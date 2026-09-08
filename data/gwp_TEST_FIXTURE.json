@@ -1,0 +1,7 @@
+{
+  "name": "TEST-FIXTURE-NOT-FOR-PRODUCTION",
+  "horizon_years": 100,
+  "source_name": "TEST FIXTURE. These are round numbers chosen to make test arithmetic checkable by hand. They are NOT real GWP values and must never be used in a report.",
+  "source_url": "test://fixture",
+  "values": { "CH4_fossil": 30, "CH4_nonfossil": 27, "N2O": 270, "SF6": 25000 }
+}

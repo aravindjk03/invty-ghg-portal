@@ -1,0 +1,13 @@
+{
+  "name": "AR6",
+  "horizon_years": 100,
+  "source_name": "INGEST REQUIRED - IPCC AR6 WG1 Ch.7 Table 7.15 / GHG Protocol GWP values table",
+  "source_url": "",
+  "_instructions": "Fill every null from the published table, set source_url, then delete this key. The loader REJECTS a set with an empty source_url or a null value, on purpose. Note AR6 gives DIFFERENT values for fossil and non-fossil methane; record which non-fossil value you chose and why.",
+  "values": {
+    "CH4_fossil": null, "CH4_nonfossil": null, "N2O": null,
+    "SF6": null, "NF3": null, "CF4": null, "C2F6": null,
+    "HFC-23": null, "HFC-32": null, "HFC-125": null, "HFC-134a": null,
+    "HFC-143a": null, "HFC-227ea": null, "HFC-1234yf": null, "HCFC-22": null
+  }
+}

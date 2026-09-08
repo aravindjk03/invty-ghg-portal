@@ -33,6 +33,18 @@ Thumbs.db
 .vscode/
 *.suo
 *.ntvs*
-*.njsproj
-*.sln
 *.sw?
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.pytest_cache/
+*.db
+*.sqlite
+*.sqlite3

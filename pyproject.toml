@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ghg-core"
+version = "1.0.0"
+description = "INVTY GHG calculation core - pure, deterministic, dependency-light"
+requires-python = ">=3.11"
+dependencies = []                       # the engine itself needs nothing
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "pint>=0.24"]    # pint is used ONLY to cross-check units in CI
+
+# Explicit, so setuptools never tries to treat data/ or tests/ as packages.
+[tool.setuptools]
+packages = ["ghg_core"]
+
+[tool.setuptools.package-data]
+ghg_core = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
