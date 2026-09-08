@@ -1,14 +1,46 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessage } from '../types/ghg';
+import {
+  ActivityEntry,
+  EmissionFactor,
+  ScopeSummary,
+  WhatIfScenario,
+  ScenarioResult,
+  ToastMessage,
+} from '../types/ghg';
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
-import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
+import { ConsolidationBoundary, IntegratedSteelMethod, routeActivityScope } from '../engine/scopeRouter';
+import { getDefaultFactorForCategory } from '../engine/factorCatalogue';
+import { Category3Coefficients, DEFAULT_CATEGORY3_COEFFICIENTS } from '../engine/calculator';
+import { SectorId, DEFAULT_SECTOR } from '../config/sectors';
+
+/** Prior-period totals used for year-on-year comparison on the dashboard. */
+export interface PriorPeriodTotals {
+  label: string;
+  scope1: number;
+  scope2: number;
+  scope3: number;
+  /** Optional production/turnover basis so intensity can also be compared. */
+  outputBasis?: number;
+}
 
 interface GHGContextType {
+  /** Live emission-factor register (API when reachable, bundled snapshot otherwise). */
+  factors: EmissionFactor[];
+  factorsSource: 'api' | 'bundled';
+  /** Scope-routing warnings keyed by activity row id. */
+  routingFindings: Record<string, string[]>;
   companyName: string;
   reportingPeriod: string;
   boundaryApproach: ConsolidationBoundary;
   steelMethod: IntegratedSteelMethod;
+  sector: SectorId;
+  setSector: (sector: SectorId) => void;
+  /** Prior reporting period totals, entered by the user; null until supplied. */
+  priorPeriod: PriorPeriodTotals | null;
+  setPriorPeriod: (totals: PriorPeriodTotals | null) => void;
+  category3Coefficients: Category3Coefficients;
+  setCategory3Coefficients: (c: Category3Coefficients) => void;
   setCompanyName: (name: string) => void;
   setReportingPeriod: (period: string) => void;
   setBoundaryApproach: (boundary: ConsolidationBoundary) => void;
@@ -200,6 +232,32 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [reportingPeriod, setReportingPeriod] = useState<string>('FY 2025–26');
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
+  const [sector, setSector] = useState<SectorId>(DEFAULT_SECTOR);
+
+  // Year-on-year deltas were hardcoded strings on the dashboard. They are only
+  // real if there is a prior period to compare against, so it is stored and the
+  // UI shows nothing when it is absent rather than inventing a trend.
+  const [priorPeriod, setPriorPeriod] = useState<PriorPeriodTotals | null>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_PRIOR`);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [category3Coefficients, setCategory3Coefficients] = useState<Category3Coefficients>(
+    DEFAULT_CATEGORY3_COEFFICIENTS
+  );
+
+  useEffect(() => {
+    try {
+      if (priorPeriod) localStorage.setItem(`${STORAGE_KEY}_PRIOR`, JSON.stringify(priorPeriod));
+      else localStorage.removeItem(`${STORAGE_KEY}_PRIOR`);
+    } catch {
+      /* storage unavailable */
+    }
+  }, [priorPeriod]);
 
   const [scope1Entries, setScope1Entries] = useState<ActivityEntry[]>(() => {
     try {
@@ -230,8 +288,30 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  // Emission factors come from the API so the server stays the register of
+  // record; the bundled catalogue seeds the first paint and covers offline use.
+  const [factors, setFactors] = useState<EmissionFactor[]>(DEFAULT_FACTORS);
+  const [factorsSource, setFactorsSource] = useState<'api' | 'bundled'>('bundled');
+
+  useEffect(() => {
+    let cancelled = false;
+    ghgService
+      .getFactors()
+      .then((fetched) => {
+        if (cancelled || fetched === DEFAULT_FACTORS) return;
+        setFactors(fetched);
+        setFactorsSource('api');
+      })
+      .catch(() => {
+        /* getFactors already falls back to the bundled catalogue. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const addToast = useCallback((type: ToastMessage['type'], message: string, duration = 4000) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     setToasts((prev) => [...prev, { id, type, message, duration }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -260,29 +340,76 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     switchFleetToElectric: false,
   });
 
+  // Seeded flat so the first paint shows no reduction rather than stale
+  // hardcoded figures that contradict the computed inventory. The effect below
+  // replaces this as soon as the real summary is available.
   const [scenarioResult, setScenarioResult] = useState<ScenarioResult>({
-    baselineTotal: 1992.2,
-    newTotal: 1850.4,
-    deltaTco2e: 141.8,
-    deltaPercentage: 7.1,
-    scope1New: 345.1,
-    scope2New: 309.3,
-    scope3New: 1196.0,
+    baselineTotal: 0,
+    newTotal: 0,
+    deltaTco2e: 0,
+    deltaPercentage: 0,
+    scope1New: 0,
+    scope2New: 0,
+    scope3New: 0,
   });
 
   // Bug Guard #6: Compute summary via useMemo from active entries (never store derived total in useState)
   const summary = useMemo<ScopeSummary>(() => {
-    return summarizeInventory(scope1Entries, scope2Entries, scope3Entries, 'location');
-  }, [scope1Entries, scope2Entries, scope3Entries]);
+    return summarizeInventory(scope1Entries, scope2Entries, scope3Entries, 'location', {
+      boundary: boundaryApproach,
+      category3Coefficients,
+    });
+  }, [scope1Entries, scope2Entries, scope3Entries, boundaryApproach, category3Coefficients]);
 
   // Live Scenario updates
   useEffect(() => {
+    let cancelled = false;
     ghgService
       .simulateScenario(summary.scope1, summary.scope2Location, summary.scope3, scenario)
       .then((res) => {
-        setScenarioResult(res);
+        if (!cancelled) setScenarioResult(res);
+      })
+      .catch((err) => {
+        console.warn('[GHG] Scenario simulation failed:', err);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [scenario, summary.scope1, summary.scope2Location, summary.scope3]);
+
+  /**
+   * Scope routing checks (captive generation, EV charging, biogenic/Montreal
+   * memo routing, steel method mutual exclusion, leased-asset double counting).
+   * The router was written but never called, so `steelMethod` had no effect on
+   * anything. Findings surface as row warnings rather than silently rewriting
+   * the user's data.
+   */
+  const routingFindings = useMemo(() => {
+    const findings: Record<string, string[]> = {};
+    const all = [...scope1Entries, ...scope2Entries, ...scope3Entries];
+
+    for (const row of all) {
+      const decision = routeActivityScope(row.emissionFactor?.id || '', {
+        boundary: boundaryApproach,
+        isInsideBoundary: true,
+        steelMethod,
+      });
+
+      const messages = [...decision.warnings];
+
+      // A row filed under a scope the router disagrees with is a real
+      // allocation error, not a style preference.
+      if (!decision.isMemo && decision.targetScope !== row.scope) {
+        messages.push(
+          `This source belongs in ${decision.targetScope.replace('scope-', 'Scope ')} (${decision.categoryName}), but the row is filed under ${String(row.scope).replace('scope-', 'Scope ')}.`
+        );
+      }
+
+      if (messages.length > 0) findings[row.id] = messages;
+    }
+
+    return findings;
+  }, [scope1Entries, scope2Entries, scope3Entries, boundaryApproach, steelMethod]);
 
   // Mutation handlers with Bug Guard #14 (immutable reference returns)
   const updateRow = useCallback(
@@ -311,16 +438,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addRow = useCallback(
     (scope: 'scope-1' | 'scope-2' | 'scope-3', category: string) => {
-      // Extract prefix like cat1, cat2, cat15
-      const catPrefix = category.startsWith('cat') ? category.split('_')[0] : '';
-      const factor =
-        (catPrefix ? DEFAULT_FACTORS.find((f) => f.id.startsWith(`${catPrefix}.`)) : null) ||
-        DEFAULT_FACTORS.find((f) => f.category.toLowerCase().includes(category.toLowerCase())) ||
-        (scope === 'scope-1'
-          ? DEFAULT_FACTORS[0]
-          : scope === 'scope-2'
-          ? DEFAULT_FACTORS.find((f) => f.id === 'elec.grid.location') || DEFAULT_FACTORS[0]
-          : DEFAULT_FACTORS.find((f) => f.id === 'cat1.material.steel') || DEFAULT_FACTORS[0]);
+      // Resolve through the shared catalogue so a new row always opens on a
+      // factor that actually belongs to the category it was added under.
+      const factor = getDefaultFactorForCategory(category, scope);
 
       const defaultAmount = factor.unit.toLowerCase() === 'kwh' ? 10000 : 100;
       const calc = calculateRowEmissions(defaultAmount, factor.factorValue, factor.fuelOrActivity, factor.unit);
@@ -462,10 +582,19 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <GHGContext.Provider
       value={{
+        factors,
+        factorsSource,
+        routingFindings,
         companyName,
         reportingPeriod,
         boundaryApproach,
         steelMethod,
+        sector,
+        setSector,
+        priorPeriod,
+        setPriorPeriod,
+        category3Coefficients,
+        setCategory3Coefficients,
         setCompanyName,
         setReportingPeriod,
         setBoundaryApproach,

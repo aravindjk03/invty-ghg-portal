@@ -1,6 +1,8 @@
 import Decimal from 'decimal.js';
 import { parseIndianNumber } from './unitConverter';
 import { ActivityEntry, ScopeSummary, QualityGrade } from '../types/ghg';
+import { isMarketInstrument, isMemoFactor } from './factorCatalogue';
+import { ConsolidationBoundary } from './scopeRouter';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_EVEN });
 
@@ -112,24 +114,54 @@ export function calculateDataQualityGrade(entries: ActivityEntry[]): QualityGrad
 /**
  * Bug Guard #10: Auto-derive Category 3 (WTT and T&D) from Scope 1 & 2 without circular storage.
  */
+/**
+ * Coefficients behind the auto-derived Scope 3 Category 3 figure.
+ *
+ * These were inline magic numbers presented as calculated output with no
+ * citation and no way to override them. They are defaults, not measurements:
+ * an entity with supplier-specific well-to-tank data or a state DISCOM loss
+ * figure should replace them, so they are settable per inventory.
+ */
+export interface Category3Coefficients {
+  /** Well-to-tank uplift on Scope 1 combustion. DEFRA/DESNZ WTT ~18% of TTW. */
+  wttFuelsRatio: number;
+  /** Well-to-tank uplift on purchased electricity (generation upstream). */
+  wttElectricityRatio: number;
+  /** Grid transmission & distribution losses. CEA reports ~19% for India. */
+  tdLossRatio: number;
+}
+
+export const DEFAULT_CATEGORY3_COEFFICIENTS: Category3Coefficients = {
+  wttFuelsRatio: 0.18,
+  wttElectricityRatio: 0.12,
+  tdLossRatio: 0.19,
+};
+
 export function deriveCategory3Emissions(
   scope1Entries: ActivityEntry[],
-  scope2LocationTco2e: Decimal
+  scope2LocationTco2e: Decimal,
+  coefficients: Category3Coefficients = DEFAULT_CATEGORY3_COEFFICIENTS,
+  boundary: ConsolidationBoundary = 'Operational control'
 ): Decimal {
+  const share = (row: ActivityEntry) => consolidationShare(row, boundary);
   // 1. WTT fuels: approx 20% of Scope 1 combustion
   let scope1Combustion = new Decimal(0);
   for (const e of scope1Entries) {
+    // Memo rows are excluded from Scope 1 gross, so they must not seed the
+    // derived Category 3 either — otherwise a biomass boiler line kept out of
+    // Scope 1 would still inflate Scope 3 through the WTT uplift.
+    if (isMemoFactor(e.emissionFactor || { scope: e.scope, category: '' })) continue;
     if (e.category === 'stationary_combustion' || e.category === 'mobile_combustion') {
-      scope1Combustion = scope1Combustion.plus(new Decimal(e.calculatedTco2e || 0));
+      scope1Combustion = scope1Combustion.plus(new Decimal(e.calculatedTco2e || 0).times(share(e)));
     }
   }
-  const wttFuels = scope1Combustion.times(new Decimal(0.18)); // ~18% WTT factor
+  const wttFuels = scope1Combustion.times(new Decimal(coefficients.wttFuelsRatio));
 
-  // 2. WTT electricity: ~12% of Scope 2
-  const wttElec = scope2LocationTco2e.times(new Decimal(0.12));
+  // 2. WTT electricity (upstream of generation)
+  const wttElec = scope2LocationTco2e.times(new Decimal(coefficients.wttElectricityRatio));
 
-  // 3. Indian T&D losses: CEA specifies ~19% average transmission loss
-  const tdLosses = scope2LocationTco2e.times(new Decimal(0.19));
+  // 3. Grid transmission & distribution losses
+  const tdLosses = scope2LocationTco2e.times(new Decimal(coefficients.tdLossRatio));
 
   return wttFuels.plus(wttElec).plus(tdLosses);
 }
@@ -138,48 +170,97 @@ export function deriveCategory3Emissions(
  * Computes full inventory summary across Scope 1, Scope 2, Scope 3, and memo items.
  * Bug Guard #9: Scope 2 location and market are NEVER summed together.
  */
+export interface ConsolidationOptions {
+  /**
+   * Under the equity-share approach an entity reports its percentage share of
+   * each operation's emissions. Under operational or financial control it
+   * reports 100% of the operations it controls, so the share is not applied.
+   */
+  boundary?: ConsolidationBoundary;
+  category3Coefficients?: Category3Coefficients;
+}
+
+/**
+ * Share of a row's emissions that consolidates into the inventory.
+ * Rows default to 100% so existing data is unaffected.
+ */
+function consolidationShare(row: ActivityEntry, boundary: ConsolidationBoundary): Decimal {
+  if (boundary !== 'Equity share') return new Decimal(1);
+  const pct = row.equitySharePercent;
+  if (pct === undefined || pct === null || isNaN(Number(pct))) return new Decimal(1);
+  return new Decimal(Math.min(100, Math.max(0, Number(pct)))).dividedBy(100);
+}
+
 export function summarizeInventory(
   scope1Entries: ActivityEntry[],
   scope2Entries: ActivityEntry[],
   scope3Entries: ActivityEntry[],
-  scope2ReportingPreference: 'location' | 'market' = 'location'
+  scope2ReportingPreference: 'location' | 'market' = 'location',
+  options: ConsolidationOptions = {}
 ): ScopeSummary {
+  const boundary = options.boundary ?? 'Operational control';
+  const cat3Coefficients = options.category3Coefficients ?? DEFAULT_CATEGORY3_COEFFICIENTS;
+  const contribution = (row: ActivityEntry) =>
+    new Decimal(row.calculatedTco2e || 0).times(consolidationShare(row, boundary));
   let s1Total = new Decimal(0);
   let s2LocTotal = new Decimal(0);
   let s2MktTotal = new Decimal(0);
   let s3Total = new Decimal(0);
   let biogenicTotal = new Decimal(0);
 
-  // 1. Scope 1
+  // 1. Scope 1.
+  // Memo treatment is decided by the factor, not by which workspace the row was
+  // entered in. Testing `row.scope === 'biogenic'` never matched — nothing sets
+  // that — so picking a biogenic or Montreal Protocol source in a Scope 1 row
+  // added it straight into Scope 1 gross, which is the opposite of the rule.
   for (const row of scope1Entries) {
-    if (row.scope === 'biogenic') {
-      biogenicTotal = biogenicTotal.plus(new Decimal(row.calculatedTco2e || 0));
+    if (isMemoFactor(row.emissionFactor || { scope: row.scope, category: '' })) {
+      biogenicTotal = biogenicTotal.plus(contribution(row));
     } else {
-      s1Total = s1Total.plus(new Decimal(row.calculatedTco2e || 0));
+      s1Total = s1Total.plus(contribution(row));
     }
   }
 
-  // 2. Scope 2: Distinguish location-based vs market-based
+  // 2. Scope 2: Distinguish location-based vs market-based.
+  // Classified by the contractual instrument behind the factor rather than by
+  // substring-matching the label, which missed PPAs, green tariffs and RECs.
+  let hasMarketInstrument = false;
   for (const row of scope2Entries) {
-    const isMarket = row.category?.toLowerCase().includes('market') || row.fuelOrSource?.toLowerCase().includes('market');
+    if (isMemoFactor(row.emissionFactor || { scope: row.scope, category: '' })) {
+      // Self-generated solar/wind and exported power are energy-balance memos.
+      biogenicTotal = biogenicTotal.plus(contribution(row));
+      continue;
+    }
+    const isMarket =
+      isMarketInstrument(row.emissionFactor?.id || '') || row.category === 'market_instruments';
     if (isMarket) {
-      s2MktTotal = s2MktTotal.plus(new Decimal(row.calculatedTco2e || 0));
+      hasMarketInstrument = true;
+      s2MktTotal = s2MktTotal.plus(contribution(row));
     } else {
-      s2LocTotal = s2LocTotal.plus(new Decimal(row.calculatedTco2e || 0));
+      s2LocTotal = s2LocTotal.plus(contribution(row));
     }
   }
 
-  // If no market entries, default market to location or renewable-adjusted
-  if (s2MktTotal.isZero() && !s2LocTotal.isZero()) {
+  // With no contractual instruments there is no true market-based position, so
+  // the location-based figure stands in — but the caller is told, so the UI can
+  // say so instead of showing two identical numbers as if they were dual-reported.
+  const scope2MarketBasis: ScopeSummary['scope2MarketBasis'] = hasMarketInstrument
+    ? 'instruments'
+    : 'location-proxy';
+  if (!hasMarketInstrument) {
     s2MktTotal = s2LocTotal;
   }
 
   // 3. Scope 3 manual entries + auto-derived Category 3
   for (const row of scope3Entries) {
-    s3Total = s3Total.plus(new Decimal(row.calculatedTco2e || 0));
+    if (isMemoFactor(row.emissionFactor || { scope: row.scope, category: '' })) {
+      biogenicTotal = biogenicTotal.plus(contribution(row));
+      continue;
+    }
+    s3Total = s3Total.plus(contribution(row));
   }
   // Add auto-derived Cat 3
-  const derivedCat3 = deriveCategory3Emissions(scope1Entries, s2LocTotal);
+  const derivedCat3 = deriveCategory3Emissions(scope1Entries, s2LocTotal, cat3Coefficients, boundary);
   s3Total = s3Total.plus(derivedCat3);
 
   // Bug Guard #9: Grand Total includes EXACTLY ONE Scope 2 view (default: location)
@@ -197,6 +278,7 @@ export function summarizeInventory(
     scope1: Number(s1Total.toFixed(2)),
     scope2Location: Number(s2LocTotal.toFixed(2)),
     scope2Market: Number(s2MktTotal.toFixed(2)),
+    scope2MarketBasis,
     scope3: Number(s3Total.toFixed(2)),
     biogenicMemo: Number(biogenicTotal.toFixed(2)),
     totalEmissions: Number(grandTotal.toFixed(2)),

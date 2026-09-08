@@ -241,12 +241,23 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                         </tr>
                         <tr className="bg-slate-50 text-brand-muted text-[11px]">
                           <td className="p-2.5 italic" colSpan={2}>
-                            Memo Item: Scope 2 Market-Based Dual Reporting
+                            Memo Item: Scope 2 Market-Based
+                            {summary.scope2MarketBasis === 'location-proxy'
+                              ? ' (location-based proxy — no contractual instruments)'
+                              : ' Dual Reporting'}
                           </td>
-                          <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                          <td
+                            className={`p-2.5 text-right font-mono font-bold ${
+                              summary.scope2MarketBasis === 'instruments'
+                                ? 'text-emerald-700'
+                                : 'text-brand-muted'
+                            }`}
+                          >
                             {formatIndianNumber(summary.scope2Market)}
                           </td>
-                          <td className="p-2.5 text-right font-mono italic">Dual View</td>
+                          <td className="p-2.5 text-right font-mono italic">
+                            {summary.scope2MarketBasis === 'instruments' ? 'Dual View' : 'Proxy'}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -352,10 +363,23 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                       <div className="p-4 rounded-lg bg-surface border border-border space-y-1">
                         <span className="font-bold text-brand-heading block">Market-based Method</span>
                         <p className="text-brand-muted text-[11px]">
-                          Adjusted for Solar Open Access PPA contracts with verified surrender of EACs.
+                          {summary.scope2MarketBasis === 'instruments'
+                            ? 'Adjusted for contractual instruments (PPAs, green tariffs, RECs/I-RECs) with verified surrender of EACs.'
+                            : 'No contractual instruments were recorded for the reporting period. Per GHG Protocol Scope 2 Guidance the location-based figure is reported in its place; this is a disclosure, not a dual-reported market position.'}
                         </p>
-                        <div className="text-xl font-mono font-bold text-emerald-700 pt-2">
+                        <div
+                          className={`text-xl font-mono font-bold pt-2 ${
+                            summary.scope2MarketBasis === 'instruments'
+                              ? 'text-emerald-700'
+                              : 'text-brand-muted'
+                          }`}
+                        >
                           {formatIndianNumber(summary.scope2Market)} tCO₂e
+                          {summary.scope2MarketBasis === 'location-proxy' && (
+                            <span className="block text-[11px] font-sans font-semibold text-status-warning mt-1">
+                              Location-based proxy
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

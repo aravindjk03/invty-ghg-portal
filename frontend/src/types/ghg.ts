@@ -37,8 +37,12 @@ export interface EmissionFactor {
   fuelOrActivity: string;
   scope: ScopeType;
   category: string;
+  /** GHG Protocol category number, e.g. '1.2' mobile combustion, '3.6' business travel. */
+  ghgCategory: string;
   factorValue: number; // kgCO2e per unit
   unit: string;
+  /** Pipe-separated units the factor may be entered in, e.g. 'kg|t|lb'. */
+  allowedUnits?: string;
   source: string; // e.g. "DESNZ 2026", "CEA 2024", "IPCC AR6"
   publicationYear: number;
   qualityTier: DataQualityTier;
@@ -56,6 +60,12 @@ export interface ActivityEntry {
   unit: string;
   emissionFactor: EmissionFactor;
   calculatedTco2e: number;
+  /**
+   * Reporting entity's ownership share of the operation, 0-100. Only applied
+   * under the equity-share consolidation approach; control approaches
+   * consolidate 100% of the operations they cover. Defaults to 100.
+   */
+  equitySharePercent?: number;
   warning?: string;
   notes?: string;
   evidenceFile?: string;
@@ -67,6 +77,14 @@ export interface ScopeSummary {
   scope1: number;
   scope2Location: number;
   scope2Market: number;
+  /**
+   * How the market-based figure was arrived at. 'instruments' means at least one
+   * contractual instrument (PPA, green tariff, REC/I-REC, supplier-specific or
+   * residual-mix rate) backs it; 'location-proxy' means none exist and the
+   * location-based figure is standing in, which must be disclosed rather than
+   * presented as a genuine dual-reported number.
+   */
+  scope2MarketBasis: 'instruments' | 'location-proxy';
   scope3: number;
   biogenicMemo: number;
   totalEmissions: number;

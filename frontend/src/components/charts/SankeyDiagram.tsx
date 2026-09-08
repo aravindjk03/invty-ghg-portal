@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card } from '../ui/Card';
 import { Table, Column } from '../ui/Table';
 import { Button } from '../ui/Button';
 import { TableProperties, Network } from 'lucide-react';
+import { useGHG } from '../../context/GHGContext';
+import { isMemoFactor } from '../../engine/factorCatalogue';
+import { ActivityEntry } from '../../types/ghg';
 
 interface SankeyRow {
   activity: string;
@@ -12,25 +15,114 @@ interface SankeyRow {
   scopeColor: string;
 }
 
-const SANKEY_DATA: SankeyRow[] = [
-  { activity: 'Rolling Mill DG Sets (Diesel)', category: 'Stationary Comb.', scope: 'Scope 1', amount: 120.9, scopeColor: 'var(--scope-1)' },
-  { activity: 'Furnace Re-heating (Natural Gas)', category: 'Stationary Comb.', scope: 'Scope 1', amount: 37.5, scopeColor: 'var(--scope-1)' },
-  { activity: 'Billet Lancing (LPG)', category: 'Stationary Comb.', scope: 'Scope 1', amount: 7.1, scopeColor: 'var(--scope-1)' },
-  { activity: 'Heavy Logistics Fleet', category: 'Mobile Comb.', scope: 'Scope 1', amount: 24.7, scopeColor: 'var(--scope-1)' },
-  { activity: 'Scrap Yard Forklifts', category: 'Mobile Comb.', scope: 'Scope 1', amount: 8.3, scopeColor: 'var(--scope-1)' },
-  { activity: 'EAF Limestone Flux', category: 'Process Emissions', scope: 'Scope 1', amount: 140.8, scopeColor: 'var(--scope-1)' },
-  { activity: 'Chiller AC Top-up (R-134a)', category: 'Fugitive Emissions', scope: 'Scope 1', amount: 35.8, scopeColor: 'var(--scope-1)' },
-  { activity: 'Grid Electricity (CEA 2024)', category: 'Purchased Energy', scope: 'Scope 2', amount: 412.4, scopeColor: 'var(--scope-2)' },
-  { activity: 'Purchased Scrap Feedstock', category: 'Cat 1 Purchased Goods', scope: 'Scope 3', amount: 850.0, scopeColor: 'var(--scope-3)' },
-  { activity: 'Grid T&D Losses (India)', category: 'Cat 3 Energy Activities', scope: 'Scope 3', amount: 310.2, scopeColor: 'var(--scope-3)' },
-  { activity: 'Executive Flights & Travel', category: 'Cat 6 Business Travel', scope: 'Scope 3', amount: 44.5, scopeColor: 'var(--scope-3)' },
-];
+/**
+ * The fixed SVG layout allocates 34px per activity node inside a 400px canvas,
+ * so the flow can only show this many rows before ribbons collide.
+ */
+const MAX_FLOW_ROWS = 11;
+
+const SCOPE_LABEL: Record<string, string> = {
+  'scope-1': 'Scope 1',
+  'scope-2': 'Scope 2',
+  'scope-3': 'Scope 3',
+  biogenic: 'Biogenic',
+};
+
+const SCOPE_COLOR: Record<string, string> = {
+  'scope-1': 'var(--scope-1)',
+  'scope-2': 'var(--scope-2)',
+  'scope-3': 'var(--scope-3)',
+  biogenic: 'var(--biogenic)',
+};
+
+function humanizeCategory(category: string): string {
+  if (!category) return 'Uncategorised';
+  return category
+    .replace(/_/g, ' ')
+    .replace(/\bcat(\d+)\b/gi, 'Cat $1')
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function toSankeyRow(entry: ActivityEntry): SankeyRow {
+  const scopeKey = entry.scope || 'scope-1';
+  return {
+    activity: entry.fuelOrSource || entry.facility || 'Unnamed activity',
+    category: humanizeCategory(entry.category),
+    scope: SCOPE_LABEL[scopeKey] || scopeKey,
+    amount: Number(entry.calculatedTco2e || 0),
+    scopeColor: SCOPE_COLOR[scopeKey] || 'var(--scope-1)',
+  };
+}
+
+/**
+ * Builds the flow rows from the live inventory. This used to be a hardcoded
+ * array, which drifted from the real figures and made the diagram's "total
+ * inventory" node contradict the headline KPI on the same screen.
+ */
+function buildSankeyRows(entries: ActivityEntry[], derivedCat3: number): SankeyRow[] {
+  const rows = entries
+    // The headline total carries exactly one Scope 2 view (location-based) and
+    // treats memo items (biogenic CO2, Montreal Protocol gases, energy-balance
+    // lines) as out of scope, so neither may appear in the flow or the diagram
+    // would over-report against it. Keyed off the factor, matching the engine.
+    .filter((e) => !isMemoFactor(e.emissionFactor || { scope: e.scope, category: '' }))
+    .filter(
+      (e) =>
+        !(
+          e.scope === 'scope-2' &&
+          (e.category?.toLowerCase().includes('market') ||
+            e.fuelOrSource?.toLowerCase().includes('market'))
+        )
+    )
+    .map(toSankeyRow)
+    .filter((r) => r.amount !== 0)
+    .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+
+  // Category 3 (WTT fuels, WTT electricity, grid T&D losses) is derived by the
+  // engine rather than stored as an activity row, so it has to be added back
+  // here or the flow total silently under-reports against the headline KPI.
+  if (Math.abs(derivedCat3) >= 0.01) {
+    rows.push({
+      activity: 'Cat 3 — WTT fuels & grid T&D losses',
+      category: 'Cat 3 Energy Activities (auto-derived)',
+      scope: SCOPE_LABEL['scope-3'],
+      amount: Number(derivedCat3.toFixed(2)),
+      scopeColor: SCOPE_COLOR['scope-3'],
+    });
+    rows.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+  }
+
+  if (rows.length <= MAX_FLOW_ROWS) return rows;
+
+  // Roll the tail into a single node so the rendered total still reconciles.
+  const shown = rows.slice(0, MAX_FLOW_ROWS - 1);
+  const rest = rows.slice(MAX_FLOW_ROWS - 1);
+  const restTotal = rest.reduce((acc, r) => acc + r.amount, 0);
+
+  return [
+    ...shown,
+    {
+      activity: `Other activities (${rest.length})`,
+      category: 'Aggregated remainder',
+      scope: rest[0].scope,
+      amount: Number(restTotal.toFixed(2)),
+      scopeColor: rest[0].scopeColor,
+    },
+  ];
+}
 
 export const SankeyDiagram: React.FC = () => {
+  const { scope1Entries, scope2Entries, scope3Entries, summary } = useGHG();
   const [viewAsTable, setViewAsTable] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const totalEmissions = SANKEY_DATA.reduce((acc, row) => acc + row.amount, 0);
+  const sankeyData = useMemo(() => {
+    const explicitScope3 = scope3Entries.reduce((acc, e) => acc + Number(e.calculatedTco2e || 0), 0);
+    const derivedCat3 = summary.scope3 - explicitScope3;
+    return buildSankeyRows([...scope1Entries, ...scope2Entries, ...scope3Entries], derivedCat3);
+  }, [scope1Entries, scope2Entries, scope3Entries, summary.scope3]);
+
+  const totalEmissions = sankeyData.reduce((acc, row) => acc + row.amount, 0);
 
   const tableColumns: Column<SankeyRow>[] = [
     { header: 'Activity Source', accessorKey: 'activity' },
@@ -75,7 +167,7 @@ export const SankeyDiagram: React.FC = () => {
       </div>
 
       {viewAsTable ? (
-        <Table columns={tableColumns} data={SANKEY_DATA} keyExtractor={(r) => r.activity} />
+        <Table columns={tableColumns} data={sankeyData} keyExtractor={(r) => `${r.scope}-${r.activity}`} />
       ) : (
         <div className="w-full min-h-[440px] flex flex-col justify-center relative overflow-x-auto select-none pt-2">
           {/* Column Stages Indicator */}
@@ -89,7 +181,7 @@ export const SankeyDiagram: React.FC = () => {
           {/* Interactive SVG Flow Canvas */}
           <svg className="w-full h-[400px]" viewBox="0 0 900 400" preserveAspectRatio="none">
             <defs>
-              {SANKEY_DATA.map((row, idx) => (
+              {sankeyData.map((row, idx) => (
                 <linearGradient key={`grad-${idx}`} id={`sankey-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={row.scopeColor} stopOpacity={hoveredIdx === null || hoveredIdx === idx ? 0.6 : 0.15} />
                   <stop offset="100%" stopColor={row.scopeColor} stopOpacity={hoveredIdx === null || hoveredIdx === idx ? 0.35 : 0.08} />
@@ -98,7 +190,7 @@ export const SankeyDiagram: React.FC = () => {
             </defs>
 
             {/* Render Flow Ribbons */}
-            {SANKEY_DATA.map((row, idx) => {
+            {sankeyData.map((row, idx) => {
               const y1 = 20 + idx * 34;
               const y2 = 40 + (idx % 5) * 65;
               const y3 = row.scope === 'Scope 1' ? 70 : row.scope === 'Scope 2' ? 180 : 290;
@@ -207,9 +299,9 @@ export const SankeyDiagram: React.FC = () => {
           <div className="h-7 text-xs flex items-center justify-between px-2 pt-1 border-t border-border/50 text-brand-muted">
             {hoveredIdx !== null ? (
               <span className="text-brand-heading font-medium">
-                Flow: <strong>{SANKEY_DATA[hoveredIdx].activity}</strong> → {SANKEY_DATA[hoveredIdx].category} → {SANKEY_DATA[hoveredIdx].scope} (
+                Flow: <strong>{sankeyData[hoveredIdx].activity}</strong> → {sankeyData[hoveredIdx].category} → {sankeyData[hoveredIdx].scope} (
                 <span className="font-mono text-brand-link font-bold">
-                  {SANKEY_DATA[hoveredIdx].amount} tCO₂e
+                  {sankeyData[hoveredIdx].amount} tCO₂e
                 </span>
                 )
               </span>

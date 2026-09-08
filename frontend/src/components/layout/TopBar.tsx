@@ -1,20 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGHG } from '../../context/GHGContext';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
-import { 
-  HelpCircle, 
-  Settings, 
-  Save, 
-  Home, 
-  Flame, 
-  Zap, 
-  Link2, 
-  BarChart3, 
-  FileText, 
+import {
+  HelpCircle,
+  Settings,
+  Save,
+  Home,
+  Flame,
+  Zap,
+  Link2,
+  BarChart3,
+  FileText,
   CheckCircle2,
-  BookOpen
+  BookOpen,
+  ChevronDown,
+  Globe2,
+  ClipboardCheck,
+  Gauge,
+  Truck,
+  History,
 } from 'lucide-react';
+
+/**
+ * Compliance workspaces. These pages exist and are fully built, but had no
+ * entry point anywhere in the UI, which made them unreachable.
+ */
+const COMPLIANCE_PAGES = [
+  { key: 'cbam', label: 'CBAM Declaration', icon: Globe2, hint: 'EU carbon border adjustment' },
+  { key: 'brsr', label: 'BRSR Core', icon: ClipboardCheck, hint: 'SEBI Principle 6 disclosure' },
+  { key: 'cems', label: 'CEMS Monitor', icon: Gauge, hint: 'Continuous stack telemetry' },
+  { key: 'suppliers', label: 'Supplier Portal', icon: Truck, hint: 'Scope 3 primary data' },
+  { key: 'audit-trail', label: 'Audit Trail', icon: History, hint: 'Assurance ledger' },
+] as const;
 
 export interface TopBarProps {
   currentPage: string;
@@ -24,6 +42,26 @@ export interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
   const { companyName, reportingPeriod, boundaryApproach, saveToStorage } = useGHG();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [complianceOpen, setComplianceOpen] = useState(false);
+  const complianceRef = useRef<HTMLDivElement>(null);
+
+  const complianceActive = COMPLIANCE_PAGES.some((p) => p.key === currentPage);
+
+  useEffect(() => {
+    if (!complianceOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!complianceRef.current?.contains(e.target as Node)) setComplianceOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setComplianceOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [complianceOpen]);
 
   const handleSaveAndExit = () => {
     saveToStorage();
@@ -31,7 +69,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 h-[72px] bg-surface-raised border-b border-border shadow-nm-raised-sm flex items-center">
+    <header className="sticky top-0 z-40 h-[72px] bg-surface-raised border-b border-border shadow-nm-raised-sm flex items-center print:hidden">
       {/* Centered to match page container max-width exactly */}
       <div className="max-w-[1440px] mx-auto w-full px-6 flex items-center justify-between">
         {/* Left: INVTY Branding & Navigation */}
@@ -132,6 +170,56 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
               <FileText size={14} />
               <span>Report</span>
             </button>
+
+            {/* Compliance workspaces */}
+            <div className="relative" ref={complianceRef}>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={complianceOpen}
+                onClick={() => setComplianceOpen((open) => !open)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  complianceActive
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <ClipboardCheck size={14} />
+                <span>Compliance</span>
+                <ChevronDown
+                  size={12}
+                  className={`transition-transform ${complianceOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {complianceOpen && (
+                <div
+                  role="menu"
+                  className="absolute left-0 top-full mt-2 w-64 bg-surface-raised border border-border rounded-md shadow-nm-raised py-1.5 z-50"
+                >
+                  {COMPLIANCE_PAGES.map(({ key, label, icon: Icon, hint }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setComplianceOpen(false);
+                        onNavigate(key);
+                      }}
+                      className={`w-full flex items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-blue-50 ${
+                        currentPage === key ? 'bg-blue-50 text-brand-link' : 'text-brand-body'
+                      }`}
+                    >
+                      <Icon size={14} className="mt-0.5 shrink-0 text-brand-muted" />
+                      <span className="flex flex-col">
+                        <span className="font-medium leading-tight">{label}</span>
+                        <span className="text-[10px] text-brand-muted leading-tight mt-0.5">{hint}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 

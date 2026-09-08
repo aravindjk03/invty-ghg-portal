@@ -7,6 +7,8 @@ export interface KPITileProps {
   value: number | string;
   unit?: string;
   subtext?: string;
+  /** Names the period being compared against, e.g. "vs FY 2024-25". */
+  deltaLabel?: string;
   delta?: {
     value: string;
     isPositiveGood?: boolean;
@@ -25,6 +27,7 @@ export const KPITile: React.FC<KPITileProps> = ({
   unit,
   subtext,
   delta,
+  deltaLabel,
   tooltipText,
   gradeCircle,
 }) => {
@@ -122,7 +125,7 @@ export const KPITile: React.FC<KPITileProps> = ({
             >
               {delta.value}
             </span>
-            <span className="text-brand-muted">vs previous period</span>
+            <span className="text-brand-muted">{deltaLabel || 'vs previous period'}</span>
           </div>
         ) : subtext ? (
           <span className="text-brand-muted font-medium">{subtext}</span>

@@ -1,30 +1,39 @@
 import { request } from './api';
 import { EmissionFactor, WhatIfScenario, ScenarioResult, ActivityEntry, ScopeSummary } from '../types/ghg';
-import { CATALOGUE_SOURCES } from '../data/catalogueData';
+import { DEFAULT_FACTORS, getFactorsForCategory } from '../engine/factorCatalogue';
 import { calculateRowEmissions } from '../engine/calculator';
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import Decimal from 'decimal.js';
+import { convertUnit } from '../engine/unitConverter';
 
-// Map catalogue entries to EmissionFactor objects
-export const DEFAULT_FACTORS: EmissionFactor[] = CATALOGUE_SOURCES.map((source) => ({
-  id: source.activity_key,
-  fuelOrActivity: source.display_name,
-  scope: (source.scope === '1' ? 'scope-1' : source.scope === '2' ? 'scope-2' : source.scope === '3' ? 'scope-3' : 'biogenic') as any,
-  category: source.category_name,
-  factorValue: source.factorValue,
-  unit: source.default_unit,
-  source: source.factor_source,
-  publicationYear: source.publicationYear,
-  qualityTier: source.qualityTier,
-  notes: source.notes,
-}));
+// The catalogue moved to engine/factorCatalogue (it is shared with the
+// calculator); re-exported here so existing call sites keep working.
+export { DEFAULT_FACTORS };
+// xlsx, jspdf and html2canvas are ~1.4 MB combined and are only needed once a
+// user actually exports, so they are pulled in on demand rather than shipped in
+// the initial bundle.
 
 export const ghgService = {
-  async getFactors(): Promise<EmissionFactor[]> {
+  /**
+   * The factor register, from the API when reachable.
+   *
+   * The bundled catalogue is the offline snapshot, not a second register: both
+   * are generated from the same source and share activity keys, so a row saved
+   * offline still resolves against the served catalogue.
+   */
+  async getFactors(filters?: { scope?: string; ghgCategory?: string }): Promise<EmissionFactor[]> {
+    const params = new URLSearchParams();
+    if (filters?.scope) params.set('scope', filters.scope);
+    if (filters?.ghgCategory) params.set('ghgCategory', filters.ghgCategory);
+    const query = params.toString();
+
     try {
-      return await request<EmissionFactor[]>('/factors');
+      const factors = await request<EmissionFactor[]>(`/factors${query ? `?${query}` : ''}`);
+      // A malformed or empty payload must not blank out every source picker.
+      if (!Array.isArray(factors) || factors.length === 0 || !factors[0]?.ghgCategory) {
+        return DEFAULT_FACTORS;
+      }
+      return factors;
     } catch {
       return DEFAULT_FACTORS;
     }
@@ -117,11 +126,12 @@ export const ghgService = {
   /**
    * Export activity entries and summary to XLSX with multiple worksheets
    */
-  exportXlsx(
+  async exportXlsx(
     entries: ActivityEntry[],
     summary: ScopeSummary,
     filename = 'Acme_Steel_FY2025_26_GHG_Audit_Trail.xlsx'
-  ): void {
+  ): Promise<void> {
+    const XLSX = await import('xlsx');
     const workbook = XLSX.utils.book_new();
 
     // Sheet 1: Summary KPI
@@ -206,6 +216,11 @@ export const ghgService = {
     }
 
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
@@ -246,44 +261,108 @@ export const ghgService = {
   /**
    * Bug Guard #12: CSV parsing with papaparse, BOM stripping, validation
    */
-  parseCsvFile(file: File): Promise<{ entries: Partial<ActivityEntry>[]; errors: string[] }> {
+  parseCsvFile(
+    file: File,
+    target?: { scope?: ActivityEntry['scope']; category?: string }
+  ): Promise<{ entries: Partial<ActivityEntry>[]; errors: string[] }> {
     return new Promise((resolve) => {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         dynamicTyping: false,
-        transformHeader: (h) => h.replace(/^\uFEFF/, '').trim().toLowerCase(),
+        transformHeader: (h) => h.replace(/^﻿/, '').trim().toLowerCase(),
         complete: (results) => {
           const entries: Partial<ActivityEntry>[] = [];
           const errors: string[] = [];
 
+          // Match only within the category being imported into, so a CSV
+          // dropped on Mobile combustion cannot resolve to a Scope 3 factor.
+          const searchable = getFactorsForCategory(target?.category, target?.scope);
+
           results.data.forEach((row: any, idx: number) => {
+            const line = idx + 1;
             const facility = row.facility || row.plant || 'Main Plant';
-            const source = row.source || row.fuel || row.activity || '';
+            const source = String(row.source || row.fuel || row.activity || '').trim();
             const amountStr = row.amount || row.quantity || row.value || '';
-            const unit = row.unit || 'L';
+            const declaredUnit = String(row.unit || '').trim();
 
             const numAmount = parseFloat(String(amountStr).replace(/,/g, ''));
             if (isNaN(numAmount)) {
-              errors.push(`Row ${idx + 1}: Invalid or missing quantity "${amountStr}"`);
+              errors.push(`Row ${line}: invalid or missing quantity "${amountStr}"`);
               return;
             }
 
-            // Find matching factor
-            const factor = DEFAULT_FACTORS.find(
+            if (!source) {
+              // Previously an empty source matched everything via includes(''),
+              // silently importing against whichever factor sorted first.
+              errors.push(`Row ${line}: missing emission source — skipped`);
+              return;
+            }
+
+            const needle = source.toLowerCase();
+            const factor = searchable.find(
               (f) =>
-                f.fuelOrActivity.toLowerCase().includes(source.toLowerCase()) ||
-                f.id.toLowerCase().includes(source.toLowerCase())
-            ) || DEFAULT_FACTORS[0];
+                f.fuelOrActivity.toLowerCase().includes(needle) ||
+                f.id.toLowerCase().includes(needle)
+            );
+
+            if (!factor) {
+              errors.push(`Row ${line}: no emission factor matches "${source}" in this category`);
+              return;
+            }
+
+            // The factor is expressed per its own unit. Importing a quantity in
+            // a different unit and applying the factor anyway silently scaled
+            // rows by up to 1000x (kg entered against a per-tonne factor).
+            const allowed = (factor.allowedUnits || factor.unit)
+              .split('|')
+              .map((u) => u.trim().toLowerCase())
+              .filter(Boolean);
+
+            if (declaredUnit && !allowed.includes(declaredUnit.toLowerCase())) {
+              errors.push(
+                `Row ${line}: unit "${declaredUnit}" is not valid for ${factor.fuelOrActivity} ` +
+                  `(expected one of ${allowed.join(', ')}) — skipped`
+              );
+              return;
+            }
+
+            // The factor is priced per its own unit, so an allowed-but-different
+            // unit must be CONVERTED, never relabelled — relabelling 500 kg as
+            // 500 t is exactly the 1000x error this guard exists to stop.
+            let quantity = numAmount;
+            const unit = factor.unit;
+
+            if (declaredUnit && declaredUnit.toLowerCase() !== factor.unit.toLowerCase()) {
+              try {
+                quantity = convertUnit(
+                  new Decimal(numAmount),
+                  declaredUnit,
+                  factor.unit,
+                  factor.fuelOrActivity
+                ).toNumber();
+              } catch (err: any) {
+                errors.push(
+                  `Row ${line}: cannot convert ${numAmount} ${declaredUnit} to ${factor.unit} ` +
+                    `for ${factor.fuelOrActivity} — ${err?.message || 'unsupported conversion'}`
+                );
+                return;
+              }
+            }
+
+            const calc = calculateRowEmissions(quantity, factor.factorValue, factor.fuelOrActivity, unit);
 
             entries.push({
               id: `csv-row-${Date.now()}-${idx}`,
               facility,
+              scope: target?.scope,
+              category: target?.category,
               fuelOrSource: factor.fuelOrActivity,
-              amount: numAmount,
+              amount: quantity,
               unit,
               emissionFactor: factor,
-              calculatedTco2e: Number(((numAmount * factor.factorValue) / 1000).toFixed(2)),
+              calculatedTco2e: calc.calculatedTco2e,
+              warning: calc.warning,
               updatedAt: new Date().toISOString(),
             });
           });

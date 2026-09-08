@@ -64,7 +64,10 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
     setCsvErrors([]);
 
     try {
-      const result = await ghgService.parseCsvFile(file);
+      const result = await ghgService.parseCsvFile(file, {
+        scope: 'scope-2',
+        category: 'purchased_electricity',
+      });
       if (result.errors.length > 0) {
         setCsvErrors(result.errors);
       }
@@ -103,7 +106,11 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
 
         <div className="flex items-center gap-2">
           <ScopeBadge scope="scope-2" size="md" />
-          <Badge variant="verified">Dual Reporting Ready</Badge>
+          {summary.scope2MarketBasis === 'instruments' ? (
+            <Badge variant="verified">Dual Reporting Active</Badge>
+          ) : (
+            <Badge variant="warning">No contractual instruments</Badge>
+          )}
         </div>
       </div>
 
