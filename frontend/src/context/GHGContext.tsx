@@ -9,17 +9,38 @@ import {
 } from '../types/ghg';
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
-import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
+import { ConsolidationBoundary, IntegratedSteelMethod, routeActivityScope } from '../engine/scopeRouter';
 import { getDefaultFactorForCategory } from '../engine/factorCatalogue';
+import { Category3Coefficients, DEFAULT_CATEGORY3_COEFFICIENTS } from '../engine/calculator';
+import { SectorId, DEFAULT_SECTOR } from '../config/sectors';
+
+/** Prior-period totals used for year-on-year comparison on the dashboard. */
+export interface PriorPeriodTotals {
+  label: string;
+  scope1: number;
+  scope2: number;
+  scope3: number;
+  /** Optional production/turnover basis so intensity can also be compared. */
+  outputBasis?: number;
+}
 
 interface GHGContextType {
   /** Live emission-factor register (API when reachable, bundled snapshot otherwise). */
   factors: EmissionFactor[];
   factorsSource: 'api' | 'bundled';
+  /** Scope-routing warnings keyed by activity row id. */
+  routingFindings: Record<string, string[]>;
   companyName: string;
   reportingPeriod: string;
   boundaryApproach: ConsolidationBoundary;
   steelMethod: IntegratedSteelMethod;
+  sector: SectorId;
+  setSector: (sector: SectorId) => void;
+  /** Prior reporting period totals, entered by the user; null until supplied. */
+  priorPeriod: PriorPeriodTotals | null;
+  setPriorPeriod: (totals: PriorPeriodTotals | null) => void;
+  category3Coefficients: Category3Coefficients;
+  setCategory3Coefficients: (c: Category3Coefficients) => void;
   setCompanyName: (name: string) => void;
   setReportingPeriod: (period: string) => void;
   setBoundaryApproach: (boundary: ConsolidationBoundary) => void;
@@ -211,6 +232,32 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [reportingPeriod, setReportingPeriod] = useState<string>('FY 2025–26');
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
+  const [sector, setSector] = useState<SectorId>(DEFAULT_SECTOR);
+
+  // Year-on-year deltas were hardcoded strings on the dashboard. They are only
+  // real if there is a prior period to compare against, so it is stored and the
+  // UI shows nothing when it is absent rather than inventing a trend.
+  const [priorPeriod, setPriorPeriod] = useState<PriorPeriodTotals | null>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_PRIOR`);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [category3Coefficients, setCategory3Coefficients] = useState<Category3Coefficients>(
+    DEFAULT_CATEGORY3_COEFFICIENTS
+  );
+
+  useEffect(() => {
+    try {
+      if (priorPeriod) localStorage.setItem(`${STORAGE_KEY}_PRIOR`, JSON.stringify(priorPeriod));
+      else localStorage.removeItem(`${STORAGE_KEY}_PRIOR`);
+    } catch {
+      /* storage unavailable */
+    }
+  }, [priorPeriod]);
 
   const [scope1Entries, setScope1Entries] = useState<ActivityEntry[]>(() => {
     try {
@@ -308,8 +355,11 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Bug Guard #6: Compute summary via useMemo from active entries (never store derived total in useState)
   const summary = useMemo<ScopeSummary>(() => {
-    return summarizeInventory(scope1Entries, scope2Entries, scope3Entries, 'location');
-  }, [scope1Entries, scope2Entries, scope3Entries]);
+    return summarizeInventory(scope1Entries, scope2Entries, scope3Entries, 'location', {
+      boundary: boundaryApproach,
+      category3Coefficients,
+    });
+  }, [scope1Entries, scope2Entries, scope3Entries, boundaryApproach, category3Coefficients]);
 
   // Live Scenario updates
   useEffect(() => {
@@ -326,6 +376,40 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cancelled = true;
     };
   }, [scenario, summary.scope1, summary.scope2Location, summary.scope3]);
+
+  /**
+   * Scope routing checks (captive generation, EV charging, biogenic/Montreal
+   * memo routing, steel method mutual exclusion, leased-asset double counting).
+   * The router was written but never called, so `steelMethod` had no effect on
+   * anything. Findings surface as row warnings rather than silently rewriting
+   * the user's data.
+   */
+  const routingFindings = useMemo(() => {
+    const findings: Record<string, string[]> = {};
+    const all = [...scope1Entries, ...scope2Entries, ...scope3Entries];
+
+    for (const row of all) {
+      const decision = routeActivityScope(row.emissionFactor?.id || '', {
+        boundary: boundaryApproach,
+        isInsideBoundary: true,
+        steelMethod,
+      });
+
+      const messages = [...decision.warnings];
+
+      // A row filed under a scope the router disagrees with is a real
+      // allocation error, not a style preference.
+      if (!decision.isMemo && decision.targetScope !== row.scope) {
+        messages.push(
+          `This source belongs in ${decision.targetScope.replace('scope-', 'Scope ')} (${decision.categoryName}), but the row is filed under ${String(row.scope).replace('scope-', 'Scope ')}.`
+        );
+      }
+
+      if (messages.length > 0) findings[row.id] = messages;
+    }
+
+    return findings;
+  }, [scope1Entries, scope2Entries, scope3Entries, boundaryApproach, steelMethod]);
 
   // Mutation handlers with Bug Guard #14 (immutable reference returns)
   const updateRow = useCallback(
@@ -500,10 +584,17 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         factors,
         factorsSource,
+        routingFindings,
         companyName,
         reportingPeriod,
         boundaryApproach,
         steelMethod,
+        sector,
+        setSector,
+        priorPeriod,
+        setPriorPeriod,
+        category3Coefficients,
+        setCategory3Coefficients,
         setCompanyName,
         setReportingPeriod,
         setBoundaryApproach,

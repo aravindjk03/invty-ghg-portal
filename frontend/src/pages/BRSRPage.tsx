@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
+import { getSector } from '../config/sectors';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -31,11 +32,11 @@ interface BRSRPageProps {
 }
 
 export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
-  const { summary, companyName, reportingPeriod, addToast } = useGHG();
+  const { summary, companyName, reportingPeriod, addToast, sector } = useGHG();
 
   const [turnoverCrores, setTurnoverCrores] = useState(1450.0);
   const [physicalOutputTonnes, setPhysicalOutputTonnes] = useState(380000);
-  const [outputMetric, setOutputMetric] = useState('Finished Rolled Steel Products');
+  const [outputMetric, setOutputMetric] = useState(getSector(sector).outputMetric);
   const [cinNumber, setCinNumber] = useState('L27100MH2024PLC198234');
   const [assuranceType, setAssuranceType] = useState<'Reasonable Assurance' | 'Limited Assurance' | 'Internal Audit Only'>('Reasonable Assurance');
   const [assuranceAgency, setAssuranceAgency] = useState('DNV Business Assurance India');

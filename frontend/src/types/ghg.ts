@@ -60,6 +60,12 @@ export interface ActivityEntry {
   unit: string;
   emissionFactor: EmissionFactor;
   calculatedTco2e: number;
+  /**
+   * Reporting entity's ownership share of the operation, 0-100. Only applied
+   * under the equity-share consolidation approach; control approaches
+   * consolidate 100% of the operations they cover. Defaults to 100.
+   */
+  equitySharePercent?: number;
   warning?: string;
   notes?: string;
   evidenceFile?: string;

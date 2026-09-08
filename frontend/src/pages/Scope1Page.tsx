@@ -7,13 +7,15 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { Card } from '../components/ui/Card';
 import { DonutChart } from '../components/charts/DonutChart';
 import { useGHG } from '../context/GHGContext';
+import { getSector } from '../config/sectors';
 import { ghgService } from '../services/ghgService';
 import { formatIndianNumber } from '../engine/unitConverter';
 import { 
   Flame, 
   Truck, 
   Factory, 
-  ShieldAlert, 
+  ShieldAlert,
+  Sprout, 
   ArrowLeft, 
   Plus, 
   ArrowRight, 
@@ -39,13 +41,17 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
     addBatchEntries,
     saveToStorage,
     addToast,
+    sector,
   } = useGHG();
+
+  const sectorProfile = getSector(sector);
 
   const [entryMode, setEntryMode] = useState<Record<string, 'guided' | 'csv' | 'quick'>>({
     stationary_combustion: 'guided',
     mobile_combustion: 'guided',
     process_emissions: 'guided',
     fugitive_emissions: 'guided',
+    agricultural_emissions: 'guided',
   });
 
   const [csvErrors, setCsvErrors] = useState<Record<string, string[]>>({});
@@ -55,17 +61,21 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
   const mobileEntries = scope1Entries.filter((r) => r.category === 'mobile_combustion');
   const processEntries = scope1Entries.filter((r) => r.category === 'process_emissions');
   const fugitiveEntries = scope1Entries.filter((r) => r.category === 'fugitive_emissions');
+  // GHG category 1.5. Seven catalogue factors sat here with no way to reach them.
+  const agriEntries = scope1Entries.filter((r) => r.category === 'agricultural_emissions');
 
   const stationarySubtotal = stationaryEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
   const mobileSubtotal = mobileEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
   const processSubtotal = processEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
   const fugitiveSubtotal = fugitiveEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
+  const agriSubtotal = agriEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
 
   const scope1DonutData = [
     { name: 'Stationary Combustion', value: stationarySubtotal, color: 'var(--scope-1)' },
     { name: 'Mobile Combustion', value: mobileSubtotal, color: '#F97316' },
     { name: 'Process Emissions', value: processSubtotal, color: '#FB923C' },
     { name: 'Fugitive Leaks', value: fugitiveSubtotal, color: '#FDBA74' },
+    { name: 'Agriculture & Land', value: agriSubtotal, color: '#FED7AA' },
   ];
 
   const handleCsvUpload = async (category: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -379,6 +389,41 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
               )}
             </div>
           </Accordion>
+
+          {/* ACCORDION 5: Agriculture & Land Use (GHG category 1.5) */}
+          <Accordion
+            icon={<Sprout size={22} className="text-orange-300" />}
+            title="Agriculture & land use"
+            description="Livestock, manure, fertiliser N2O, rice cultivation, land use change"
+            subtotal={agriSubtotal}
+            defaultOpen={false}
+          >
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b border-border">
+                <SegmentedControl
+                  size="sm"
+                  value={entryMode.agricultural_emissions}
+                  onChange={(val) =>
+                    setEntryMode({ ...entryMode, agricultural_emissions: val as any })
+                  }
+                  options={[
+                    { value: 'guided', label: 'Guided entry' },
+                    { value: 'csv', label: 'Upload CSV' },
+                    { value: 'quick', label: 'Quick estimate' },
+                  ]}
+                />
+                <span className="text-xs font-mono text-brand-muted">
+                  {agriEntries.length} entries logged
+                </span>
+              </div>
+              {renderSectionContent(
+                'agricultural_emissions',
+                agriEntries,
+                'Agriculture & Land Use',
+                'Add agricultural or land use entry'
+              )}
+            </div>
+          </Accordion>
         </div>
 
         {/* Right Column: Scoped to Scope 1 (Cols 9 to 12) */}
@@ -444,11 +489,9 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           <Card className="p-5 text-xs text-brand-muted space-y-2">
             <div className="flex items-center gap-2 font-semibold text-brand-heading">
               <Info size={15} className="text-brand-link" />
-              <span>Steel Sector Accounting Guideline</span>
+              <span>{sectorProfile.label} Accounting Guideline</span>
             </div>
-            <p className="leading-relaxed">
-              In integrated and secondary steel manufacturing, emissions from fuels used for metallurgical reduction (e.g. coke, coal) are accounted under stationary combustion, while flux calcination is classified as chemical process emissions.
-            </p>
+            <p className="leading-relaxed">{sectorProfile.guidance}</p>
           </Card>
         </div>
       </div>

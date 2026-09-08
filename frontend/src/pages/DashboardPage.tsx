@@ -30,6 +30,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     scenarioResult,
     updateScenario,
     addToast,
+    priorPeriod,
   } = useGHG();
 
   const [downloadFormat, setDownloadFormat] = useState('PDF');
@@ -129,6 +130,40 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     },
   ];
 
+  // Year-on-year movement, computed against the prior period the user supplied
+  // in Settings. These tiles previously showed the string literals '-4.2%' and
+  // '-6.8%', which never changed whatever the inventory did.
+  const priorTotal = priorPeriod
+    ? priorPeriod.scope1 + priorPeriod.scope2 + priorPeriod.scope3
+    : null;
+
+  const totalDelta =
+    priorTotal && priorTotal > 0
+      ? (() => {
+          const change = ((summary.totalEmissions - priorTotal) / priorTotal) * 100;
+          return {
+            value: `${change > 0 ? '+' : ''}${change.toFixed(1)}%`,
+            isDecrease: change < 0,
+          };
+        })()
+      : undefined;
+
+  const intensityDelta =
+    priorTotal && priorPeriod?.outputBasis
+      ? (() => {
+          const priorIntensity = priorTotal / priorPeriod.outputBasis;
+          const current = intensityData.value || 0;
+          if (!priorIntensity) return undefined;
+          const change = ((current - priorIntensity) / priorIntensity) * 100;
+          return {
+            value: `${change > 0 ? '+' : ''}${change.toFixed(1)}%`,
+            isDecrease: change < 0,
+          };
+        })()
+      : undefined;
+
+  const comparisonLabel = priorPeriod ? `vs ${priorPeriod.label}` : undefined;
+
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8 pb-32 space-y-8 select-none">
       {/* ROW 1: 4 KPI Tiles (Uniformly Aligned) */}
@@ -138,14 +173,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           value={summary.totalEmissions}
           unit="tCO₂e"
           tooltipText="Consolidated operational emissions across Scopes 1, 2, and active Scope 3 categories."
-          delta={{ value: '-4.2%', isDecrease: true }}
+          delta={totalDelta}
+          deltaLabel={comparisonLabel}
+          subtext={priorPeriod ? undefined : 'No prior period set — add one in Settings'}
         />
         <KPITile
           label="Emissions Intensity"
           value={intensityData.value || 0}
           unit="tCO₂e / ₹ Cr"
-          tooltipText="Gross operational carbon emissions divided by total corporate annual turnover (₹480 Cr)."
-          delta={{ value: '-6.8%', isDecrease: true }}
+          tooltipText="Gross operational carbon emissions divided by total corporate annual turnover."
+          delta={intensityDelta}
+          deltaLabel={comparisonLabel}
         />
         <KPITile
           label="Data Quality Grade"

@@ -30,7 +30,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   onDelete,
   onDuplicate,
 }) => {
-  const { factors } = useGHG();
+  const { factors, routingFindings, boundaryApproach } = useGHG();
   const [menuOpen, setMenuOpen] = useState(false);
   const [displayResult, setDisplayResult] = useState(entry.calculatedTco2e);
   const [isOverridingFactor, setIsOverridingFactor] = useState(false);
@@ -333,6 +333,38 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
             </span>
           )}
         </div>
+
+        {/* Equity share, only meaningful under the equity-share boundary */}
+        {boundaryApproach === 'Equity share' && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="font-semibold text-brand-heading">Equity share:</span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step="0.1"
+              aria-label="Equity share percent"
+              value={entry.equitySharePercent ?? 100}
+              onChange={(e) => {
+                const pct = parseFloat(e.target.value);
+                onUpdate({ equitySharePercent: isNaN(pct) ? 100 : Math.min(100, Math.max(0, pct)) });
+              }}
+              className="w-16 h-6 px-1.5 bg-surface-raised border border-border rounded font-mono text-[11px] text-right"
+            />
+            <span className="text-brand-muted">%</span>
+          </span>
+        )}
+
+        {/* Scope routing findings from the engine */}
+        {(routingFindings[entry.id] || []).map((msg, i) => (
+          <div
+            key={i}
+            className="flex items-start gap-1 text-status-warning font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60"
+          >
+            <AlertTriangle size={13} className="flex-shrink-0 mt-0.5" />
+            <span>{msg}</span>
+          </div>
+        ))}
 
         {/* Factor sits outside the category this row is filed under */}
         {factorIsOutsideCategory && (

@@ -18,9 +18,13 @@ import {
   Trash2, 
   ArrowLeft,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  TrendingDown,
+  Sliders
 } from 'lucide-react';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
+import { SECTORS, SectorId, getSector } from '../config/sectors';
+import { DEFAULT_CATEGORY3_COEFFICIENTS } from '../engine/calculator';
 
 interface SettingsPageProps {
   onNavigate: (page: string) => void;
@@ -31,6 +35,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
     companyName,
     reportingPeriod,
     boundaryApproach,
+    sector,
+    setSector,
+    priorPeriod,
+    setPriorPeriod,
+    category3Coefficients,
+    setCategory3Coefficients,
     steelMethod,
     setCompanyName,
     setReportingPeriod,
@@ -45,6 +55,47 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
     saveToStorage,
     addToast,
   } = useGHG();
+
+  const sectorProfile = getSector(sector);
+
+  const [priorDraft, setPriorDraft] = useState({
+    label: priorPeriod?.label ?? '',
+    scope1: priorPeriod ? String(priorPeriod.scope1) : '',
+    scope2: priorPeriod ? String(priorPeriod.scope2) : '',
+    scope3: priorPeriod ? String(priorPeriod.scope3) : '',
+    outputBasis: priorPeriod?.outputBasis ? String(priorPeriod.outputBasis) : '',
+  });
+
+  const handleSavePriorPeriod = () => {
+    const num = (v: string) => {
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    };
+    const scope1 = num(priorDraft.scope1);
+    const scope2 = num(priorDraft.scope2);
+    const scope3 = num(priorDraft.scope3);
+
+    if (scope1 + scope2 + scope3 <= 0) {
+      addToast('warning', 'Enter at least one prior-period scope total before saving.');
+      return;
+    }
+
+    const outputBasis = parseFloat(priorDraft.outputBasis);
+    setPriorPeriod({
+      label: priorDraft.label.trim() || 'prior period',
+      scope1,
+      scope2,
+      scope3,
+      outputBasis: isNaN(outputBasis) || outputBasis <= 0 ? undefined : outputBasis,
+    });
+    addToast('success', 'Prior period baseline saved. Dashboard trends now compare against it.');
+  };
+
+  const handleClearPriorPeriod = () => {
+    setPriorPeriod(null);
+    setPriorDraft({ label: '', scope1: '', scope2: '', scope3: '', outputBasis: '' });
+    addToast('info', 'Prior period cleared. Dashboard will not show a trend.');
+  };
 
   const [useIndianFormat, setUseIndianFormat] = useState(true);
 
@@ -151,6 +202,139 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
                 Indian Standard Financial Year (1 April – 31 March)
               </span>
             </div>
+
+            <div className="sm:col-span-2 pt-2 border-t border-border">
+              <label className="block text-xs font-semibold text-brand-body mb-1">
+                Reporting Sector
+              </label>
+              <Select
+                value={sector}
+                onChange={(e) => setSector(e.target.value as SectorId)}
+                options={SECTORS.map((sec) => ({ value: sec.id, label: sec.label }))}
+              />
+              <p className="text-[11px] text-brand-muted mt-1.5 leading-relaxed">
+                {sectorProfile.guidance}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Section 1b: Prior period baseline for year-on-year comparison */}
+        <Card className="p-6 bg-surface-raised border border-border shadow-nm-raised">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingDown size={18} className="text-brand-primary" />
+            <h2 className="text-base font-bold text-brand-heading">
+              Prior Period Baseline
+            </h2>
+          </div>
+          <p className="text-[11px] text-brand-muted mb-4 leading-relaxed">
+            Year-on-year movement on the dashboard is computed against these figures. Leave blank
+            and no trend is shown — the dashboard will not display a comparison it cannot compute.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-brand-body mb-1">Period label</label>
+              <Input
+                value={priorDraft.label}
+                onChange={(e) => setPriorDraft({ ...priorDraft, label: e.target.value })}
+                placeholder="FY 2024–25"
+              />
+            </div>
+            {(['scope1', 'scope2', 'scope3'] as const).map((k) => (
+              <div key={k}>
+                <label className="block text-xs font-semibold text-brand-body mb-1">
+                  {k === 'scope1' ? 'Scope 1' : k === 'scope2' ? 'Scope 2' : 'Scope 3'} (tCO₂e)
+                </label>
+                <Input
+                  type="number"
+                  value={priorDraft[k]}
+                  onChange={(e) => setPriorDraft({ ...priorDraft, [k]: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+            ))}
+            <div>
+              <label className="block text-xs font-semibold text-brand-body mb-1">
+                Output basis
+              </label>
+              <Input
+                type="number"
+                value={priorDraft.outputBasis}
+                onChange={(e) => setPriorDraft({ ...priorDraft, outputBasis: e.target.value })}
+                placeholder="optional"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-4">
+            <Button variant="secondary" size="sm" onClick={handleSavePriorPeriod}>
+              Save baseline
+            </Button>
+            {priorPeriod && (
+              <Button variant="ghost" size="sm" onClick={handleClearPriorPeriod}>
+                Clear
+              </Button>
+            )}
+            <span className="text-[11px] text-brand-muted">
+              {priorPeriod
+                ? `Comparing against ${priorPeriod.label} · ${(
+                    priorPeriod.scope1 + priorPeriod.scope2 + priorPeriod.scope3
+                  ).toFixed(2)} tCO₂e`
+                : 'No baseline set'}
+            </span>
+          </div>
+        </Card>
+
+        {/* Section 1c: Auto-derived Category 3 coefficients */}
+        <Card className="p-6 bg-surface-raised border border-border shadow-nm-raised">
+          <div className="flex items-center gap-2 mb-1">
+            <Sliders size={18} className="text-brand-primary" />
+            <h2 className="text-base font-bold text-brand-heading">
+              Auto-Derived Scope 3 Category 3 Coefficients
+            </h2>
+          </div>
+          <p className="text-[11px] text-brand-muted mb-4 leading-relaxed">
+            Category 3 is derived from Scope 1 combustion and Scope 2 electricity using the ratios
+            below. These are published defaults, not measurements — replace them with
+            supplier-specific well-to-tank data or your DISCOM's reported loss figure where you
+            have it.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {([
+              ['wttFuelsRatio', 'WTT fuels (% of Scope 1 combustion)', 'DESNZ well-to-tank'],
+              ['wttElectricityRatio', 'WTT electricity (% of Scope 2)', 'Upstream of generation'],
+              ['tdLossRatio', 'Grid T&D losses (% of Scope 2)', 'CEA India average'],
+            ] as const).map(([key, label, cite]) => (
+              <div key={key}>
+                <label className="block text-xs font-semibold text-brand-body mb-1">{label}</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={(category3Coefficients[key] * 100).toFixed(1)}
+                  onChange={(e) => {
+                    const pct = parseFloat(e.target.value);
+                    if (isNaN(pct) || pct < 0) return;
+                    setCategory3Coefficients({
+                      ...category3Coefficients,
+                      [key]: pct / 100,
+                    });
+                  }}
+                />
+                <span className="text-[11px] text-brand-muted mt-1 block">{cite}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCategory3Coefficients(DEFAULT_CATEGORY3_COEFFICIENTS)}
+            >
+              Reset to published defaults
+            </Button>
           </div>
         </Card>
 
@@ -178,10 +362,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
                 ]}
               />
               <p className="text-[11px] text-brand-muted mt-1.5 leading-relaxed">
-                Under <strong>Operational Control</strong>, 100% of emissions from facilities where Acme Steel holds authority to introduce operating policies are accounted under Scope 1 and Scope 2. Leased assets outside this boundary route to Category 8.
+                Under <strong>Operational</strong> or <strong>Financial Control</strong>, 100% of
+                emissions from facilities {companyName} controls are consolidated. Under{' '}
+                <strong>Equity Share</strong>, each activity row contributes only the ownership
+                percentage recorded against it, so the reported totals change with this setting.
+                Leased assets outside the boundary route to Category 8.
               </p>
+              {boundaryApproach === 'Equity share' && (
+                <div className="mt-2 p-2.5 rounded bg-blue-50 border border-blue-200 text-[11px] text-blue-900 leading-relaxed">
+                  Rows without an explicit ownership share are consolidated at 100%. Set the share
+                  per row in each scope workspace.
+                </div>
+              )}
             </div>
 
+            {sectorProfile.hasIntegratedSteelMethod && (
             <div className="pt-2 border-t border-border">
               <label className="block text-xs font-semibold text-brand-body mb-1">
                 Integrated Steel Emission Accounting Method (IPCC Vol 3 Ch 4)
@@ -195,9 +390,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
                 ]}
               />
               <p className="text-[11px] text-brand-muted mt-1.5 leading-relaxed">
-                Enforces Bug Guard Rule #6: The engine blocks simultaneous entry of carbon mass balance reductants and individual recovered process gases (BF/CO/LD gas) to prevent double counting.
+                The engine blocks simultaneous entry of carbon mass balance reductants and
+                individual recovered process gases (BF/CO/LD gas), which would double count blast
+                furnace carbon.
               </p>
             </div>
+            )}
           </div>
         </Card>
 
