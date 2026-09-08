@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /* ---- Executive Enterprise Corporate Surfaces ---- */
+    --canvas: #F8FAFC;         /* Clean institutional slate-50 canvas */
+    --surface: #F1F5F9;        /* Recessed / secondary panels (slate-100) */
+    --surface-raised: #FFFFFF; /* Crisp white cards, inputs, data tables */
+    --surface-sunken: #E2E8F0; /* Clean borders and track backgrounds (slate-200) */
+
+    /* ---- High-Contrast Corporate Typography ---- */
+    --text-heading: #0F172A;    /* Slate-900: Authoritative executive heading */
+    --text-body: #334155;       /* Slate-700: High-legibility enterprise body */
+    --text-link: #1D4ED8;       /* Deep Enterprise Blue */
+    --text-muted: #64748B;      /* Slate-500: Secondary metadata */
+    --text-decorative: #CBD5E1; /* Slate-300: Table dividers and subtle grid lines */
+
+    /* ---- Corporate Blue Accents ---- */
+    --blue-700: #1E40AF;
+    --blue-600: #1D4ED8;
+    --blue-500: #2563EB;
+    --blue-200: #BFDBFE;
+    --blue-100: #DBEAFE;
+    --blue-50: #EFF6FF;
+
+    /* ---- Precision 1px Borders ---- */
+    --border: #E2E8F0;          /* Clean slate-200 border */
+    --border-strong: #CBD5E1;   /* Active / focused slate-300 */
+
+    /* ---- Semantic Scope Palette (Corporate ESG Standards) ---- */
+    --scope-1: #C2410C;  /* Direct combustion — Burnt amber/rust */
+    --scope-2: #1D4ED8;  /* Purchased energy — Corporate Blue */
+    --scope-3: #6B21A8;  /* Value chain — Deep plum/purple */
+    --biogenic: #475569; /* Out-of-scope memo — Slate-600 */
+
+    --success: #15803D;  /* Forest green (verified compliance) */
+    --warning: #B45309;  /* Amber-700 (data audit warning) */
+    --danger: #B91C1C;   /* Red-700 (critical boundary breach) */
+    --info: #0369A1;     /* Sky-700 */
+
+    /* Data Quality Grades */
+    --grade-a: #15803D;
+    --grade-b: #4D7C0F;
+    --grade-c: #B45309;
+    --grade-d: #C2410C;
+    --grade-e: #B91C1C;
+
+    /* ---- Clean Enterprise Radii (Sharp, disciplined 4-8px) ---- */
+    --r-sm: 4px;   /* Tags, badges, indicators */
+    --r-md: 6px;   /* Form inputs, select dropdowns, buttons */
+    --r-lg: 8px;   /* Enterprise cards, data tables */
+    --r-xl: 12px;  /* Modals, executive dialogs */
+    --r-pill: 6px; /* Disciplined corporate tags instead of bubbly pills */
+
+    /* ---- Standardized Corporate Shadow Elevations ---- */
+    --nm-raised: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.08);
+    --nm-raised-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --nm-raised-lg: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.04);
+    --nm-pressed: inset 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --nm-inset-input: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+
+    /* ---- Motion ---- */
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --t-fast: 120ms;
+    --t-base: 200ms;
+    --t-slow: 350ms;
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--text-body);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Monospaced Tabular Figures for All Financial & Emissions Metrics */
+  .tabular-nums,
+  input[type="number"],
+  .number-val {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* High-Visibility Corporate Focus Ring */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--blue-600);
+    outline-offset: 1px;
+    border-radius: inherit;
+  }
+}
+
+/* Reusable Corporate Utility Classes */
+.corporate-card {
+  background-color: var(--surface-raised);
+  border-radius: var(--r-lg);
+  box-shadow: var(--nm-raised);
+  border: 1px solid var(--border);
+  transition: border-color var(--t-fast);
+}
+
+.corporate-card:hover {
+  border-color: var(--border-strong);
+}
+
+/* Forced Colors Mode (High Contrast Support) */
+@media (forced-colors: active) {
+  .corporate-card, button, input {
+    box-shadow: none !important;
+    border: 1px solid CanvasText !important;
+  }
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid Highlight !important;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle enterprise scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-decorative);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

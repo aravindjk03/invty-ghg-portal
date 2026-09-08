@@ -1,0 +1,267 @@
+activity_key,display_name,group,scope,ghg_category,category_name,default_unit,allowed_units,gases,factor_source,notes
+fuel.coal.anthracite,Coal — anthracite,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",DESNZ,
+fuel.coal.bituminous,Coal — bituminous,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",DESNZ,
+fuel.coal.sub_bituminous,Coal — sub-bituminous,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.coal.lignite,Coal — lignite / brown coal,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.coal.coking,Coal — coking / metallurgical,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,"If used as a reductant not a fuel, route to process emissions 1.3"
+fuel.coal.indian_domestic,Coal — Indian domestic (grade-specified),Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,Ask for GCV band; Indian coal has high ash and low GCV — do not use imported-coal factors
+fuel.coal.imported_steam,Coal — imported steam coal,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",DESNZ,
+fuel.coke.metallurgical,Coke — metallurgical,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.coke.petroleum,Petroleum coke (petcoke),Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",DESNZ,
+fuel.charcoal,Charcoal,Solid fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",IPCC 2006 Vol.2,"CO2 is biogenic — memo item, outside scopes"
+fuel.biomass.wood_chips,Wood chips,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.wood_pellets,Wood pellets,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.wood_logs,Wood logs,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.briquettes,Biomass briquettes,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.bagasse,Bagasse,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.rice_husk,Rice husk,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.groundnut_shell,Groundnut shell,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.mustard_husk,Mustard husk,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.coconut_shell,Coconut shell,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.sawdust,Sawdust,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.biomass.agri_residue,Agricultural residue — other,Biomass,1,1.1,Stationary combustion,t,kg|t|lb,"CH4,N2O",DESNZ,BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1
+fuel.msw,Municipal solid waste (as fuel),Waste-derived fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,Split fossil vs biogenic carbon fraction
+fuel.rdf,Refuse-derived fuel (RDF),Waste-derived fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,Split fossil vs biogenic fraction
+fuel.tyre_derived,Tyre-derived fuel,Waste-derived fuel,1,1.1,Stationary combustion,t,kg|t|lb,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal|kg|t,"CO2,CH4,N2O",DESNZ,Most common Indian DG-set fuel
+fuel.ldo,Light diesel oil (LDO),Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal|kg|t,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.furnace_oil,Furnace oil / heavy fuel oil,Liquid fuel,1,1.1,Stationary combustion,t,kg|t|L|kL,"CO2,CH4,N2O",DESNZ,
+fuel.kerosene_sko,Kerosene / SKO,Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+fuel.naphtha,Naphtha,Liquid fuel,1,1.1,Stationary combustion,t,kg|t|L|kL,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.lpg.stationary,LPG — stationary,Liquid fuel,1,1.1,Stationary combustion,kg,kg|t|L|m3,"CO2,CH4,N2O",DESNZ,"Sold by mass in India, by volume in UK — unit trap"
+fuel.propane,Propane,Liquid fuel,1,1.1,Stationary combustion,kg,kg|t|L|m3,"CO2,CH4,N2O",DESNZ,
+fuel.butane,Butane,Liquid fuel,1,1.1,Stationary combustion,kg,kg|t|L|m3,"CO2,CH4,N2O",DESNZ,
+fuel.lng,LNG,Liquid fuel,1,1.1,Stationary combustion,t,kg|t|m3|GJ,"CO2,CH4,N2O",DESNZ,
+fuel.biodiesel.stationary,Biodiesel (B100) — stationary,Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal,"CH4,N2O",DESNZ,Biogenic CO2 → memo item
+fuel.ethanol.stationary,Ethanol — stationary,Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal,"CH4,N2O",DESNZ,Biogenic CO2 → memo item
+fuel.lubricants,Lubricants (combusted),Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal|kg,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.waste_oil,Waste oil (combusted),Liquid fuel,1,1.1,Stationary combustion,L,L|kL|m3|gal|kg,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.natural_gas,Natural gas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CO2,CH4,N2O",DESNZ,Ask net or gross CV — a ~10% error if mismatched
+fuel.png,Piped natural gas (PNG),Gaseous fuel,1,1.1,Stationary combustion,scm,m3|scm|Nm3|MMBtu|GJ|kWh,"CO2,CH4,N2O",DESNZ,
+fuel.cng.stationary,CNG — stationary,Gaseous fuel,1,1.1,Stationary combustion,kg,kg|scm|m3,"CO2,CH4,N2O",DESNZ,
+fuel.biogas,Biogas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CH4,N2O",DESNZ,Biogenic CO2 → memo item
+fuel.landfill_gas,Landfill gas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CH4,N2O",IPCC 2006 Vol.2,Biogenic CO2 → memo item
+fuel.producer_gas,Producer gas / syngas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.blast_furnace_gas,Blast furnace gas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CO2,CH4,N2O",IPCC 2006 Vol.2,Steel plants — recovered process gas burned for energy
+fuel.coke_oven_gas,Coke oven gas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.converter_gas,Converter / LD gas,Gaseous fuel,1,1.1,Stationary combustion,m3,m3|scm|Nm3|MMBtu|GJ|kWh,"CO2,CH4,N2O",IPCC 2006 Vol.2,
+fuel.hydrogen.grey,"Hydrogen — grey (SMR-derived), combusted",Gaseous fuel,1,1.1,Stationary combustion,kg,kg|m3|GJ,N2O,IPCC 2006 Vol.2,"Hydrogen combustion produces water, NOT CO2. CO2 factor is 0. SMR CO2 belongs in process.hydrogen_smr (1.3) if made on site, or Cat 3.3 if bought."
+fuel.hydrogen.green,"Hydrogen — green, combusted",Gaseous fuel,1,1.1,Stationary combustion,kg,kg|m3|GJ,none,IPCC 2006 Vol.2,Zero at combustion; record for energy balance
+fuel.ammonia_fuel,Ammonia as fuel,Gaseous fuel,1,1.1,Stationary combustion,t,kg|t,N2O,IPCC 2006 Vol.2,
+mobile.diesel,Diesel — owned/leased vehicles,Mobile — road,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,Fuel-based method preferred over distance-based
+mobile.petrol,Petrol / gasoline — owned/leased vehicles,Mobile — road,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.cng,CNG — owned/leased vehicles,Mobile — road,1,1.2,Mobile combustion,kg,kg|scm,"CO2,CH4,N2O",DESNZ,
+mobile.lpg_auto,Auto LPG,Mobile — road,1,1.2,Mobile combustion,kg,kg|L,"CO2,CH4,N2O",DESNZ,
+mobile.biodiesel_blend,Biodiesel blend (B7/B20),Mobile — road,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,Split fossil and biogenic fractions by blend ratio
+mobile.ethanol_blend,Ethanol blend (E10/E20),Mobile — road,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,India is moving to E20 — blend ratio must be a user input
+mobile.distance.car,Distance — company car,Mobile — road,1,1.2,Mobile combustion,km,km|mi,"CO2,CH4,N2O",DESNZ,Fallback only; flag as lower data quality than fuel-based
+mobile.distance.truck,Distance — owned truck by size class,Mobile — road,1,1.2,Mobile combustion,km,km|mi,"CO2,CH4,N2O",DESNZ,Fallback only
+mobile.distance.two_wheeler,Distance — owned two-wheeler,Mobile — road,1,1.2,Mobile combustion,km,km|mi,"CO2,CH4,N2O",DESNZ,
+mobile.forklift_diesel,Forklift / material handling — diesel,Mobile — road,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.forklift_lpg,Forklift — LPG,Mobile — road,1,1.2,Mobile combustion,kg,kg|L,"CO2,CH4,N2O",DESNZ,
+mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,Mobile — air/sea/rail,1,1.2,Mobile combustion,L,L|kL|m3|gal|kg|t,"CO2,CH4,N2O",DESNZ,SCOPE 1 ONLY if the aircraft is owned or leased. A commercial flight ticket is Scope 3 Category 6.
+mobile.avgas,Aviation gasoline — owned aircraft,Mobile — air/sea/rail,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.marine_gas_oil,Marine gas oil — owned vessel,Mobile — air/sea/rail,1,1.2,Mobile combustion,t,kg|t|L|kL,"CO2,CH4,N2O",DESNZ,
+mobile.marine_hfo,Heavy fuel oil / bunker — owned vessel,Mobile — air/sea/rail,1,1.2,Mobile combustion,t,kg|t,"CO2,CH4,N2O",DESNZ,
+mobile.rail_diesel,Diesel — owned locomotive / siding shunter,Mobile — air/sea/rail,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+process.cement_clinker,Cement — clinker calcination,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,Tier 2: clinker production x CaO content. Do not use cement output.
+process.lime_calcination,Lime — calcination of limestone,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.dolomite_calcination,Dolomite calcination,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.limestone_flux,Limestone / dolomite used as flux,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,Common in steel and glass
+process.soda_ash_use,Soda ash use,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.iron_steel_bf,Iron & steel — blast furnace reductant (carbon mass balance),Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,"MUTUALLY EXCLUSIVE with fuel.coke.metallurgical, fuel.blast_furnace_gas, fuel.coke_oven_gas and fuel.converter_gas. IPCC Vol.3 Ch.4 accounts for integrated steel by ONE carbon balance. Engine must enforce a method flag: carbon-balance OR fuel-based, never both."
+process.iron_steel_dri,Iron & steel — direct reduced iron (DRI/sponge iron),Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,Very common in India
+process.iron_steel_eaf_electrode,Iron & steel — EAF graphite electrode consumption,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.ammonia_production,Ammonia production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.nitric_acid,Nitric acid production,Process,1,1.3,Process emissions,t,kg|t,N2O,IPCC 2006 Vol.2,"N2O — dominant gas, not CO2"
+process.adipic_acid,Adipic acid production,Process,1,1.3,Process emissions,t,kg|t,N2O,IPCC 2006 Vol.2,N2O — dominant gas
+process.urea_production,Urea production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,Net of CO2 consumed
+process.methanol_production,Methanol production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.hydrogen_smr,Hydrogen production — SMR,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.aluminium_anode,Aluminium — anode consumption,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.aluminium_pfc,Aluminium — PFC from anode effects,Process,1,1.3,Process emissions,t,kg|t,PFC,IPCC 2006 Vol.2,CF4 and C2F6 — very high GWP
+process.glass_carbonates,Glass — carbonate decomposition,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.ceramics,Ceramics / brick firing — carbonates,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.calcium_carbide,Calcium carbide production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.ferroalloys,Ferroalloy production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.ethylene_petchem,Petrochemical — ethylene / olefins,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.carbon_black,Carbon black production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.pulp_paper_lime_kiln,Pulp & paper — lime kiln,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.hfc23_byproduct,HFC-23 by-product from HCFC-22 manufacture,Process,1,1.3,Process emissions,t,kg|t,HFC,IPCC 2006 Vol.2,"GWP ~12,700 — tiny masses are material"
+process.titanium_dioxide,Titanium dioxide production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.phosphoric_acid,Phosphoric acid production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.lead_production,Lead production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.zinc_production,Zinc production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.silicon_carbide,Silicon carbide production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
+process.co2_captured,CO2 captured and stored/utilised (deduction),Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,"NEGATIVE entry. Without this, process totals are overstated for any plant with CCS/CCU."
+process.other_process_direct,Other process — enter tCO2e directly,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,Escape hatch so a user with their own calculation is never blocked
+fugitive.refrigerant.r134a,R-134a (HFC-134a),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Simplified material balance: new-charge losses + servicing top-up + disposal losses
+fugitive.refrigerant.r410a,R-410A (blend),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Blend — GWP must be mass-weighted from components; AR6 has no blend value
+fugitive.refrigerant.r404a,R-404A (blend),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Blend — derive GWP from composition
+fugitive.refrigerant.r407c,R-407C (blend),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Blend — derive GWP from composition
+fugitive.refrigerant.r32,R-32 (HFC-32),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Simplified material balance: new-charge losses + servicing top-up + disposal losses
+fugitive.refrigerant.r1234yf,R-1234yf (HFO),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,AR6 GWP100 is ~0.5 — footnote it or it reads as a bug
+fugitive.refrigerant.r1234ze,R-1234ze (HFO),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Simplified material balance: new-charge losses + servicing top-up + disposal losses
+fugitive.refrigerant.r507a,R-507A (blend),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Blend
+fugitive.refrigerant.r417a,R-417A (blend),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Blend
+fugitive.refrigerant.r23,R-23 (HFC-23),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Very high GWP
+fugitive.refrigerant.r125,R-125 (HFC-125),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Simplified material balance: new-charge losses + servicing top-up + disposal losses
+fugitive.refrigerant.r143a,R-143a (HFC-143a),Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,Simplified material balance: new-charge losses + servicing top-up + disposal losses
+fugitive.refrigerant.r290,R-290 (propane) refrigerant,Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,"GWP ~3, near zero"
+fugitive.refrigerant.r717,R-717 (ammonia) refrigerant,Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,GWP 0
+fugitive.refrigerant.r744,R-744 (CO2) refrigerant,Fugitive — refrigerant,1,1.4,Fugitive emissions,kg,kg|g|lb,HFC,IPCC AR6 GWP / GHG Protocol GWP table,GWP 1
+combustion.acetylene,Acetylene — cutting / welding torch,Gaseous fuel,1,1.1,Stationary combustion,kg,kg,"CO2,CH4,N2O",IPCC 2006 Vol.2,"Burned fuel = combustion (IPCC 1A), NOT fugitive. Only vented unburnt acetylene is fugitive."
+fugitive.sf6,SF6 — electrical switchgear,Fugitive — other,1,1.4,Fugitive emissions,kg,kg|g,SF6,IPCC AR6,"GWP ~25,200 — a few kg is material"
+fugitive.nf3,NF3 — electronics manufacturing,Fugitive — other,1,1.4,Fugitive emissions,kg,kg|g,NF3,IPCC AR6,
+fugitive.pfc_etch,PFCs — semiconductor etch/clean,Fugitive — other,1,1.4,Fugitive emissions,kg,kg|g,PFC,IPCC AR6,
+fugitive.fire_co2,Fire suppression — CO2,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,CO2,IPCC 2006 Vol.2,
+fugitive.fire_hfc227ea,Fire suppression — HFC-227ea / FM-200,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,HFC,IPCC AR6,
+fugitive.fire_novec,Fire suppression — Novec 1230,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,other,Manufacturer data,GWP ~1
+fugitive.ch4_wastewater,Methane — on-site anaerobic wastewater treatment,Fugitive — other,1,1.4,Fugitive emissions,m3,m3|kL|kg,CH4,IPCC 2006 Vol.2,
+fugitive.ch4_ng_distribution,Methane — on-site gas distribution leaks,Fugitive — other,1,1.4,Fugitive emissions,m3,m3|scm,CH4,IPCC 2006 Vol.2,
+fugitive.ch4_coal_mine,Methane — coal mining,Fugitive — other,1,1.4,Fugitive emissions,t,t,CH4,IPCC 2006 Vol.2,
+fugitive.co2_welding,CO2 — welding shielding gas,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,CO2,IPCC 2006 Vol.2,
+fugitive.n2o_medical,N2O — medical / laboratory use,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,N2O,IPCC AR6,
+fugitive.co2_beverage,CO2 — carbonation / beverage dispense,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,CO2,IPCC 2006 Vol.2,
+fugitive.n2o_wastewater,N2O — on-site wastewater treatment,Fugitive — other,1,1.4,Fugitive emissions,m3,m3|kL|kg,N2O,IPCC 2006 Vol.2,IPCC Vol.5 Ch.6 — nitrogen in effluent. Pairs with fugitive.ch4_wastewater.
+fugitive.hfc_foam,HFCs — foam blowing agents,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,HFC,IPCC AR6,
+fugitive.hfc_aerosol,HFCs — aerosols and solvents,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,HFC,IPCC AR6,
+fugitive.sf6_magnesium,SF6 — magnesium casting cover gas,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,SF6,IPCC AR6,
+flare.process_vent,Process vent — flared,Flaring and venting,1,1.1,Stationary combustion,m3,m3|t,"CO2,CH4,N2O",IPCC 2006 Vol.2,IPCC 1B2
+flare.biogas,Biogas / landfill gas flared,Flaring and venting,1,1.1,Stationary combustion,m3,m3,"CH4,N2O",IPCC 2006 Vol.2,Biogenic CO2 to memo
+vent.process_ch4,Process vent — unflared methane,Flaring and venting,1,1.4,Fugitive emissions,t,kg|t,CH4,IPCC 2006 Vol.2,
+vent.oil_gas,Oil & gas venting,Flaring and venting,1,1.4,Fugitive emissions,m3,m3,"CH4,CO2",IPCC 2006 Vol.2,
+mobile.offroad.excavator,"Excavator — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.offroad.dozer,"Bulldozer — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.offroad.crane,"Crane — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.offroad.haul_truck,"Mining haul truck — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.offroad.loader,"Wheel loader — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.offroad.tractor,"Tractor / farm equipment — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+mobile.offroad.genset_mobile,"Mobile generator — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
+agri.enteric_fermentation,Enteric fermentation — livestock,Agriculture and land,1,1.5,Agriculture,head.yr,head.yr,CH4,IPCC 2006 Vol.2,
+agri.manure_management,Manure management,Agriculture and land,1,1.5,Agriculture,head.yr,head.yr,"CH4,N2O",IPCC 2006 Vol.2,
+agri.fertiliser_n2o,N2O from synthetic fertiliser application,Agriculture and land,1,1.5,Agriculture,t,kg|t,N2O,IPCC 2006 Vol.2,Direct and indirect N2O
+agri.urea_application,CO2 from urea application,Agriculture and land,1,1.5,Agriculture,t,kg|t,CO2,IPCC 2006 Vol.2,
+agri.lime_application,CO2 from agricultural lime application,Agriculture and land,1,1.5,Agriculture,t,kg|t,CO2,IPCC 2006 Vol.2,
+agri.rice_cultivation,Rice cultivation — CH4,Agriculture and land,1,1.5,Agriculture,ha,ha,CH4,IPCC 2006 Vol.2,
+land.use_change,Land use change emissions,Agriculture and land,1,1.5,Land use,ha,ha,CO2,GHG Protocol Land Sector & Removals Guidance,
+land.removals_biochar,Durable removals — biochar / sequestration,Agriculture and land,1,memo,Removals memo,t,kg|t,CO2,GHG Protocol Land Sector & Removals Guidance,"Removals are reported SEPARATELY from gross emissions, never netted off"
+elec.grid.location,Grid electricity — location-based,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh|GWh|units,"CO2,CH4,N2O",CEA (India) / eGRID (US) / DESNZ (UK) / IEA,"Use CEA weighted average emission rate, NOT the OM/BM/combined-margin CDM figures"
+elec.grid.market_residual,Grid electricity — market-based residual mix,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,"CO2,CH4,N2O",AIB (EU) / Green-e (US),No residual mix published for India — substitute grid average and footnote it
+elec.ppa_renewable,Electricity — renewable PPA,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,CO2,Contract / supplier,Market-based only; still counts at grid factor for location-based
+elec.green_tariff,Electricity — green tariff,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,CO2,Supplier disclosure,
+elec.irec,Electricity — I-REC / REC retired,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,CO2,Certificate registry,"Must be retired, not merely purchased; record certificate IDs"
+elec.open_access,Electricity — open access / third-party sale (India),Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,"CO2,CH4,N2O",CEA / contract,
+elec.dg_backup_purchased,Electricity — purchased from a shared DG set,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,"CO2,CH4,N2O",Supplier,
+elec.ev_charging_onsite,Electricity — charging owned EVs at own facility,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,"CO2,CH4,N2O",CEA / grid,"SCOPE 2, not Scope 1. An owned EV has no tailpipe combustion; its electricity is purchased energy."
+elec.supplier_specific,Electricity — supplier/utility-specific emission rate,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,"CO2,CH4,N2O",Supplier disclosure,Market-based hierarchy tier 3: contracts > supplier-specific rate > residual mix > grid average
+elec.submetered_tenant,Electricity — sub-metered from landlord,Purchased electricity,2,2.1,Purchased electricity,kWh,kWh|MWh,"CO2,CH4,N2O",CEA / landlord,Scope 2 if you control the space; otherwise Cat 8/13. Boundary declaration decides.
+elec.selfgen_solar_onsite,Self-generated solar consumed on site,Memo — energy balance,memo,memo,Energy balance memo,kWh,kWh|MWh,none,n/a,NOT Scope 2. Scope 2 Guidance 5.4: energy produced and consumed by the same entity generates no Scope 2. Record for energy balance only.
+elec.selfgen_wind_onsite,Self-generated wind consumed on site,Memo — energy balance,memo,memo,Energy balance memo,kWh,kWh|MWh,none,n/a,NOT Scope 2. Record for energy balance only.
+elec.exported,Electricity exported to grid,Memo — energy balance,memo,memo,Energy balance memo,kWh,kWh|MWh,none,n/a,Scope 2 Guidance 5.4 scenario 4: exclude generation sold back to the grid. Never subtracted from any total.
+steam.purchased,Purchased steam,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",t,kg|t|GJ|MMBtu,"CO2,CH4,N2O",Supplier factor / DESNZ default,
+heat.purchased,Purchased heat / hot water,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|MMBtu|kWh,"CO2,CH4,N2O",Supplier factor / DESNZ default,
+cooling.chilled_water,Purchased chilled water / district cooling,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|kWh|TR-hr,"CO2,CH4,N2O",Supplier factor,
+compressed_air.purchased,Purchased compressed air,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",m3,m3|kWh,"CO2,CH4,N2O",Supplier factor,Rare; usually metered as electricity instead
+cat1.material.steel,"Steel (crude, rebar, HR/CR coil)",Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.cement,Cement,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.aluminium,Aluminium (primary / secondary),Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Primary is ~10x secondary — must be distinguished
+cat1.material.copper,Copper,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.plastic_pp,Plastic — polypropylene,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.plastic_pe,Plastic — polyethylene,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.plastic_pvc,Plastic — PVC,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.plastic_pet,Plastic — PET,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.paper,Paper / cardboard,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.glass,Glass,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.timber,Timber / wood products,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|m3,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.chemicals_generic,Chemicals — generic,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.textiles,Textiles,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.food_generic,Food & catering,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.packaging,Packaging materials,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.water_supply,Water supply,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,m3,m3|kL,CO2e,ecoinvent / EXIOBASE / DESNZ,Treatment of the same water is Category 5
+cat1.material.it_services,IT / cloud services,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,INR,INR|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.professional_services,Professional services,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,INR,INR|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.spend_based,Purchased goods — spend-based (by category),Cat 1 — Purchased goods,3,3.1,Purchased goods and services,INR,INR|USD|EUR,CO2e,EXIOBASE / USEEIO,Must deflate to the factor's base year and convert currency at a dated rate — skipping this is wrong by tens of percent
+cat2.machinery,Machinery & equipment,Cat 2 — Capital goods,3,3.2,Capital goods,INR,INR|USD|kg|t,CO2e,EXIOBASE / EEIO,
+cat2.buildings,Buildings & construction,Cat 2 — Capital goods,3,3.2,Capital goods,INR,INR|USD|m2,CO2e,EEIO / ecoinvent,
+cat2.vehicles,Vehicles purchased,Cat 2 — Capital goods,3,3.2,Capital goods,INR,INR|USD|unit,CO2e,EEIO,
+cat2.it_hardware,IT hardware,Cat 2 — Capital goods,3,3.2,Capital goods,INR,INR|USD|unit,CO2e,EEIO / manufacturer LCA,
+cat2.spend_based,Capital goods — spend-based,Cat 2 — Capital goods,3,3.2,Capital goods,INR,INR|USD,CO2e,EXIOBASE / USEEIO,
+cat3.wtt_fuels,Well-to-tank of all Scope 1 fuels,Cat 3 — Fuel & energy related,3,3.3,Fuel- and energy-related activities,auto,auto,CO2e,DESNZ,AUTO-DERIVED from Scope 1 entries. Zero extra user input — compute it and show it appearing.
+cat3.wtt_electricity,Well-to-tank of purchased electricity,Cat 3 — Fuel & energy related,3,3.3,Fuel- and energy-related activities,auto,auto,CO2e,DESNZ,AUTO-DERIVED from Scope 2
+cat3.td_losses,Transmission & distribution losses,Cat 3 — Fuel & energy related,3,3.3,Fuel- and energy-related activities,auto,auto,CO2e,CEA / DESNZ,AUTO-DERIVED. India T&D losses are high (~17-20%) — materially larger than EU/US
+cat3.wtt_td_losses,Well-to-tank of T&D losses,Cat 3 — Fuel & energy related,3,3.3,Fuel- and energy-related activities,auto,auto,CO2e,DESNZ,AUTO-DERIVED
+cat3.generation_sold_to_end_users,Generation of purchased electricity sold on to end users,Cat 3 — Fuel & energy related,3,3.3,Fuel- and energy-related activities,kWh,kWh|MWh,CO2e,CEA / grid,"The Scope 3 Standard's fourth Cat 3 sub-activity. Applies to utilities, traders and resellers only."
+cat4.road_hgv,Road freight — HGV by size/load,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km|km,CO2e,DESNZ,Third-party or hired trucks. Own trucks are Scope 1.2.
+cat4.road_lcv,Road freight — LCV / van,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km|km,CO2e,DESNZ,
+cat4.rail,Rail freight,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,
+cat4.sea_container,Sea freight — container,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,
+cat4.sea_bulk,Sea freight — bulk carrier,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,
+cat4.air_freight,Air freight,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,Roughly 50-100x sea per t.km — usually a hotspot
+cat4.courier,Courier / parcel,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km|parcel,CO2e,DESNZ,
+cat4.pipeline,Pipeline transport,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,
+cat4.cold_chain,Refrigerated transport,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,Add refrigerant leakage separately
+cat4.warehousing_3pl,Third-party warehousing,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,m2.yr,m2.yr|INR,CO2e,DESNZ,
+cat4.spend_based,Upstream transport — spend-based,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,INR,INR|USD,CO2e,DESNZ,
+cat5.landfill_mixed,Landfill — mixed municipal waste,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.landfill_organic,Landfill — organic waste,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,Highest CH4 of any waste route
+cat5.incineration,Incineration — no energy recovery,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.incineration_energy,Incineration with energy recovery,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.composting,Composting,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.anaerobic_digestion,Anaerobic digestion,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.recycling_metal,Recycling — metal,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.recycling_plastic,Recycling — plastic,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.recycling_paper,Recycling — paper,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.recycling_glass,Recycling — glass,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.hazardous,Hazardous waste treatment,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.ewaste,E-waste,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.construction_debris,Construction & demolition waste,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.sewage_sludge,Sewage sludge,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
+cat5.wastewater_treated,Wastewater sent for off-site treatment,Cat 5 — Waste,3,3.5,Waste generated in operations,m3,m3|kL,CO2e,DESNZ,On-site anaerobic treatment is Scope 1.4 fugitive instead
+cat6.air_domestic_economy,"Air — domestic, economy",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi|pax.km,CO2e,DESNZ,A commercial ticket. Company-owned aircraft is Scope 1.2.
+cat6.air_short_haul_economy,"Air — short haul, economy",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.air_long_haul_economy,"Air — long haul, economy",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.air_long_haul_premium,"Air — long haul, premium economy",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.air_long_haul_business,"Air — long haul, business",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,Roughly 2-3x economy per km — cabin class matters
+cat6.air_long_haul_first,"Air — long haul, first",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.rail,Rail travel,Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.taxi,Taxi / ride-hailing,Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.rental_car,Rental car,Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.personal_car_reimbursed,"Personal car, reimbursed mileage",Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,"Scope 3, not Scope 1 — the company does not own the vehicle"
+cat6.bus_coach,Bus / coach,Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.ferry,Ferry,Cat 6 — Business travel,3,3.6,Business travel,km,km|mi,CO2e,DESNZ,
+cat6.hotel_nights,Hotel stays,Cat 6 — Business travel,3,3.6,Business travel,night,night,CO2e,DESNZ,Factor varies widely by country
+cat6.spend_based,Business travel — spend-based,Cat 6 — Business travel,3,3.6,Business travel,INR,INR|USD,CO2e,DESNZ,
+cat6.air_rf_uplift,Air travel — radiative forcing uplift,Cat 6 — Business travel,3,3.6,Business travel,toggle,toggle,CO2e,DESNZ,A user-selectable multiplier (~1.9x). Must be disclosed in the report when applied.
+cat7.car_petrol,"Commute — car, petrol",Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.car_diesel,"Commute — car, diesel",Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.car_ev,"Commute — car, electric",Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.two_wheeler,Commute — two-wheeler,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.bus,Commute — bus,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.metro_rail,Commute — metro / suburban rail,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.auto_rickshaw,Commute — auto rickshaw,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.company_bus,Commute — company-provided bus,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.walk_cycle,Commute — walk / cycle,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.carpool,Commute — carpool,Cat 7 — Employee commuting,3,3.7,Employee commuting,km,km|mi,CO2e,DESNZ,Modelled: headcount x mode split x average distance x working days
+cat7.wfh,Remote / work-from-home energy,Cat 7 — Employee commuting,3,3.7,Employee commuting,day,day|FTE.yr,CO2e,DESNZ,Homeworking energy factor x days
+cat8.leased_upstream,Upstream leased assets,Cat 8-15 — Other,3,3.8,Upstream leased assets,kWh,kWh|L|m2,CO2e,reuse S1/S2 engines,Only if NOT already inside your consolidation boundary — the most common double-count in the whole inventory
+cat9.downstream_transport,Downstream transportation & distribution,Cat 8-15 — Other,3,3.9,Downstream transportation,t.km,t.km|km,CO2e,DESNZ,
+cat9.warehousing,Downstream warehousing / storage,Cat 8-15 — Other,3,3.9,Downstream transportation,m2.yr,m2.yr|kWh,CO2e,DESNZ,Cat 9 explicitly includes retail and storage
+cat9.retail,Retail outlet energy,Cat 8-15 — Other,3,3.9,Downstream transportation,m2.yr,m2.yr|kWh,CO2e,DESNZ,
+cat10.processing_sold,Processing of sold intermediate products,Cat 8-15 — Other,3,3.10,Processing of sold products,t,kg|t,CO2e,site-specific,Applies to intermediate goods only — a steel maker whose coil is processed by a customer
+cat11.use_energy_direct,Use of sold products — direct energy use,Cat 8-15 — Other,3,3.11,Use of sold products,kWh,kWh|L|m3,CO2e,DESNZ,For energy-using products this usually dwarfs everything else. Needs lifetime x annual use x factor.
+cat11.use_indirect,Use of sold products — indirect,Cat 8-15 — Other,3,3.11,Use of sold products,unit,unit,CO2e,product-specific,
+cat11.sold_fuels,Use of sold fuels / feedstocks,Cat 8-15 — Other,3,3.11,Use of sold products,t,kg|t|L,CO2e,IPCC 2006 Vol.2,For fuel distributors this is nearly the entire footprint
+cat12.landfill,EOL — landfill,Cat 8-15 — Other,3,3.12,End-of-life treatment of sold products,t,kg|t,CO2e,DESNZ,Mass of product sold x material composition x disposal route split
+cat12.incineration,EOL — incineration,Cat 8-15 — Other,3,3.12,End-of-life treatment of sold products,t,kg|t,CO2e,DESNZ,Mass of product sold x material composition x disposal route split
+cat12.recycling,EOL — recycling,Cat 8-15 — Other,3,3.12,End-of-life treatment of sold products,t,kg|t,CO2e,DESNZ,Mass of product sold x material composition x disposal route split
+cat12.reuse,EOL — reuse,Cat 8-15 — Other,3,3.12,End-of-life treatment of sold products,t,kg|t,CO2e,DESNZ,Mass of product sold x material composition x disposal route split
+cat13.leased_downstream,Downstream leased assets,Cat 8-15 — Other,3,3.13,Downstream leased assets,kWh,kWh|m2,CO2e,reuse S1/S2 engines,
+cat14.franchises,Franchises,Cat 8-15 — Other,3,3.14,Franchises,kWh,kWh|outlet,CO2e,reuse S1/S2 engines,
+cat15.investments,Investments (PCAF-style attribution),Cat 8-15 — Other,3,3.15,Investments,INR,INR|USD,CO2e,PCAF,Phase 2. Attribution factor = outstanding amount / investee enterprise value
+memo.biogenic_co2,Biogenic CO2 from biomass / biofuel combustion,Memo — outside scopes,memo,memo,Biogenic memo item,t,kg|t,CO2,DESNZ,GHG Protocol requires this be reported SEPARATELY from the scopes. Its CH4 and N2O DO stay in Scope 1.
+memo.biogenic_co2_scope3,Biogenic CO2 arising in Scope 3 activities,Memo — outside scopes,memo,memo,Biogenic memo item,t,kg|t,CO2,DESNZ,"GHG Protocol requires biogenic CO2 be reported separately FOR EACH SCOPE in which it arises — biofuel in Cat 4, composting/AD/incineration of biogenic waste in Cat 5, biofuel sold in Cat 11."
+memo.montreal_r22,R-22 / HCFC-22 refrigerant,Memo — outside scopes,memo,memo,Montreal Protocol gas,kg,kg|g,HCFC,IPCC AR6,"Montreal Protocol substance — reported separately, NEVER added to the Scope 1 total"
+memo.montreal_cfc,"CFCs (R-11, R-12) and halons",Memo — outside scopes,memo,memo,Montreal Protocol gas,kg,kg|g,CFC,IPCC AR6,"Reported separately, outside the scopes"
+memo.avoided_exported_renewable,Avoided emissions from exported renewable power,Memo — outside scopes,memo,memo,Avoided emissions memo,kWh,kWh|MWh,CO2e,n/a,Never netted off the inventory total. Memo disclosure only.
+memo.offsets_retired,Carbon credits retired,Memo — outside scopes,memo,memo,Offsets memo,tCO2e,tCO2e,CO2e,registry,Reported separately from gross emissions. Gross totals are never reduced by offsets.
