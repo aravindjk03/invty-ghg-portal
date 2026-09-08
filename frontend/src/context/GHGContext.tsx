@@ -13,6 +13,7 @@ import { ConsolidationBoundary, IntegratedSteelMethod, routeActivityScope } from
 import { getDefaultFactorForCategory } from '../engine/factorCatalogue';
 import { Category3Coefficients, DEFAULT_CATEGORY3_COEFFICIENTS } from '../engine/calculator';
 import { SectorId, DEFAULT_SECTOR } from '../config/sectors';
+import { useAuth } from './AuthContext';
 
 /** Prior-period totals used for year-on-year comparison on the dashboard. */
 export interface PriorPeriodTotals {
@@ -228,11 +229,20 @@ const INITIAL_SCOPE3_ENTRIES: ActivityEntry[] = [
 const GHGContext = createContext<GHGContextType | undefined>(undefined);
 
 export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [companyName, setCompanyName] = useState<string>('Acme Steel Pvt Ltd');
-  const [reportingPeriod, setReportingPeriod] = useState<string>('FY 2025–26');
+  // The organisation captured at onboarding is the reporting entity, so seed
+  // the inventory from it rather than shipping a hardcoded sample company.
+  const { user } = useAuth();
+  const [companyName, setCompanyName] = useState<string>(
+    () => user?.profile?.companyName || 'Acme Steel Pvt Ltd'
+  );
+  const [reportingPeriod, setReportingPeriod] = useState<string>(
+    () => user?.profile?.reportingPeriod || 'FY 2025–26'
+  );
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
-  const [sector, setSector] = useState<SectorId>(DEFAULT_SECTOR);
+  const [sector, setSector] = useState<SectorId>(
+    () => (user?.profile?.sector as SectorId) || DEFAULT_SECTOR
+  );
 
   // Year-on-year deltas were hardcoded strings on the dashboard. They are only
   // real if there is a prior period to compare against, so it is stored and the

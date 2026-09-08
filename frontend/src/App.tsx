@@ -1,5 +1,8 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { GHGProvider, useGHG } from './context/GHGContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginPage } from './pages/LoginPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 import { TopBar } from './components/layout/TopBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -13,11 +16,10 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ 
 const ReportPreviewPage = lazy(() => import('./pages/ReportPreviewPage').then((m) => ({ default: m.ReportPreviewPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage').then((m) => ({ default: m.ShowcasePage })));
-const CBAMPage = lazy(() => import('./pages/CBAMPage').then((m) => ({ default: m.CBAMPage })));
-const BRSRPage = lazy(() => import('./pages/BRSRPage').then((m) => ({ default: m.BRSRPage })));
-const CEMSMonitorPage = lazy(() => import('./pages/CEMSMonitorPage').then((m) => ({ default: m.CEMSMonitorPage })));
-const SupplierPortalPage = lazy(() => import('./pages/SupplierPortalPage').then((m) => ({ default: m.SupplierPortalPage })));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then((m) => ({ default: m.AuditTrailPage })));
+
+// CBAMPage, BRSRPage, CEMSMonitorPage and SupplierPortalPage are intentionally
+// not routed. See PARKED_PAGES in config/routes.ts.
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -126,14 +128,6 @@ function MainApp() {
         return <DashboardPage onNavigate={navigate} />;
       case 'report':
         return <ReportPreviewPage onNavigate={navigate} />;
-      case 'cbam':
-        return <CBAMPage onNavigate={navigate} />;
-      case 'brsr':
-        return <BRSRPage onNavigate={navigate} />;
-      case 'cems':
-        return <CEMSMonitorPage onNavigate={navigate} />;
-      case 'suppliers':
-        return <SupplierPortalPage onNavigate={navigate} />;
       case 'audit-trail':
         return <AuditTrailPage onNavigate={navigate} />;
       case 'settings':
@@ -175,12 +169,44 @@ function MainApp() {
   );
 }
 
+/**
+ * Decides what the signed-out / half-onboarded user sees.
+ *
+ * The inventory workspace only mounts once there is a session and an
+ * organisation profile, so GHGProvider never runs for an anonymous visitor.
+ */
+function AuthGate() {
+  const { user, initialising } = useAuth();
+
+  if (initialising) {
+    return (
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-1 w-40 mx-auto rounded-pill bg-surface-sunken overflow-hidden">
+            <div className="h-full w-1/3 bg-blue-600 animate-pulse rounded-pill" />
+          </div>
+          <p className="text-xs text-brand-muted mt-3">Restoring your session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return <LoginPage />;
+  if (!user.profileComplete) return <OnboardingPage />;
+
+  return (
+    <GHGProvider>
+      <MainApp />
+    </GHGProvider>
+  );
+}
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <GHGProvider>
-        <MainApp />
-      </GHGProvider>
+      <AuthProvider>
+        <AuthGate />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -21,6 +21,8 @@ export type SectorId =
   | 'agriculture_food'
   | 'textiles'
   | 'pharma_healthcare'
+  | 'automotive'
+  | 'machinery_equipment'
   | 'transport_logistics'
   | 'waste_management'
   | 'construction_realestate'
@@ -184,6 +186,28 @@ export const SECTORS: SectorProfile[] = [
     keyProcessFactors: ['fugitive.n2o_medical', 'fugitive.fire_hfc227ea', 'process.other_process_direct'],
     guidance:
       'Medical and laboratory N2O, anaesthetic gases and refrigerant losses from the cold chain are the main direct sources. Cold chain distribution is a significant Scope 3 Category 4 line.',
+  },
+  {
+    id: 'automotive',
+    label: 'Automobile & Auto Components',
+    outputMetric: 'Vehicles / units produced',
+    keyProcessFactors: [
+      'solvent.paint_coating',
+      'fugitive.co2_welding',
+      'process.aluminium_anode',
+      'fugitive.sf6_magnesium',
+      'compressed_air.purchased',
+    ],
+    guidance:
+      'Direct emissions concentrate in the paint shop (curing ovens and solvent use), welding shielding gas, foundry and heat-treatment furnaces, and refrigerant losses from booth chillers. Press and body shops are dominated by purchased electricity. The great majority of the footprint for a vehicle manufacturer sits in Scope 3: purchased steel, aluminium and plastics under Category 1, and the use-phase of sold vehicles under Category 11, which typically exceeds all operational emissions combined.',
+  },
+  {
+    id: 'machinery_equipment',
+    label: 'Machinery & Industrial Equipment',
+    outputMetric: 'Units produced',
+    keyProcessFactors: ['fugitive.co2_welding', 'solvent.paint_coating', 'compressed_air.purchased'],
+    guidance:
+      'Fabrication, welding, machining and surface finishing dominate direct emissions, with purchased electricity the largest single line. Use-phase energy of sold equipment belongs in Scope 3 Category 11 and is often the material figure.',
   },
   {
     id: 'transport_logistics',

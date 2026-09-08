@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGHG } from '../../context/GHGContext';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import {
@@ -15,11 +16,9 @@ import {
   CheckCircle2,
   BookOpen,
   ChevronDown,
-  Globe2,
   ClipboardCheck,
-  Gauge,
-  Truck,
   History,
+  LogOut,
 } from 'lucide-react';
 
 /**
@@ -27,10 +26,6 @@ import {
  * entry point anywhere in the UI, which made them unreachable.
  */
 const COMPLIANCE_PAGES = [
-  { key: 'cbam', label: 'CBAM Declaration', icon: Globe2, hint: 'EU carbon border adjustment' },
-  { key: 'brsr', label: 'BRSR Core', icon: ClipboardCheck, hint: 'SEBI Principle 6 disclosure' },
-  { key: 'cems', label: 'CEMS Monitor', icon: Gauge, hint: 'Continuous stack telemetry' },
-  { key: 'suppliers', label: 'Supplier Portal', icon: Truck, hint: 'Scope 3 primary data' },
   { key: 'audit-trail', label: 'Audit Trail', icon: History, hint: 'Assurance ledger' },
 ] as const;
 
@@ -44,6 +39,25 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
   const [helpOpen, setHelpOpen] = useState(false);
   const [complianceOpen, setComplianceOpen] = useState(false);
   const complianceRef = useRef<HTMLDivElement>(null);
+  const { user, signOut } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!userMenuRef.current?.contains(e.target as Node)) setUserMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [userMenuOpen]);
 
   const complianceActive = COMPLIANCE_PAGES.some((p) => p.key === currentPage);
 
@@ -259,6 +273,64 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
           >
             <Settings size={18} />
           </button>
+
+          {/* Signed-in user */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={userMenuOpen}
+              onClick={() => setUserMenuOpen((open) => !open)}
+              className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-blue-600 text-white text-xs font-bold border border-border focus-visible:outline-2 focus-visible:outline-blue-600"
+              title={user?.email}
+            >
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                (user?.name || user?.email || '?').slice(0, 1).toUpperCase()
+              )}
+            </button>
+
+            {userMenuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-60 bg-surface-raised border border-border rounded-md shadow-nm-raised py-1.5 z-50"
+              >
+                <div className="px-3 py-2 border-b border-border">
+                  <p className="text-xs font-semibold text-brand-heading truncate">
+                    {user?.name}
+                  </p>
+                  <p className="text-[11px] text-brand-muted truncate">{user?.email}</p>
+                  {user?.profile?.companyName && (
+                    <p className="text-[11px] text-brand-muted truncate mt-0.5">
+                      {user.profile.companyName}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    onNavigate('settings');
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-brand-body hover:bg-blue-50"
+                >
+                  <Settings size={14} className="text-brand-muted" />
+                  Settings
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={signOut}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-status-danger hover:bg-red-50"
+                >
+                  <LogOut size={14} />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
 
           <button
             type="button"

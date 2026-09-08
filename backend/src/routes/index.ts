@@ -8,6 +8,8 @@ import brsrRoutes from './brsr.routes';
 import suppliersRoutes from './suppliers.routes';
 import cemsRoutes from './cems.routes';
 import auditRoutes from './audit.routes';
+import authRoutes from './auth.routes';
+import { requireAuth } from '../middleware/requireAuth';
 
 const router = Router();
 
@@ -21,15 +23,25 @@ router.get('/health', (_req: Request, res: Response) => {
   });
 });
 
-// API versioning v1
+// Authentication — public by design (this is where you sign in).
+router.use('/v1/auth', authRoutes);
+
+// The factor register is reference data and stays readable without a session,
+// so the client can render the catalogue on the sign-in screen.
 router.use('/v1/factors', factorsRoutes);
-router.use('/v1/emissions', emissionsRoutes);
-router.use('/v1/reports', reportsRoutes);
+
+// Lead capture is a public marketing endpoint.
 router.use('/v1/leads', leadsRoutes);
-router.use('/v1/cbam', cbamRoutes);
-router.use('/v1/brsr', brsrRoutes);
-router.use('/v1/suppliers', suppliersRoutes);
-router.use('/v1/cems', cemsRoutes);
-router.use('/v1/audit', auditRoutes);
+
+// Everything below carries or produces inventory data and requires a session.
+router.use('/v1/emissions', requireAuth, emissionsRoutes);
+router.use('/v1/reports', requireAuth, reportsRoutes);
+router.use('/v1/audit', requireAuth, auditRoutes);
+
+// Parked modules: still mounted and protected, but not exposed in the UI.
+router.use('/v1/cbam', requireAuth, cbamRoutes);
+router.use('/v1/brsr', requireAuth, brsrRoutes);
+router.use('/v1/suppliers', requireAuth, suppliersRoutes);
+router.use('/v1/cems', requireAuth, cemsRoutes);
 
 export default router;

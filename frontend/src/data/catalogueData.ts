@@ -1,4 +1,6 @@
-// Auto-generated catalogue containing 266+ GHG emission activities with factors
+// GENERATED FILE — do not edit by hand.
+// Source: backend/src/data/emission_source_catalogue.json
+// Regenerate with: node scripts/build-catalogue.mjs
 export interface CatalogueSource {
   activity_key: string;
   display_name: string;
@@ -4272,9 +4274,74 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factorValue": 1000,
     "qualityTier": "Secondary",
     "publicationYear": 2024
+  },
+  {
+    "activity_key": "solvent.paint_coating",
+    "display_name": "Solvent & paint use — carbon oxidised",
+    "group": "Solvent and product use",
+    "scope": "1",
+    "ghg_category": "1.3",
+    "category_name": "Process emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|t",
+    "gases": "CO2",
+    "factor_source": "IPCC 2006 Vol 3 Ch 3 (derived)",
+    "notes": "Paint shop / coating solvent. CO2 = mass x carbon fraction x 44/12. Assumes a 0.75 carbon fraction for a typical aromatic/ester paint-solvent blend, fully oxidised. REPLACE with the carbon content on your solvent's safety data sheet where available.",
+    "factorValue": 2.75,
+    "qualityTier": "Proxy",
+    "publicationYear": 2006
+  },
+  {
+    "activity_key": "fugitive.anaesthetic_desflurane",
+    "display_name": "Desflurane — anaesthetic gas",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg",
+    "gases": "HFE",
+    "factor_source": "IPCC AR5 GWP100",
+    "notes": "Vented anaesthetic agent. Published GWP100 values vary across sources; confirm against the GWP set your inventory declares.",
+    "factorValue": 2540,
+    "qualityTier": "Secondary",
+    "publicationYear": 2014
+  },
+  {
+    "activity_key": "fugitive.anaesthetic_sevoflurane",
+    "display_name": "Sevoflurane — anaesthetic gas",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg",
+    "gases": "HFE",
+    "factor_source": "IPCC AR5 GWP100",
+    "notes": "Vented anaesthetic agent. Published GWP100 values vary across sources; confirm against the GWP set your inventory declares.",
+    "factorValue": 130,
+    "qualityTier": "Secondary",
+    "publicationYear": 2014
+  },
+  {
+    "activity_key": "fugitive.anaesthetic_isoflurane",
+    "display_name": "Isoflurane — anaesthetic gas",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg",
+    "gases": "HFE",
+    "factor_source": "IPCC AR5 GWP100",
+    "notes": "Vented anaesthetic agent. Published GWP100 values vary across sources; confirm against the GWP set your inventory declares.",
+    "factorValue": 510,
+    "qualityTier": "Secondary",
+    "publicationYear": 2014
   }
 ];
 
+/** Lookup by activity key, used by the factor resolver. */
 export const CATALOGUE_BY_KEY: Record<string, CatalogueSource> = CATALOGUE_SOURCES.reduce(
   (acc, item) => {
     acc[item.activity_key] = item;
