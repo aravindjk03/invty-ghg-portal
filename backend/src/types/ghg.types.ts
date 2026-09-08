@@ -1,4 +1,4 @@
-export type ScopeType = 'scope-1' | 'scope-2' | 'scope-3' | 'biogenic';
+export type ScopeType = 'scope-1' | 'scope-2' | 'scope-3' | 'biogenic' | 'memo';
 
 export type Scope1Category = 
   | 'stationary_combustion'
@@ -21,8 +21,12 @@ export interface EmissionFactor {
   fuelOrActivity: string;
   scope: ScopeType;
   category: string;
+  /** GHG Protocol category number, e.g. '1.2' mobile combustion, '3.6' business travel. */
+  ghgCategory: string;
   factorValue: number; // kgCO2e per unit
   unit: string;
+  /** Pipe-separated units the factor may be entered in, e.g. 'kg|t|lb'. */
+  allowedUnits?: string;
   source: string; // e.g. "DESNZ 2026", "CEA 2024", "IPCC AR6"
   publicationYear: number;
   qualityTier: DataQualityTier;

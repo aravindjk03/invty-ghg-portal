@@ -1,10 +1,21 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessage } from '../types/ghg';
+import {
+  ActivityEntry,
+  EmissionFactor,
+  ScopeSummary,
+  WhatIfScenario,
+  ScenarioResult,
+  ToastMessage,
+} from '../types/ghg';
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
+import { getDefaultFactorForCategory } from '../engine/factorCatalogue';
 
 interface GHGContextType {
+  /** Live emission-factor register (API when reachable, bundled snapshot otherwise). */
+  factors: EmissionFactor[];
+  factorsSource: 'api' | 'bundled';
   companyName: string;
   reportingPeriod: string;
   boundaryApproach: ConsolidationBoundary;
@@ -230,8 +241,30 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  // Emission factors come from the API so the server stays the register of
+  // record; the bundled catalogue seeds the first paint and covers offline use.
+  const [factors, setFactors] = useState<EmissionFactor[]>(DEFAULT_FACTORS);
+  const [factorsSource, setFactorsSource] = useState<'api' | 'bundled'>('bundled');
+
+  useEffect(() => {
+    let cancelled = false;
+    ghgService
+      .getFactors()
+      .then((fetched) => {
+        if (cancelled || fetched === DEFAULT_FACTORS) return;
+        setFactors(fetched);
+        setFactorsSource('api');
+      })
+      .catch(() => {
+        /* getFactors already falls back to the bundled catalogue. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const addToast = useCallback((type: ToastMessage['type'], message: string, duration = 4000) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     setToasts((prev) => [...prev, { id, type, message, duration }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -260,14 +293,17 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     switchFleetToElectric: false,
   });
 
+  // Seeded flat so the first paint shows no reduction rather than stale
+  // hardcoded figures that contradict the computed inventory. The effect below
+  // replaces this as soon as the real summary is available.
   const [scenarioResult, setScenarioResult] = useState<ScenarioResult>({
-    baselineTotal: 1992.2,
-    newTotal: 1850.4,
-    deltaTco2e: 141.8,
-    deltaPercentage: 7.1,
-    scope1New: 345.1,
-    scope2New: 309.3,
-    scope3New: 1196.0,
+    baselineTotal: 0,
+    newTotal: 0,
+    deltaTco2e: 0,
+    deltaPercentage: 0,
+    scope1New: 0,
+    scope2New: 0,
+    scope3New: 0,
   });
 
   // Bug Guard #6: Compute summary via useMemo from active entries (never store derived total in useState)
@@ -277,11 +313,18 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Live Scenario updates
   useEffect(() => {
+    let cancelled = false;
     ghgService
       .simulateScenario(summary.scope1, summary.scope2Location, summary.scope3, scenario)
       .then((res) => {
-        setScenarioResult(res);
+        if (!cancelled) setScenarioResult(res);
+      })
+      .catch((err) => {
+        console.warn('[GHG] Scenario simulation failed:', err);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [scenario, summary.scope1, summary.scope2Location, summary.scope3]);
 
   // Mutation handlers with Bug Guard #14 (immutable reference returns)
@@ -311,16 +354,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addRow = useCallback(
     (scope: 'scope-1' | 'scope-2' | 'scope-3', category: string) => {
-      // Extract prefix like cat1, cat2, cat15
-      const catPrefix = category.startsWith('cat') ? category.split('_')[0] : '';
-      const factor =
-        (catPrefix ? DEFAULT_FACTORS.find((f) => f.id.startsWith(`${catPrefix}.`)) : null) ||
-        DEFAULT_FACTORS.find((f) => f.category.toLowerCase().includes(category.toLowerCase())) ||
-        (scope === 'scope-1'
-          ? DEFAULT_FACTORS[0]
-          : scope === 'scope-2'
-          ? DEFAULT_FACTORS.find((f) => f.id === 'elec.grid.location') || DEFAULT_FACTORS[0]
-          : DEFAULT_FACTORS.find((f) => f.id === 'cat1.material.steel') || DEFAULT_FACTORS[0]);
+      // Resolve through the shared catalogue so a new row always opens on a
+      // factor that actually belongs to the category it was added under.
+      const factor = getDefaultFactorForCategory(category, scope);
 
       const defaultAmount = factor.unit.toLowerCase() === 'kwh' ? 10000 : 100;
       const calc = calculateRowEmissions(defaultAmount, factor.factorValue, factor.fuelOrActivity, factor.unit);
@@ -462,6 +498,8 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <GHGContext.Provider
       value={{
+        factors,
+        factorsSource,
         companyName,
         reportingPeriod,
         boundaryApproach,

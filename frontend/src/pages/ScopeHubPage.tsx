@@ -5,7 +5,7 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { SummaryRail } from '../components/layout/SummaryRail';
 import { useGHG } from '../context/GHGContext';
 import { formatIndianNumber } from '../engine/unitConverter';
-import { ArrowRight, Building2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Building2, CheckCircle2, Info } from 'lucide-react';
 
 export interface ScopeHubPageProps {
   onNavigate: (page: string) => void;
@@ -135,10 +135,17 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wide bg-blue-50 text-blue-800 border border-blue-200">
                     SCOPE 2
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                    <CheckCircle2 size={13} />
-                    Dual Reporting Active
-                  </span>
+                  {summary.scope2MarketBasis === 'instruments' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+                      <CheckCircle2 size={13} />
+                      Dual Reporting Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-muted">
+                      <Info size={13} />
+                      Location-based only
+                    </span>
+                  )}
                 </div>
 
                 <h2 className="text-lg font-bold text-brand-heading">

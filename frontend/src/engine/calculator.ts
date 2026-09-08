@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import { parseIndianNumber } from './unitConverter';
 import { ActivityEntry, ScopeSummary, QualityGrade } from '../types/ghg';
+import { isMarketInstrument, isMemoFactor } from './factorCatalogue';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_EVEN });
 
@@ -119,6 +120,10 @@ export function deriveCategory3Emissions(
   // 1. WTT fuels: approx 20% of Scope 1 combustion
   let scope1Combustion = new Decimal(0);
   for (const e of scope1Entries) {
+    // Memo rows are excluded from Scope 1 gross, so they must not seed the
+    // derived Category 3 either — otherwise a biomass boiler line kept out of
+    // Scope 1 would still inflate Scope 3 through the WTT uplift.
+    if (isMemoFactor(e.emissionFactor || { scope: e.scope, category: '' })) continue;
     if (e.category === 'stationary_combustion' || e.category === 'mobile_combustion') {
       scope1Combustion = scope1Combustion.plus(new Decimal(e.calculatedTco2e || 0));
     }
@@ -150,32 +155,55 @@ export function summarizeInventory(
   let s3Total = new Decimal(0);
   let biogenicTotal = new Decimal(0);
 
-  // 1. Scope 1
+  // 1. Scope 1.
+  // Memo treatment is decided by the factor, not by which workspace the row was
+  // entered in. Testing `row.scope === 'biogenic'` never matched — nothing sets
+  // that — so picking a biogenic or Montreal Protocol source in a Scope 1 row
+  // added it straight into Scope 1 gross, which is the opposite of the rule.
   for (const row of scope1Entries) {
-    if (row.scope === 'biogenic') {
+    if (isMemoFactor(row.emissionFactor || { scope: row.scope, category: '' })) {
       biogenicTotal = biogenicTotal.plus(new Decimal(row.calculatedTco2e || 0));
     } else {
       s1Total = s1Total.plus(new Decimal(row.calculatedTco2e || 0));
     }
   }
 
-  // 2. Scope 2: Distinguish location-based vs market-based
+  // 2. Scope 2: Distinguish location-based vs market-based.
+  // Classified by the contractual instrument behind the factor rather than by
+  // substring-matching the label, which missed PPAs, green tariffs and RECs.
+  let hasMarketInstrument = false;
   for (const row of scope2Entries) {
-    const isMarket = row.category?.toLowerCase().includes('market') || row.fuelOrSource?.toLowerCase().includes('market');
+    if (isMemoFactor(row.emissionFactor || { scope: row.scope, category: '' })) {
+      // Self-generated solar/wind and exported power are energy-balance memos.
+      biogenicTotal = biogenicTotal.plus(new Decimal(row.calculatedTco2e || 0));
+      continue;
+    }
+    const isMarket =
+      isMarketInstrument(row.emissionFactor?.id || '') || row.category === 'market_instruments';
     if (isMarket) {
+      hasMarketInstrument = true;
       s2MktTotal = s2MktTotal.plus(new Decimal(row.calculatedTco2e || 0));
     } else {
       s2LocTotal = s2LocTotal.plus(new Decimal(row.calculatedTco2e || 0));
     }
   }
 
-  // If no market entries, default market to location or renewable-adjusted
-  if (s2MktTotal.isZero() && !s2LocTotal.isZero()) {
+  // With no contractual instruments there is no true market-based position, so
+  // the location-based figure stands in — but the caller is told, so the UI can
+  // say so instead of showing two identical numbers as if they were dual-reported.
+  const scope2MarketBasis: ScopeSummary['scope2MarketBasis'] = hasMarketInstrument
+    ? 'instruments'
+    : 'location-proxy';
+  if (!hasMarketInstrument) {
     s2MktTotal = s2LocTotal;
   }
 
   // 3. Scope 3 manual entries + auto-derived Category 3
   for (const row of scope3Entries) {
+    if (isMemoFactor(row.emissionFactor || { scope: row.scope, category: '' })) {
+      biogenicTotal = biogenicTotal.plus(new Decimal(row.calculatedTco2e || 0));
+      continue;
+    }
     s3Total = s3Total.plus(new Decimal(row.calculatedTco2e || 0));
   }
   // Add auto-derived Cat 3
@@ -197,6 +225,7 @@ export function summarizeInventory(
     scope1: Number(s1Total.toFixed(2)),
     scope2Location: Number(s2LocTotal.toFixed(2)),
     scope2Market: Number(s2MktTotal.toFixed(2)),
+    scope2MarketBasis,
     scope3: Number(s3Total.toFixed(2)),
     biogenicMemo: Number(biogenicTotal.toFixed(2)),
     totalEmissions: Number(grandTotal.toFixed(2)),

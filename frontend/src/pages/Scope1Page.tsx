@@ -76,7 +76,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
     setCsvErrors((prev) => ({ ...prev, [category]: [] }));
 
     try {
-      const result = await ghgService.parseCsvFile(file);
+      const result = await ghgService.parseCsvFile(file, { scope: 'scope-1', category });
       if (result.errors.length > 0) {
         setCsvErrors((prev) => ({ ...prev, [category]: result.errors }));
       }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -20,6 +20,11 @@ import {
   TrendingDown, 
   FileText 
 } from 'lucide-react';
+import {
+  complianceService,
+  BrsrRequest,
+  ResultSource,
+} from '../services/complianceService';
 
 interface BRSRPageProps {
   onNavigate: (page: string) => void;
@@ -36,6 +41,8 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
   const [assuranceAgency, setAssuranceAgency] = useState('DNV Business Assurance India');
   const [copiedXbrl, setCopiedXbrl] = useState(false);
   const [leadGateOpen, setLeadGateOpen] = useState(false);
+  const [serverXbrl, setServerXbrl] = useState<string | null>(null);
+  const [resultSource, setResultSource] = useState<ResultSource>('local');
 
   // BRSR Core calculations
   const brsrMetrics = useMemo(() => {
@@ -110,8 +117,59 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
 </xbrli:xbrl>`;
   }, [cinNumber, summary, brsrMetrics, assuranceType, assuranceAgency]);
 
+  // BRSR Core is filed with SEBI, so the XBRL that leaves this screen is the
+  // server's rendering of it. The local Decimal maths keeps the on-screen
+  // intensities live while inputs change, and covers an unreachable API.
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      const payload: BrsrRequest = {
+        financialYear: reportingPeriod,
+        turnoverInCroresINR: turnoverCrores > 0 ? turnoverCrores : 1,
+        physicalOutputTonnes: physicalOutputTonnes > 0 ? physicalOutputTonnes : 1,
+        outputMetricName: outputMetric,
+        scope1TotalTco2e: Math.max(0, summary.scope1),
+        scope2LocationTco2e: Math.max(0, summary.scope2Location),
+        scope2MarketTco2e: Math.max(0, summary.scope2Market),
+        scope3TotalTco2e: Math.max(0, summary.scope3),
+        companyName,
+        cinNumber,
+        assuranceType,
+        assuranceAgency,
+      };
+
+      complianceService
+        .calculateBrsr<{ xbrlXmlPreview?: string }>(payload, () => ({}))
+        .then(({ data, source }) => {
+          if (cancelled) return;
+          setServerXbrl(data?.xbrlXmlPreview ?? null);
+          setResultSource(data?.xbrlXmlPreview ? source : 'local');
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    reportingPeriod,
+    turnoverCrores,
+    physicalOutputTonnes,
+    outputMetric,
+    summary.scope1,
+    summary.scope2Location,
+    summary.scope2Market,
+    summary.scope3,
+    companyName,
+    cinNumber,
+    assuranceType,
+    assuranceAgency,
+  ]);
+
+  const filingXbrl = serverXbrl ?? generatedXbrl;
+
   const handleCopyXbrl = () => {
-    navigator.clipboard.writeText(generatedXbrl);
+    navigator.clipboard.writeText(filingXbrl);
     setCopiedXbrl(true);
     setTimeout(() => setCopiedXbrl(false), 2000);
     addToast('success', 'SEBI BRSR Core XBRL XML copied to clipboard');
@@ -127,7 +185,7 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
   };
 
   const executeDownload = () => {
-    const blob = new Blob([generatedXbrl], { type: 'application/xml' });
+    const blob = new Blob([filingXbrl], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -321,6 +379,13 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
                 <h3 className="text-xs font-bold text-brand-heading uppercase tracking-wider flex items-center gap-1.5">
                   <FileText size={14} className="text-brand-primary" />
                   SEBI MCA XBRL Document Instance
+                  <span className="ml-2 font-sans font-normal normal-case tracking-normal">
+                    {resultSource === 'api' ? (
+                      <Badge variant="verified">Server-verified</Badge>
+                    ) : (
+                      <Badge variant="warning">Computed offline</Badge>
+                    )}
+                  </span>
                 </h3>
                 <Button variant="ghost" size="sm" onClick={handleCopyXbrl} leftIcon={copiedXbrl ? <Check size={14} /> : <Copy size={14} />}>
                   {copiedXbrl ? 'Copied' : 'Copy XBRL'}
@@ -328,7 +393,7 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
               </div>
 
               <div className="h-44 overflow-y-auto p-3 bg-slate-900 text-slate-200 font-mono text-[11px] rounded border border-slate-800 select-all leading-normal">
-                <pre>{generatedXbrl}</pre>
+                <pre>{filingXbrl}</pre>
               </div>
 
               <div className="pt-2 flex justify-end">
