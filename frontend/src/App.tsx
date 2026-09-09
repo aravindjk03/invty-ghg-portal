@@ -9,6 +9,8 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ReportPreviewPage } from './pages/ReportPreviewPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ShowcasePage } from './pages/ShowcasePage';
+import { LoginPage } from './pages/LoginPage';
+import { authService } from './services/authService';
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -54,7 +56,9 @@ function ToastPortal() {
 
 function MainApp() {
   const { setCompanyName, addToast } = useGHG();
-  const [currentPage, setCurrentPage] = useState<string>('scope-hub');
+  const [currentPage, setCurrentPage] = useState<string>(() => {
+    return authService.getStoredUser() ? 'scope-hub' : 'login';
+  });
 
   // Ingest portfolio redirect params on mount
   React.useEffect(() => {
@@ -78,6 +82,8 @@ function MainApp() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'login':
+        return <LoginPage onNavigate={setCurrentPage} />;
       case 'scope-1':
         return <Scope1Page onNavigate={setCurrentPage} />;
       case 'scope-2':

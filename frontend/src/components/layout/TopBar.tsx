@@ -13,7 +13,10 @@ import {
   BarChart3, 
   FileText, 
   CheckCircle2,
-  BookOpen
+  BookOpen,
+  LogIn,
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
 
 export interface TopBarProps {
@@ -22,7 +25,7 @@ export interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
-  const { companyName, reportingPeriod, boundaryApproach, saveToStorage } = useGHG();
+  const { companyName, reportingPeriod, boundaryApproach, saveToStorage, currentUser, logout } = useGHG();
   const [helpOpen, setHelpOpen] = useState(false);
 
   const handleSaveAndExit = () => {
@@ -147,8 +150,42 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
           </span>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        {/* Right: Actions & User Session */}
+        <div className="flex items-center gap-2.5">
+          {currentUser ? (
+            <div className="flex items-center gap-2 bg-surface/80 pl-2.5 pr-1.5 py-1 rounded-full border border-border text-xs">
+              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[11px]">
+                {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="font-semibold text-brand-heading leading-tight truncate max-w-[120px]">
+                  {currentUser.name}
+                </span>
+                <span className="text-[9px] uppercase tracking-wider text-brand-muted font-medium">
+                  {currentUser.role.replace('_', ' ')}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={logout}
+                title="Sign out"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-brand-muted hover:text-red-600 hover:bg-red-50 transition-colors ml-1"
+              >
+                <LogOut size={13} />
+              </button>
+            </div>
+          ) : (
+            <Button
+              variant={currentPage === 'login' ? 'primary' : 'secondary'}
+              size="sm"
+              leftIcon={<LogIn size={14} />}
+              onClick={() => onNavigate('login')}
+              className="font-medium"
+            >
+              Sign In
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"

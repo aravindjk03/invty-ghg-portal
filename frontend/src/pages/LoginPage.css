@@ -1,0 +1,350 @@
+/* INVTY Enterprise GHG Portal - Authentication Styles */
+.invty-auth-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 30px 16px;
+  background-color: #edf1f7;
+}
+
+.invty-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.invty-brand-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.05em;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28);
+}
+
+.invty-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.invty-brand-title {
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.05em;
+  color: #1e293b;
+  line-height: 1.1;
+}
+
+.invty-brand-subtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 400px;
+  min-height: 520px;
+  background-color: #ffffff;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 30px, rgba(0, 0, 0, 0.05) 0px 1px 3px;
+  border: 1px solid #dce4f0;
+  border-radius: 16px;
+  box-sizing: border-box;
+  padding: 28px 32px;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.title {
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Lucida Sans", "Lucida Grande", sans-serif;
+  margin: 6px 0 20px 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.auth-mode-switch {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 24px;
+  padding: 3px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.auth-mode-tab {
+  flex: 1;
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+  border: none;
+  background: transparent;
+}
+
+.auth-mode-tab.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 15px;
+}
+
+.input {
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  outline: 0 !important;
+  box-sizing: border-box;
+  padding: 11px 16px;
+  font-size: 13px;
+  color: #1e293b;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  border-color: #0d9488;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.page-link {
+  text-decoration: underline;
+  margin: -4px 0 0 0;
+  text-align: end;
+  color: #64748b;
+  text-decoration-color: #94a3b8;
+}
+
+.page-link-label {
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Lucida Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.page-link-label:hover {
+  color: #0d9488;
+}
+
+.form-btn {
+  padding: 12px 18px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Lucida Sans", sans-serif;
+  border-radius: 20px;
+  border: 0 !important;
+  outline: 0 !important;
+  background: #0d9488;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: rgba(13, 148, 136, 0.3) 0px 4px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.form-btn:hover:not(:disabled) {
+  background: #0f766e;
+  transform: translateY(-1px);
+  box-shadow: rgba(13, 148, 136, 0.4) 0px 6px 16px;
+}
+
+.form-btn:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.form-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.sign-up-label {
+  margin: 6px 0 0 0;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Lucida Sans", sans-serif;
+}
+
+.sign-up-link {
+  margin-left: 4px;
+  font-size: 12px;
+  text-decoration: underline;
+  text-decoration-color: #0d9488;
+  color: #0d9488;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Lucida Sans", sans-serif;
+  transition: color 0.15s;
+}
+
+.sign-up-link:hover {
+  color: #0f766e;
+}
+
+.divider-container {
+  display: flex;
+  align-items: center;
+  margin: 16px 0 14px 0;
+  gap: 10px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.divider-text {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.buttons-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.apple-login-button,
+.google-login-button {
+  border-radius: 20px;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px 0px,
+              rgba(0, 0, 0, 0.04) 0px 0px 0px 1px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Lucida Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.apple-login-button {
+  background-color: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+}
+
+.apple-login-button:hover {
+  background-color: #000000;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 6px 16px;
+}
+
+.google-login-button {
+  background-color: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.google-login-button:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.apple-icon,
+.google-icon {
+  font-size: 18px;
+  margin-bottom: 1px;
+  flex-shrink: 0;
+}
+
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-credentials-box {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.demo-title {
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.demo-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.demo-chip-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.demo-chip-btn:hover {
+  border-color: #0d9488;
+  background: #f0fdfa;
+}

@@ -3,6 +3,7 @@ import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessa
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
+import { User, authService } from '../services/authService';
 
 interface GHGContextType {
   companyName: string;
@@ -13,6 +14,9 @@ interface GHGContextType {
   setReportingPeriod: (period: string) => void;
   setBoundaryApproach: (boundary: ConsolidationBoundary) => void;
   setSteelMethod: (method: IntegratedSteelMethod) => void;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  logout: () => Promise<void>;
   scope1Entries: ActivityEntry[];
   scope2Entries: ActivityEntry[];
   scope3Entries: ActivityEntry[];
@@ -196,10 +200,25 @@ const INITIAL_SCOPE3_ENTRIES: ActivityEntry[] = [
 const GHGContext = createContext<GHGContextType | undefined>(undefined);
 
 export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [companyName, setCompanyName] = useState<string>('Acme Steel Pvt Ltd');
+  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getStoredUser());
+  const [companyName, setCompanyName] = useState<string>(() => {
+    const stored = authService.getStoredUser();
+    return stored?.companyName || 'Acme Steel Pvt Ltd';
+  });
   const [reportingPeriod, setReportingPeriod] = useState<string>('FY 2025–26');
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
+
+  useEffect(() => {
+    authService.verifySession().then((user) => {
+      if (user) {
+        setCurrentUser(user);
+        if (user.companyName) {
+          setCompanyName(user.companyName);
+        }
+      }
+    });
+  }, []);
 
   const [scope1Entries, setScope1Entries] = useState<ActivityEntry[]>(() => {
     try {
@@ -459,6 +478,12 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [scope1Entries, scope2Entries, scope3Entries, addToast]);
 
+  const logout = useCallback(async () => {
+    await authService.logout();
+    setCurrentUser(null);
+    addToast('info', 'Logged out successfully');
+  }, [addToast]);
+
   return (
     <GHGContext.Provider
       value={{
@@ -470,6 +495,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setReportingPeriod,
         setBoundaryApproach,
         setSteelMethod,
+        currentUser,
+        setCurrentUser,
+        logout,
         scope1Entries,
         scope2Entries,
         scope3Entries,
