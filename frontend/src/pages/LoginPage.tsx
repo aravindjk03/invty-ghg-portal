@@ -178,10 +178,12 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           />
           {/* Subtle branding overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent p-8 flex flex-col justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-mono font-bold text-lg shadow-lg">
-                IV
-              </div>
+            <div className="flex items-center gap-3">
+              <img
+                src="/invty-logo.png"
+                alt="INVTY Logo"
+                className="w-9 h-9 object-contain drop-shadow-md brightness-110"
+              />
               <div className="flex flex-col">
                 <span className="font-mono font-bold text-white tracking-wider text-base">INVTY</span>
                 <span className="text-[10px] uppercase tracking-widest text-slate-300 font-semibold">

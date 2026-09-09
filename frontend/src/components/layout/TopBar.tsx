@@ -319,13 +319,15 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
           <button
             type="button"
             onClick={() => onNavigate(currentUser ? 'scope-hub' : 'login')}
-            className="flex-shrink-0 flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600 py-1 pr-2"
+            className="flex-shrink-0 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600 py-1 pr-2 group"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md">
-              <span className="font-mono font-bold text-[15px] tracking-tighter">IV</span>
-            </div>
+            <img
+              src="/invty-logo.png"
+              alt="INVTY Logo"
+              className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
+            />
             <div className="flex flex-col text-left">
-              <span className="font-mono font-bold text-[13px] tracking-wider text-[#0F172A] leading-tight">
+              <span className="font-mono font-bold text-[14px] tracking-wider text-[#0F172A] leading-tight">
                 INVTY
               </span>
               <span className="text-[9px] uppercase tracking-widest text-[#94A3B8] font-semibold leading-tight">

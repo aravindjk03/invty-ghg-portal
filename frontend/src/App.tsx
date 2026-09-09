@@ -82,9 +82,11 @@ function MainApp() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#EDF1F7] gap-4">
-        <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-mono font-bold text-xl shadow-lg animate-pulse">
-          IV
-        </div>
+        <img
+          src="/invty-logo.png"
+          alt="INVTY Logo"
+          className="w-14 h-14 object-contain drop-shadow-md animate-pulse"
+        />
         <p className="text-sm text-gray-500 font-medium tracking-wide">Verifying session…</p>
       </div>
     );

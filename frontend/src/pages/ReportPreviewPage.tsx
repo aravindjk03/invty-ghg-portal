@@ -8,14 +8,11 @@ import { ghgService, DEFAULT_FACTORS } from '../services/ghgService';
 import { formatIndianNumber } from '../engine/unitConverter';
 import { Printer, Download, ShieldCheck, RefreshCw, FileSpreadsheet, CheckSquare, Square } from 'lucide-react';
 import { LeadGateModal } from '../components/ui/LeadGateModal';
+import { cn } from '@/lib/utils';
 
 export interface ReportPreviewPageProps {
   onNavigate: (page: string) => void;
 }
-
-// Inline Base64 SVG Logo for Watermark
-const INVTY_LOGO_SVG_BASE64 =
-  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgNjAiPjx0ZXh0IHg9IjEwIiB5PSI0NSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzEyM0M4MiI+SU5WVFl8R0hHPC90ZXh0Pjwvc3ZnPg==';
 
 export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
   const {
@@ -32,7 +29,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
   const [reportType, setReportType] = useState<'Screening' | 'Verified'>('Verified');
   const [framework, setFramework] = useState<'GHG Protocol' | 'BRSR Core' | 'ISO 14064-1'>('GHG Protocol');
-  const [watermarkOpacity, setWatermarkOpacity] = useState(0.06);
+  const [watermarkOpacity, setWatermarkOpacity] = useState(0.04);
   const [isGenerating, setIsGenerating] = useState(false);
   const [leadGateOpen, setLeadGateOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'print' | 'xlsx' | null>(null);
@@ -128,18 +125,30 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
           {sections.execSummary && (
             <div
               className="w-full max-w-[800px] min-h-[1100px] bg-white border border-border shadow-nm-raised-lg rounded-xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-between print:shadow-none print:border-none print:rounded-none print:m-0 print:p-10 page-break-after"
-              style={{
-                backgroundImage: `url("${INVTY_LOGO_SVG_BASE64}")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 45%',
-                backgroundSize: '65%',
-              }}
             >
+              {/* Watermark Logo Behind Report Content */}
+              {watermarkOpacity > 0 && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <img
+                    src="/invty-logo.png"
+                    alt=""
+                    className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
+                    style={{
+                      opacity: watermarkOpacity,
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Watermark Diagonal Banner for Screening */}
               {reportType === 'Screening' && (
                 <div
                   className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 rotate-[-30deg]"
-                  style={{ opacity: watermarkOpacity + 0.04 }}
+                  style={{ opacity: Math.min(watermarkOpacity + 0.05, 0.16) }}
                 >
                   <span className="text-5xl md:text-6xl font-extrabold uppercase tracking-widest text-[#A66300] border-4 border-[#A66300] px-10 py-3 text-center">
                     SCREENING ESTIMATE
@@ -149,7 +158,10 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
-                <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                <div className="flex items-center gap-2">
+                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                </div>
                 <span>{companyName} · {reportingPeriod}</span>
                 <span className="font-mono">ID: {reportId}</span>
               </div>
@@ -267,16 +279,31 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
           {(sections.scope1 || sections.scope2) && (
             <div
               className="w-full max-w-[800px] min-h-[1100px] bg-white border border-border shadow-nm-raised-lg rounded-xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-between print:shadow-none print:border-none print:rounded-none print:m-0 print:p-10 page-break-after"
-              style={{
-                backgroundImage: `url("${INVTY_LOGO_SVG_BASE64}")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 45%',
-                backgroundSize: '65%',
-              }}
             >
+              {/* Watermark Logo Behind Report Content */}
+              {watermarkOpacity > 0 && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <img
+                    src="/invty-logo.png"
+                    alt=""
+                    className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
+                    style={{
+                      opacity: watermarkOpacity,
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
-                <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                <div className="flex items-center gap-2">
+                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                </div>
                 <span>Scope 1 & 2 Disclosures</span>
                 <span className="font-mono">ID: {reportId}</span>
               </div>
@@ -381,16 +408,31 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
           {sections.methodology && (
             <div
               className="w-full max-w-[800px] min-h-[1100px] bg-white border border-border shadow-nm-raised-lg rounded-xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-between print:shadow-none print:border-none print:rounded-none print:m-0 print:p-10 page-break-after"
-              style={{
-                backgroundImage: `url("${INVTY_LOGO_SVG_BASE64}")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center 45%',
-                backgroundSize: '65%',
-              }}
             >
+              {/* Watermark Logo Behind Report Content */}
+              {watermarkOpacity > 0 && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <img
+                    src="/invty-logo.png"
+                    alt=""
+                    className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
+                    style={{
+                      opacity: watermarkOpacity,
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
-                <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                <div className="flex items-center gap-2">
+                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                </div>
                 <span>Methodology & Factor Registry</span>
                 <span className="font-mono">ID: {reportId}</span>
               </div>
@@ -470,8 +512,29 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
             <div
               className="w-full max-w-[800px] min-h-[1100px] bg-white border border-border shadow-nm-raised-lg rounded-xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-between print:shadow-none print:border-none print:rounded-none print:m-0 print:p-10"
             >
+              {/* Watermark Logo Behind Report Content */}
+              {watermarkOpacity > 0 && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <img
+                    src="/invty-logo.png"
+                    alt=""
+                    className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
+                    style={{
+                      opacity: watermarkOpacity,
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
-                <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · ANNEXE</span>
+                <div className="flex items-center gap-2">
+                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · ANNEXE</span>
+                </div>
                 <span>Complete Activity Audit Trail</span>
                 <span className="font-mono">Total {allEntries.length} lines</span>
               </div>
@@ -617,23 +680,48 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
             </div>
 
             {/* Watermark Opacity Slider */}
-            <div className="space-y-2 pt-2 border-t border-border">
-              <div className="flex justify-between text-xs font-semibold text-brand-body">
-                <span>Watermark Opacity</span>
-                <span className="font-mono text-brand-link font-bold">
+            <div className="space-y-2.5 pt-2 border-t border-border">
+              <div className="flex justify-between items-center text-xs font-semibold text-brand-body">
+                <span>Watermark Opacity & Blend</span>
+                <span className="font-mono text-brand-link font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">
                   {(watermarkOpacity * 100).toFixed(0)}%
                 </span>
               </div>
               <input
                 type="range"
-                min={0.03}
-                max={0.15}
+                min={0}
+                max={0.20}
                 step={0.01}
                 value={watermarkOpacity}
                 onChange={(e) => setWatermarkOpacity(parseFloat(e.target.value))}
                 aria-label="Watermark Opacity"
                 className="w-full accent-blue-600 h-2 bg-surface-sunken rounded-md shadow-nm-pressed border border-border cursor-pointer"
               />
+              <div className="grid grid-cols-4 gap-1.5 pt-0.5 text-[10px]">
+                {[
+                  { label: 'Off', val: 0 },
+                  { label: 'Subtle 3%', val: 0.03 },
+                  { label: 'Ideal 4%', val: 0.04 },
+                  { label: 'Clear 8%', val: 0.08 },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setWatermarkOpacity(preset.val)}
+                    className={cn(
+                      'py-1 px-1.5 rounded border transition-colors font-medium text-center',
+                      Math.abs(watermarkOpacity - preset.val) < 0.005
+                        ? 'bg-blue-600 text-white border-blue-600 font-semibold shadow-sm'
+                        : 'bg-surface hover:bg-slate-100 text-brand-muted border-border'
+                    )}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-brand-muted leading-tight">
+                Official INVTY logo watermark is blended into the document background using multiply mode, keeping tables and figures 100% legible.
+              </p>
             </div>
 
             {/* Print & Download Action */}
