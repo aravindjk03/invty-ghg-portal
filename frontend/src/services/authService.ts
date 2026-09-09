@@ -3,9 +3,12 @@ import { env } from '../config/env';
 export interface User {
   id: string;
   email: string;
+  phone?: string;
   name: string;
   companyName: string;
   role: string;
+  avatarUrl?: string;
+  authProvider?: string;
   createdAt: string;
 }
 
@@ -17,8 +20,10 @@ export interface AuthResponse {
 }
 
 export interface DemoAccount {
-  email: string;
-  password: string;
+  type?: 'email' | 'mobile';
+  email?: string;
+  phone?: string;
+  password?: string;
   name: string;
   company: string;
   role: string;
@@ -52,11 +57,12 @@ export const authService = {
     localStorage.removeItem(USER_KEY);
   },
 
+  // 1. Email + Password Sign In
   async login(email: string, password: string): Promise<AuthResponse> {
     const res = await fetch(`${env.API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: email.trim(), password }),
     });
 
     const data = await res.json();
@@ -68,6 +74,7 @@ export const authService = {
     return data;
   },
 
+  // 2. Email + Password Registration
   async signup(payload: { name: string; email: string; password: string; companyName: string }): Promise<AuthResponse> {
     const res = await fetch(`${env.API_BASE_URL}/auth/signup`, {
       method: 'POST',
@@ -84,19 +91,66 @@ export const authService = {
     return data;
   },
 
-  async oauthMock(provider: 'google' | 'apple', email?: string): Promise<AuthResponse> {
-    const body: Record<string, string> = { provider };
-    if (email) body.email = email;
-
-    const res = await fetch(`${env.API_BASE_URL}/auth/oauth-mock`, {
+  // 3. Official Google Sign-In
+  async googleAuth(payload: {
+    credential?: string;
+    email?: string;
+    name?: string;
+    picture?: string;
+    companyName?: string;
+  }): Promise<AuthResponse> {
+    const res = await fetch(`${env.API_BASE_URL}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
     if (!res.ok || !data.success) {
-      throw new Error(data.error?.message || `${provider} sign-in failed.`);
+      throw new Error(data.error?.message || 'Google sign-in failed.');
+    }
+
+    this.setSession(data.user, data.token);
+    return data;
+  },
+
+  // 4. Mobile Phone - Send OTP
+  async sendMobileOtp(phone: string): Promise<{ success: boolean; message: string; phone: string; devOtp?: string }> {
+    const res = await fetch(`${env.API_BASE_URL}/auth/mobile/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone.trim() }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error?.message || 'Failed to dispatch OTP code.');
+    }
+
+    return data;
+  },
+
+  // 5. Mobile Phone - Verify OTP
+  async verifyMobileOtp(payload: {
+    phone: string;
+    code: string;
+    name?: string;
+    companyName?: string;
+  }): Promise<AuthResponse> {
+    const res = await fetch(`${env.API_BASE_URL}/auth/mobile/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: payload.phone.trim(),
+        code: payload.code.trim(),
+        name: payload.name?.trim(),
+        companyName: payload.companyName?.trim(),
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error?.message || 'OTP verification failed.');
     }
 
     this.setSession(data.user, data.token);
@@ -111,6 +165,7 @@ export const authService = {
     } catch {
       return [
         {
+          type: 'email',
           email: 'admin@invty.com',
           password: 'Invty@2026',
           name: 'INVTY Enterprise Admin',
@@ -118,11 +173,19 @@ export const authService = {
           role: 'ADMIN',
         },
         {
+          type: 'email',
           email: 'demo@company.com',
           password: 'Demo@1234',
           name: 'Rajesh Sharma',
           company: 'Tata Heavy Engineering Ltd',
           role: 'ESG_ANALYST',
+        },
+        {
+          type: 'mobile',
+          phone: '+919876543210',
+          name: 'INVTY Enterprise Admin',
+          company: 'INVTY Sustainability Systems',
+          role: 'ADMIN',
         },
       ];
     }

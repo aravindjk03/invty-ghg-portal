@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { authService, User } from '../services/authService';
+import { authService, User, DemoAccount } from '../services/authService';
 import { useGHG } from '../context/GHGContext';
 import { 
   Loader2, 
@@ -10,23 +10,53 @@ import {
   User as UserIcon, 
   Building2,
   Eye,
-  EyeOff
+  EyeOff,
+  Mail,
+  Smartphone,
+  ArrowRight,
+  RefreshCw,
+  Edit2,
+  ShieldCheck
 } from 'lucide-react';
 
 export interface LoginPageProps {
   onNavigate: (page: string) => void;
 }
 
+type AuthMethod = 'email' | 'mobile';
+
 export default function LoginPage({ onNavigate }: LoginPageProps) {
   const { setCurrentUser, setCompanyName, addToast } = useGHG();
 
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  // Primary mode tabs
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
+  
+  // Email Form State
+  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+
+  // Mobile OTP State
+  const [countryCode, setCountryCode] = useState('+91');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [mobileStep, setMobileStep] = useState<'phone' | 'otp'>('phone');
+  const [otpCode, setOtpCode] = useState('');
+  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [mobileName, setMobileName] = useState('');
+  const [mobileCompany, setMobileCompany] = useState('');
+
+  // Google Modal State
+  const [googleModalOpen, setGoogleModalOpen] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+  const [customGoogleName, setCustomGoogleName] = useState('');
+  const [googleCustomMode, setGoogleCustomMode] = useState(false);
+
+  // Shared UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,28 +65,31 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
 
-  // Google sign-in modal state
-  const [googleModalOpen, setGoogleModalOpen] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState<string | null>(null);
+  // Demo accounts
+  const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
 
-  // Pre-fill remembered email if saved
   useEffect(() => {
     const savedEmail = localStorage.getItem('invty_remembered_email');
     if (savedEmail) {
       setEmail(savedEmail);
     }
+    authService.getDemoAccounts().then(setDemoAccounts);
   }, []);
 
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
   const handleAuthSuccess = (user: User, msg: string) => {
-    if (rememberMe) {
+    if (rememberMe && user.email && !user.email.includes('@invty-auth.local')) {
       localStorage.setItem('invty_remembered_email', user.email);
-    } else {
-      localStorage.removeItem('invty_remembered_email');
     }
 
-    // Immediately update global authenticated user state
     setCurrentUser(user);
     if (user.companyName) {
       setCompanyName(user.companyName);
@@ -65,14 +98,16 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     onNavigate('scope-hub');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ─────────────────────────────────────────────────────────────
+  // 1. Email Sign In & Sign Up Handler
+  // ─────────────────────────────────────────────────────────────
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Explicit client-side pre-validation
-    if (mode === 'signin') {
-      if (!email.trim()) {
-        setError('Please enter your email address.');
+    if (emailMode === 'signin') {
+      if (!email.trim() || !email.includes('@')) {
+        setError('Please enter a valid business email address.');
         return;
       }
       if (!password) {
@@ -85,23 +120,22 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         return;
       }
       if (!company.trim()) {
-        setError('Please enter your company or organization name.');
+        setError('Please enter your corporate or organizational name.');
         return;
       }
       if (!email.trim() || !email.includes('@')) {
-        setError('Please enter a valid business email address.');
+        setError('Please enter a valid corporate email address.');
         return;
       }
       if (!password || password.length < 6) {
-        setError('Password must be at least 6 characters.');
+        setError('Password must be at least 6 characters long.');
         return;
       }
     }
 
     setLoading(true);
-
     try {
-      if (mode === 'signin') {
+      if (emailMode === 'signin') {
         const res = await authService.login(email.trim(), password);
         handleAuthSuccess(res.user, 'Signed in successfully.');
       } else {
@@ -111,44 +145,129 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           password,
           companyName: company.trim(),
         });
-        handleAuthSuccess(res.user, 'Account registered and saved to database.');
+        handleAuthSuccess(res.user, 'Account registered and secured in database.');
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please verify your email and password.');
+      setError(err.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    setGoogleEmail('');
-    setGoogleError(null);
-    setGoogleModalOpen(true);
-  };
+  // ─────────────────────────────────────────────────────────────
+  // 2. Mobile Phone - Send OTP
+  // ─────────────────────────────────────────────────────────────
+  const handleSendMobileOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setError(null);
 
-  const handleGoogleModalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!googleEmail.trim() || !googleEmail.includes('@')) {
-      setGoogleError('Please enter a valid Google account email address.');
+    const cleanNum = mobileNumber.replace(/\D/g, '');
+    if (cleanNum.length < 8 || cleanNum.length > 15) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
-    setGoogleLoading(true);
-    setGoogleError(null);
+
+    const fullPhone = `${countryCode}${cleanNum}`;
+    setLoading(true);
+
     try {
-      const res = await authService.oauthMock('google', googleEmail.trim());
-      setGoogleModalOpen(false);
-      handleAuthSuccess(res.user, 'Signed in with Google.');
+      const res = await authService.sendMobileOtp(fullPhone);
+      setMobileStep('otp');
+      setOtpCode('');
+      setDevOtpHint(res.devOtp || null);
+      setCountdown(30);
+      addToast('info', `Verification OTP dispatched to ${fullPhone}`);
     } catch (err: any) {
-      setGoogleError(err.message || 'Google sign-in failed. Please try again.');
+      setError(err.message || 'Failed to dispatch verification OTP.');
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   };
 
-  const fillDemoCredentials = (demoEmail: string, demoPass: string) => {
+  // ─────────────────────────────────────────────────────────────
+  // 3. Mobile Phone - Verify OTP
+  // ─────────────────────────────────────────────────────────────
+  const handleVerifyMobileOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (otpCode.trim().length !== 6) {
+      setError('Please enter the full 6-digit OTP code.');
+      return;
+    }
+
+    const cleanNum = mobileNumber.replace(/\D/g, '');
+    const fullPhone = `${countryCode}${cleanNum}`;
+    setLoading(true);
+
+    try {
+      const res = await authService.verifyMobileOtp({
+        phone: fullPhone,
+        code: otpCode.trim(),
+        name: mobileName.trim() || undefined,
+        companyName: mobileCompany.trim() || undefined,
+      });
+      handleAuthSuccess(res.user, 'Mobile verified successfully.');
+    } catch (err: any) {
+      setError(err.message || 'Invalid or expired OTP code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // 4. Google Sign In Handler
+  // ─────────────────────────────────────────────────────────────
+  const handleSelectGoogleAccount = async (account: { email: string; name: string; avatarUrl?: string }) => {
+    setError(null);
+    setLoading(true);
+    setGoogleModalOpen(false);
+
+    try {
+      const res = await authService.googleAuth({
+        email: account.email,
+        name: account.name,
+        picture: account.avatarUrl,
+      });
+      handleAuthSuccess(res.user, 'Google authentication successful.');
+    } catch (err: any) {
+      setError(err.message || 'Google sign-in failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCustomGoogleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customGoogleEmail.trim() || !customGoogleEmail.includes('@')) {
+      setError('Please enter a valid Google email address.');
+      return;
+    }
+    await handleSelectGoogleAccount({
+      email: customGoogleEmail.trim(),
+      name: customGoogleName.trim() || customGoogleEmail.split('@')[0],
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(customGoogleEmail)}`,
+    });
+  };
+
+  // Demo accounts quick-filler
+  const fillEmailDemo = (demoEmail: string, demoPass: string) => {
+    setAuthMethod('email');
+    setEmailMode('signin');
     setEmail(demoEmail);
     setPassword(demoPass);
-    setMode('signin');
+    setError(null);
+  };
+
+  const fillMobileDemo = (phone: string) => {
+    setAuthMethod('mobile');
+    setMobileStep('phone');
+    if (phone.startsWith('+91')) {
+      setCountryCode('+91');
+      setMobileNumber(phone.slice(3));
+    } else {
+      setMobileNumber(phone);
+    }
     setError(null);
   };
 
@@ -164,9 +283,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-[calc(100vh-72px)] w-full flex items-center justify-center p-4 sm:p-6 bg-[#EDF1F7]">
-      <div className="flex flex-col md:flex-row max-w-5xl w-full bg-white rounded-3xl shadow-2xl border border-gray-200/80 overflow-hidden min-h-[660px]">
-        {/* Left Side Hero Banner Image */}
+    <div className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 sm:p-6 bg-[#EDF1F7]">
+      <div className="flex flex-col md:flex-row max-w-5xl w-full bg-white rounded-3xl shadow-2xl border border-gray-200/80 overflow-hidden min-h-[670px]">
+        
+        {/* ── Left Side Hero Banner ─────────────────────────────────── */}
         <div className="w-full md:w-1/2 relative hidden md:block bg-slate-900">
           <img
             className="h-full w-full object-cover"
@@ -176,13 +296,13 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               (e.target as HTMLElement).style.display = 'none';
             }}
           />
-          {/* Subtle branding overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent p-8 flex flex-col justify-between">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent p-8 flex flex-col justify-between">
+            {/* Logo Badge */}
             <div className="flex items-center gap-3">
               <img
                 src="/invty-logo.png"
                 alt="INVTY Logo"
-                className="w-9 h-9 object-contain drop-shadow-md brightness-110"
+                className="w-10 h-10 object-contain drop-shadow-md brightness-110"
               />
               <div className="flex flex-col">
                 <span className="font-mono font-bold text-white tracking-wider text-base">INVTY</span>
@@ -192,31 +312,64 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               </div>
             </div>
 
-            <div className="text-white space-y-1.5">
-              <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/20 border border-blue-400/30 text-blue-300 backdrop-blur-sm">
-                Corporate GHG Protocol & BRSR Core
-              </span>
+            {/* Bottom Value Props */}
+            <div className="text-white space-y-2">
+              <div className="flex items-center gap-1.5 text-xs text-blue-300 font-semibold bg-blue-500/20 px-3 py-1 rounded-full border border-blue-400/30 w-fit backdrop-blur-sm">
+                <ShieldCheck size={14} className="text-blue-400" />
+                <span>Enterprise Multi-Method Auth</span>
+              </div>
               <h3 className="text-xl font-bold text-white tracking-tight">
-                Enterprise Carbon Accounting Engine
+                Deterministic Carbon Accounting
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-sm">
-                Precision Scope 1, Scope 2, and Scope 3 footprint quantification wired to a deterministic calculation registry.
+                Sign in using your corporate email, verified mobile OTP, or Google SSO to access precision Scope 1, 2, and 3 assurance registers.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Side Form */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6 sm:p-10">
-          <form className="w-full max-w-sm flex flex-col items-center justify-center" onSubmit={handleSubmit}>
-            <h2 className="text-3xl sm:text-4xl text-gray-900 font-medium tracking-tight">
-              {mode === 'signin' ? 'Sign in' : 'Create account'}
+        {/* ── Right Side Form ───────────────────────────────────────── */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center p-6 sm:p-10">
+          <div className="w-full max-w-sm mx-auto flex flex-col items-center">
+            
+            {/* Header */}
+            <h2 className="text-2xl sm:text-3xl text-gray-900 font-bold tracking-tight text-center">
+              Welcome to INVTY
             </h2>
-            <p className="text-sm text-gray-500/90 mt-2 text-center">
-              {mode === 'signin'
-                ? 'Welcome back! Please sign in with your password'
-                : 'Join INVTY to manage corporate emissions inventory'}
+            <p className="text-xs sm:text-sm text-gray-500 mt-1.5 text-center">
+              Select your preferred authentication method
             </p>
+
+            {/* ── Auth Method Tabs (Email vs Mobile) ───────────────── */}
+            <div className="grid grid-cols-2 gap-1 w-full bg-slate-100 p-1 rounded-full mt-5 border border-slate-200">
+              <button
+                type="button"
+                onClick={() => { setAuthMethod('email'); setError(null); }}
+                className={cn(
+                  'flex items-center justify-center gap-2 py-2 rounded-full text-xs font-semibold transition-all',
+                  authMethod === 'email'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                )}
+              >
+                <Mail size={14} />
+                <span>Business Email</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setAuthMethod('mobile'); setError(null); }}
+                className={cn(
+                  'flex items-center justify-center gap-2 py-2 rounded-full text-xs font-semibold transition-all',
+                  authMethod === 'mobile'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                )}
+              >
+                <Smartphone size={14} />
+                <span>Mobile OTP</span>
+              </button>
+            </div>
 
             {/* Error Banner */}
             {error && (
@@ -226,251 +379,521 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               </div>
             )}
 
-            {/* Google Single Sign-On Button */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="w-full mt-6 bg-gray-500/10 hover:bg-gray-500/15 border border-gray-200/60 transition-colors flex items-center justify-center h-12 rounded-full gap-2.5"
-            >
-              <img
-                src="https://cdn.21st.dev/assets/mirror/1c/1cfd0c4e7a6f38863315799a1bb09f981d08df39353f5f1467aec59e328e1bbd.svg"
-                alt="googleLogo"
-                className="w-5 h-5"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://www.google.com/favicon.ico';
-                }}
-              />
-              <span className="text-sm font-medium text-gray-700">Continue with Google</span>
-            </button>
+            {/* ── METHOD 1: EMAIL & PASSWORD ──────────────────────── */}
+            {authMethod === 'email' && (
+              <form onSubmit={handleEmailSubmit} className="w-full mt-5 space-y-3.5">
+                {/* Signup Extra Fields */}
+                {emailMode === 'signup' && (
+                  <>
+                    <div className="flex items-center w-full border border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all h-11 rounded-full px-4 gap-2.5">
+                      <UserIcon size={15} className="text-gray-400 flex-shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
 
-            {/* Divider */}
-            <div className="flex items-center gap-4 w-full my-5">
-              <div className="w-full h-px bg-gray-300/90"></div>
-              <p className="w-full text-nowrap text-xs sm:text-sm text-gray-500/90 text-center font-medium">
-                {mode === 'signin' ? 'or sign in with email' : 'or register with email'}
-              </p>
-              <div className="w-full h-px bg-gray-300/90"></div>
-            </div>
+                    <div className="flex items-center w-full border border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all h-11 rounded-full px-4 gap-2.5">
+                      <Building2 size={15} className="text-gray-400 flex-shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Company or Organization"
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </>
+                )}
 
-            {/* In Signup Mode: Name & Company Inputs */}
-            {mode === 'signup' && (
-              <div className="w-full flex flex-col gap-3 mb-3">
-                <div className="flex items-center w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-12 rounded-full overflow-hidden pl-5 pr-4 gap-2.5">
-                  <UserIcon size={16} className="text-gray-400 flex-shrink-0" />
+                {/* Email input */}
+                <div className="flex items-center w-full border border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all h-11 rounded-full px-4 gap-2.5">
+                  <Mail size={15} className="text-gray-400 flex-shrink-0" />
                   <input
-                    type="text"
-                    placeholder="Full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="bg-transparent text-gray-800 placeholder-gray-500/80 outline-none text-sm w-full h-full"
+                    type="email"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
                     required
                     disabled={loading}
+                    autoComplete="email"
                   />
                 </div>
 
-                <div className="flex items-center w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-12 rounded-full overflow-hidden pl-5 pr-4 gap-2.5">
-                  <Building2 size={16} className="text-gray-400 flex-shrink-0" />
+                {/* Password input */}
+                <div className="flex items-center w-full border border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all h-11 rounded-full px-4 gap-2.5">
+                  <span className="text-gray-400 text-sm font-mono flex-shrink-0">🔒</span>
                   <input
-                    type="text"
-                    placeholder="Company or Organization"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    className="bg-transparent text-gray-800 placeholder-gray-500/80 outline-none text-sm w-full h-full"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={emailMode === 'signin' ? 'Password' : 'Create Password (min 6 chars)'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
                     required
                     disabled={loading}
+                    autoComplete={emailMode === 'signin' ? 'current-password' : 'new-password'}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
                 </div>
+
+                {/* Remember Me & Forgot Password */}
+                {emailMode === 'signin' && (
+                  <div className="flex items-center justify-between text-xs text-gray-500 pt-0.5">
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => { setForgotEmail(email); setForgotOpen(true); }}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={cn(
+                    'w-full h-11 rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-all font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.99] mt-2',
+                    loading && 'opacity-70 cursor-not-allowed'
+                  )}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Verifying credentials...</span>
+                    </>
+                  ) : emailMode === 'signin' ? (
+                    'Sign In with Email'
+                  ) : (
+                    'Create Corporate Account'
+                  )}
+                </button>
+
+                {/* Toggle sign in / sign up */}
+                <p className="text-xs text-gray-500 text-center pt-2">
+                  {emailMode === 'signin' ? (
+                    <>
+                      Don’t have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => { setEmailMode('signup'); setError(null); }}
+                        className="text-blue-600 hover:underline font-semibold"
+                      >
+                        Register
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already registered?{' '}
+                      <button
+                        type="button"
+                        onClick={() => { setEmailMode('signin'); setError(null); }}
+                        className="text-blue-600 hover:underline font-semibold"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </p>
+              </form>
+            )}
+
+            {/* ── METHOD 2: MOBILE OTP ───────────────────────────── */}
+            {authMethod === 'mobile' && (
+              <div className="w-full mt-5">
+                {mobileStep === 'phone' ? (
+                  <form onSubmit={handleSendMobileOtp} className="space-y-3.5">
+                    <p className="text-xs text-gray-500">
+                      Enter your registered corporate mobile number to receive a 6-digit verification code.
+                    </p>
+
+                    <div className="flex items-center w-full border border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all h-11 rounded-full overflow-hidden px-3 gap-2">
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="bg-transparent text-xs font-semibold text-gray-700 outline-none pr-1 border-r border-gray-200"
+                        disabled={loading}
+                      >
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+65">🇸🇬 +65</option>
+                        <option value="+49">🇩🇪 +49</option>
+                      </select>
+
+                      <input
+                        type="tel"
+                        placeholder="98765 43210"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value)}
+                        className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full font-mono"
+                        required
+                        autoFocus
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className={cn(
+                        'w-full h-11 rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-all font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.99]',
+                        loading && 'opacity-70 cursor-not-allowed'
+                      )}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span>Dispatching OTP...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Send 6-Digit OTP</span>
+                          <ArrowRight size={15} />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyMobileOtp} className="space-y-3.5">
+                    <div className="flex items-center justify-between text-xs text-gray-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                      <span>Code sent to <strong>{countryCode} {mobileNumber}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => { setMobileStep('phone'); setDevOtpHint(null); }}
+                        className="text-blue-600 hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <Edit2 size={12} />
+                        <span>Edit</span>
+                      </button>
+                    </div>
+
+                    {/* Developer OTP Auto-Fill Hint */}
+                    {devOtpHint && (
+                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+                        <span>Demo OTP: <strong className="font-mono text-sm tracking-wider text-emerald-900">{devOtpHint}</strong></span>
+                        <button
+                          type="button"
+                          onClick={() => setOtpCode(devOtpHint)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-[11px] font-semibold"
+                        >
+                          Auto Fill
+                        </button>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-xs font-semibold text-gray-700 block mb-1">
+                        Enter 6-Digit Verification Code
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        placeholder="• • • • • •"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        className="w-full h-12 text-center font-mono text-lg tracking-[0.5em] border border-gray-300 rounded-2xl outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all font-bold"
+                        autoFocus
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Didn't receive the code?</span>
+                      {countdown > 0 ? (
+                        <span className="font-mono text-gray-400">Resend in {countdown}s</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSendMobileOtp()}
+                          className="text-blue-600 hover:underline font-semibold flex items-center gap-1"
+                        >
+                          <RefreshCw size={12} />
+                          <span>Resend OTP</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || otpCode.length !== 6}
+                      className={cn(
+                        'w-full h-11 rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-all font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.99]',
+                        (loading || otpCode.length !== 6) && 'opacity-70 cursor-not-allowed'
+                      )}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span>Verifying OTP code...</span>
+                        </>
+                      ) : (
+                        'Verify & Sign In'
+                      )}
+                    </button>
+                  </form>
+                )}
               </div>
             )}
 
-            {/* Email Input */}
-            <div className="flex items-center w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-12 rounded-full overflow-hidden pl-6 pr-4 gap-2">
-              <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M0 .55.571 0H15.43l.57.55v9.9l-.571.55H.57L0 10.45zm1.143 1.138V9.9h13.714V1.69l-6.503 4.8h-.697zM13.749 1.1H2.25L8 5.356z"
-                  fill="#6B7280"
-                />
-              </svg>
-              <input
-                type="email"
-                placeholder="Email id"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-transparent text-gray-800 placeholder-gray-500/80 outline-none text-sm w-full h-full"
-                required
-                disabled={loading}
-                autoComplete="email"
-              />
-            </div>
+            {/* ── GOOGLE SINGLE SIGN-ON DIVIDER & BUTTON ────────────── */}
+            <div className="w-full my-4">
+              <div className="flex items-center gap-3 w-full my-3">
+                <div className="w-full h-px bg-gray-200"></div>
+                <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold whitespace-nowrap">
+                  or continue with
+                </span>
+                <div className="w-full h-px bg-gray-200"></div>
+              </div>
 
-            {/* Password Input with Show/Hide toggle */}
-            <div className="flex items-center mt-4 w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-12 rounded-full overflow-hidden pl-6 pr-3 gap-2">
-              <svg width="13" height="17" viewBox="0 0 13 17" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-                <path
-                  d="M13 8.5c0-.938-.729-1.7-1.625-1.7h-.812V4.25C10.563 1.907 8.74 0 6.5 0S2.438 1.907 2.438 4.25V6.8h-.813C.729 6.8 0 7.562 0 8.5v6.8c0 .938.729 1.7 1.625 1.7h9.75c.896 0 1.625-.762 1.625-1.7zM4.063 4.25c0-1.406 1.093-2.55 2.437-2.55s2.438 1.144 2.438 2.55V6.8H4.061z"
-                  fill="#6B7280"
-                />
-              </svg>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-transparent text-gray-800 placeholder-gray-500/80 outline-none text-sm w-full h-full"
-                required
-                disabled={loading}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-              />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-                className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                onClick={() => { setGoogleCustomMode(false); setGoogleModalOpen(true); }}
+                disabled={loading}
+                className="w-full h-11 rounded-full border border-gray-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-3 text-xs sm:text-sm font-semibold text-gray-700 shadow-sm"
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Sign in with Google</span>
               </button>
             </div>
 
-            {/* Remember Me and Forgot Password */}
-            {mode === 'signin' && (
-              <div className="w-full flex items-center justify-between mt-5 text-gray-500/80">
-                <div className="flex items-center gap-2">
-                  <input
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    type="checkbox"
-                    id="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  <label className="text-xs sm:text-sm cursor-pointer select-none" htmlFor="checkbox">
-                    Remember me
-                  </label>
+            {/* ── TEST ACCOUNTS PRE-POPULATE ────────────────────────── */}
+            <div className="w-full mt-3 p-3 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Database size={13} className="text-blue-600" />
+                  <span>SQLite Seeded Test Logins</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForgotEmail(email);
-                    setForgotOpen(true);
-                  }}
-                  className="text-xs sm:text-sm underline hover:text-indigo-600 transition-colors"
-                >
-                  Forgot password?
-                </button>
+                <span className="text-[10px] text-slate-400 font-normal">Click to fill</span>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={cn(
-                'mt-6 w-full h-11 rounded-full text-white bg-indigo-600 hover:bg-indigo-700 transition-all font-medium flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 active:scale-[0.99]',
-                loading && 'opacity-70 cursor-not-allowed'
-              )}
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>Verifying credentials...</span>
-                </>
-              ) : mode === 'signin' ? (
-                'Login'
-              ) : (
-                'Create Account'
-              )}
-            </button>
-
-            {/* Toggle Signin / Signup */}
-            <p className="text-gray-500/90 text-xs sm:text-sm mt-4 text-center">
-              {mode === 'signin' ? (
-                <>
-                  Don’t have an account?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('signup');
-                      setError(null);
-                    }}
-                    className="text-indigo-600 hover:underline font-semibold"
-                  >
-                    Sign up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('signin');
-                      setError(null);
-                    }}
-                    className="text-indigo-600 hover:underline font-semibold"
-                  >
-                    Sign in
-                  </button>
-                </>
-              )}
-            </p>
-
-            {/* SQLite Database Test Accounts Card */}
-            <div className="w-full mt-6 p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                <Database size={13} className="text-indigo-600" />
-                <span>Pre-seeded SQLite Test Logins</span>
-              </div>
-              <p className="text-[11px] text-slate-500 mb-2">
-                Click any account below to populate fields, then press <strong>Login</strong>:
-              </p>
               <div className="grid grid-cols-1 gap-1.5">
+                {/* Admin Email */}
                 <button
                   type="button"
-                  onClick={() => fillDemoCredentials('admin@invty.com', 'Invty@2026')}
-                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 text-xs transition-colors group"
+                  onClick={() => fillEmailDemo('admin@invty.com', 'Invty@2026')}
+                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs transition-colors group"
                 >
                   <div>
                     <span className="font-semibold text-slate-800">Admin: </span>
                     <span className="text-slate-600">admin@invty.com</span>
                   </div>
-                  <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-indigo-100">
+                  <span className="font-mono text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-blue-100">
                     Invty@2026
                   </span>
                 </button>
+
+                {/* Mobile Phone Demo */}
                 <button
                   type="button"
-                  onClick={() => fillDemoCredentials('demo@company.com', 'Demo@1234')}
-                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 text-xs transition-colors group"
+                  onClick={() => fillMobileDemo('+919876543210')}
+                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs transition-colors group"
                 >
-                  <div>
-                    <span className="font-semibold text-slate-800">Analyst: </span>
-                    <span className="text-slate-600">demo@company.com</span>
+                  <div className="flex items-center gap-1.5">
+                    <Smartphone size={13} className="text-emerald-600" />
+                    <span className="font-semibold text-slate-800">Mobile OTP: </span>
+                    <span className="font-mono text-slate-600">+91 98765 43210</span>
                   </div>
-                  <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-indigo-100">
-                    Demo@1234
+                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-emerald-100">
+                    Instant OTP
                   </span>
                 </button>
               </div>
             </div>
-          </form>
+
+          </div>
         </div>
       </div>
 
-      {/* Forgot Password Dialog */}
+      {/* ── GOOGLE IDENTITY CHOOSER MODAL ─────────────────────────── */}
+      {googleModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 max-w-sm w-full space-y-4">
+            
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span className="text-sm font-bold text-gray-800">Sign in with Google</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGoogleModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500">
+              Choose an account to continue to <strong>INVTY GHG Portal</strong>
+            </p>
+
+            {!googleCustomMode ? (
+              <div className="space-y-2">
+                {/* Account 1 */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectGoogleAccount({
+                    email: 'alex.director@invty-enterprise.com',
+                    name: 'Alex Director',
+                    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+                  })}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 border border-gray-200 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0">
+                    AD
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-xs font-semibold text-gray-900 group-hover:text-blue-600">Alex Director</span>
+                    <span className="text-[11px] text-gray-500 truncate">alex.director@invty-enterprise.com</span>
+                  </div>
+                </button>
+
+                {/* Account 2 */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectGoogleAccount({
+                    email: 'rajesh.esg@gmail.com',
+                    name: 'Rajesh Sharma',
+                    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces',
+                  })}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 border border-gray-200 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0">
+                    RS
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-xs font-semibold text-gray-900 group-hover:text-blue-600">Rajesh Sharma</span>
+                    <span className="text-[11px] text-gray-500 truncate">rajesh.esg@gmail.com</span>
+                  </div>
+                </button>
+
+                {/* Enter Custom Account */}
+                <button
+                  type="button"
+                  onClick={() => setGoogleCustomMode(true)}
+                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-gray-300 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors text-center"
+                >
+                  + Use another Google account
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleCustomGoogleSubmit} className="space-y-3">
+                <input
+                  type="email"
+                  placeholder="your.email@gmail.com"
+                  value={customGoogleEmail}
+                  onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                  className="w-full h-11 px-4 border border-gray-300 rounded-full text-xs text-gray-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  required
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  placeholder="Account Display Name (Optional)"
+                  value={customGoogleName}
+                  onChange={(e) => setCustomGoogleName(e.target.value)}
+                  className="w-full h-11 px-4 border border-gray-300 rounded-full text-xs text-gray-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+                <div className="flex justify-between items-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setGoogleCustomMode(false)}
+                    className="text-xs text-gray-500 hover:underline"
+                  >
+                    ← Back to list
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+              By continuing, Google shares your profile name, email address, and avatar with INVTY in accordance with our Privacy Policy.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── FORGOT PASSWORD MODAL ─────────────────────────────────── */}
       {forgotOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-sm w-full animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Reset password</h3>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-sm w-full">
+            <h3 className="text-base font-bold text-gray-900 mb-1">Reset password</h3>
             <p className="text-xs text-gray-500 mb-4">
-              Enter your corporate email address to receive password reset instructions.
+              Enter your corporate email address to receive password recovery instructions.
             </p>
 
             {forgotSent ? (
               <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-green-600 flex-shrink-0" />
-                <span>Reset email dispatched! Please check your inbox.</span>
+                <span>Recovery instructions dispatched! Check your corporate inbox.</span>
               </div>
             ) : (
               <form onSubmit={handleForgotSubmit} className="space-y-3">
@@ -479,7 +902,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                   placeholder="name@company.com"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full h-11 px-4 border border-gray-300 rounded-full text-xs text-gray-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                  className="w-full h-11 px-4 border border-gray-300 rounded-full text-xs text-gray-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   required
                 />
                 <div className="flex justify-end gap-2 pt-2">
@@ -492,7 +915,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full"
+                    className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full"
                   >
                     Send instructions
                   </button>
@@ -502,74 +925,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           </div>
         </div>
       )}
-      {/* Google Sign-In Modal */}
-      {googleModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-sm w-full">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                <img
-                  src="https://cdn.21st.dev/assets/mirror/1c/1cfd0c4e7a6f38863315799a1bb09f981d08df39353f5f1467aec59e328e1bbd.svg"
-                  alt="Google"
-                  className="w-5 h-5"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://www.google.com/favicon.ico';
-                  }}
-                />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">Sign in with Google</h3>
-                <p className="text-xs text-gray-500">Enter your Google account email</p>
-              </div>
-            </div>
 
-            {googleError && (
-              <div className="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700">
-                <AlertCircle size={14} className="flex-shrink-0 text-red-500" />
-                <span>{googleError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleGoogleModalSubmit} className="space-y-3">
-              <input
-                type="email"
-                placeholder="yourname@gmail.com"
-                value={googleEmail}
-                onChange={(e) => setGoogleEmail(e.target.value)}
-                className="w-full h-11 px-4 border border-gray-300 rounded-full text-sm text-gray-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-                autoFocus
-                disabled={googleLoading}
-                required
-              />
-              <div className="flex justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setGoogleModalOpen(false)}
-                  disabled={googleLoading}
-                  className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={googleLoading}
-                  className="px-5 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center gap-1.5 transition-colors disabled:opacity-70"
-                >
-                  {googleLoading ? (
-                    <>
-                      <Loader2 size={13} className="animate-spin" />
-                      <span>Signing in…</span>
-                    </>
-                  ) : (
-                    'Continue'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
