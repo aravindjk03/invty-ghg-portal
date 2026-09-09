@@ -55,10 +55,8 @@ function ToastPortal() {
 }
 
 function MainApp() {
-  const { setCompanyName, addToast } = useGHG();
-  const [currentPage, setCurrentPage] = useState<string>(() => {
-    return authService.getStoredUser() ? 'scope-hub' : 'login';
-  });
+  const { currentUser, setCompanyName, addToast } = useGHG();
+  const [currentPage, setCurrentPage] = useState<string>('scope-hub');
 
   // Ingest portfolio redirect params on mount
   React.useEffect(() => {
@@ -71,19 +69,23 @@ function MainApp() {
     if (company) {
       setCompanyName(company);
     }
-    if (page) {
+    if (page && currentUser) {
       setCurrentPage(page);
     }
 
     if (ref === 'portfolio') {
       addToast('info', 'Welcome from Portfolio. Guest session activated.');
     }
-  }, [setCompanyName, addToast]);
+  }, [setCompanyName, addToast, currentUser]);
+
+  const activePage = currentUser ? (currentPage === 'login' ? 'scope-hub' : currentPage) : 'login';
 
   const renderPage = () => {
-    switch (currentPage) {
-      case 'login':
-        return <LoginPage onNavigate={setCurrentPage} />;
+    if (!currentUser) {
+      return <LoginPage onNavigate={setCurrentPage} />;
+    }
+
+    switch (activePage) {
       case 'scope-1':
         return <Scope1Page onNavigate={setCurrentPage} />;
       case 'scope-2':

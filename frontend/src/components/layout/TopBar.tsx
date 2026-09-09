@@ -16,7 +16,8 @@ import {
   BookOpen,
   LogIn,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Lock
 } from 'lucide-react';
 
 export interface TopBarProps {
@@ -33,6 +34,11 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
     onNavigate('scope-hub');
   };
 
+  const handleLogout = async () => {
+    await logout();
+    onNavigate('login');
+  };
+
   return (
     <header className="sticky top-0 z-40 h-[72px] bg-surface-raised border-b border-border shadow-nm-raised-sm flex items-center">
       {/* Centered to match page container max-width exactly */}
@@ -41,7 +47,13 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
         <div className="flex items-center gap-5">
           <button
             type="button"
-            onClick={() => onNavigate('scope-hub')}
+            onClick={() => {
+              if (currentUser) {
+                onNavigate('scope-hub');
+              } else {
+                onNavigate('login');
+              }
+            }}
             className="flex items-center gap-2.5 group focus-visible:outline-2 focus-visible:outline-blue-600 rounded-md p-1"
           >
             <div className="w-9 h-9 rounded-md bg-blue-600 flex items-center justify-center text-white shadow-nm-raised-sm">
@@ -57,126 +69,166 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             </div>
           </button>
 
-          {/* Core Navigation Tabs - Clean, Corporate & Properly Spaced */}
-          <nav className="flex items-center gap-1.5 bg-surface-sunken p-1.5 rounded-md border border-border shadow-nm-pressed text-xs">
-            <button
-              type="button"
-              onClick={() => onNavigate('scope-hub')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
-                currentPage === 'scope-hub'
-                  ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
-                  : 'text-brand-muted hover:text-brand-body'
-              }`}
-            >
-              <Home size={14} />
-              <span>Hub</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('scope-1')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
-                currentPage === 'scope-1'
-                  ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
-                  : 'text-brand-muted hover:text-brand-body'
-              }`}
-            >
-              <Flame size={14} className="text-scope-1" />
-              <span>Scope 1</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('scope-2')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
-                currentPage === 'scope-2'
-                  ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
-                  : 'text-brand-muted hover:text-brand-body'
-              }`}
-            >
-              <Zap size={14} className="text-scope-2" />
-              <span>Scope 2</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('scope-3')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
-                currentPage === 'scope-3'
-                  ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
-                  : 'text-brand-muted hover:text-brand-body'
-              }`}
-            >
-              <Link2 size={14} className="text-scope-3" />
-              <span>Scope 3</span>
-            </button>
+          {/* Core Navigation Tabs - Rendered Only When Authenticated */}
+          {currentUser ? (
+            <nav className="flex items-center gap-1.5 bg-surface-sunken p-1.5 rounded-md border border-border shadow-nm-pressed text-xs">
+              <button
+                type="button"
+                onClick={() => onNavigate('scope-hub')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  currentPage === 'scope-hub'
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <Home size={14} />
+                <span>Hub</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('scope-1')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  currentPage === 'scope-1'
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <Flame size={14} className="text-scope-1" />
+                <span>Scope 1</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('scope-2')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  currentPage === 'scope-2'
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <Zap size={14} className="text-scope-2" />
+                <span>Scope 2</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('scope-3')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  currentPage === 'scope-3'
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <Link2 size={14} className="text-scope-3" />
+                <span>Scope 3</span>
+              </button>
 
-            {/* Subtle Divider */}
-            <div className="h-4 w-px bg-border mx-1" />
+              {/* Subtle Divider */}
+              <div className="h-4 w-px bg-border mx-1" />
 
-            <button
-              type="button"
-              onClick={() => onNavigate('dashboard')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
-                currentPage === 'dashboard'
-                  ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
-                  : 'text-brand-muted hover:text-brand-body'
-              }`}
-            >
-              <BarChart3 size={14} />
-              <span>Dashboard</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('report')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
-                currentPage === 'report'
-                  ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
-                  : 'text-brand-muted hover:text-brand-body'
-              }`}
-            >
-              <FileText size={14} />
-              <span>Report</span>
-            </button>
-          </nav>
+              <button
+                type="button"
+                onClick={() => onNavigate('dashboard')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  currentPage === 'dashboard'
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <BarChart3 size={14} />
+                <span>Dashboard</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('report')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-medium transition-all ${
+                  currentPage === 'report'
+                    ? 'bg-surface-raised text-brand-link shadow-nm-raised-sm font-semibold'
+                    : 'text-brand-muted hover:text-brand-body'
+                }`}
+              >
+                <FileText size={14} />
+                <span>Report</span>
+              </button>
+            </nav>
+          ) : (
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-md font-medium">
+              <Lock size={13} className="text-amber-600" />
+              <span>Authentication Required to Access Inventory</span>
+            </div>
+          )}
         </div>
 
         {/* Centre: Company & Reporting Context */}
-        <div className="hidden lg:flex items-center gap-2 text-xs text-brand-muted bg-surface/90 px-3.5 py-1.5 rounded-md border border-border shadow-sm">
-          <span className="font-semibold text-brand-heading">{companyName}</span>
-          <span>·</span>
-          <span>{reportingPeriod}</span>
-          <span>·</span>
-          <span className="flex items-center gap-1 text-brand-body">
-            <CheckCircle2 size={12} className="text-status-success" />
-            {boundaryApproach}
-          </span>
-        </div>
+        {currentUser ? (
+          <div className="hidden lg:flex items-center gap-2 text-xs text-brand-muted bg-surface/90 px-3.5 py-1.5 rounded-md border border-border shadow-sm">
+            <span className="font-semibold text-brand-heading">{companyName}</span>
+            <span>·</span>
+            <span>{reportingPeriod}</span>
+            <span>·</span>
+            <span className="flex items-center gap-1 text-brand-body">
+              <CheckCircle2 size={12} className="text-status-success" />
+              {boundaryApproach}
+            </span>
+          </div>
+        ) : (
+          <div className="hidden lg:flex items-center gap-2 text-xs text-brand-muted bg-surface/90 px-3.5 py-1.5 rounded-md border border-border shadow-sm">
+            <span className="font-semibold text-brand-heading">INVTY Enterprise Portal</span>
+            <span>·</span>
+            <span className="text-brand-muted font-mono">SQLite DB Security Active</span>
+          </div>
+        )}
 
         {/* Right: Actions & User Session */}
         <div className="flex items-center gap-2.5">
           {currentUser ? (
-            <div className="flex items-center gap-2 bg-surface/80 pl-2.5 pr-1.5 py-1 rounded-full border border-border text-xs">
-              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[11px]">
-                {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+            <>
+              <div className="flex items-center gap-2 bg-surface/80 pl-2.5 pr-1.5 py-1 rounded-full border border-border text-xs">
+                <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[11px]">
+                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="hidden md:flex flex-col text-left">
+                  <span className="font-semibold text-brand-heading leading-tight truncate max-w-[120px]">
+                    {currentUser.name}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-brand-muted font-medium">
+                    {currentUser.role.replace('_', ' ')}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Sign out"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-brand-muted hover:text-red-600 hover:bg-red-50 transition-colors ml-1"
+                >
+                  <LogOut size={13} />
+                </button>
               </div>
-              <div className="hidden md:flex flex-col text-left">
-                <span className="font-semibold text-brand-heading leading-tight truncate max-w-[120px]">
-                  {currentUser.name}
-                </span>
-                <span className="text-[9px] uppercase tracking-wider text-brand-muted font-medium">
-                  {currentUser.role.replace('_', ' ')}
-                </span>
-              </div>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Save size={14} />}
+                onClick={handleSaveAndExit}
+                className="hidden sm:inline-flex"
+              >
+                Save Draft
+              </Button>
+
               <button
                 type="button"
-                onClick={logout}
-                title="Sign out"
-                className="w-7 h-7 rounded-full flex items-center justify-center text-brand-muted hover:text-red-600 hover:bg-red-50 transition-colors ml-1"
+                aria-label="Settings & Boundaries"
+                onClick={() => onNavigate('settings')}
+                className={`w-9 h-9 rounded-md flex items-center justify-center border transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 ${
+                  currentPage === 'settings'
+                    ? 'bg-surface-raised text-brand-primary border-border shadow-nm-raised-sm'
+                    : 'text-brand-muted hover:text-brand-body hover:bg-blue-50 border-transparent hover:border-border'
+                }`}
               >
-                <LogOut size={13} />
+                <Settings size={18} />
               </button>
-            </div>
+            </>
           ) : (
             <Button
-              variant={currentPage === 'login' ? 'primary' : 'secondary'}
+              variant="primary"
               size="sm"
               leftIcon={<LogIn size={14} />}
               onClick={() => onNavigate('login')}
@@ -185,29 +237,6 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
               Sign In
             </Button>
           )}
-
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={<Save size={14} />}
-            onClick={handleSaveAndExit}
-            className="hidden sm:inline-flex"
-          >
-            Save Draft
-          </Button>
-
-          <button
-            type="button"
-            aria-label="Settings & Boundaries"
-            onClick={() => onNavigate('settings')}
-            className={`w-9 h-9 rounded-md flex items-center justify-center border transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 ${
-              currentPage === 'settings'
-                ? 'bg-surface-raised text-brand-primary border-border shadow-nm-raised-sm'
-                : 'text-brand-muted hover:text-brand-body hover:bg-blue-50 border-transparent hover:border-border'
-            }`}
-          >
-            <Settings size={18} />
-          </button>
 
           <button
             type="button"

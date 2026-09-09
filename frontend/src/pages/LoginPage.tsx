@@ -2,18 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { authService, User } from '../services/authService';
 import { useGHG } from '../context/GHGContext';
-import { Loader2, AlertCircle, Database, CheckCircle2, User as UserIcon, Building2 } from 'lucide-react';
+import { 
+  Loader2, 
+  AlertCircle, 
+  Database, 
+  CheckCircle2, 
+  User as UserIcon, 
+  Building2,
+  Eye,
+  EyeOff
+} from 'lucide-react';
 
 export interface LoginPageProps {
   onNavigate: (page: string) => void;
 }
 
 export default function LoginPage({ onNavigate }: LoginPageProps) {
-  const { setCompanyName, addToast } = useGHG();
+  const { setCurrentUser, setCompanyName, addToast } = useGHG();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -40,6 +50,8 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       localStorage.removeItem('invty_remembered_email');
     }
 
+    // Immediately update global authenticated user state
+    setCurrentUser(user);
     if (user.companyName) {
       setCompanyName(user.companyName);
     }
@@ -50,25 +62,53 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Explicit client-side pre-validation
+    if (mode === 'signin') {
+      if (!email.trim()) {
+        setError('Please enter your email address.');
+        return;
+      }
+      if (!password) {
+        setError('Please enter your password.');
+        return;
+      }
+    } else {
+      if (!name.trim()) {
+        setError('Please enter your full name.');
+        return;
+      }
+      if (!company.trim()) {
+        setError('Please enter your company or organization name.');
+        return;
+      }
+      if (!email.trim() || !email.includes('@')) {
+        setError('Please enter a valid business email address.');
+        return;
+      }
+      if (!password || password.length < 6) {
+        setError('Password must be at least 6 characters.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
       if (mode === 'signin') {
         const res = await authService.login(email.trim(), password);
-        handleAuthSuccess(res.user, 'Signed in successfully to SQLite database.');
+        handleAuthSuccess(res.user, 'Signed in successfully.');
       } else {
-        if (!name.trim()) throw new Error('Please enter your full name.');
-        if (!company.trim()) throw new Error('Please enter your company or organization name.');
         const res = await authService.signup({
           name: name.trim(),
           email: email.trim(),
           password,
           companyName: company.trim(),
         });
-        handleAuthSuccess(res.user, 'Account created and saved to database.');
+        handleAuthSuccess(res.user, 'Account registered and saved to database.');
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please verify your credentials.');
+      setError(err.message || 'Authentication failed. Please verify your email and password.');
     } finally {
       setLoading(false);
     }
@@ -115,12 +155,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             src="https://cdn.21st.dev/assets/mirror/f4/f48e20bd4dcdcf2ca40eafe923e1134d17f43dce1c5bff8f1b96b7301e126ec3.png"
             alt="INVTY GHG Portal Hero"
             onError={(e) => {
-              // Fallback if CDN is unreachable
               (e.target as HTMLElement).style.display = 'none';
             }}
           />
           {/* Subtle branding overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent p-8 flex flex-col justify-between">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent p-8 flex flex-col justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-mono font-bold text-lg shadow-lg">
                 IV
@@ -155,7 +194,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             </h2>
             <p className="text-sm text-gray-500/90 mt-2 text-center">
               {mode === 'signin'
-                ? 'Welcome back! Please sign in to continue'
+                ? 'Welcome back! Please sign in with your password'
                 : 'Join INVTY to manage corporate emissions inventory'}
             </p>
 
@@ -179,7 +218,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 alt="googleLogo"
                 className="w-5 h-5"
                 onError={(e) => {
-                  // Fallback Google G icon
                   (e.target as HTMLImageElement).src = 'https://www.google.com/favicon.ico';
                 }}
               />
@@ -248,8 +286,8 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               />
             </div>
 
-            {/* Password Input */}
-            <div className="flex items-center mt-4 w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-12 rounded-full overflow-hidden pl-6 pr-4 gap-2">
+            {/* Password Input with Show/Hide toggle */}
+            <div className="flex items-center mt-4 w-full bg-transparent border border-gray-300/60 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-12 rounded-full overflow-hidden pl-6 pr-3 gap-2">
               <svg width="13" height="17" viewBox="0 0 13 17" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
                 <path
                   d="M13 8.5c0-.938-.729-1.7-1.625-1.7h-.812V4.25C10.563 1.907 8.74 0 6.5 0S2.438 1.907 2.438 4.25V6.8h-.813C.729 6.8 0 7.562 0 8.5v6.8c0 .938.729 1.7 1.625 1.7h9.75c.896 0 1.625-.762 1.625-1.7zM4.063 4.25c0-1.406 1.093-2.55 2.437-2.55s2.438 1.144 2.438 2.55V6.8H4.061z"
@@ -257,7 +295,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 />
               </svg>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -266,6 +304,14 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 disabled={loading}
                 autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
             {/* Remember Me and Forgot Password */}
@@ -308,7 +354,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               {loading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  <span>Connecting to DB...</span>
+                  <span>Verifying credentials...</span>
                 </>
               ) : mode === 'signin' ? (
                 'Login'
@@ -350,30 +396,39 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               )}
             </p>
 
-            {/* SQLite Database Quick Test Accounts */}
-            <div className="w-full mt-6 p-3 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2">
+            {/* SQLite Database Test Accounts Card */}
+            <div className="w-full mt-6 p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                 <Database size={13} className="text-indigo-600" />
                 <span>Pre-seeded SQLite Test Logins</span>
               </div>
+              <p className="text-[11px] text-slate-500 mb-2">
+                Click any account below to populate fields, then press <strong>Login</strong>:
+              </p>
               <div className="grid grid-cols-1 gap-1.5">
                 <button
                   type="button"
                   onClick={() => fillDemoCredentials('admin@invty.com', 'Invty@2026')}
-                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 text-xs transition-colors"
+                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 text-xs transition-colors group"
                 >
-                  <span className="font-medium text-slate-700">admin@invty.com</span>
-                  <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">
+                  <div>
+                    <span className="font-semibold text-slate-800">Admin: </span>
+                    <span className="text-slate-600">admin@invty.com</span>
+                  </div>
+                  <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-indigo-100">
                     Invty@2026
                   </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => fillDemoCredentials('demo@company.com', 'Demo@1234')}
-                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 text-xs transition-colors"
+                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 text-xs transition-colors group"
                 >
-                  <span className="font-medium text-slate-700">demo@company.com</span>
-                  <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">
+                  <div>
+                    <span className="font-semibold text-slate-800">Analyst: </span>
+                    <span className="text-slate-600">demo@company.com</span>
+                  </div>
+                  <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-indigo-100">
                     Demo@1234
                   </span>
                 </button>
