@@ -35,6 +35,12 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
 
+  // Google sign-in modal state
+  const [googleModalOpen, setGoogleModalOpen] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+
   // Pre-fill remembered email if saved
   useEffect(() => {
     const savedEmail = localStorage.getItem('invty_remembered_email');
@@ -114,16 +120,28 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
+  const handleGoogleSignIn = () => {
+    setGoogleEmail('');
+    setGoogleError(null);
+    setGoogleModalOpen(true);
+  };
+
+  const handleGoogleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!googleEmail.trim() || !googleEmail.includes('@')) {
+      setGoogleError('Please enter a valid Google account email address.');
+      return;
+    }
+    setGoogleLoading(true);
+    setGoogleError(null);
     try {
-      const res = await authService.oauthMock('google');
-      handleAuthSuccess(res.user, 'Authenticated with Google.');
+      const res = await authService.oauthMock('google', googleEmail.trim());
+      setGoogleModalOpen(false);
+      handleAuthSuccess(res.user, 'Signed in with Google.');
     } catch (err: any) {
-      setError(err.message || 'Google authentication failed.');
+      setGoogleError(err.message || 'Google sign-in failed. Please try again.');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -479,6 +497,74 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+      {/* Google Sign-In Modal */}
+      {googleModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-sm w-full">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+                <img
+                  src="https://cdn.21st.dev/assets/mirror/1c/1cfd0c4e7a6f38863315799a1bb09f981d08df39353f5f1467aec59e328e1bbd.svg"
+                  alt="Google"
+                  className="w-5 h-5"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://www.google.com/favicon.ico';
+                  }}
+                />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">Sign in with Google</h3>
+                <p className="text-xs text-gray-500">Enter your Google account email</p>
+              </div>
+            </div>
+
+            {googleError && (
+              <div className="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700">
+                <AlertCircle size={14} className="flex-shrink-0 text-red-500" />
+                <span>{googleError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleGoogleModalSubmit} className="space-y-3">
+              <input
+                type="email"
+                placeholder="yourname@gmail.com"
+                value={googleEmail}
+                onChange={(e) => setGoogleEmail(e.target.value)}
+                className="w-full h-11 px-4 border border-gray-300 rounded-full text-sm text-gray-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                autoFocus
+                disabled={googleLoading}
+                required
+              />
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setGoogleModalOpen(false)}
+                  disabled={googleLoading}
+                  className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={googleLoading}
+                  className="px-5 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center gap-1.5 transition-colors disabled:opacity-70"
+                >
+                  {googleLoading ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Signing in…</span>
+                    </>
+                  ) : (
+                    'Continue'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

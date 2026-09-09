@@ -55,7 +55,7 @@ function ToastPortal() {
 }
 
 function MainApp() {
-  const { currentUser, setCompanyName, addToast } = useGHG();
+  const { currentUser, authLoading, setCompanyName, addToast } = useGHG();
   const [currentPage, setCurrentPage] = useState<string>('scope-hub');
 
   // Ingest portfolio redirect params on mount
@@ -77,6 +77,18 @@ function MainApp() {
       addToast('info', 'Welcome from Portfolio. Guest session activated.');
     }
   }, [setCompanyName, addToast, currentUser]);
+
+  // While verifying session, show a loading screen instead of flickering
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#EDF1F7] gap-4">
+        <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-mono font-bold text-xl shadow-lg animate-pulse">
+          IV
+        </div>
+        <p className="text-sm text-gray-500 font-medium tracking-wide">Verifying session…</p>
+      </div>
+    );
+  }
 
   const activePage = currentUser ? (currentPage === 'login' ? 'scope-hub' : currentPage) : 'login';
 

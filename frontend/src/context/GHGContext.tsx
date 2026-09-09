@@ -16,6 +16,7 @@ interface GHGContextType {
   setSteelMethod: (method: IntegratedSteelMethod) => void;
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
+  authLoading: boolean;
   logout: () => Promise<void>;
   scope1Entries: ActivityEntry[];
   scope2Entries: ActivityEntry[];
@@ -200,6 +201,9 @@ const INITIAL_SCOPE3_ENTRIES: ActivityEntry[] = [
 const GHGContext = createContext<GHGContextType | undefined>(undefined);
 
 export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // authLoading is true only during the initial async session verification
+  const hasStoredToken = Boolean(authService.getToken());
+  const [authLoading, setAuthLoading] = useState<boolean>(hasStoredToken);
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getStoredUser());
   const [companyName, setCompanyName] = useState<string>(() => {
     const stored = authService.getStoredUser();
@@ -210,13 +214,23 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
 
   useEffect(() => {
+    if (!authService.getToken()) {
+      // No token: definitely not logged in, nothing to verify
+      setAuthLoading(false);
+      return;
+    }
     authService.verifySession().then((user) => {
       if (user) {
         setCurrentUser(user);
         if (user.companyName) {
           setCompanyName(user.companyName);
         }
+      } else {
+        // Token was stale — clear user so login page is shown
+        setCurrentUser(null);
       }
+    }).finally(() => {
+      setAuthLoading(false);
     });
   }, []);
 
@@ -497,6 +511,7 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSteelMethod,
         currentUser,
         setCurrentUser,
+        authLoading,
         logout,
         scope1Entries,
         scope2Entries,

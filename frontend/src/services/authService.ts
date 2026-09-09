@@ -84,11 +84,14 @@ export const authService = {
     return data;
   },
 
-  async oauthMock(provider: 'google' | 'apple'): Promise<AuthResponse> {
+  async oauthMock(provider: 'google' | 'apple', email?: string): Promise<AuthResponse> {
+    const body: Record<string, string> = { provider };
+    if (email) body.email = email;
+
     const res = await fetch(`${env.API_BASE_URL}/auth/oauth-mock`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider }),
+      body: JSON.stringify(body),
     });
 
     const data = await res.json();
