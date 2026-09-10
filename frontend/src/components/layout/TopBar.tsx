@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   LucideIcon,
+  Package,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -69,6 +70,14 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(22,163,74,0.18),rgba(16,185,129,0.18))',
     activeTextClass: 'text-emerald-600',
     activeIconStyle: { color: '#16a34a' },
+  },
+  {
+    icon: Package,
+    label: 'Product Carbon',
+    page: 'product-carbon',
+    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
+    activeTextClass: 'text-teal-700',
+    activeIconStyle: { color: '#0f766e' },
   },
   {
     icon: BarChart3,
@@ -163,7 +172,7 @@ function NavPill({ item, isActive, onNavigate }: NavPillProps) {
               className="h-[15px] w-[15px] flex-shrink-0"
               style={isActive ? item.activeIconStyle : undefined}
             />
-            <span className="hidden lg:inline leading-none">{item.label}</span>
+            <span className="hidden xl:inline leading-none">{item.label}</span>
           </motion.div>
 
           {/* Back face – appears on flip */}
@@ -183,7 +192,7 @@ function NavPill({ item, isActive, onNavigate }: NavPillProps) {
               className="h-[15px] w-[15px] flex-shrink-0"
               style={item.activeIconStyle}
             />
-            <span className="hidden lg:inline leading-none">{item.label}</span>
+            <span className="hidden xl:inline leading-none">{item.label}</span>
           </motion.div>
         </button>
       </motion.div>
@@ -262,7 +271,7 @@ function MobileDrawer({ open, activePage, onNavigate, onClose }: MobileDrawerPro
             exit={{ opacity: 0, y: -6 }}
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
           >
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-w-lg mx-auto">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 max-w-xl mx-auto">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.page === activePage;

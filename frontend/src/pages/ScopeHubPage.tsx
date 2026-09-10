@@ -5,7 +5,7 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { SummaryRail } from '../components/layout/SummaryRail';
 import { useGHG } from '../context/GHGContext';
 import { formatIndianNumber } from '../engine/unitConverter';
-import { ArrowRight, Building2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Building2, CheckCircle2, Package } from 'lucide-react';
 
 export interface ScopeHubPageProps {
   onNavigate: (page: string) => void;
@@ -287,6 +287,82 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                     Review Category Screening
                   </Button>
                 </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Product Carbon Footprint (ISO 14067 / Product Standard) Card */}
+          <Card
+            interactive
+            onClick={() => onNavigate('product-carbon')}
+            className="p-6 border-emerald-200 bg-gradient-to-br from-white via-emerald-50/20 to-teal-50/30 hover:border-emerald-400 transition-all shadow-sm"
+          >
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-emerald-100">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      ISO 14067 / CBAM
+                    </span>
+                    <span className="text-xs font-semibold text-emerald-700">Product Life-Cycle Emissions &amp; Production Costs</span>
+                  </div>
+                  <h2 className="text-xl font-bold text-brand-heading flex items-center gap-2">
+                    <Package className="w-5 h-5 text-emerald-600" />
+                    Product Carbon Emission Register
+                  </h2>
+                  <p className="text-xs text-brand-muted mt-1 max-w-2xl leading-normal">
+                    Track cradle-to-gate carbon intensity per unit produced or used, correlate production spend with emissions liabilities, assess EU CBAM exposure, and run decarbonization sensitivity simulations.
+                  </p>
+                </div>
+
+                <div className="text-left sm:text-right flex-shrink-0 bg-white/80 p-3 rounded-lg border border-emerald-100">
+                  <span className="text-[11px] font-bold text-brand-muted uppercase tracking-wider block">
+                    Embodied Footprint
+                  </span>
+                  <div className="flex items-baseline sm:justify-end gap-1 mt-0.5">
+                    <span className="text-xl font-mono font-bold text-emerald-700">
+                      Cradle-to-Gate
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 font-medium">Unit Intensity &amp; Production Spend</span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-2.5 bg-white/90 rounded border border-emerald-100 text-xs">
+                  <span className="text-brand-muted block text-[11px]">Manufactured Products</span>
+                  <span className="font-semibold text-brand-heading">Finished Goods (Gate)</span>
+                </div>
+                <div className="p-2.5 bg-white/90 rounded border border-emerald-100 text-xs">
+                  <span className="text-brand-muted block text-[11px]">Procured Materials</span>
+                  <span className="font-semibold text-brand-heading">Supply Chain Inputs</span>
+                </div>
+                <div className="p-2.5 bg-white/90 rounded border border-emerald-100 text-xs">
+                  <span className="text-brand-muted block text-[11px]">Shadow Carbon Pricing</span>
+                  <span className="font-semibold text-brand-heading">Liability Modeling</span>
+                </div>
+                <div className="p-2.5 bg-white/90 rounded border border-emerald-100 text-xs">
+                  <span className="text-brand-muted block text-[11px]">What-If Sensitivity</span>
+                  <span className="font-semibold text-brand-heading">Renewable &amp; Abatement</span>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-emerald-100 flex items-center justify-between flex-wrap gap-3">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate('product-carbon');
+                  }}
+                  rightIcon={<ArrowRight size={14} />}
+                >
+                  Open Product Carbon Register
+                </Button>
+                <span className="text-[11px] text-brand-muted font-medium">
+                  ISO 14067 &amp; GHG Protocol Product Standard Aligned
+                </span>
               </div>
             </div>
           </Card>

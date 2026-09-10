@@ -10,6 +10,7 @@ import { ReportPreviewPage } from './pages/ReportPreviewPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { LoginPage } from './pages/LoginPage';
+import { ProductCarbonPage } from './pages/ProductCarbonPage';
 import { authService } from './services/authService';
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -106,6 +107,8 @@ function MainApp() {
         return <Scope2Page onNavigate={setCurrentPage} />;
       case 'scope-3':
         return <Scope3Page onNavigate={setCurrentPage} />;
+      case 'product-carbon':
+        return <ProductCarbonPage onNavigate={setCurrentPage} />;
       case 'dashboard':
         return <DashboardPage onNavigate={setCurrentPage} />;
       case 'report':
