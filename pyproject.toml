@@ -10,7 +10,16 @@ requires-python = ">=3.11"
 dependencies = []                       # the engine itself needs nothing
 
 [project.optional-dependencies]
-test = ["pytest>=8.0", "pint>=0.24"]    # pint is used ONLY to cross-check units in CI
+# pint is used ONLY to cross-check units in CI.
+# sqlalchemy/alembic are needed by tests/test_database.py, which exercises the
+# persistence layer. Without them pytest cannot even collect that module.
+# Versions per docs/techstack-and-bugguard.md Part 1.
+test = [
+    "pytest>=8.0",
+    "pint>=0.24",
+    "sqlalchemy>=2.0,<2.1",
+    "alembic>=1.13,<1.14",
+]
 
 # Explicit, so setuptools never tries to treat data/ or tests/ as packages.
 [tool.setuptools]
