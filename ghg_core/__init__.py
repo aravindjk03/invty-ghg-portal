@@ -20,6 +20,9 @@ from .factors import (ALLOCATION_METHODS, CRADLE_TO_GATE, CRADLE_TO_GRAVE,
                       assert_comparable)
 from .gwp import GwpSet, load_gwp_set
 from .quantities import D, round_sig
+from .screening import (AI_ESTIMATE, CREATION_STAGES, QUANTITY_UNITS, STAGES,
+                        VERIFIED_REGISTRY, LineResult as ScreeningLineResult,
+                        Range, ScreeningLine, ScreeningResult, screen_product)
 from .units import FuelProperty, convert, gcv_kcal_per_kg_to_mj_per_kg, normalise_unit
 
 __version__ = ENGINE_VERSION
