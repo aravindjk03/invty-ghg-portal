@@ -20,6 +20,15 @@ test = [
     "sqlalchemy>=2.0,<2.1",
     "alembic>=1.13,<1.14",
 ]
+# The Product Carbon service (service/). fastapi, pydantic and uvicorn are
+# approved in docs/techstack-and-bugguard.md Part 1. anthropic is added for
+# the AI estimator the Product Carbon page was explicitly asked to use.
+service = [
+    "fastapi>=0.115,<0.116",
+    "pydantic>=2.9,<2.10",
+    "uvicorn[standard]>=0.32,<0.33",
+    "anthropic>=1.6,<2",
+]
 
 # Explicit, so setuptools never tries to treat data/ or tests/ as packages.
 [tool.setuptools]
