@@ -47,16 +47,29 @@ Fallback ladder: exact → prior year → parent region → class average (Tier 
 EEIO proxy (Tier C) → **raise**. Every rung sets its flag. The last rung is not
 optional.
 
-## 6. The AI never emits a number
+## 6. The AI proposes lines; the engine produces every aggregate
 
-The mitigation advisor proposes structured intent — which input, which lever,
-what percentage change. `ghg_core.calculate()` produces every figure. The output
-schema has no absolute-emissions field, so fabrication is unrepresentable rather
-than discouraged.
+Decision recorded 2026-09-16, at the product owner's request: on the Product
+Carbon page ONLY, the AI may propose per-line quantities and per-unit emission
+factor ranges for any product, so that a visitor can get a screening estimate
+for materials INVTY holds no verified data for.
 
-`abstain_reason` is a first-class result. "No credible route-specific data exists
-for this material" is a correct and expected answer, and must never be replaced
-by a plausible guess.
+What stays absolute:
+
+- The AI never states an aggregate. The output schema in `service/schemas.py`
+  has no field for a total, subtotal, share or ranking. Every one of those is
+  computed by `ghg_core.screening.screen_product` in Decimal.
+- Every AI-proposed factor is labelled `ai_estimate` on every screen it appears
+  on, with its cited reference marked unverified, or "No source cited".
+- A verified registry factor always REPLACES the AI's factor for a matching
+  catalogue material and route. AI estimates never enter the registry or the
+  catalogue, and never feed the corporate inventory (Scope 1/2/3).
+- Ranges are summed endpoint-to-endpoint and labelled as ranges, never as a
+  confidence interval.
+- Results carry a standing label: screening estimate, not an ISO 14067-verified
+  footprint or an EPD.
+- Abstention stays first-class. `is_ambiguous` + `clarification` must be
+  rendered, never swallowed.
 
 ## 7. Everything in the catalogue is TO_INGEST
 

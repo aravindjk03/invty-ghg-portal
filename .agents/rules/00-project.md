@@ -42,6 +42,11 @@ GWP value. These are ingested from named publications only. If a coefficient is
 missing, raise an error and tell me which one — never substitute a plausible
 number, and never default to zero.
 
+One scoped exception, approved by the product owner on 2026-09-16: the Product
+Carbon page may show AI-proposed screening factors, clearly labelled, under the
+conditions in @.agents/rules/50-product-carbon.md section 6. It does not extend
+to the corporate inventory, the factor registry, or any report.
+
 ## Dependencies
 
 Install only what @docs/techstack-and-bugguard.md Part 1 approves. If you believe

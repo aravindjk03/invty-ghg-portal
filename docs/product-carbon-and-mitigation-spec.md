@@ -419,3 +419,117 @@ Steps 1–3 have no UI. Step 6 has nothing true to reason over until step 4 runs
 3. **Vehicle use-phase** requires a duty cycle and a grid assumption. Out of scope
    for v1 cradle-to-gate; flag clearly on the page.
 4. **ecoinvent licence** would materially widen Tier A. Currently assumed absent.
+
+---
+
+## 15. Product Carbon Estimator — what is built (2026-09-16)
+
+The product owner asked for a page, placed before Scope 1, where a visitor names
+ANY product and gets the carbon from creating it and from using it, with AI
+analysis. That required relaxing §8.1 for this page only; the scoped exception
+is recorded in `.agents/rules/50-product-carbon.md` §6 and
+`.agents/rules/00-project.md`.
+
+### 15.1 Flow
+
+```
+visitor: product + region + optional details
+  -> service (FastAPI, service/app.py)
+  -> decomposition cache (repeat searches: no AI call, no cost)
+  -> per-client rate limit on new AI calls
+  -> Claude (default claude-haiku-4-5, structured output; see 15.6)
+       returns lifecycle LINES: quantity + per-unit factor low/central/high
+  -> verified registry lookup per line (replaces the AI factor on a match)
+  -> ghg_core.screening.screen_product  (every total, range, share, hotspot)
+  -> EstimateResponse, every number a string
+  -> ProductCarbonPage.tsx renders strings; no arithmetic in the UI
+```
+
+### 15.2 Lifecycle stages
+
+ISO 14067 / GHG Protocol Product Standard stages: `raw_materials`,
+`manufacturing`, `distribution`, `use`, `end_of_life`.
+
+- **Creation** = raw materials + manufacturing + distribution
+- **Use** = use phase over the stated service life
+- **End of life** reported separately; **lifecycle** = all five
+
+### 15.3 Guards
+
+| Guard | Where |
+|---|---|
+| No aggregate field in the AI schema | `service/schemas.py`, tested |
+| Factor denominator always equals the line's unit — no conversion on this path | `ghg_core/screening.py` |
+| Negative factors or quantities refused — credits never net | `ScreeningLine.__post_init__` |
+| `low <= central <= high` enforced; failing lines excluded and listed, never repaired | pipeline |
+| Hallucinated catalogue keys, or a real key on the wrong route, ignored | `Catalogue.matches` |
+| Registry factor on a different unit keeps the AI estimate rather than guessing a conversion | pipeline |
+| `stop_reason` checked before content; partial output before a fallback discarded | `parse_message` |
+| Visitor text only in the user turn, never the system prompt | estimator |
+| Display rounded to 3 significant figures; exact values also returned | pipeline |
+
+### 15.4 Running it
+
+```
+cp service/.env.example service/.env   # add ANTHROPIC_API_KEY
+npm run dev:pcf                        # http://localhost:8000
+```
+
+Without a key the service still runs, `/health` reports `ai_configured: false`,
+and the page shows setup steps instead of failing silently.
+
+### 15.5 Model choice and cost (decided 2026-09-16)
+
+The product owner asked for the cheapest workable option. Default model:
+**Claude Haiku 4.5**. Switch with `PCF_AI_MODEL` in `service/.env`.
+
+| Model | Estimated cost per new estimate | Request shape |
+|---|---|---|
+| `claude-haiku-4-5` (default) | about $0.02 | structured output; optional thinking budget; no effort |
+| `claude-sonnet-5` | about $0.04-0.07 | adaptive thinking + effort |
+| `claude-opus-5` | about $0.20-0.45 | adaptive thinking + effort + server-side refusal fallback |
+
+Estimates assume about 6,500 input tokens (mostly the cached system prompt)
+and 2,500 output tokens. Each response reports its real token usage and
+estimated cost, and `/health` keeps a running total. Prices live in
+`service/models.py` and must be updated when Anthropic's rates change.
+
+Cost controls:
+
+- **Decomposition cache** (SQLite, `service/data/`, git-ignored). The key covers
+  model, prompt fingerprint, and normalised product, region and details. Only the
+  AI's lines are cached; the engine recomputes every time, so cached estimates
+  pick up verified factors once they are ingested.
+- **Rate limit**: `PCF_RATE_LIMIT_PER_HOUR` new AI estimates per client (default
+  30). Cache hits are never limited.
+- **Prompt caching** on the system prompt, which dominates input tokens.
+
+### 15.6 Why the AI is not trained
+
+Fine-tuning a model on emission factors was considered and rejected:
+
+1. Fine-tuning shapes style and format; it does not make recalled numbers
+   reliable. The model would state factors more confidently, not more correctly.
+2. A weight cannot cite the publication a number came from, which breaks the
+   provenance rule in `.agents/rules/40-use-the-core.md`.
+3. Factors are revised yearly (grid, DESNZ, CEA). A trained model is stale
+   as soon as they change.
+
+Accuracy comes from **grounding**, not training: verified registry factors
+replace AI estimates line by line (built), and an **eval set** of reviewed
+products measures whether a cheaper model is still good enough (not yet built).
+Free local models (e.g. via Ollama) were assessed: this development machine
+(i3, 8 GB RAM, integrated graphics) cannot run a capable one, so they need a
+GPU server and were not integrated.
+
+### 15.7 Not yet done
+
+- **Live verification on Haiku 4.5.** No API key was available during the
+  build, so the request shape is unit-tested but has not been exercised against
+  the real API. Run one estimate after adding a key.
+- **Rate limit behind a proxy.** The limit keys on the connecting IP. Behind a
+  load balancer every visitor shares one IP; read the forwarded client address
+  from a trusted proxy before deploying.
+- **An eval set** (§8 of the original advisor design) to measure decomposition
+  quality before customers rely on it.
+- **Ingestion** (§12 step 4). Until it runs, every line is an AI estimate.
