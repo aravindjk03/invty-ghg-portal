@@ -20,8 +20,9 @@ def test_unknown_model_is_rejected_with_the_supported_list():
         get_profile("gpt-something")
 
 
-def test_haiku_is_the_cheapest_supported_model():
-    cheapest = min(PROFILES.values(), key=lambda p: (p.input_usd_per_mtok, p.output_usd_per_mtok))
+def test_haiku_is_the_cheapest_paid_model():
+    paid = [p for p in PROFILES.values() if p.billing == "estimated"]
+    cheapest = min(paid, key=lambda p: (p.input_usd_per_mtok, p.output_usd_per_mtok))
     assert cheapest.model == "claude-haiku-4-5"
 
 

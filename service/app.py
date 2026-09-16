@@ -17,8 +17,9 @@ from ghg_core import ENGINE_VERSION, InMemoryFactorRegistry
 
 from .cache import DecompositionCache, cache_key
 from .catalogue import Catalogue
-from .config import Settings, ai_credentials_present, load_env_file
+from .config import Settings, ai_credentials_present, gemini_api_key, load_env_file
 from .estimator import AIEstimator, ClaudeEstimator, EstimatorError, prompt_fingerprint
+from .gemini import GeminiEstimator
 from .models import estimate_cost_usd
 from .pipeline import build_response
 from .ratelimit import SlidingWindowLimiter
@@ -65,10 +66,24 @@ _estimator: AIEstimator | None = None
 def get_estimator() -> AIEstimator:
     global _estimator
     if _estimator is None:
-        _estimator = ClaudeEstimator(settings.profile, effort=settings.effort,
-                                     thinking_budget=settings.thinking_budget,
-                                     max_tokens=settings.max_tokens)
+        if settings.provider == "gemini":
+            _estimator = GeminiEstimator(settings.profile, api_key=gemini_api_key(),
+                                         max_tokens=settings.max_tokens)
+        else:
+            _estimator = ClaudeEstimator(settings.profile, effort=settings.effort,
+                                         thinking_budget=settings.thinking_budget,
+                                         max_tokens=settings.max_tokens)
     return _estimator
+
+
+def _credentials_ok() -> bool:
+    return ai_credentials_present(settings.provider)
+
+
+SETUP_HINT = {
+    "gemini": "Add GEMINI_API_KEY to service/.env and restart the Product Carbon service.",
+    "anthropic": "Add ANTHROPIC_API_KEY to service/.env and restart the Product Carbon service.",
+}
 
 
 app = FastAPI(title="INVTY Product Carbon Service", version=ENGINE_VERSION)
@@ -80,7 +95,9 @@ app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
 def health() -> dict:
     return {
         "status": "ok",
-        "ai_configured": ai_credentials_present(),
+        "ai_configured": _credentials_ok(),
+        "provider": settings.provider,
+        "billing": settings.profile.billing,
         "model": settings.model,
         "model_label": settings.profile.label,
         "engine_version": ENGINE_VERSION,
@@ -101,7 +118,8 @@ def _respond(request: EstimateRequest, decomposition, *, cache_hit: bool,
                           model=profile.model, model_label=profile.label,
                           effort=settings.effort if profile.supports_effort else None,
                           year=settings.reporting_year, cache_hit=cache_hit,
-                          usage=usage, cost_usd=cost)
+                          usage=usage, cost_usd=cost, provider=profile.provider,
+                          cost_basis=profile.billing)
 
 
 @app.post("/v1/pcf/estimate", response_model=EstimateResponse)
@@ -114,11 +132,10 @@ def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
         spend.record_hit()
         return _respond(request, cached, cache_hit=True)
 
-    if not ai_credentials_present():
+    if not _credentials_ok():
         raise HTTPException(status_code=503, detail={
             "code": "ai_not_configured",
-            "message": "AI is not configured on the server. Add ANTHROPIC_API_KEY to "
-                       "service/.env and restart the Product Carbon service.",
+            "message": f"AI is not configured on the server. {SETUP_HINT[settings.provider]}",
         })
 
     client_id = http.client.host if http.client else "unknown"
@@ -147,8 +164,8 @@ def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
     cost = estimate_cost_usd(settings.profile, result.usage)
     spend.record_call(cost)
     cache.put(key, settings.model, result.decomposition)
-    log.info("estimate model=%s in=%d out=%d cache_read=%d cost_usd=%s",
-             settings.model, result.usage.input_tokens, result.usage.output_tokens,
+    log.info("estimate provider=%s model=%s in=%d out=%d cache_read=%d cost_usd=%s",
+             settings.provider, settings.model, result.usage.input_tokens, result.usage.output_tokens,
              result.usage.cache_read_input_tokens, cost)
     return _respond(request, result.decomposition, cache_hit=False,
                     usage=result.usage, cost=cost)

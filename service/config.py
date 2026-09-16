@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from .models import DEFAULT_MODEL, ModelProfile, get_profile
+from .models import DEFAULT_MODELS, DEFAULT_PROVIDER, ModelProfile, get_profile
 
 SERVICE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SERVICE_DIR.parent
@@ -15,9 +15,18 @@ ALLOWED_EFFORTS = ("low", "medium", "high", "xhigh", "max")
 MIN_THINKING_BUDGET = 1024
 
 
-def load_env_file(path: Path = SERVICE_DIR / ".env") -> None:
+def load_env_file(path: Path | None = None) -> None:
     """Minimal KEY=VALUE loader. Never overrides a variable already set, so a
-    real environment always wins over the file."""
+    real environment always wins over the file.
+
+    PCF_ENV_FILE overrides the location; set it to an empty string to load no
+    file at all. The test suite does that so it never reads local secrets.
+    """
+    if path is None:
+        override = os.environ.get("PCF_ENV_FILE")
+        if override == "":
+            return
+        path = Path(override) if override else SERVICE_DIR / ".env"
     if not path.exists():
         return
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -31,12 +40,19 @@ def load_env_file(path: Path = SERVICE_DIR / ".env") -> None:
             os.environ[key] = value
 
 
-def ai_credentials_present() -> bool:
-    """True when the Anthropic SDK has something to authenticate with.
+def gemini_api_key() -> str:
+    return (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
 
-    The SDK resolves an API key, an auth token, or an `ant auth login` profile.
-    This checks for the same sources without ever reading a secret's value.
+
+def ai_credentials_present(provider: str = "anthropic") -> bool:
+    """True when the selected provider has something to authenticate with.
+
+    Anthropic: an API key, an auth token, or an `ant auth login` profile.
+    Gemini: GEMINI_API_KEY (or GOOGLE_API_KEY).
+    Never reads a secret's value beyond checking it is non-empty.
     """
+    if provider == "gemini":
+        return bool(gemini_api_key())
     if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"):
         return True
     if os.environ.get("ANTHROPIC_PROFILE"):
@@ -68,9 +84,16 @@ class Settings:
     def model(self) -> str:
         return self.profile.model
 
+    @property
+    def provider(self) -> str:
+        return self.profile.provider
+
     @staticmethod
     def from_env() -> "Settings":
-        profile = get_profile(os.environ.get("PCF_AI_MODEL", DEFAULT_MODEL).strip())
+        provider = os.environ.get("PCF_AI_PROVIDER", DEFAULT_PROVIDER).strip().lower()
+        default_model = DEFAULT_MODELS.get(provider, "")
+        profile = get_profile(os.environ.get("PCF_AI_MODEL", default_model).strip() or default_model,
+                              provider)
 
         effort = os.environ.get("PCF_AI_EFFORT", "high").strip().lower()
         if effort not in ALLOWED_EFFORTS:

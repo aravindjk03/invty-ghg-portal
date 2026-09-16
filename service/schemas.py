@@ -190,6 +190,7 @@ class UsageOut(_Strict):
 
 
 class Method(_Strict):
+    provider: Literal["anthropic", "gemini"]
     model: str
     model_label: str
     effort: Optional[str]                 # None for models without an effort setting
@@ -198,7 +199,8 @@ class Method(_Strict):
     reporting_year: int
     cache_hit: bool                       # True: served from cache, no AI call made
     usage: Optional[UsageOut]             # None on a cache hit
-    estimated_cost_usd: str               # "0" on a cache hit
+    estimated_cost_usd: str               # "0" on a cache hit or a free tier
+    cost_basis: Literal["estimated", "free_tier"]
 
 
 class EstimateResponse(_Strict):

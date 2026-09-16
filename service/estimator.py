@@ -52,6 +52,11 @@ class EstimatorUnavailable(EstimatorError):
     code, status = "ai_unavailable", 503
 
 
+class EstimatorQuotaExceeded(EstimatorError):
+    """The provider's own quota (e.g. a free-tier daily limit) is used up."""
+    code, status = "ai_quota_exceeded", 429
+
+
 @dataclass(frozen=True)
 class EstimatorResult:
     decomposition: Decomposition
@@ -77,6 +82,7 @@ Lines
 
 Sources
 - In reference, name the publication or dataset family your factor reflects - an IPCC guideline chapter, a sector association life-cycle inventory, a national grid emission database. If you cannot point to a real source, leave reference empty. Never invent a citation; an empty reference is honest, a fabricated one is not.
+- Do not cite ecoinvent, GaBi or Sphera. INVTY holds no licence for them and cannot publish figures attributed to them. Prefer public sources: IPCC guidelines, national inventories such as India's CEA CO2 Baseline Database, sector association life-cycle inventories, published EPDs, EXIOBASE.
 - The catalogue below lists materials and production routes for which INVTY will hold verified factors. When a line is exactly one of these materials on exactly that route, set catalogue_key and production_route to the listed values so a verified factor can replace your estimate. Otherwise leave both empty. Do not approximate a match.
 
 Analysis

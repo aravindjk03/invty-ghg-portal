@@ -26,3 +26,24 @@ const child = spawn(
   { cwd: root, stdio: 'inherit' }
 );
 child.on('exit', (code) => process.exit(code ?? 0));
+
+// Stopping this script must stop the service too. uvicorn --reload runs a
+// reloader plus a worker; on Windows killing only the reloader's parent leaves
+// both holding port 8000, so take the whole tree down.
+let stopping = false;
+function stopChild() {
+  if (stopping || child.exitCode !== null) return;
+  stopping = true;
+  if (process.platform === 'win32') {
+    spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  } else {
+    child.kill('SIGTERM');
+  }
+}
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
+  process.on(signal, () => {
+    stopChild();
+    setTimeout(() => process.exit(0), 500);
+  });
+}
+process.on('exit', stopChild);

@@ -430,7 +430,7 @@ def app_module(monkeypatch, tmp_path):
     monkeypatch.setattr(module, "cache", DecompositionCache(tmp_path / "c.db", 3600))
     monkeypatch.setattr(module, "limiter", SlidingWindowLimiter(100))
     monkeypatch.setattr(module, "spend", _Spend())
-    monkeypatch.setattr(module, "ai_credentials_present", lambda: True)
+    monkeypatch.setattr(module, "ai_credentials_present", lambda *a: True)
     return module
 
 
@@ -450,7 +450,7 @@ def test_default_model_is_haiku(monkeypatch):
 
 def test_estimate_refuses_cleanly_without_ai_credentials(app_module, monkeypatch, request_in):
     from fastapi import HTTPException
-    monkeypatch.setattr(app_module, "ai_credentials_present", lambda: False)
+    monkeypatch.setattr(app_module, "ai_credentials_present", lambda *a: False)
     with pytest.raises(HTTPException) as e:
         app_module.estimate(request_in, _http())
     assert e.value.status_code == 503
@@ -483,7 +483,7 @@ def test_cached_answers_are_served_even_without_ai_credentials(app_module, monke
                                                                request_in):
     monkeypatch.setattr(app_module, "_estimator", _CountingEstimator())
     app_module.estimate(request_in, _http())
-    monkeypatch.setattr(app_module, "ai_credentials_present", lambda: False)
+    monkeypatch.setattr(app_module, "ai_credentials_present", lambda *a: False)
     assert app_module.estimate(request_in, _http()).method.cache_hit is True
 
 

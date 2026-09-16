@@ -35,6 +35,17 @@ from .schemas import (AILine, Decomposition, DisplayRange, EstimateRequest,
 
 KG_PER_TONNE = Decimal(1000)
 
+# Commercial LCA databases INVTY holds no licence for. A public page must not
+# attribute a figure to them, even as an unverified AI citation.
+NON_REDISTRIBUTABLE_SOURCES = ("ecoinvent", "gabi", "sphera")
+
+
+def _publishable_reference(reference: str) -> str:
+    """Drop an AI citation that names a non-redistributable database. The line
+    stays an AI estimate; it simply shows no source rather than an unlicensed one."""
+    lowered = reference.lower()
+    return "" if any(name in lowered for name in NON_REDISTRIBUTABLE_SOURCES) else reference
+
 
 def _plain(d: Decimal) -> str:
     """Exact value as a plain string - never scientific notation."""
@@ -117,7 +128,8 @@ def build_lines(decomp: Decomposition, catalogue: Catalogue,
                     quantity=ai.quantity, quantity_unit=ai.quantity_unit,
                     factor_low=ai.factor_low, factor_central=ai.factor_central,
                     factor_high=ai.factor_high, provenance=AI_ESTIMATE,
-                    factor_basis=ai.factor_basis, reference=ai.reference)
+                    factor_basis=ai.factor_basis,
+                    reference=_publishable_reference(ai.reference))
         except ValueError as exc:
             excluded.append(ExcludedLine(component=ai.component, stage=ai.stage,
                                          reason=str(exc)))
@@ -141,6 +153,7 @@ def _estimate_id(request: EstimateRequest, lines: list[ScreeningLine]) -> str:
 def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: Catalogue,
                    registry: InMemoryFactorRegistry, *, model: str, effort: Optional[str],
                    year: int, model_label: str = "", cache_hit: bool = False,
+                   provider: str = "anthropic", cost_basis: str = "estimated",
                    usage: Optional[TokenUsage] = None, cost_usd: Decimal = Decimal(0),
                    now: Optional[datetime] = None) -> EstimateResponse:
     lines, ai_by_id, excluded = build_lines(decomp, catalogue, registry, request.region, year)
@@ -179,7 +192,7 @@ def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: C
         verified_share_pct=_pct(result.verified_share),
         excluded=excluded,
         analysis=decomp.analysis,
-        method=Method(model=model, model_label=model_label or model, effort=effort,
+        method=Method(provider=provider, model=model, model_label=model_label or model, effort=effort,
                       engine_version=ENGINE_VERSION,
                       generated_at=(now or datetime.now(timezone.utc)).isoformat(),
                       reporting_year=year, cache_hit=cache_hit,
@@ -187,5 +200,5 @@ def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: C
                           input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
                           cache_read_input_tokens=usage.cache_read_input_tokens,
                           cache_creation_input_tokens=usage.cache_creation_input_tokens),
-                      estimated_cost_usd=_sig(cost_usd)),
+                      estimated_cost_usd=_sig(cost_usd), cost_basis=cost_basis),
     )
