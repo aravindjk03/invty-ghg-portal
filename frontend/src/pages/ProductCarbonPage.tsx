@@ -58,7 +58,7 @@ function ServiceStatus() {
     text = 'AI not configured';
   } else if (health.data) {
     dot = 'bg-status-success';
-    text = `AI ready · ${health.data.model_label}`;
+    text = `AI ready · ${health.data.model_label}${health.data.billing === 'free_tier' ? ' (free tier)' : ''}`;
   }
 
   return (
@@ -74,7 +74,8 @@ function ServiceStatus() {
       )}
       {health.data && health.data.ai_calls + health.data.cache_hits > 0 && (
         <span className="text-xs text-brand-muted font-mono tabular-nums">
-          Est. AI spend ${health.data.estimated_spend_usd} · {health.data.ai_calls} new ·{' '}
+          {health.data.billing === 'free_tier' ? 'Free tier' : `Est. AI spend $${health.data.estimated_spend_usd}`} ·{' '}
+          {health.data.ai_calls} new ·{' '}
           {health.data.cache_hits} from cache
         </span>
       )}
@@ -153,7 +154,9 @@ function Pending({ product, onCancel }: { product: string; onCancel: () => void 
   );
 }
 
-function SetupSteps() {
+function SetupSteps({ provider }: { provider?: 'anthropic' | 'gemini' }) {
+  const keyName = provider === 'gemini' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
+  const keyOwner = provider === 'gemini' ? 'Gemini' : 'Anthropic';
   return (
     <ol className="mt-3 flex flex-col gap-2 text-sm text-brand-body list-decimal pl-5">
       <li>
@@ -161,7 +164,7 @@ function SetupSteps() {
         <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">service/.env</code>
       </li>
       <li>
-        Add your Anthropic key to <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">ANTHROPIC_API_KEY</code>
+        Add your {keyOwner} key to <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">{keyName}</code>
       </li>
       <li>
         Restart the service: <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">npm run dev:pcf</code>
@@ -170,7 +173,11 @@ function SetupSteps() {
   );
 }
 
-function Failure({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+function Failure({ error, onRetry, provider }: {
+  error: unknown;
+  onRetry: () => void;
+  provider?: 'anthropic' | 'gemini';
+}) {
   const err = error instanceof PcfError ? error : new PcfError('unknown', 'Something went wrong. Try again.');
   const titles: Record<string, string> = {
     ai_not_configured: 'AI is not set up on the server yet',
@@ -178,6 +185,7 @@ function Failure({ error, onRetry }: { error: unknown; onRetry: () => void }) {
     ai_refused: 'The AI declined this request',
     invalid_input: 'That description could not be used',
     rate_limited: 'Hourly estimate limit reached',
+    ai_quota_exceeded: "The AI provider's free limit has been reached",
   };
   const title = titles[err.code] ?? 'The estimate could not be completed';
 
@@ -188,7 +196,7 @@ function Failure({ error, onRetry }: { error: unknown; onRetry: () => void }) {
         <div className="flex-1">
           <p className="text-base font-semibold text-brand-heading">{title}</p>
           <p className="text-sm text-brand-body mt-1">{err.message}</p>
-          {err.code === 'ai_not_configured' && <SetupSteps />}
+          {err.code === 'ai_not_configured' && <SetupSteps provider={provider} />}
           {err.code === 'service_down' && (
             <p className="mt-3 inline-flex items-center gap-2 text-sm text-brand-body">
               <Terminal size={15} className="text-brand-muted" />
@@ -291,7 +299,7 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
               <AlertTriangle size={18} className="text-status-warning flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-brand-heading">AI is not configured yet, so estimates will not run</p>
-                <SetupSteps />
+                <SetupSteps provider={health.data.provider} />
               </div>
             </div>
           </Card>
@@ -365,7 +373,7 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
 
         {/* Output */}
         {estimate.isPending && submitted && <Pending product={submitted.product} onCancel={cancel} />}
-        {estimate.isError && !estimate.isPending && <Failure error={estimate.error} onRetry={retry} />}
+        {estimate.isError && !estimate.isPending && <Failure error={estimate.error} onRetry={retry} provider={health.data?.provider} />}
         {estimate.isSuccess && <EstimateResult data={estimate.data} />}
         {estimate.isIdle && <HowItWorks />}
       </div>

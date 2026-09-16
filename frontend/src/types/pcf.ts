@@ -83,6 +83,7 @@ export const EstimateResponseSchema = z.object({
     confidence: z.enum(['high', 'medium', 'low']),
   }),
   method: z.object({
+    provider: z.enum(['anthropic', 'gemini']),
     model: z.string(),
     model_label: z.string(),
     effort: z.string().nullable(),
@@ -99,12 +100,15 @@ export const EstimateResponseSchema = z.object({
       })
       .nullable(),
     estimated_cost_usd: z.string(),
+    cost_basis: z.enum(['estimated', 'free_tier']),
   }),
 });
 
 export const HealthSchema = z.object({
   status: z.string(),
   ai_configured: z.boolean(),
+  provider: z.enum(['anthropic', 'gemini']),
+  billing: z.enum(['estimated', 'free_tier']),
   model: z.string(),
   model_label: z.string(),
   engine_version: z.string(),

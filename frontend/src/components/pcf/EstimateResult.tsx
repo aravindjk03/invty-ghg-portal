@@ -551,8 +551,15 @@ function MethodNote({ data }: { data: EstimateResponse }) {
             input tokens (
             <span className="font-mono tabular-nums">{method.usage.cache_read_input_tokens.toLocaleString('en-IN')}</span> from
             prompt cache) and <span className="font-mono tabular-nums">{method.usage.output_tokens.toLocaleString('en-IN')}</span>{' '}
-            output tokens · estimated cost{' '}
-            <span className="font-mono tabular-nums font-semibold text-brand-heading">${method.estimated_cost_usd}</span>
+            output tokens ·{' '}
+            {method.cost_basis === 'free_tier' ? (
+              <span className="font-semibold text-brand-heading">free tier, no charge within the provider&apos;s limits</span>
+            ) : (
+              <>
+                estimated cost{' '}
+                <span className="font-mono tabular-nums font-semibold text-brand-heading">${method.estimated_cost_usd}</span>
+              </>
+            )}
           </>
         ) : null}
       </p>

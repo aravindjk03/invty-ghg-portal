@@ -504,6 +504,49 @@ Cost controls:
   30). Cache hits are never limited.
 - **Prompt caching** on the system prompt, which dominates input tokens.
 
+### 15.5a Free option: Gemini (added 2026-09-17)
+
+To run without cost during development, Google's Gemini API free tier is a
+second provider. Set in `service/.env`:
+
+```
+PCF_AI_PROVIDER=gemini
+GEMINI_API_KEY=...
+```
+
+- Default model **`gemini-3.6-flash`**. `gemini-2.5-flash` was the documented
+  free model, but on 2026-09-17 the live API refused it for new users and named
+  3.6 Flash as the replacement.
+- No subscription needed. The Gemini app subscription and the Gemini API are
+  separate; a free key comes from Google AI Studio.
+- Create the key in a **new project with no billing linked**. Free-tier limits
+  are per project, and a project with billing is charged paid rates.
+- Called over REST (`generateContent`) with the standard library, so it adds no
+  dependency. `responseJsonSchema` was verified live to honour
+  `additionalProperties`, `required` and `enum`. The key travels only in the
+  `x-goog-api-key` header.
+- Transient 5xx and network errors are retried twice with backoff (2s, 4s), as
+  the Anthropic SDK does for Claude. A 429 is not retried: on the free tier it
+  usually means the daily quota is spent.
+- Responses report `cost_basis: free_tier` and a cost of 0. If billing is
+  linked, Google charges its paid rates, which this service does not track.
+- Google may use free-tier (unpaid) API traffic to improve its products; check
+  its terms before sending anything sensitive. Product names are low risk.
+
+**First live runs (2026-09-17, India):**
+
+| Product | Creation | Use | Lifecycle | Time |
+|---|---|---|---|---|
+| Stainless steel bottle, 750 ml, 3 years of hand washing | 1.55 kg | 9.86 kg | 11.4 kg CO2e | 26 s |
+| 50 kg bag of PPC cement | 33.9 kg | 0 | 34.2 kg CO2e | 26 s |
+
+A repeat search with different casing and spacing was served from cache in
+289 ms. The first run surfaced two issues, both fixed: Google returned a
+transient 503 (now retried), and the model cited ecoinvent as a source. The
+prompt now forbids ecoinvent, GaBi and Sphera, and the pipeline strips any such
+citation before it reaches the page, leaving the figure labelled as an AI
+estimate with no source.
+
 ### 15.6 Why the AI is not trained
 
 Fine-tuning a model on emission factors was considered and rejected:
@@ -524,9 +567,9 @@ GPU server and were not integrated.
 
 ### 15.7 Not yet done
 
-- **Live verification on Haiku 4.5.** No API key was available during the
-  build, so the request shape is unit-tested but has not been exercised against
-  the real API. Run one estimate after adding a key.
+- **Live verification on Claude Haiku 4.5.** Gemini has been exercised live;
+  the Claude request shape is unit-tested but has not run against the real
+  API. Run one estimate after adding an Anthropic key.
 - **Rate limit behind a proxy.** The limit keys on the connecting IP. Behind a
   load balancer every visitor shares one IP; read the forwarded client address
   from a trusted proxy before deploying.
