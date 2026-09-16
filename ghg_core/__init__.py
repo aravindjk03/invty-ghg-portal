@@ -6,12 +6,18 @@ publications through the ingestion pipeline. See docs/calculation-methodology.md
 """
 from .engine import (ENGINE_VERSION, ActivityRecord, CalculationRun, LineResult,
                      Totals, calculate, derive_td_losses, intensity)
-from .errors import (EfBasisMismatchError, FactorNotFoundError,
-                     FuelPropertyRequiredError, GasReferenceMismatchError,
-                     GhgCoreError, GwpNotFoundError, IncompatibleUnitsError,
-                     UnknownUnitError, DoubleCountError)
-from .factors import (ENERGY_BASIS, PHYSICAL_BASIS, EmissionFactor, Flag,
-                      InMemoryFactorRegistry)
+from .errors import (AmbiguousBoundaryError, EfBasisMismatchError,
+                     FactorNotFoundError, FuelPropertyRequiredError,
+                     GasReferenceMismatchError, GhgCoreError, GwpNotFoundError,
+                     IncomparableFactorsError, IncompatibleUnitsError,
+                     ProductRouteRequiredError, UnknownUnitError,
+                     DoubleCountError)
+from .factors import (ALLOCATION_METHODS, CRADLE_TO_GATE, CRADLE_TO_GRAVE,
+                      ENERGY_BASIS, GATE_TO_GATE, PCF_CLASS_FALLBACK,
+                      PCF_EEIO_FALLBACK, PCF_PREFIX, PHYSICAL_BASIS,
+                      SYSTEM_BOUNDARIES, TIER_A, TIER_B, TIER_C,
+                      EmissionFactor, Flag, InMemoryFactorRegistry,
+                      assert_comparable)
 from .gwp import GwpSet, load_gwp_set
 from .quantities import D, round_sig
 from .units import FuelProperty, convert, gcv_kcal_per_kg_to_mj_per_kg, normalise_unit
