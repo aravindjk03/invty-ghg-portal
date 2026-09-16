@@ -48,6 +48,14 @@ const NAV_ITEMS: NavItem[] = [
     activeIconStyle: { color: '#1d4ed8' },
   },
   {
+    icon: Package,
+    label: 'Product Carbon',
+    page: 'product-carbon',
+    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
+    activeTextClass: 'text-teal-700',
+    activeIconStyle: { color: '#0f766e' },
+  },
+  {
     icon: Flame,
     label: 'Scope 1',
     page: 'scope-1',
@@ -70,14 +78,6 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(22,163,74,0.18),rgba(16,185,129,0.18))',
     activeTextClass: 'text-emerald-600',
     activeIconStyle: { color: '#16a34a' },
-  },
-  {
-    icon: Package,
-    label: 'Product Carbon',
-    page: 'product-carbon',
-    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
-    activeTextClass: 'text-teal-700',
-    activeIconStyle: { color: '#0f766e' },
   },
   {
     icon: BarChart3,
