@@ -28,6 +28,7 @@ from .estimator import (AIEstimator, EstimatorError, EstimatorIncomplete,
                         EstimatorInvalidOutput, EstimatorNotConfigured,
                         EstimatorQuotaExceeded, EstimatorRefused, EstimatorResult,
                         EstimatorUnavailable)
+from .guard import sanitize_decomposition
 from .models import ModelProfile
 from .schemas import EstimateRequest
 
@@ -68,6 +69,10 @@ class FallbackEstimator:
                 continue
             try:
                 result = step.estimator().decompose(request, catalogue)
+                # Unsafe or absurd output counts as invalid, so the next provider
+                # gets a chance rather than the page showing it.
+                result = replace(result,
+                                 decomposition=sanitize_decomposition(result.decomposition))
             except EstimatorRefused:
                 raise
             except FALL_THROUGH as exc:

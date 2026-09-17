@@ -79,6 +79,8 @@ class Settings:
     cache_ttl_seconds: int        # 0 = cache off
     cache_path: Path
     rate_limit_per_hour: int      # 0 = unlimited
+    assistant_name: str           # the only AI name the public ever sees
+    admin_token: str              # guards /admin/status; empty disables it
 
     @property
     def profile(self) -> ModelProfile:
@@ -140,4 +142,7 @@ class Settings:
             cache_path=Path(os.environ.get("PCF_CACHE_PATH",
                                            str(SERVICE_DIR / "data" / "estimate_cache.db"))),
             rate_limit_per_hour=_int("PCF_RATE_LIMIT_PER_HOUR", 30),
+            assistant_name=os.environ.get("PCF_ASSISTANT_NAME", "INSITY EDGE AI").strip()
+            or "INSITY EDGE AI",
+            admin_token=os.environ.get("PCF_ADMIN_TOKEN", "").strip(),
         )

@@ -24,7 +24,7 @@ GEMINI = PROFILES["gemini-3.6-flash"]
 
 def decomposition_payload():
     return {
-        "product": {"interpreted_as": "Cotton T-shirt", "category": "textiles",
+        "product": {"is_product": True, "interpreted_as": "Cotton T-shirt", "category": "textiles",
                     "declared_unit": "1 item", "is_ambiguous": False, "clarification": ""},
         "assumptions": {"region": "IN", "service_life_years": 3,
                         "use_profile": "Washed weekly", "end_of_life_route": "Landfill"},
@@ -101,7 +101,8 @@ def test_request_uses_the_same_schema_and_json_output(catalogue, request_in):
     assert cfg["responseJsonSchema"] == DECOMPOSITION_SCHEMA
     assert cfg["maxOutputTokens"] == 16000
     assert "Do not state totals" in body["systemInstruction"]["parts"][0]["text"]
-    assert body["contents"][0]["parts"][0]["text"].startswith("Product: cotton t-shirt")
+    assert "<<<VISITOR_PRODUCT>>>\ncotton t-shirt\n<<<END_VISITOR_PRODUCT>>>" in \
+        body["contents"][0]["parts"][0]["text"]
 
 
 def test_api_key_is_sent_in_a_header_never_in_the_url_or_body(catalogue, request_in):
@@ -295,7 +296,7 @@ def test_env_file_never_overrides_the_real_environment(monkeypatch, tmp_path):
 
 # --- the HTTP layer on Gemini ---------------------------------------------------
 
-def test_app_reports_gemini_as_free_tier(monkeypatch, tmp_path, request_in):
+def test_app_on_gemini_is_free_and_keeps_the_vendor_private(monkeypatch, tmp_path, request_in):
     from service import app as module
     from service.app import _Spend
     from service.cache import DecompositionCache
@@ -304,6 +305,7 @@ def test_app_reports_gemini_as_free_tier(monkeypatch, tmp_path, request_in):
     from service.schemas import Decomposition
 
     monkeypatch.setenv("PCF_AI_PROVIDER", "gemini")
+    monkeypatch.setenv("PCF_ADMIN_TOKEN", "test-admin-token")
     monkeypatch.delenv("PCF_AI_MODEL", raising=False)
     monkeypatch.setattr(module, "settings", Settings.from_env())
     monkeypatch.setattr(module, "cache", DecompositionCache(tmp_path / "c.db", 3600))
@@ -316,16 +318,16 @@ def test_app_reports_gemini_as_free_tier(monkeypatch, tmp_path, request_in):
             return EstimatorResult(
                 decomposition=Decomposition.model_validate(
                     json.loads(json.dumps(decomposition_payload()), parse_float=Decimal)),
-                usage=TokenUsage(input_tokens=2000, output_tokens=2200))
+                usage=TokenUsage(input_tokens=2000, output_tokens=2200),
+                profile=GEMINI)
 
     monkeypatch.setattr(module, "_estimator", Fake())
     r = module.estimate(request_in, SimpleNamespace(client=SimpleNamespace(host="t")))
-    assert r.method.provider == "gemini"
-    assert r.method.cost_basis == "free_tier"
-    assert r.method.estimated_cost_usd == "0"
-    health = module.health()
-    assert health["provider"] == "gemini" and health["billing"] == "free_tier"
-
+    assert r.method.assistant == "INSITY EDGE AI"
+    assert "gemini" not in r.model_dump_json().lower()
+    status = module.admin_status(x_admin_token="test-admin-token")
+    assert status["providers"][0]["billing"] == "free_tier"
+    assert status["usage_since_start"]["estimated_spend_usd"] == "0.0000"
 
 # --- retries ---------------------------------------------------------------------
 
@@ -367,7 +369,7 @@ def _respond_with_reference(cited):
     payload["lines"][0]["reference"] = cited
     return build_response(EstimateRequest(product="cotton t-shirt", region="IN"),
                           parse_response(ok_response(payload=payload)), Catalogue.load(),
-                          InMemoryFactorRegistry(), model="m", effort=None, year=2026)
+                          InMemoryFactorRegistry(), year=2026, assistant="INSITY EDGE AI")
 
 
 @pytest.mark.parametrize("cited", ["Ecoinvent v3.9", "GaBi Professional 2024", "Sphera LCA DB"])

@@ -28,10 +28,10 @@ from ghg_core.screening import (AI_ESTIMATE, VERIFIED_REGISTRY, Range,
                                 ScreeningLine, screen_product)
 
 from .catalogue import Catalogue
-from .models import TokenUsage
+from .guard import check_line_bounds, sanitize_decomposition
 from .schemas import (AILine, Decomposition, DisplayRange, EstimateRequest,
                       EstimateResponse, ExcludedLine, LineOut, Method, RangeOut,
-                      Totals, UsageOut)
+                      Totals)
 
 KG_PER_TONNE = Decimal(1000)
 
@@ -111,6 +111,7 @@ def build_lines(decomp: Decomposition, catalogue: Catalogue,
         line_id = f"L{i:02d}"
         verified = _verified_factor(ai, catalogue, registry, region, year)
         try:
+            check_line_bounds(ai)
             if verified is not None:
                 f = verified.factor
                 spread = (f.value * f.uncertainty_pct / 100) if f.uncertainty_pct else Decimal(0)
@@ -151,12 +152,12 @@ def _estimate_id(request: EstimateRequest, lines: list[ScreeningLine]) -> str:
 
 
 def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: Catalogue,
-                   registry: InMemoryFactorRegistry, *, model: str, effort: Optional[str],
-                   year: int, model_label: str = "", cache_hit: bool = False,
-                   provider: str = "anthropic", cost_basis: str = "estimated",
-                   fallback_from: tuple[str, ...] = (),
-                   usage: Optional[TokenUsage] = None, cost_usd: Decimal = Decimal(0),
+                   registry: InMemoryFactorRegistry, *, year: int, assistant: str,
+                   cache_hit: bool = False,
                    now: Optional[datetime] = None) -> EstimateResponse:
+    # Idempotent: output from any path, including older cache entries, is made
+    # safe to display before anything is built from it.
+    decomp = sanitize_decomposition(decomp)
     lines, ai_by_id, excluded = build_lines(decomp, catalogue, registry, request.region, year)
     result = screen_product(lines)
 
@@ -193,14 +194,7 @@ def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: C
         verified_share_pct=_pct(result.verified_share),
         excluded=excluded,
         analysis=decomp.analysis,
-        method=Method(provider=provider, model=model, model_label=model_label or model, effort=effort,
-                      engine_version=ENGINE_VERSION,
+        method=Method(assistant=assistant, engine_version=ENGINE_VERSION,
                       generated_at=(now or datetime.now(timezone.utc)).isoformat(),
-                      reporting_year=year, cache_hit=cache_hit,
-                      usage=None if usage is None else UsageOut(
-                          input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
-                          cache_read_input_tokens=usage.cache_read_input_tokens,
-                          cache_creation_input_tokens=usage.cache_creation_input_tokens),
-                      estimated_cost_usd=_sig(cost_usd), cost_basis=cost_basis,
-                      fallback_from=list(fallback_from)),
+                      reporting_year=year, cache_hit=cache_hit),
     )

@@ -35,7 +35,7 @@ def ai_line(**kw):
 
 def decomposition_dict(lines=None):
     return {
-        "product": {"interpreted_as": "Electric kettle, 1.7 L", "category": "daily_products",
+        "product": {"is_product": True, "interpreted_as": "Electric kettle, 1.7 L", "category": "daily_products",
                     "declared_unit": "1 item", "is_ambiguous": False, "clarification": ""},
         "assumptions": {"region": "IN", "service_life_years": 5,
                         "use_profile": "Boiled 3 times a day", "end_of_life_route": "Landfill"},
@@ -77,7 +77,7 @@ def request_in():
 
 def respond(decomp, catalogue, request, registry=None):
     return build_response(request, decomp, catalogue, registry or InMemoryFactorRegistry(),
-                          model="claude-opus-5", effort="high", year=2026)
+                          year=2026, assistant="INSITY EDGE AI")
 
 
 def text_message(payload, stop_reason="end_turn", extra_blocks=()):
@@ -436,13 +436,11 @@ def app_module(monkeypatch, tmp_path):
     return module
 
 
-def test_health_reports_model_spend_and_an_empty_verified_registry(app_module):
+def test_public_health_names_only_the_assistant(app_module):
     h = app_module.health()
-    assert h["verified_factors"] == 0
-    assert h["catalogue_rows"] == 190
-    assert h["model"] == app_module.settings.model
-    assert h["estimated_spend_usd"] == "0.0000"
-
+    assert h["assistant"] == "INSITY EDGE AI"
+    assert h["verified_factors"] == 0 and h["catalogue_rows"] == 190
+    assert not ({"provider", "model", "providers", "estimated_spend_usd"} & set(h))
 
 def test_default_model_is_haiku(monkeypatch):
     from service.config import Settings
@@ -459,14 +457,14 @@ def test_estimate_refuses_cleanly_without_ai_credentials(app_module, monkeypatch
     assert e.value.detail["code"] == "ai_not_configured"
 
 
-def test_estimate_returns_engine_computed_totals_and_cost(app_module, monkeypatch, request_in):
+def test_estimate_returns_engine_computed_totals_and_records_cost_privately(app_module,
+                                                                            monkeypatch,
+                                                                            request_in):
     monkeypatch.setattr(app_module, "_estimator", _CountingEstimator())
     r = app_module.estimate(request_in, _http())
     assert r.totals.lifecycle.central == "810"
-    assert r.method.cache_hit is False
-    assert r.method.usage.output_tokens == 2500
-    assert r.method.estimated_cost_usd != "0"
-
+    assert r.method.cache_hit is False and r.method.assistant == "INSITY EDGE AI"
+    assert app_module.spend.ai_calls == 1 and app_module.spend.usd > 0
 
 def test_repeat_search_is_served_from_cache_without_calling_the_ai(app_module, monkeypatch,
                                                                     request_in):
@@ -477,7 +475,6 @@ def test_repeat_search_is_served_from_cache_without_calling_the_ai(app_module, m
         EstimateRequest(product="  Electric   KETTLE ", region="IN", details=""), _http())
     assert est.calls == 1
     assert again.method.cache_hit is True
-    assert again.method.estimated_cost_usd == "0"
     assert again.totals.lifecycle.central == first.totals.lifecycle.central
 
 

@@ -23,7 +23,7 @@ HAIKU = PROFILES["claude-haiku-4-5"]
 
 def decomposition():
     return Decomposition.model_validate(json.loads(json.dumps({
-        "product": {"interpreted_as": "Cotton T-shirt", "category": "textiles",
+        "product": {"is_product": True, "interpreted_as": "Cotton T-shirt", "category": "textiles",
                     "declared_unit": "1 item", "is_ambiguous": False, "clarification": ""},
         "assumptions": {"region": "IN", "service_life_years": 3, "use_profile": "Washed weekly",
                         "end_of_life_route": "Landfill"},
@@ -187,6 +187,7 @@ def app_chain(monkeypatch, tmp_path):
     from service.cache import DecompositionCache
     from service.ratelimit import SlidingWindowLimiter
     monkeypatch.setenv("PCF_AI_PROVIDER", "gemini,anthropic")
+    monkeypatch.setenv("PCF_ADMIN_TOKEN", "test-admin-token")
     monkeypatch.setattr(module, "settings", Settings.from_env())
     monkeypatch.setattr(module, "cache", DecompositionCache(tmp_path / "c.db", 3600))
     monkeypatch.setattr(module, "limiter", SlidingWindowLimiter(100))
@@ -200,39 +201,40 @@ def _http():
     return SimpleNamespace(client=SimpleNamespace(host="t"))
 
 
-def test_health_lists_both_providers_and_which_have_keys(app_chain, monkeypatch):
+def test_admin_status_lists_both_providers_and_their_status(app_chain, monkeypatch):
     monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: provider == "gemini")
-    h = app_chain.health()
-    assert [(p["model"], p["configured"]) for p in h["providers"]] == \
-        [("gemini-3.6-flash", True), ("claude-haiku-4-5", False)]
-    assert h["ai_configured"] is True and h["provider"] == "gemini"
+    s = app_chain.admin_status(x_admin_token="test-admin-token")
+    assert [(p["model"], p["status"]) for p in s["providers"]] == \
+        [("gemini-3.6-flash", "ready"), ("claude-haiku-4-5", "needs_key")]
+    assert app_chain.health()["ai_ready"] is True
 
-
-def test_response_names_claude_and_the_failed_primary(app_chain, monkeypatch, req):
+def test_fallback_is_invisible_publicly_and_recorded_for_the_operator(app_chain, monkeypatch, req):
     monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: True)
     g, _ = step(GEMINI, EstimatorQuotaExceeded("limit"))
     c, _ = step(HAIKU, "ok")
     monkeypatch.setattr(app_chain, "_estimator", FallbackEstimator([g, c]))
     r = app_chain.estimate(req, _http())
-    assert (r.method.provider, r.method.model) == ("anthropic", "claude-haiku-4-5")
-    assert r.method.fallback_from == ["Gemini 3.6 Flash"]
-    assert r.method.cost_basis == "estimated"
+    assert r.method.assistant == "INSITY EDGE AI"
+    usage = app_chain.admin_status(x_admin_token="test-admin-token")["usage_since_start"]
+    assert usage["by_model"] == {"claude-haiku-4-5": 1} and usage["fallbacks"] == 1
 
-
-def test_a_cached_answer_reports_the_model_that_produced_it(app_chain, monkeypatch, req):
+def test_the_cache_records_the_model_that_produced_an_answer(app_chain, monkeypatch, req):
+    from service.cache import cache_key
     monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: True)
     g, _ = step(GEMINI, EstimatorUnavailable("down"))
     c, _ = step(HAIKU, "ok")
     monkeypatch.setattr(app_chain, "_estimator", FallbackEstimator([g, c]))
     app_chain.estimate(req, _http())
-    again = app_chain.estimate(req, _http())
-    assert again.method.cache_hit is True
-    assert again.method.model == "claude-haiku-4-5"
+    key = cache_key(app_chain.settings.cache_identity, app_chain.fingerprint, req)
+    assert app_chain.cache.lookup(key)[1] == "claude-haiku-4-5"
+    assert app_chain.estimate(req, _http()).method.cache_hit is True
 
-
-def test_not_configured_message_names_both_keys(app_chain, monkeypatch, req):
+def test_not_configured_message_is_brand_level(app_chain, monkeypatch, req):
     from fastapi import HTTPException
     monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: False)
     with pytest.raises(HTTPException) as e:
         app_chain.estimate(req, _http())
-    assert "GEMINI_API_KEY or ANTHROPIC_API_KEY" in e.value.detail["message"]
+    message = e.value.detail["message"]
+    assert message.startswith("INSITY EDGE AI")
+    assert "API_KEY" not in message and "Gemini" not in message and "Claude" not in message
+

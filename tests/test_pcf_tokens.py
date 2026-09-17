@@ -144,6 +144,7 @@ def app_status(monkeypatch):
     from service import app as module
     from service.config import Settings
     monkeypatch.setenv("PCF_AI_PROVIDER", "gemini,anthropic")
+    monkeypatch.setenv("PCF_ADMIN_TOKEN", "test-admin-token")
     monkeypatch.setattr(module, "settings", Settings.from_env())
     monkeypatch.setattr(module, "_anthropic_status", {"checked": 0.0, "status": None})
     return module
@@ -152,20 +153,20 @@ def app_status(monkeypatch):
 def test_status_says_which_provider_needs_a_key(app_status, monkeypatch):
     monkeypatch.setattr(app_status, "ai_credentials_present", lambda provider: provider == "gemini")
     monkeypatch.setattr(app_status, "probe_anthropic", lambda model: pytest.fail("no key: must not probe"))
-    statuses = [p["status"] for p in app_status.health()["providers"]]
+    statuses = [p["status"] for p in app_status.admin_status(x_admin_token="test-admin-token")["providers"]]
     assert statuses == ["ready", "needs_key"]
 
 
 def test_status_reports_an_anthropic_account_without_credit(app_status, monkeypatch):
     monkeypatch.setattr(app_status, "ai_credentials_present", lambda provider: True)
     monkeypatch.setattr(app_status, "probe_anthropic", lambda model: "no_credit")
-    assert app_status.health()["providers"][1]["status"] == "no_credit"
+    assert app_status.admin_status(x_admin_token="test-admin-token")["providers"][1]["status"] == "no_credit"
 
 
 def test_account_probe_is_cached(app_status, monkeypatch):
     calls = []
     monkeypatch.setattr(app_status, "ai_credentials_present", lambda provider: True)
     monkeypatch.setattr(app_status, "probe_anthropic", lambda model: calls.append(model) or "ready")
-    app_status.health()
-    app_status.health()
+    app_status.admin_status(x_admin_token="test-admin-token")
+    app_status.admin_status(x_admin_token="test-admin-token")
     assert calls == ["claude-haiku-4-5"]

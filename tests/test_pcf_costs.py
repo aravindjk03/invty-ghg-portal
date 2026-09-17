@@ -70,7 +70,7 @@ def test_non_numeric_limit_is_rejected_clearly(monkeypatch):
 
 def _decomp():
     return Decomposition.model_validate({
-        "product": {"interpreted_as": "x", "category": "other", "declared_unit": "1 item",
+        "product": {"is_product": True, "interpreted_as": "x", "category": "other", "declared_unit": "1 item",
                     "is_ambiguous": False, "clarification": ""},
         "assumptions": {"region": "IN", "service_life_years": "1", "use_profile": "",
                         "end_of_life_route": ""},

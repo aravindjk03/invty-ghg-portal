@@ -10,7 +10,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from .text import clean_visitor_text
 
 Region = Literal["IN", "GLOBAL", "GB", "US", "EU"]
 REGION_NAMES: dict[str, str] = {
@@ -38,10 +40,24 @@ class EstimateRequest(_Strict):
     region: Region = "IN"
     details: str = Field(default="", max_length=600)
 
+    @field_validator("product", "details", mode="before")
+    @classmethod
+    def _clean(cls, value):
+        """Untrusted text is cleaned before length checks, caching or any prompt."""
+        return clean_visitor_text(value) if isinstance(value, str) else value
+
+    @field_validator("product")
+    @classmethod
+    def _has_words(cls, value: str) -> str:
+        if not any(ch.isalpha() for ch in value):
+            raise ValueError("Describe the product in words.")
+        return value
+
 
 # --- what the AI returns -----------------------------------------------------
 
 class ProductInterpretation(_Strict):
+    is_product: bool          # False: not a physical product or material; no estimate is shown
     interpreted_as: str
     category: Category
     declared_unit: str
@@ -109,7 +125,7 @@ def _enum(values) -> dict:
 
 DECOMPOSITION_SCHEMA: dict = _obj({
     "product": _obj({
-        "interpreted_as": _S, "category": _enum(Category), "declared_unit": _S,
+        "is_product": _B, "interpreted_as": _S, "category": _enum(Category), "declared_unit": _S,
         "is_ambiguous": _B, "clarification": _S,
     }),
     "assumptions": _obj({
@@ -182,26 +198,14 @@ class Totals(_Strict):
     lifecycle: RangeOut
 
 
-class UsageOut(_Strict):
-    input_tokens: int
-    output_tokens: int
-    cache_read_input_tokens: int
-    cache_creation_input_tokens: int
-
-
 class Method(_Strict):
-    provider: Literal["anthropic", "gemini"]
-    model: str
-    model_label: str
-    effort: Optional[str]                 # None for models without an effort setting
+    """Public. Names the assistant brand only: which vendor model answered, its
+    token use and cost stay server-side (logs and the admin status endpoint)."""
+    assistant: str
     engine_version: str
     generated_at: str
     reporting_year: int
     cache_hit: bool                       # True: served from cache, no AI call made
-    usage: Optional[UsageOut]             # None on a cache hit
-    estimated_cost_usd: str               # "0" on a cache hit or a free tier
-    cost_basis: Literal["estimated", "free_tier"]
-    fallback_from: list[str] = []         # providers tried first that could not answer
 
 
 class EstimateResponse(_Strict):
