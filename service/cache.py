@@ -50,14 +50,19 @@ class DecompositionCache:
         return sqlite3.connect(self.path, timeout=5)
 
     def get(self, key: str) -> Optional[Decomposition]:
+        hit = self.lookup(key)
+        return None if hit is None else hit[0]
+
+    def lookup(self, key: str) -> Optional[tuple[Decomposition, str]]:
+        """(decomposition, model that produced it), or None."""
         if not self.enabled:
             return None
         with self._connect() as db:
-            row = db.execute("SELECT created_at, payload FROM decompositions WHERE key = ?",
+            row = db.execute("SELECT created_at, payload, model FROM decompositions WHERE key = ?",
                              (key,)).fetchone()
         if row is None or self._clock() - row[0] > self.ttl_seconds:
             return None
-        return Decomposition.model_validate_json(row[1])
+        return Decomposition.model_validate_json(row[1]), row[2]
 
     def put(self, key: str, model: str, decomposition: Decomposition) -> None:
         if not self.enabled:

@@ -70,7 +70,7 @@ def _int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Settings:
-    profile: ModelProfile
+    profiles: tuple[ModelProfile, ...]   # in the order they are tried
     effort: str
     thinking_budget: int          # Haiku only; 0 = thinking off
     max_tokens: int
@@ -81,6 +81,11 @@ class Settings:
     rate_limit_per_hour: int      # 0 = unlimited
 
     @property
+    def profile(self) -> ModelProfile:
+        """The primary provider: tried first."""
+        return self.profiles[0]
+
+    @property
     def model(self) -> str:
         return self.profile.model
 
@@ -88,12 +93,29 @@ class Settings:
     def provider(self) -> str:
         return self.profile.provider
 
+    @property
+    def cache_identity(self) -> str:
+        """The provider chain, for cache keys. A single provider keeps the plain
+        model name, so existing cached answers stay valid."""
+        return ">".join(p.model for p in self.profiles)
+
     @staticmethod
     def from_env() -> "Settings":
-        provider = os.environ.get("PCF_AI_PROVIDER", DEFAULT_PROVIDER).strip().lower()
-        default_model = DEFAULT_MODELS.get(provider, "")
-        profile = get_profile(os.environ.get("PCF_AI_MODEL", default_model).strip() or default_model,
-                              provider)
+        providers = [p.strip().lower() for p in
+                     os.environ.get("PCF_AI_PROVIDER", DEFAULT_PROVIDER).split(",") if p.strip()]
+        if not providers:
+            raise ValueError("PCF_AI_PROVIDER is empty. Set it to e.g. gemini or gemini,anthropic.")
+        if len(set(providers)) != len(providers):
+            raise ValueError(f"PCF_AI_PROVIDER lists a provider twice: {','.join(providers)}")
+        profiles = []
+        for provider in providers:
+            default_model = DEFAULT_MODELS.get(provider, "")
+            # PCF_<PROVIDER>_MODEL picks one provider's model. PCF_AI_MODEL still works
+            # when only one provider is configured.
+            model = os.environ.get(f"PCF_{provider.upper()}_MODEL", "").strip()
+            if not model and len(providers) == 1:
+                model = os.environ.get("PCF_AI_MODEL", "").strip()
+            profiles.append(get_profile(model or default_model, provider))
 
         effort = os.environ.get("PCF_AI_EFFORT", "high").strip().lower()
         if effort not in ALLOWED_EFFORTS:
@@ -108,7 +130,7 @@ class Settings:
 
         origins = os.environ.get("PCF_CORS_ORIGINS", "http://localhost:5173")
         return Settings(
-            profile=profile,
+            profiles=tuple(profiles),
             effort=effort,
             thinking_budget=thinking_budget,
             max_tokens=max_tokens,

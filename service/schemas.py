@@ -201,6 +201,7 @@ class Method(_Strict):
     usage: Optional[UsageOut]             # None on a cache hit
     estimated_cost_usd: str               # "0" on a cache hit or a free tier
     cost_basis: Literal["estimated", "free_tier"]
+    fallback_from: list[str] = []         # providers tried first that could not answer
 
 
 class EstimateResponse(_Strict):

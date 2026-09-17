@@ -10,7 +10,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
 from pydantic import ValidationError
 
@@ -61,6 +61,8 @@ class EstimatorQuotaExceeded(EstimatorError):
 class EstimatorResult:
     decomposition: Decomposition
     usage: TokenUsage
+    profile: Optional[ModelProfile] = None      # the model that answered
+    fallback_from: tuple[str, ...] = ()         # providers that were tried and failed first
 
 
 class AIEstimator(Protocol):
@@ -215,4 +217,5 @@ class ClaudeEstimator:
                 f"The AI service returned an error ({exc.status_code}). Try again shortly.") from exc
 
         return EstimatorResult(decomposition=parse_message(message),
-                               usage=TokenUsage.from_sdk(getattr(message, "usage", None)))
+                               usage=TokenUsage.from_sdk(getattr(message, "usage", None)),
+                               profile=self.profile)

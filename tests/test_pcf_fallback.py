@@ -1,0 +1,236 @@
+"""Provider fallback: Gemini first, Claude when Gemini cannot answer.
+No network. EVERY NUMBER HERE IS AN INVENTED FIXTURE."""
+import json
+from decimal import Decimal
+from types import SimpleNamespace
+
+import pytest
+
+pytest.importorskip("fastapi")
+
+from service.catalogue import Catalogue
+from service.config import Settings
+from service.estimator import (EstimatorIncomplete, EstimatorInvalidOutput,
+                               EstimatorNotConfigured, EstimatorQuotaExceeded,
+                               EstimatorRefused, EstimatorResult, EstimatorUnavailable)
+from service.fallback import FallbackEstimator, ProviderStep
+from service.models import PROFILES, TokenUsage
+from service.schemas import Decomposition, EstimateRequest
+
+GEMINI = PROFILES["gemini-3.6-flash"]
+HAIKU = PROFILES["claude-haiku-4-5"]
+
+
+def decomposition():
+    return Decomposition.model_validate(json.loads(json.dumps({
+        "product": {"interpreted_as": "Cotton T-shirt", "category": "textiles",
+                    "declared_unit": "1 item", "is_ambiguous": False, "clarification": ""},
+        "assumptions": {"region": "IN", "service_life_years": 3, "use_profile": "Washed weekly",
+                        "end_of_life_route": "Landfill"},
+        "lines": [{"stage": "raw_materials", "component": "Cotton fibre", "quantity": 0.2,
+                   "quantity_unit": "kg", "factor_low": 2, "factor_central": 3, "factor_high": 5,
+                   "factor_basis": "fixture", "reference": "", "catalogue_key": "",
+                   "production_route": ""}],
+        "analysis": {"summary": "Fixture.", "creation_drivers": [], "use_phase_drivers": [],
+                     "reduction_opportunities": [], "data_gaps": [], "confidence": "low"},
+    }), parse_float=Decimal))
+
+
+class Fake:
+    def __init__(self, outcome):
+        self.outcome, self.calls = outcome, 0
+
+    def decompose(self, request, catalogue):
+        self.calls += 1
+        if isinstance(self.outcome, Exception):
+            raise self.outcome
+        return EstimatorResult(decomposition=decomposition(), usage=TokenUsage(output_tokens=10))
+
+
+def step(profile, outcome, configured=True):
+    fake = Fake(outcome)
+    return ProviderStep(profile=profile, configured=lambda: configured, build=lambda: fake), fake
+
+
+@pytest.fixture
+def req():
+    return EstimateRequest(product="cotton t-shirt", region="IN")
+
+
+@pytest.fixture
+def catalogue():
+    return Catalogue.load()
+
+
+# --- the chain ------------------------------------------------------------------
+
+def test_primary_answers_when_it_can(req, catalogue):
+    (g, gf), (c, cf) = step(GEMINI, "ok"), step(HAIKU, "ok")
+    result = FallbackEstimator([g, c]).decompose(req, catalogue)
+    assert result.profile is GEMINI and result.fallback_from == ()
+    assert (gf.calls, cf.calls) == (1, 0)
+
+
+@pytest.mark.parametrize("failure", [
+    EstimatorQuotaExceeded("daily limit"), EstimatorUnavailable("503"),
+    EstimatorIncomplete("cut off"), EstimatorInvalidOutput("bad json"),
+    EstimatorNotConfigured("key rejected"),
+])
+def test_claude_answers_when_gemini_cannot(failure, req, catalogue):
+    (g, _), (c, cf) = step(GEMINI, failure), step(HAIKU, "ok")
+    result = FallbackEstimator([g, c]).decompose(req, catalogue)
+    assert result.profile is HAIKU
+    assert result.fallback_from == ("Gemini 3.6 Flash",)
+    assert cf.calls == 1
+
+
+def test_a_refusal_is_not_routed_to_another_model(req, catalogue):
+    """Sending a declined request elsewhere to get it answered would work around
+    the first model's judgement."""
+    (g, _), (c, cf) = step(GEMINI, EstimatorRefused("declined")), step(HAIKU, "ok")
+    with pytest.raises(EstimatorRefused):
+        FallbackEstimator([g, c]).decompose(req, catalogue)
+    assert cf.calls == 0
+
+
+def test_a_provider_without_a_key_is_skipped_without_a_request(req, catalogue):
+    (g, gf), (c, _) = step(GEMINI, "ok", configured=False), step(HAIKU, "ok")
+    result = FallbackEstimator([g, c]).decompose(req, catalogue)
+    assert result.profile is HAIKU
+    assert gf.calls == 0
+    assert result.fallback_from == ()        # skipped, not failed: nothing to report
+
+
+def test_gemini_failure_with_no_claude_key_says_the_backup_needs_a_key(req, catalogue):
+    (g, _), (c, cf) = step(GEMINI, EstimatorQuotaExceeded("Gemini limit reached.")), \
+        step(HAIKU, "ok", configured=False)
+    with pytest.raises(EstimatorQuotaExceeded) as e:
+        FallbackEstimator([g, c]).decompose(req, catalogue)
+    assert "Gemini limit reached." in e.value.message
+    assert "Claude Haiku 4.5 is set up as a backup but has no API key" in e.value.message
+    assert cf.calls == 0
+
+
+def test_every_provider_out_of_quota_is_reported_as_quota(req, catalogue):
+    (g, _), (c, _) = step(GEMINI, EstimatorQuotaExceeded("a")), step(HAIKU, EstimatorQuotaExceeded("b"))
+    with pytest.raises(EstimatorQuotaExceeded, match="Every AI provider"):
+        FallbackEstimator([g, c]).decompose(req, catalogue)
+
+
+def test_mixed_failures_report_the_last_one(req, catalogue):
+    (g, _), (c, _) = step(GEMINI, EstimatorQuotaExceeded("a")), step(HAIKU, EstimatorUnavailable("down"))
+    with pytest.raises(EstimatorUnavailable, match="down"):
+        FallbackEstimator([g, c]).decompose(req, catalogue)
+
+
+def test_no_keys_at_all_is_not_configured(req, catalogue):
+    (g, _), (c, _) = step(GEMINI, "ok", configured=False), step(HAIKU, "ok", configured=False)
+    with pytest.raises(EstimatorNotConfigured):
+        FallbackEstimator([g, c]).decompose(req, catalogue)
+
+
+def test_estimators_are_built_once_and_reused(req, catalogue):
+    builds = []
+    fake = Fake("ok")
+    s = ProviderStep(profile=GEMINI, configured=lambda: True,
+                     build=lambda: builds.append(1) or fake)
+    chain = FallbackEstimator([s])
+    chain.decompose(req, catalogue)
+    chain.decompose(req, catalogue)
+    assert len(builds) == 1 and fake.calls == 2
+
+
+def test_an_empty_chain_is_refused():
+    with pytest.raises(ValueError):
+        FallbackEstimator([])
+
+
+# --- settings -------------------------------------------------------------------
+
+def test_provider_list_is_parsed_in_order(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini, anthropic")
+    s = Settings.from_env()
+    assert [p.model for p in s.profiles] == ["gemini-3.6-flash", "claude-haiku-4-5"]
+    assert s.profile is s.profiles[0]
+    assert s.cache_identity == "gemini-3.6-flash>claude-haiku-4-5"
+
+
+def test_single_provider_keeps_the_plain_cache_identity(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini")
+    assert Settings.from_env().cache_identity == "gemini-3.6-flash"
+
+
+def test_per_provider_model_override(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini,anthropic")
+    monkeypatch.setenv("PCF_ANTHROPIC_MODEL", "claude-sonnet-5")
+    assert Settings.from_env().profiles[1].model == "claude-sonnet-5"
+
+
+def test_listing_a_provider_twice_is_rejected(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini,gemini")
+    with pytest.raises(ValueError, match="twice"):
+        Settings.from_env()
+
+
+def test_mistral_is_not_a_supported_provider(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini,mistral")
+    with pytest.raises(ValueError, match="PCF_AI_PROVIDER"):
+        Settings.from_env()
+
+
+# --- the HTTP layer -------------------------------------------------------------
+
+@pytest.fixture
+def app_chain(monkeypatch, tmp_path):
+    from service import app as module
+    from service.app import _Spend
+    from service.cache import DecompositionCache
+    from service.ratelimit import SlidingWindowLimiter
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini,anthropic")
+    monkeypatch.setattr(module, "settings", Settings.from_env())
+    monkeypatch.setattr(module, "cache", DecompositionCache(tmp_path / "c.db", 3600))
+    monkeypatch.setattr(module, "limiter", SlidingWindowLimiter(100))
+    monkeypatch.setattr(module, "spend", _Spend())
+    return module
+
+
+def _http():
+    return SimpleNamespace(client=SimpleNamespace(host="t"))
+
+
+def test_health_lists_both_providers_and_which_have_keys(app_chain, monkeypatch):
+    monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: provider == "gemini")
+    h = app_chain.health()
+    assert [(p["model"], p["configured"]) for p in h["providers"]] == \
+        [("gemini-3.6-flash", True), ("claude-haiku-4-5", False)]
+    assert h["ai_configured"] is True and h["provider"] == "gemini"
+
+
+def test_response_names_claude_and_the_failed_primary(app_chain, monkeypatch, req):
+    monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: True)
+    g, _ = step(GEMINI, EstimatorQuotaExceeded("limit"))
+    c, _ = step(HAIKU, "ok")
+    monkeypatch.setattr(app_chain, "_estimator", FallbackEstimator([g, c]))
+    r = app_chain.estimate(req, _http())
+    assert (r.method.provider, r.method.model) == ("anthropic", "claude-haiku-4-5")
+    assert r.method.fallback_from == ["Gemini 3.6 Flash"]
+    assert r.method.cost_basis == "estimated"
+
+
+def test_a_cached_answer_reports_the_model_that_produced_it(app_chain, monkeypatch, req):
+    monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: True)
+    g, _ = step(GEMINI, EstimatorUnavailable("down"))
+    c, _ = step(HAIKU, "ok")
+    monkeypatch.setattr(app_chain, "_estimator", FallbackEstimator([g, c]))
+    app_chain.estimate(req, _http())
+    again = app_chain.estimate(req, _http())
+    assert again.method.cache_hit is True
+    assert again.method.model == "claude-haiku-4-5"
+
+
+def test_not_configured_message_names_both_keys(app_chain, monkeypatch, req):
+    from fastapi import HTTPException
+    monkeypatch.setattr(app_chain, "ai_credentials_present", lambda provider: False)
+    with pytest.raises(HTTPException) as e:
+        app_chain.estimate(req, _http())
+    assert "GEMINI_API_KEY or ANTHROPIC_API_KEY" in e.value.detail["message"]

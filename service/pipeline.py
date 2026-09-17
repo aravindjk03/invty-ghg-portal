@@ -154,6 +154,7 @@ def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: C
                    registry: InMemoryFactorRegistry, *, model: str, effort: Optional[str],
                    year: int, model_label: str = "", cache_hit: bool = False,
                    provider: str = "anthropic", cost_basis: str = "estimated",
+                   fallback_from: tuple[str, ...] = (),
                    usage: Optional[TokenUsage] = None, cost_usd: Decimal = Decimal(0),
                    now: Optional[datetime] = None) -> EstimateResponse:
     lines, ai_by_id, excluded = build_lines(decomp, catalogue, registry, request.region, year)
@@ -200,5 +201,6 @@ def build_response(request: EstimateRequest, decomp: Decomposition, catalogue: C
                           input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
                           cache_read_input_tokens=usage.cache_read_input_tokens,
                           cache_creation_input_tokens=usage.cache_creation_input_tokens),
-                      estimated_cost_usd=_sig(cost_usd), cost_basis=cost_basis),
+                      estimated_cost_usd=_sig(cost_usd), cost_basis=cost_basis,
+                      fallback_from=list(fallback_from)),
     )

@@ -179,4 +179,5 @@ class GeminiEstimator:
             raise error_for_status(status, data, self.profile.model)
 
         return EstimatorResult(decomposition=parse_response(data),
-                               usage=TokenUsage.from_gemini(data.get("usageMetadata")))
+                               usage=TokenUsage.from_gemini(data.get("usageMetadata")),
+                               profile=self.profile)

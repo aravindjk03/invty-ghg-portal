@@ -19,8 +19,9 @@ from .cache import DecompositionCache, cache_key
 from .catalogue import Catalogue
 from .config import Settings, ai_credentials_present, gemini_api_key, load_env_file
 from .estimator import AIEstimator, ClaudeEstimator, EstimatorError, prompt_fingerprint
+from .fallback import FallbackEstimator, ProviderStep
 from .gemini import GeminiEstimator
-from .models import estimate_cost_usd
+from .models import PROFILES, ModelProfile, estimate_cost_usd
 from .pipeline import build_response
 from .ratelimit import SlidingWindowLimiter
 from .schemas import EstimateRequest, EstimateResponse
@@ -38,6 +39,8 @@ limiter = SlidingWindowLimiter(settings.rate_limit_per_hour, window_seconds=3600
 # ingestion pipeline (spec §12 step 4). Until then every line is an AI estimate,
 # and the page says so.
 registry = InMemoryFactorRegistry()
+
+KEY_NAMES = {"gemini": "GEMINI_API_KEY", "anthropic": "ANTHROPIC_API_KEY"}
 
 
 class _Spend:
@@ -63,27 +66,36 @@ spend = _Spend()
 _estimator: AIEstimator | None = None
 
 
+def _configured(profile: ModelProfile) -> bool:
+    return ai_credentials_present(profile.provider)
+
+
+def _build(profile: ModelProfile) -> AIEstimator:
+    if profile.provider == "gemini":
+        return GeminiEstimator(profile, api_key=gemini_api_key(), max_tokens=settings.max_tokens)
+    return ClaudeEstimator(profile, effort=settings.effort,
+                           thinking_budget=settings.thinking_budget,
+                           max_tokens=settings.max_tokens)
+
+
 def get_estimator() -> AIEstimator:
     global _estimator
     if _estimator is None:
-        if settings.provider == "gemini":
-            _estimator = GeminiEstimator(settings.profile, api_key=gemini_api_key(),
-                                         max_tokens=settings.max_tokens)
-        else:
-            _estimator = ClaudeEstimator(settings.profile, effort=settings.effort,
-                                         thinking_budget=settings.thinking_budget,
-                                         max_tokens=settings.max_tokens)
+        _estimator = FallbackEstimator([
+            ProviderStep(profile=p, configured=(lambda p=p: _configured(p)),
+                         build=(lambda p=p: _build(p)))
+            for p in settings.profiles
+        ])
     return _estimator
 
 
 def _credentials_ok() -> bool:
-    return ai_credentials_present(settings.provider)
+    return any(_configured(p) for p in settings.profiles)
 
 
-SETUP_HINT = {
-    "gemini": "Add GEMINI_API_KEY to service/.env and restart the Product Carbon service.",
-    "anthropic": "Add ANTHROPIC_API_KEY to service/.env and restart the Product Carbon service.",
-}
+def _setup_hint() -> str:
+    keys = " or ".join(KEY_NAMES[p.provider] for p in settings.profiles)
+    return f"Add {keys} to service/.env and restart the Product Carbon service."
 
 
 app = FastAPI(title="INVTY Product Carbon Service", version=ENGINE_VERSION)
@@ -93,13 +105,19 @@ app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
 
 @app.get("/health")
 def health() -> dict:
+    primary = settings.profile
     return {
         "status": "ok",
         "ai_configured": _credentials_ok(),
-        "provider": settings.provider,
-        "billing": settings.profile.billing,
-        "model": settings.model,
-        "model_label": settings.profile.label,
+        "provider": primary.provider,
+        "billing": primary.billing,
+        "model": primary.model,
+        "model_label": primary.label,
+        "providers": [
+            {"provider": p.provider, "model": p.model, "label": p.label,
+             "billing": p.billing, "configured": _configured(p)}
+            for p in settings.profiles
+        ],
         "engine_version": ENGINE_VERSION,
         "catalogue_rows": len(catalogue),
         "verified_factors": len(registry),
@@ -112,30 +130,32 @@ def health() -> dict:
 
 
 def _respond(request: EstimateRequest, decomposition, *, cache_hit: bool,
-             usage=None, cost: Decimal = Decimal(0)) -> EstimateResponse:
-    profile = settings.profile
+             answered_by: ModelProfile, usage=None, cost: Decimal = Decimal(0),
+             fallback_from: tuple[str, ...] = ()) -> EstimateResponse:
     return build_response(request, decomposition, catalogue, registry,
-                          model=profile.model, model_label=profile.label,
-                          effort=settings.effort if profile.supports_effort else None,
+                          model=answered_by.model, model_label=answered_by.label,
+                          effort=settings.effort if answered_by.supports_effort else None,
                           year=settings.reporting_year, cache_hit=cache_hit,
-                          usage=usage, cost_usd=cost, provider=profile.provider,
-                          cost_basis=profile.billing)
+                          usage=usage, cost_usd=cost, provider=answered_by.provider,
+                          cost_basis=answered_by.billing, fallback_from=fallback_from)
 
 
 @app.post("/v1/pcf/estimate", response_model=EstimateResponse)
 def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
-    key = cache_key(settings.model, fingerprint, request)
+    key = cache_key(settings.cache_identity, fingerprint, request)
 
     # A cached answer costs nothing, so it is served before any key or limit check.
-    cached = cache.get(key)
-    if cached is not None:
+    hit = cache.lookup(key)
+    if hit is not None:
+        decomposition, model = hit
         spend.record_hit()
-        return _respond(request, cached, cache_hit=True)
+        return _respond(request, decomposition, cache_hit=True,
+                        answered_by=PROFILES.get(model, settings.profile))
 
     if not _credentials_ok():
         raise HTTPException(status_code=503, detail={
             "code": "ai_not_configured",
-            "message": f"AI is not configured on the server. {SETUP_HINT[settings.provider]}",
+            "message": f"AI is not configured on the server. {_setup_hint()}",
         })
 
     client_id = http.client.host if http.client else "unknown"
@@ -161,11 +181,13 @@ def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
             "message": "The estimate could not be completed. Try again shortly.",
         }) from exc
 
-    cost = estimate_cost_usd(settings.profile, result.usage)
+    answered_by = result.profile or settings.profile
+    cost = estimate_cost_usd(answered_by, result.usage)
     spend.record_call(cost)
-    cache.put(key, settings.model, result.decomposition)
-    log.info("estimate provider=%s model=%s in=%d out=%d cache_read=%d cost_usd=%s",
-             settings.provider, settings.model, result.usage.input_tokens, result.usage.output_tokens,
+    cache.put(key, answered_by.model, result.decomposition)
+    log.info("estimate provider=%s model=%s fallback_from=%s in=%d out=%d cache_read=%d cost_usd=%s",
+             answered_by.provider, answered_by.model, ",".join(result.fallback_from) or "-",
+             result.usage.input_tokens, result.usage.output_tokens,
              result.usage.cache_read_input_tokens, cost)
-    return _respond(request, result.decomposition, cache_hit=False,
-                    usage=result.usage, cost=cost)
+    return _respond(request, result.decomposition, cache_hit=False, answered_by=answered_by,
+                    usage=result.usage, cost=cost, fallback_from=result.fallback_from)

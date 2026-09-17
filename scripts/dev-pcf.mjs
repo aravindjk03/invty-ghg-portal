@@ -20,11 +20,12 @@ if (!python) {
   process.exit(1);
 }
 
-const child = spawn(
-  python,
-  ['-m', 'uvicorn', 'service.app:app', '--port', '8000', '--reload'],
-  { cwd: root, stdio: 'inherit' }
-);
+// Auto-reload is opt-in (PCF_RELOAD=1). On Windows the reloader has hung while
+// still serving old code, and it adds a second process to clean up.
+const args = ['-m', 'uvicorn', 'service.app:app', '--port', '8000'];
+if (process.env.PCF_RELOAD === '1') args.push('--reload');
+
+const child = spawn(python, args, { cwd: root, stdio: 'inherit' });
 child.on('exit', (code) => process.exit(code ?? 0));
 
 // Stopping this script must stop the service too. uvicorn --reload runs a
