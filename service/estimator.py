@@ -81,11 +81,12 @@ Lines
 - Never net credits, offsets, avoided emissions or recycling benefits against the footprint. Biogenic carbon storage is not a negative line.
 - Use-phase lines must reflect the region's electricity or fuel mix and a stated service life and usage pattern. If a product genuinely has no use-phase emissions, return no use lines and say so in the analysis.
 - For a material or chemical sold by weight, the declared unit is 1 kg unless the visitor says otherwise; for a discrete product it is one item.
+- Use the fewest lines that cover the footprint, usually 5 to 10. Merge minor inputs rather than listing each one.
+- factor_basis is a few words; reference is the source name only.
 
 Sources
 - In reference, name the publication or dataset family your factor reflects - an IPCC guideline chapter, a sector association life-cycle inventory, a national grid emission database. If you cannot point to a real source, leave reference empty. Never invent a citation; an empty reference is honest, a fabricated one is not.
 - Do not cite ecoinvent, GaBi or Sphera. INVTY holds no licence for them and cannot publish figures attributed to them. Prefer public sources: IPCC guidelines, national inventories such as India's CEA CO2 Baseline Database, sector association life-cycle inventories, published EPDs, EXIOBASE.
-- The catalogue below lists materials and production routes for which INVTY will hold verified factors. When a line is exactly one of these materials on exactly that route, set catalogue_key and production_route to the listed values so a verified factor can replace your estimate. Otherwise leave both empty. Do not approximate a match.
 
 Analysis
 - Write for an engineer or sustainability manager: plain, specific, no marketing tone.
@@ -93,16 +94,30 @@ Analysis
 - Reduction opportunities name a concrete lever and the stage it acts on.
 - data_gaps lists what would most change the result if known.
 - confidence is your overall confidence in the decomposition.
+- Keep it short: summary at most three sentences; at most three items each in creation_drivers, use_phase_drivers, reduction_opportunities and data_gaps; one sentence per rationale.
 
 Ambiguity
 - If the product is too vague to decompose credibly ("a machine", "chemicals"), still return a typical decomposition, set is_ambiguous to true, and say in clarification exactly what the visitor should specify. Otherwise set is_ambiguous to false and clarification to an empty string.
+"""
 
-Catalogue (material_key | route | declared unit | name):
+CATALOGUE_SECTION = """
+Catalogue
+- These materials and production routes have verified INVTY factors. When a line is exactly one of them on exactly that route, set catalogue_key and production_route to the listed values so the verified factor replaces your estimate. Otherwise leave both empty. Do not approximate a match.
+(material_key | route | declared unit | name)
+"""
+
+NO_CATALOGUE_SECTION = """
+Leave catalogue_key and production_route empty on every line.
 """
 
 
 def build_system(catalogue: Catalogue) -> str:
-    return SYSTEM_PROMPT + catalogue.prompt_listing()
+    """The system prompt. The catalogue section appears only when there is a
+    material to map to; pass `Catalogue.restricted_to(...)` to list just those."""
+    listing = catalogue.prompt_listing()
+    if not listing:
+        return SYSTEM_PROMPT + NO_CATALOGUE_SECTION
+    return SYSTEM_PROMPT + CATALOGUE_SECTION + listing + "\n"
 
 
 def build_user_message(request: EstimateRequest) -> str:
@@ -212,6 +227,13 @@ class ClaudeEstimator:
         except anthropic.APIConnectionError as exc:
             raise EstimatorUnavailable(
                 "Could not reach the AI service. Check the network connection.") from exc
+        except anthropic.BadRequestError as exc:
+            if "credit balance" in str(exc).lower():
+                raise EstimatorNotConfigured(
+                    "The Anthropic account has no API credit. Add credit at "
+                    "console.anthropic.com under Plans & Billing.") from exc
+            raise EstimatorError(
+                "The Anthropic API rejected the request (400).") from exc
         except anthropic.APIStatusError as exc:
             raise EstimatorUnavailable(
                 f"The AI service returned an error ({exc.status_code}). Try again shortly.") from exc

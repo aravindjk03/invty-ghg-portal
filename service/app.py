@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from decimal import Decimal
 
 from fastapi import FastAPI, HTTPException, Request
@@ -31,7 +32,6 @@ log = logging.getLogger("invty.pcf")
 load_env_file()
 settings = Settings.from_env()
 catalogue = Catalogue.load()
-fingerprint = prompt_fingerprint(catalogue)
 cache = DecompositionCache(settings.cache_path, settings.cache_ttl_seconds)
 limiter = SlidingWindowLimiter(settings.rate_limit_per_hour, window_seconds=3600)
 
@@ -39,6 +39,11 @@ limiter = SlidingWindowLimiter(settings.rate_limit_per_hour, window_seconds=3600
 # ingestion pipeline (spec §12 step 4). Until then every line is an AI estimate,
 # and the page says so.
 registry = InMemoryFactorRegistry()
+
+# The AI is only shown catalogue materials that have a verified factor. With the
+# registry empty that is none, which keeps every prompt thousands of tokens shorter.
+prompt_catalogue = catalogue.restricted_to(registry.activity_keys())
+fingerprint = prompt_fingerprint(prompt_catalogue)
 
 KEY_NAMES = {"gemini": "GEMINI_API_KEY", "anthropic": "ANTHROPIC_API_KEY"}
 
@@ -89,6 +94,39 @@ def get_estimator() -> AIEstimator:
     return _estimator
 
 
+_ANTHROPIC_STATUS_TTL = 600.0
+_anthropic_status: dict = {"checked": 0.0, "status": None}
+
+
+def probe_anthropic(model: str) -> str:
+    """'ready' | 'no_credit' | 'key_rejected' | 'unknown'. Uses token counting,
+    which Anthropic does not charge for, and sends a two-token message."""
+    import anthropic
+    try:
+        anthropic.Anthropic(timeout=10.0, max_retries=0).messages.count_tokens(
+            model=model, messages=[{"role": "user", "content": "ok"}])
+        return "ready"
+    except anthropic.AuthenticationError:
+        return "key_rejected"
+    except anthropic.BadRequestError as exc:
+        return "no_credit" if "credit balance" in str(exc).lower() else "unknown"
+    except Exception:  # noqa: BLE001 - a status probe must never break /health
+        return "unknown"
+
+
+def provider_status(profile: ModelProfile) -> str:
+    """'needs_key' | 'ready' | 'no_credit' | 'key_rejected' | 'unknown'. The
+    Anthropic account check is cached for ten minutes."""
+    if not _configured(profile):
+        return "needs_key"
+    if profile.provider != "anthropic":
+        return "ready"
+    now = time.monotonic()
+    if _anthropic_status["status"] is None or now - _anthropic_status["checked"] > _ANTHROPIC_STATUS_TTL:
+        _anthropic_status.update(status=probe_anthropic(profile.model), checked=now)
+    return _anthropic_status["status"]
+
+
 def _credentials_ok() -> bool:
     return any(_configured(p) for p in settings.profiles)
 
@@ -115,7 +153,8 @@ def health() -> dict:
         "model_label": primary.label,
         "providers": [
             {"provider": p.provider, "model": p.model, "label": p.label,
-             "billing": p.billing, "configured": _configured(p)}
+             "billing": p.billing, "configured": _configured(p),
+             "status": provider_status(p)}
             for p in settings.profiles
         ],
         "engine_version": ENGINE_VERSION,
@@ -170,7 +209,7 @@ def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
         })
 
     try:
-        result = get_estimator().decompose(request, catalogue)
+        result = get_estimator().decompose(request, prompt_catalogue)
     except EstimatorError as exc:
         raise HTTPException(status_code=exc.status,
                             detail={"code": exc.code, "message": exc.message}) from exc

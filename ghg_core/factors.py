@@ -174,6 +174,10 @@ class InMemoryFactorRegistry:
     def add(self, factor: EmissionFactor) -> None:
         self._rows.append(factor)
 
+    def activity_keys(self) -> frozenset[str]:
+        """Activity keys with at least one current (non-superseded) factor."""
+        return frozenset(f.activity_key for f in self._rows if f.superseded_by is None)
+
     def __len__(self) -> int:
         return len(self._rows)
 

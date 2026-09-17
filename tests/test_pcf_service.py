@@ -431,6 +431,8 @@ def app_module(monkeypatch, tmp_path):
     monkeypatch.setattr(module, "limiter", SlidingWindowLimiter(100))
     monkeypatch.setattr(module, "spend", _Spend())
     monkeypatch.setattr(module, "ai_credentials_present", lambda *a: True)
+    monkeypatch.setattr(module, "probe_anthropic", lambda model: "ready")
+    monkeypatch.setattr(module, "_anthropic_status", {"checked": 0.0, "status": None})
     return module
 
 

@@ -191,6 +191,8 @@ def app_chain(monkeypatch, tmp_path):
     monkeypatch.setattr(module, "cache", DecompositionCache(tmp_path / "c.db", 3600))
     monkeypatch.setattr(module, "limiter", SlidingWindowLimiter(100))
     monkeypatch.setattr(module, "spend", _Spend())
+    monkeypatch.setattr(module, "probe_anthropic", lambda model: "ready")
+    monkeypatch.setattr(module, "_anthropic_status", {"checked": 0.0, "status": None})
     return module
 
 

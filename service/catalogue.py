@@ -47,6 +47,14 @@ class Catalogue:
         entry = self._by_key.get(key)
         return entry is not None and entry.production_route == route
 
+    def restricted_to(self, keys) -> "Catalogue":
+        """Only the entries whose key is in `keys`. Used to list, in the AI prompt,
+        just the materials that actually have verified factors: listing the whole
+        catalogue costs thousands of tokens per request and changes nothing when
+        no factor exists to replace the AI's estimate."""
+        wanted = set(keys)
+        return Catalogue([e for k, e in self._by_key.items() if k in wanted])
+
     def prompt_listing(self) -> str:
         """Tier A material rows only, one per line, for the model's reference."""
         return "\n".join(
