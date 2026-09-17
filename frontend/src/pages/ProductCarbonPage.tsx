@@ -8,7 +8,6 @@ import {
   RotateCcw,
   Search,
   Sparkles,
-  Terminal,
   X,
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
@@ -18,6 +17,7 @@ import { Select } from '../components/ui/Select';
 import { EstimateResult } from '../components/pcf/EstimateResult';
 import { estimateProduct, getPcfHealth, PcfError } from '../services/pcfService';
 import { EstimateInput, Region } from '../types/pcf';
+import { env } from '../config/env';
 
 export interface ProductCarbonPageProps {
   onNavigate: (page: string) => void;
@@ -45,59 +45,43 @@ const EXAMPLES = [
 
 // ─── Service status ─────────────────────────────────────────────────────────
 
+function useHealth() {
+  return useQuery({ queryKey: ['pcf-health'], queryFn: getPcfHealth, retry: false, staleTime: 30_000 });
+}
+
+/** The assistant's public name, from the service when available. */
+function useAssistantName() {
+  return useHealth().data?.assistant ?? env.ASSISTANT_NAME;
+}
+
 function ServiceStatus() {
-  const health = useQuery({ queryKey: ['pcf-health'], queryFn: getPcfHealth, retry: false, staleTime: 30_000 });
+  const health = useHealth();
+  const name = health.data?.assistant ?? env.ASSISTANT_NAME;
 
   let dot = 'bg-brand-muted';
-  let text = 'Checking service…';
+  let state = 'checking…';
   if (health.isError) {
     dot = 'bg-status-danger';
-    text = 'Service offline';
-  } else if (health.data && !health.data.ai_configured) {
+    state = 'offline';
+  } else if (health.data && !health.data.ai_ready) {
     dot = 'bg-status-warning';
-    text = 'AI not configured';
-  } else if (health.data && !health.data.providers[0]?.configured) {
-    dot = 'bg-status-warning';
-    text = `AI ready · ${health.data.providers.find((p) => p.configured)?.label ?? health.data.model_label}`;
+    state = 'unavailable';
   } else if (health.data) {
     dot = 'bg-status-success';
-    text = `AI ready · ${health.data.model_label}${health.data.billing === 'free_tier' ? ' (free tier)' : ''}`;
+    state = 'ready';
   }
 
   return (
     <div className="flex flex-col items-start sm:items-end gap-1">
       <span className="inline-flex items-center gap-2 rounded-md border border-border bg-surface-raised px-3 py-1.5 text-xs font-medium text-brand-body">
+        <Sparkles size={13} className="text-brand-link" aria-hidden />
+        <span className="font-semibold text-brand-heading">{name}</span>
         <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
-        {text}
+        {state}
       </span>
-      {health.data &&
-        health.data.providers.slice(1).map((p) => (
-          <span key={p.model} className="text-xs text-brand-muted">
-            Backup: {p.label}{' '}
-            {p.status === 'ready' ? (
-              <span className="text-status-success">ready</span>
-            ) : (
-              <span className="text-status-warning">
-                {{
-                  needs_key: 'needs an API key',
-                  no_credit: 'needs account credit',
-                  key_rejected: 'key rejected',
-                  unknown: 'status unknown',
-                }[p.status]}
-              </span>
-            )}
-          </span>
-        ))}
       {health.data && (
         <span className="text-xs text-brand-muted font-mono tabular-nums">
           {health.data.verified_factors} verified factors · {health.data.catalogue_rows} catalogued materials
-        </span>
-      )}
-      {health.data && health.data.ai_calls + health.data.cache_hits > 0 && (
-        <span className="text-xs text-brand-muted font-mono tabular-nums">
-          {health.data.billing === 'free_tier' ? 'Free tier' : `Est. AI spend $${health.data.estimated_spend_usd}`} ·{' '}
-          {health.data.ai_calls} new ·{' '}
-          {health.data.cache_hits} from cache
         </span>
       )}
     </div>
@@ -107,14 +91,15 @@ function ServiceStatus() {
 // ─── Idle, loading and error states ────────────────────────────────────────
 
 function HowItWorks() {
+  const name = useAssistantName();
   const steps = [
     {
-      title: 'AI breaks the product down',
+      title: `${name} breaks the product down`,
       body: 'It works out the materials, manufacturing energy, transport, service life and disposal behind one unit — and proposes an emission-factor range for each.',
     },
     {
       title: 'The engine does the maths',
-      body: "INVTY's calculation engine multiplies and sums every input in exact decimal arithmetic. The AI never states a total.",
+      body: `INVTY's calculation engine multiplies and sums every input in exact decimal arithmetic. ${name} never states a total.`,
     },
     {
       title: 'Verified data takes over',
@@ -138,7 +123,7 @@ function HowItWorks() {
         ))}
       </ol>
       <p className="mt-6 border-t border-border pt-4 text-xs text-brand-muted">
-        Results are screening estimates for comparison and planning. They are not an ISO 14067-verified product
+        Results are AI screening estimates for comparison and planning. They are not an ISO 14067-verified product
         footprint or an Environmental Product Declaration.
       </p>
     </Card>
@@ -146,6 +131,7 @@ function HowItWorks() {
 }
 
 function Pending({ product, onCancel }: { product: string; onCancel: () => void }) {
+  const name = useAssistantName();
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
     const started = Date.now();
@@ -159,7 +145,7 @@ function Pending({ product, onCancel }: { product: string; onCancel: () => void 
         <div className="flex-1" role="status" aria-live="polite">
           <p className="text-base font-semibold text-brand-heading">Analysing “{product}”</p>
           <p className="text-sm text-brand-muted mt-1">
-            The AI is working through materials, manufacturing, use and disposal. This usually takes under a minute.
+            {name} is working through materials, manufacturing, use and disposal. This usually takes under a minute.
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -175,38 +161,17 @@ function Pending({ product, onCancel }: { product: string; onCancel: () => void 
   );
 }
 
-function SetupSteps({ provider }: { provider?: 'anthropic' | 'gemini' }) {
-  const keyName = provider === 'gemini' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
-  const keyOwner = provider === 'gemini' ? 'Gemini (free)' : 'Anthropic';
-  return (
-    <ol className="mt-3 flex flex-col gap-2 text-sm text-brand-body list-decimal pl-5">
-      <li>
-        Copy <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">service/.env.example</code> to{' '}
-        <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">service/.env</code>
-      </li>
-      <li>
-        Add your {keyOwner} key to <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">{keyName}</code>
-      </li>
-      <li>
-        Restart the service: <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">npm run dev:pcf</code>
-      </li>
-    </ol>
-  );
-}
-
-function Failure({ error, onRetry, provider }: {
-  error: unknown;
-  onRetry: () => void;
-  provider?: 'anthropic' | 'gemini';
-}) {
+function Failure({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const name = useAssistantName();
   const err = error instanceof PcfError ? error : new PcfError('unknown', 'Something went wrong. Try again.');
   const titles: Record<string, string> = {
-    ai_not_configured: 'AI is not set up on the server yet',
-    service_down: 'The Product Carbon service is offline',
-    ai_refused: 'The AI declined this request',
+    ai_not_configured: `${name} is unavailable`,
+    service_down: `${name} is offline`,
+    ai_refused: `${name} could not analyse this`,
+    not_a_product: "That doesn't look like a product",
     invalid_input: 'That description could not be used',
     rate_limited: 'Hourly estimate limit reached',
-    ai_quota_exceeded: "The AI provider's free limit has been reached",
+    ai_quota_exceeded: `${name} is busy`,
   };
   const title = titles[err.code] ?? 'The estimate could not be completed';
 
@@ -217,14 +182,6 @@ function Failure({ error, onRetry, provider }: {
         <div className="flex-1">
           <p className="text-base font-semibold text-brand-heading">{title}</p>
           <p className="text-sm text-brand-body mt-1">{err.message}</p>
-          {err.code === 'ai_not_configured' && <SetupSteps provider={provider} />}
-          {err.code === 'service_down' && (
-            <p className="mt-3 inline-flex items-center gap-2 text-sm text-brand-body">
-              <Terminal size={15} className="text-brand-muted" />
-              From the project folder, run{' '}
-              <code className="font-mono text-[13px] bg-surface-sunken px-1.5 py-0.5 rounded">npm run dev:pcf</code>
-            </p>
-          )}
           <div className="mt-4">
             <Button variant="secondary" size="sm" onClick={onRetry} leftIcon={<RotateCcw size={14} />}>
               Try again
@@ -313,15 +270,15 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
       </header>
 
       <div className="flex flex-col gap-6">
-        {/* Setup notice - shown before anyone hits a failing request */}
-        {health.data && !health.data.ai_configured && !estimate.isError && (
+        {/* Availability notice - brand-level only; operators see detail at /admin/status */}
+        {health.data && !health.data.ai_ready && !estimate.isError && (
           <Card className="p-5 border-[#A66300]/30">
             <div className="flex gap-3">
               <AlertTriangle size={18} className="text-status-warning flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-brand-heading">AI is not configured yet, so estimates will not run</p>
-                <SetupSteps provider={health.data.provider} />
-              </div>
+              <p className="text-sm text-brand-body">
+                <span className="font-semibold text-brand-heading">{health.data.assistant} is not available right now.</span>{' '}
+                Products estimated before still load; new estimates will resume shortly.
+              </p>
             </div>
           </Card>
         )}
@@ -394,7 +351,7 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
 
         {/* Output */}
         {estimate.isPending && submitted && <Pending product={submitted.product} onCancel={cancel} />}
-        {estimate.isError && !estimate.isPending && <Failure error={estimate.error} onRetry={retry} provider={health.data?.provider} />}
+        {estimate.isError && !estimate.isPending && <Failure error={estimate.error} onRetry={retry} />}
         {estimate.isSuccess && <EstimateResult data={estimate.data} />}
         {estimate.isIdle && <HowItWorks />}
       </div>

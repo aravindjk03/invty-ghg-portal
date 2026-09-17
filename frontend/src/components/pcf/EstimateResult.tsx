@@ -116,7 +116,7 @@ function ProvenanceBanner({ data }: { data: EstimateResponse }) {
       <div className="flex gap-3 rounded-lg border border-border bg-surface p-4">
         <ShieldAlert size={20} className="text-status-warning flex-shrink-0 mt-0.5" />
         <div className="text-sm text-brand-body">
-          <p className="font-semibold text-brand-heading">Every figure below is an AI estimate</p>
+          <p className="font-semibold text-brand-heading">Every figure below is an AI estimate from {data.method.assistant}</p>
           <p className="mt-1">
             No verified emission factors were available for these inputs yet. Treat this as a
             screening estimate — not an ISO 14067 product footprint or an Environmental Product
@@ -443,7 +443,7 @@ function AnalysisPanel({ data }: { data: EstimateResponse }) {
         icon={<Sparkles size={18} />}
         aside={<span className="text-xs text-brand-muted">Qualitative · figures come from the calculation engine</span>}
       >
-        AI analysis
+        {data.method.assistant} analysis
       </SectionTitle>
 
       <p className="text-[15px] text-brand-body leading-relaxed max-w-[72ch]">{analysis.summary}</p>
@@ -527,7 +527,7 @@ function MethodNote({ data }: { data: EstimateResponse }) {
       <h3 className="text-sm font-semibold text-brand-heading">How this estimate was made</h3>
       <ol className="mt-3 flex flex-col gap-2 text-sm text-brand-body list-decimal pl-5 max-w-[80ch]">
         <li>
-          {method.model_label} broke the product into {data.lines.length + data.excluded.length} lifecycle inputs and
+          {method.assistant} broke the product into {data.lines.length + data.excluded.length} lifecycle inputs and
           proposed a quantity and an emission-factor range for each.
         </li>
         <li>
@@ -539,38 +539,11 @@ function MethodNote({ data }: { data: EstimateResponse }) {
           not a statistical confidence interval.
         </li>
       </ol>
-      {method.fallback_from.length > 0 && (
-        <p className="mt-4 text-sm text-brand-body">
-          Answered by <span className="font-semibold text-brand-heading">{method.model_label}</span> because{' '}
-          {method.fallback_from.join(' and ')} could not answer (daily limit reached or unavailable).
-        </p>
+      {method.cache_hit && (
+        <p className="mt-4 text-sm text-brand-body">This product was estimated before, so the answer came from cache.</p>
       )}
-      <p className="mt-4 text-sm text-brand-body">
-        {method.cache_hit ? (
-          <>This product was estimated before, so the answer came from cache — no AI call and no cost.</>
-        ) : method.usage ? (
-          <>
-            AI usage:{' '}
-            <span className="font-mono tabular-nums">
-              {(method.usage.input_tokens + method.usage.cache_read_input_tokens + method.usage.cache_creation_input_tokens).toLocaleString('en-IN')}
-            </span>{' '}
-            input tokens (
-            <span className="font-mono tabular-nums">{method.usage.cache_read_input_tokens.toLocaleString('en-IN')}</span> from
-            prompt cache) and <span className="font-mono tabular-nums">{method.usage.output_tokens.toLocaleString('en-IN')}</span>{' '}
-            output tokens ·{' '}
-            {method.cost_basis === 'free_tier' ? (
-              <span className="font-semibold text-brand-heading">free tier, no charge within the provider&apos;s limits</span>
-            ) : (
-              <>
-                estimated cost{' '}
-                <span className="font-mono tabular-nums font-semibold text-brand-heading">${method.estimated_cost_usd}</span>
-              </>
-            )}
-          </>
-        ) : null}
-      </p>
       <p className="mt-2 text-xs text-brand-muted font-mono tabular-nums">
-        Estimate {data.estimate_id} · {method.model} · {REGION_LABEL[data.request.region] ?? data.request.region} · generated {generated}
+        Estimate {data.estimate_id} · {REGION_LABEL[data.request.region] ?? data.request.region} · generated {generated}
       </p>
     </section>
   );

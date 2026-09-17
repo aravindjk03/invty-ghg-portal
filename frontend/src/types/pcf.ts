@@ -48,6 +48,7 @@ export const EstimateResponseSchema = z.object({
   estimate_id: z.string(),
   request: z.object({ product: z.string(), region: z.enum(REGIONS), details: z.string() }),
   product: z.object({
+    is_product: z.boolean(),
     interpreted_as: z.string(),
     category: z.string(),
     declared_unit: z.string(),
@@ -83,53 +84,23 @@ export const EstimateResponseSchema = z.object({
     confidence: z.enum(['high', 'medium', 'low']),
   }),
   method: z.object({
-    provider: z.enum(['anthropic', 'gemini']),
-    model: z.string(),
-    model_label: z.string(),
-    effort: z.string().nullable(),
+    assistant: z.string(),
     engine_version: z.string(),
     generated_at: z.string(),
     reporting_year: z.number(),
     cache_hit: z.boolean(),
-    usage: z
-      .object({
-        input_tokens: z.number(),
-        output_tokens: z.number(),
-        cache_read_input_tokens: z.number(),
-        cache_creation_input_tokens: z.number(),
-      })
-      .nullable(),
-    estimated_cost_usd: z.string(),
-    cost_basis: z.enum(['estimated', 'free_tier']),
-    fallback_from: z.array(z.string()),
   }),
 });
 
 export const HealthSchema = z.object({
   status: z.string(),
-  ai_configured: z.boolean(),
-  provider: z.enum(['anthropic', 'gemini']),
-  billing: z.enum(['estimated', 'free_tier']),
-  model: z.string(),
-  model_label: z.string(),
-  providers: z.array(
-    z.object({
-      provider: z.enum(['anthropic', 'gemini']),
-      model: z.string(),
-      label: z.string(),
-      billing: z.enum(['estimated', 'free_tier']),
-      configured: z.boolean(),
-      status: z.enum(['ready', 'needs_key', 'no_credit', 'key_rejected', 'unknown']),
-    })
-  ),
+  assistant: z.string(),
+  ai_ready: z.boolean(),
   engine_version: z.string(),
   catalogue_rows: z.number(),
   verified_factors: z.number(),
   cache_enabled: z.boolean(),
   rate_limit_per_hour: z.number(),
-  ai_calls: z.number(),
-  cache_hits: z.number(),
-  estimated_spend_usd: z.string(),
 });
 
 export type Stage = z.infer<typeof Stage>;

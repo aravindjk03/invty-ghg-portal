@@ -71,6 +71,21 @@ What stays absolute:
 - Abstention stays first-class. `is_ambiguous` + `clarification` must be
   rendered, never swallowed.
 
+## 6a. INSITY EDGE AI: one public name, untrusted input and output
+
+- Visitors see only the assistant name (PCF_ASSISTANT_NAME, "INSITY EDGE AI").
+  Never put a vendor or model name, token count, cost or provider status in a
+  public response, public error message or the page. Those belong in the log and
+  /admin/status.
+- Always keep the "AI estimate" label. Branding must not hide that figures are
+  AI-generated.
+- Visitor text is untrusted data: cleaned (service/text.py), fenced in the
+  prompt, never interpolated into the system prompt.
+- Model output is untrusted: sanitised and bounded (service/guard.py) before use.
+  Never render model text as HTML.
+- Do not weaken is_product, the fences, the sanitiser or the plausibility bounds
+  without a test showing why.
+
 ## 7. Everything in the catalogue is TO_INGEST
 
 No coefficient value in `data/product_carbon_catalogue.csv` may be filled in by

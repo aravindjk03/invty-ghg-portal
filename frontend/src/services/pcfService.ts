@@ -15,8 +15,7 @@ export class PcfError extends Error {
   }
 }
 
-const SERVICE_DOWN =
-  'The Product Carbon service is not running. Start it with: npm run dev:pcf';
+const SERVICE_DOWN = `${env.ASSISTANT_NAME} is offline right now. Please try again later.`;
 
 export async function getPcfHealth(): Promise<PcfHealth> {
   let res: Response;
@@ -56,7 +55,7 @@ export async function estimateProduct(
     if (res.status === 422) {
       throw new PcfError('invalid_input', 'Describe the product in a few words (2–300 characters).');
     }
-    throw new PcfError('ai_unavailable', 'The estimate could not be completed. Try again shortly.');
+    throw new PcfError('ai_unavailable', `${env.ASSISTANT_NAME} could not complete this estimate. Please try again shortly.`);
   }
 
   const parsed = EstimateResponseSchema.safeParse(body);
