@@ -421,7 +421,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             {/* Logo Badge */}
             <div className="flex items-center gap-3">
               <img
-                src="/invty-logo.png"
+                src={`${import.meta.env.BASE_URL}invty-logo.png`}
                 alt="IINVTY Logo"
                 className="w-10 h-10 object-contain drop-shadow-md brightness-110"
               />

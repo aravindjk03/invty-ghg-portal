@@ -133,7 +133,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                   aria-hidden="true"
                 >
                   <img
-                    src="/invty-logo.png"
+                    src={`${import.meta.env.BASE_URL}invty-logo.png`}
                     alt=""
                     className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
                     style={{
@@ -159,7 +159,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <img src={`${import.meta.env.BASE_URL}invty-logo.png`} alt="IINVTY" className="w-4 h-4 object-contain" />
                   <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · GHG PORTAL</span>
                 </div>
                 <span>{companyName} · {reportingPeriod}</span>
@@ -287,7 +287,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                   aria-hidden="true"
                 >
                   <img
-                    src="/invty-logo.png"
+                    src={`${import.meta.env.BASE_URL}invty-logo.png`}
                     alt=""
                     className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
                     style={{
@@ -301,7 +301,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <img src={`${import.meta.env.BASE_URL}invty-logo.png`} alt="IINVTY" className="w-4 h-4 object-contain" />
                   <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · GHG PORTAL</span>
                 </div>
                 <span>Scope 1 & 2 Disclosures</span>
@@ -416,7 +416,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                   aria-hidden="true"
                 >
                   <img
-                    src="/invty-logo.png"
+                    src={`${import.meta.env.BASE_URL}invty-logo.png`}
                     alt=""
                     className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
                     style={{
@@ -430,7 +430,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <img src={`${import.meta.env.BASE_URL}invty-logo.png`} alt="IINVTY" className="w-4 h-4 object-contain" />
                   <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · GHG PORTAL</span>
                 </div>
                 <span>Methodology & Factor Registry</span>
@@ -519,7 +519,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                   aria-hidden="true"
                 >
                   <img
-                    src="/invty-logo.png"
+                    src={`${import.meta.env.BASE_URL}invty-logo.png`}
                     alt=""
                     className="w-[460px] max-w-[70%] object-contain select-none transition-opacity duration-200 pointer-events-none"
                     style={{
@@ -532,7 +532,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <img src={`${import.meta.env.BASE_URL}invty-logo.png`} alt="IINVTY" className="w-4 h-4 object-contain" />
                   <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · ANNEXE</span>
                 </div>
                 <span>Complete Activity Audit Trail</span>

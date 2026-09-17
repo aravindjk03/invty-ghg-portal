@@ -331,7 +331,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             className="flex-shrink-0 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600 py-1 pr-2 group"
           >
             <img
-              src="/invty-logo.png"
+              src={`${import.meta.env.BASE_URL}invty-logo.png`}
               alt="IINVTY Logo"
               className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
             />

@@ -1,0 +1,50 @@
+# Render Blueprint for the two server parts of the portal. The website itself
+# is static and is published to GitHub Pages (npm run deploy:pages).
+#
+# Set up: render.com -> New -> Blueprint -> pick this repository and branch.
+# Render asks for every value marked `sync: false`; paste the keys there, never
+# in this file. Free services sleep when idle, and their disk is reset on each
+# deploy: demo accounts are re-seeded and cached estimates are recomputed.
+services:
+  # Login, inventory and reports API (Express + node:sqlite).
+  - type: web
+    name: iinvty-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"              # node:sqlite needs Node 22.5 or later
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        value: https://aravindjk03.github.io
+      - key: API_SECRET_KEY
+        generateValue: true
+
+  # INSITY EDGE AI: the Product Carbon estimator (FastAPI).
+  - type: web
+    name: iinvty-insity-edge-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -e ".[service]"
+    # Behind Render's proxy, trust X-Forwarded-For so the per-visitor rate limit
+    # sees each visitor's address instead of the proxy's.
+    startCommand: uvicorn service.app:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      - key: PCF_AI_PROVIDER
+        value: gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,gemini:gemini-3.1-flash-lite,anthropic
+      - key: PCF_CORS_ORIGINS
+        value: https://aravindjk03.github.io
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PCF_ADMIN_TOKEN
+        generateValue: true
