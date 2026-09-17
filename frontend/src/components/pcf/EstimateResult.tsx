@@ -539,6 +539,12 @@ function MethodNote({ data }: { data: EstimateResponse }) {
           not a statistical confidence interval.
         </li>
       </ol>
+      {method.fallback_from.length > 0 && (
+        <p className="mt-4 text-sm text-brand-body">
+          Answered by <span className="font-semibold text-brand-heading">{method.model_label}</span> because{' '}
+          {method.fallback_from.join(' and ')} could not answer (daily limit reached or unavailable).
+        </p>
+      )}
       <p className="mt-4 text-sm text-brand-body">
         {method.cache_hit ? (
           <>This product was estimated before, so the answer came from cache — no AI call and no cost.</>

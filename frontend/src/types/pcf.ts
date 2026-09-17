@@ -101,6 +101,7 @@ export const EstimateResponseSchema = z.object({
       .nullable(),
     estimated_cost_usd: z.string(),
     cost_basis: z.enum(['estimated', 'free_tier']),
+    fallback_from: z.array(z.string()),
   }),
 });
 
@@ -111,6 +112,15 @@ export const HealthSchema = z.object({
   billing: z.enum(['estimated', 'free_tier']),
   model: z.string(),
   model_label: z.string(),
+  providers: z.array(
+    z.object({
+      provider: z.enum(['anthropic', 'gemini']),
+      model: z.string(),
+      label: z.string(),
+      billing: z.enum(['estimated', 'free_tier']),
+      configured: z.boolean(),
+    })
+  ),
   engine_version: z.string(),
   catalogue_rows: z.number(),
   verified_factors: z.number(),

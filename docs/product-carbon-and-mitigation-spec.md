@@ -547,6 +547,47 @@ prompt now forbids ecoinvent, GaBi and Sphera, and the pipeline strips any such
 citation before it reaches the page, leaving the figure labelled as an AI
 estimate with no source.
 
+### 15.5b Provider chain: Gemini first, Claude as backup (2026-09-17)
+
+`PCF_AI_PROVIDER` accepts an ordered list. The configured order is:
+
+```
+PCF_AI_PROVIDER=gemini,anthropic
+```
+
+Gemini's free tier answers first. Claude Haiku 4.5 answers only when Gemini
+cannot:
+
+| Gemini outcome | What happens |
+|---|---|
+| Answers | Used. Claude is never called. |
+| Daily quota spent, service down (after retries), truncated or malformed output, key rejected | Claude is tried. |
+| No Gemini key | Gemini is skipped without a request. |
+| **Refusal** | **Not** sent to Claude. Routing a declined request to another model to get it answered anyway would work around the first model's judgement. |
+
+The response names the model that answered and any provider that failed
+first, and the page says so ("Answered by Claude Haiku 4.5 because Gemini 3.6
+Flash could not answer"). Cached answers record the model that produced them.
+Both providers' output goes through the same schema validation and the same
+ghg_core arithmetic, so a fallback changes who proposed the lines, never how
+totals are computed. Cost is estimated for the model that actually answered.
+
+Mistral was evaluated as the backup and dropped: the account's key was valid,
+but the workspace allowed 0 requests per minute (no free plan active), and the
+product owner chose Claude instead.
+
+The app cannot use the Claude access of a developer's own chat session; it
+needs its own Anthropic API key (pay as you go, no free tier). Until
+`ANTHROPIC_API_KEY` is set, `/health` reports the backup as not configured, the
+page shows "Backup: Claude Haiku 4.5 needs an API key", and a Gemini failure
+returns an error that says the backup has no key.
+
+Verified 2026-09-17: a live estimate through the chain was answered by Gemini
+(an electric scooter, 2.75 t CO2e lifecycle, 27 s, free). With a deliberately
+invalid Gemini key, Google's real rejection moved the chain on to the next
+provider and the response recorded Gemini as failed. The Claude call itself
+has not run live: no Anthropic key yet.
+
 ### 15.6 Why the AI is not trained
 
 Fine-tuning a model on emission factors was considered and rejected:

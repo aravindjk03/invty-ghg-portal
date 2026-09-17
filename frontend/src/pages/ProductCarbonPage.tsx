@@ -56,6 +56,9 @@ function ServiceStatus() {
   } else if (health.data && !health.data.ai_configured) {
     dot = 'bg-status-warning';
     text = 'AI not configured';
+  } else if (health.data && !health.data.providers[0]?.configured) {
+    dot = 'bg-status-warning';
+    text = `AI ready · ${health.data.providers.find((p) => p.configured)?.label ?? health.data.model_label}`;
   } else if (health.data) {
     dot = 'bg-status-success';
     text = `AI ready · ${health.data.model_label}${health.data.billing === 'free_tier' ? ' (free tier)' : ''}`;
@@ -67,6 +70,17 @@ function ServiceStatus() {
         <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
         {text}
       </span>
+      {health.data &&
+        health.data.providers.slice(1).map((p) => (
+          <span key={p.model} className="text-xs text-brand-muted">
+            Backup: {p.label}{' '}
+            {p.configured ? (
+              <span className="text-status-success">ready</span>
+            ) : (
+              <span className="text-status-warning">needs an API key</span>
+            )}
+          </span>
+        ))}
       {health.data && (
         <span className="text-xs text-brand-muted font-mono tabular-nums">
           {health.data.verified_factors} verified factors · {health.data.catalogue_rows} catalogued materials
@@ -156,7 +170,7 @@ function Pending({ product, onCancel }: { product: string; onCancel: () => void 
 
 function SetupSteps({ provider }: { provider?: 'anthropic' | 'gemini' }) {
   const keyName = provider === 'gemini' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
-  const keyOwner = provider === 'gemini' ? 'Gemini' : 'Anthropic';
+  const keyOwner = provider === 'gemini' ? 'Gemini (free)' : 'Anthropic';
   return (
     <ol className="mt-3 flex flex-col gap-2 text-sm text-brand-body list-decimal pl-5">
       <li>
