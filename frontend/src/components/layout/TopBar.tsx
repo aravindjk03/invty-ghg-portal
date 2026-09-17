@@ -48,6 +48,14 @@ const NAV_ITEMS: NavItem[] = [
     activeIconStyle: { color: '#1d4ed8' },
   },
   {
+    icon: Package,
+    label: 'Product Carbon',
+    page: 'product-carbon',
+    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
+    activeTextClass: 'text-teal-700',
+    activeIconStyle: { color: '#0f766e' },
+  },
+  {
     icon: Flame,
     label: 'Scope 1',
     page: 'scope-1',
@@ -70,14 +78,6 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(22,163,74,0.18),rgba(16,185,129,0.18))',
     activeTextClass: 'text-emerald-600',
     activeIconStyle: { color: '#16a34a' },
-  },
-  {
-    icon: Package,
-    label: 'Product Carbon',
-    page: 'product-carbon',
-    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
-    activeTextClass: 'text-teal-700',
-    activeIconStyle: { color: '#0f766e' },
   },
   {
     icon: BarChart3,
@@ -331,13 +331,13 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             className="flex-shrink-0 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600 py-1 pr-2 group"
           >
             <img
-              src="/invty-logo.png"
-              alt="INVTY Logo"
+              src={`${import.meta.env.BASE_URL}invty-logo.png`}
+              alt="IINVTY Logo"
               className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
             />
             <div className="flex flex-col text-left">
               <span className="font-mono font-bold text-[14px] tracking-wider text-[#0F172A] leading-tight">
-                INVTY
+                IINVTY
               </span>
               <span className="text-[9px] uppercase tracking-widest text-[#94A3B8] font-semibold leading-tight">
                 GHG Portal
@@ -479,7 +479,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
       <Modal
         isOpen={helpOpen}
         onClose={() => setHelpOpen(false)}
-        title="INVTY GHG Accounting Standards & Guidance"
+        title="IINVTY GHG Accounting Standards & Guidance"
       >
         <div className="space-y-4 text-xs text-[#64748B] leading-relaxed">
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">

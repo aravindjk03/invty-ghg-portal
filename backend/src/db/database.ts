@@ -53,6 +53,7 @@ class DatabaseService {
     this.db = new DatabaseSync(this.dbFilePath);
     this.initSchema();
     this.seedDefaultUsers();
+    this.renameDemoAdmin();
   }
 
   private initSchema() {
@@ -107,7 +108,7 @@ class DatabaseService {
         this.db.exec("ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'email';");
       }
     } catch (err) {
-      console.warn('[INVTY DB] Schema migration check notice:', err);
+      console.warn('[IINVTY DB] Schema migration check notice:', err);
     }
   }
 
@@ -128,17 +129,17 @@ class DatabaseService {
     const result = checkStmt.get() as { count: number };
 
     if (result && result.count === 0) {
-      console.log('[INVTY DB] Seeding initial enterprise demonstration accounts...');
+      console.log('[IINVTY DB] Seeding initial enterprise demonstration accounts...');
 
-      const adminCreds = this.hashPassword('Invty@2026');
+      const adminCreds = this.hashPassword('IINVTY@2026');
       this.createUser({
         id: 'usr-admin-invty-001',
         email: 'admin@invty.com',
         phone: '+919876543210',
         password_hash: adminCreds.hash,
         salt: adminCreds.salt,
-        name: 'INVTY Enterprise Admin',
-        company_name: 'INVTY Sustainability Systems',
+        name: 'IINVTY Enterprise Admin',
+        company_name: 'IINVTY Sustainability Systems',
         role: 'ADMIN',
         auth_provider: 'email',
         created_at: new Date().toISOString(),
@@ -160,7 +161,7 @@ class DatabaseService {
         updated_at: new Date().toISOString(),
       });
 
-      console.log('[INVTY DB] Demo accounts created: admin@invty.com & demo@company.com');
+      console.log('[IINVTY DB] Demo accounts created: admin@invty.com & demo@company.com');
     }
   }
 
@@ -186,6 +187,28 @@ class DatabaseService {
     );
 
     return this.toSafeUser(user);
+  }
+
+  // The company is IINVTY (formerly written INVTY). Databases seeded before the rename
+  // still hold the old demo admin name and password; update them in place without
+  // touching any other account, or a password the admin has already changed.
+  private renameDemoAdmin() {
+    try {
+      const admin = this.findUserByEmail('admin@invty.com');
+      if (!admin) return;
+      const now = new Date().toISOString();
+      if (this.verifyPassword('Invty@2026', admin.password_hash, admin.salt)) {
+        const creds = this.hashPassword('IINVTY@2026');
+        this.db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
+          .run(creds.hash, creds.salt, now, admin.id);
+      }
+      this.db.prepare(
+        "UPDATE users SET name = 'IINVTY Enterprise Admin', company_name = 'IINVTY Sustainability Systems', updated_at = ? " +
+        "WHERE id = ? AND name = 'INVTY Enterprise Admin' AND company_name = 'INVTY Sustainability Systems'"
+      ).run(now, admin.id);
+    } catch (err) {
+      console.warn('[IINVTY DB] Demo admin rename notice:', err);
+    }
   }
 
   public findUserByEmail(email: string): UserRecord | null {
@@ -267,7 +290,7 @@ class DatabaseService {
         password_hash: hash,
         salt,
         name: name?.trim() || `Enterprise Member (${cleanPhone.slice(-4)})`,
-        company_name: companyName?.trim() || 'INVTY Industrial Enterprise',
+        company_name: companyName?.trim() || 'IINVTY Industrial Enterprise',
         role: 'ESG_ANALYST',
         avatar_url: null,
         auth_provider: 'mobile_otp',
@@ -302,7 +325,7 @@ class DatabaseService {
         password_hash: hash,
         salt,
         name: data.name?.trim() || cleanEmail.split('@')[0],
-        company_name: data.companyName?.trim() || `${cleanEmail.split('@')[1]?.split('.')[0]?.toUpperCase() || 'INVTY'} Enterprise`,
+        company_name: data.companyName?.trim() || `${cleanEmail.split('@')[1]?.split('.')[0]?.toUpperCase() || 'IINVTY'} Enterprise`,
         role: 'ESG_ANALYST',
         avatar_url: data.avatarUrl || null,
         auth_provider: 'google',

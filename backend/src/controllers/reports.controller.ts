@@ -17,7 +17,7 @@ export class ReportsController {
       const { companyName, reportingPeriod, framework, reportType, entries } = req.body;
       const summary = CalculationService.summarizeInventory(entries as ActivityEntry[]);
 
-      const reportId = `INVTY-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+      const reportId = `IINVTY-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
       const isScreening = String(reportType).toLowerCase().includes('screen');
 

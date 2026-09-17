@@ -45,6 +45,7 @@ env/
 venv/
 .venv/
 .pytest_cache/
+*.egg-info/
 *.db
 *.db-shm
 *.db-wal

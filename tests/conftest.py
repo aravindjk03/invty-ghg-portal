@@ -1,3 +1,13 @@
+import os
+
+# Keep the test suite independent of a developer's local service/.env and
+# of any AI provider variables in the shell. Must run before service imports.
+os.environ["PCF_ENV_FILE"] = ""
+for _var in ("PCF_AI_PROVIDER", "PCF_AI_MODEL", "GEMINI_API_KEY", "GOOGLE_API_KEY",
+             "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_PROFILE",
+             "PCF_GEMINI_MODEL", "PCF_ANTHROPIC_MODEL"):
+    os.environ.pop(_var, None)
+
 import pytest
 from decimal import Decimal
 from ghg_core import EmissionFactor, InMemoryFactorRegistry, GwpSet, FuelProperty

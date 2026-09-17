@@ -412,7 +412,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           <img
             className="h-full w-full object-cover"
             src="https://cdn.21st.dev/assets/mirror/f4/f48e20bd4dcdcf2ca40eafe923e1134d17f43dce1c5bff8f1b96b7301e126ec3.png"
-            alt="INVTY GHG Portal Hero"
+            alt="IINVTY GHG Portal Hero"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}
@@ -421,12 +421,12 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             {/* Logo Badge */}
             <div className="flex items-center gap-3">
               <img
-                src="/invty-logo.png"
-                alt="INVTY Logo"
+                src={`${import.meta.env.BASE_URL}invty-logo.png`}
+                alt="IINVTY Logo"
                 className="w-10 h-10 object-contain drop-shadow-md brightness-110"
               />
               <div className="flex flex-col">
-                <span className="font-mono font-bold text-white tracking-wider text-base">INVTY</span>
+                <span className="font-mono font-bold text-white tracking-wider text-base">IINVTY</span>
                 <span className="text-[10px] uppercase tracking-widest text-slate-300 font-semibold">
                   GHG Accounting Portal
                 </span>
@@ -455,7 +455,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             
             {/* Header */}
             <h2 className="text-2xl sm:text-3xl text-gray-900 font-bold tracking-tight text-center">
-              Welcome to INVTY
+              Welcome to IINVTY
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-1.5 text-center">
               Select your preferred authentication method
@@ -861,7 +861,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 {/* Admin Email */}
                 <button
                   type="button"
-                  onClick={() => fillEmailDemo('admin@invty.com', 'Invty@2026')}
+                  onClick={() => fillEmailDemo('admin@invty.com', 'IINVTY@2026')}
                   className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs transition-colors group"
                 >
                   <div>
@@ -869,7 +869,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                     <span className="text-slate-600">admin@invty.com</span>
                   </div>
                   <span className="font-mono text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-blue-100">
-                    Invty@2026
+                    IINVTY@2026
                   </span>
                 </button>
 

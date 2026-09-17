@@ -55,6 +55,9 @@ class ActivityRecord:
     scope2_view: Optional[str] = None             # "location" | "market"
     data_quality_tier: str = DQ_SECONDARY
     note: str = ""
+    # Required when activity_key is a pcf.* material - see factors.PCF_PREFIX.
+    production_route: Optional[str] = None
+    system_boundary: Optional[str] = None
 
     def __post_init__(self):
         if self.value is not None:
@@ -204,7 +207,10 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
 
     for gas in gases:
         try:
-            res = registry.resolve(rec.activity_key, rec.region, reporting_year, gas)
+            res = registry.resolve(
+                rec.activity_key, rec.region, reporting_year, gas,
+                production_route=rec.production_route,
+                system_boundary=rec.system_boundary)
         except Exception:
             if gas == gases[0]:
                 raise            # no factor at all for the primary gas -> fail loudly
