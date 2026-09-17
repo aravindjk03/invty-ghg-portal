@@ -60,6 +60,31 @@ def ai_credentials_present(provider: str = "anthropic") -> bool:
     return (Path.home() / ".config" / "anthropic").is_dir()
 
 
+def parse_provider_chain(raw: str) -> list[ModelProfile]:
+    """PCF_AI_PROVIDER, tried in order. Each entry is `provider` or
+    `provider:model`, e.g. gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,anthropic.
+
+    A bare provider uses PCF_<PROVIDER>_MODEL, else its default model.
+    PCF_AI_MODEL still works when the chain has a single bare entry.
+    """
+    entries = [e.strip() for e in raw.split(",") if e.strip()]
+    if not entries:
+        raise ValueError("PCF_AI_PROVIDER is empty. Set it to e.g. gemini or gemini,anthropic.")
+    profiles: list[ModelProfile] = []
+    for entry in entries:
+        provider, _, model = (part.strip() for part in entry.partition(":"))
+        provider = provider.lower()
+        if not model:
+            model = os.environ.get(f"PCF_{provider.upper()}_MODEL", "").strip()
+        if not model and len(entries) == 1:
+            model = os.environ.get("PCF_AI_MODEL", "").strip()
+        profile = get_profile(model or DEFAULT_MODELS.get(provider, ""), provider)
+        if profile in profiles:
+            raise ValueError(f"PCF_AI_PROVIDER lists {profile.provider}:{profile.model} twice.")
+        profiles.append(profile)
+    return profiles
+
+
 def _int(name: str, default: int) -> int:
     raw = os.environ.get(name, "").strip()
     try:
@@ -103,21 +128,7 @@ class Settings:
 
     @staticmethod
     def from_env() -> "Settings":
-        providers = [p.strip().lower() for p in
-                     os.environ.get("PCF_AI_PROVIDER", DEFAULT_PROVIDER).split(",") if p.strip()]
-        if not providers:
-            raise ValueError("PCF_AI_PROVIDER is empty. Set it to e.g. gemini or gemini,anthropic.")
-        if len(set(providers)) != len(providers):
-            raise ValueError(f"PCF_AI_PROVIDER lists a provider twice: {','.join(providers)}")
-        profiles = []
-        for provider in providers:
-            default_model = DEFAULT_MODELS.get(provider, "")
-            # PCF_<PROVIDER>_MODEL picks one provider's model. PCF_AI_MODEL still works
-            # when only one provider is configured.
-            model = os.environ.get(f"PCF_{provider.upper()}_MODEL", "").strip()
-            if not model and len(providers) == 1:
-                model = os.environ.get("PCF_AI_MODEL", "").strip()
-            profiles.append(get_profile(model or default_model, provider))
+        profiles = parse_provider_chain(os.environ.get("PCF_AI_PROVIDER", DEFAULT_PROVIDER))
 
         effort = os.environ.get("PCF_AI_EFFORT", "high").strip().lower()
         if effort not in ALLOWED_EFFORTS:

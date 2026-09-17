@@ -133,8 +133,10 @@ def test_gemini_quota_plus_claude_without_credit_explains_both(catalogue):
                      build=lambda: Failing(EstimatorNotConfigured(
                          "The Anthropic account has no API credit."))),
     ])
-    with pytest.raises(EstimatorNotConfigured, match="no API credit"):
+    # The visitor hears about the limit; the log keeps both reasons.
+    with pytest.raises(EstimatorQuotaExceeded) as e:
         chain.decompose(EstimateRequest(product="cotton t-shirt", region="IN"), catalogue)
+    assert "Gemini limit reached." in e.value.message and "no API credit" in e.value.message
 
 
 # --- provider status on /health ------------------------------------------------------

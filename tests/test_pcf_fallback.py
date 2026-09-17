@@ -238,3 +238,64 @@ def test_not_configured_message_is_brand_level(app_chain, monkeypatch, req):
     assert message.startswith("INSITY EDGE AI")
     assert "API_KEY" not in message and "Gemini" not in message and "Claude" not in message
 
+
+
+# --- several Gemini models, parking -----------------------------------------------
+
+def test_the_chain_can_list_several_models_of_one_provider(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER",
+                       "gemini:gemini-3.8-flash, gemini:gemini-3.6-flash, gemini:gemini-3.1-flash-lite, anthropic")
+    s = Settings.from_env()
+    assert [(p.provider, p.model) for p in s.profiles] == [
+        ("gemini", "gemini-3.8-flash"), ("gemini", "gemini-3.6-flash"),
+        ("gemini", "gemini-3.1-flash-lite"), ("anthropic", "claude-haiku-4-5")]
+    assert all(p.billing == "free_tier" for p in s.profiles[:3])
+
+
+def test_the_same_model_twice_is_rejected(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini:gemini-3.6-flash,gemini")
+    with pytest.raises(ValueError, match="twice"):
+        Settings.from_env()
+
+
+def test_a_model_from_another_provider_is_rejected(monkeypatch):
+    monkeypatch.setenv("PCF_AI_PROVIDER", "gemini:claude-haiku-4-5")
+    with pytest.raises(ValueError, match="anthropic model"):
+        Settings.from_env()
+
+
+def test_the_next_gemini_model_answers_when_the_first_is_out_of_quota(req, catalogue):
+    g2 = PROFILES["gemini-3.1-flash-lite"]
+    (a, af), (b, bf) = step(GEMINI, EstimatorQuotaExceeded("limit")), step(g2, "ok")
+    result = FallbackEstimator([a, b]).decompose(req, catalogue)
+    assert result.profile is g2 and (af.calls, bf.calls) == (1, 1)
+
+
+def test_an_out_of_quota_provider_is_parked_then_retried(req, catalogue):
+    now = [0.0]
+    (g, gf), (c, cf) = step(GEMINI, EstimatorQuotaExceeded("limit")), step(HAIKU, "ok")
+    chain = FallbackEstimator([g, c], park_seconds=600, clock=lambda: now[0])
+    chain.decompose(req, catalogue)
+    chain.decompose(req, catalogue)
+    assert (gf.calls, cf.calls) == (1, 2)          # second estimate skipped Gemini
+    now[0] = 601
+    chain.decompose(req, catalogue)
+    assert gf.calls == 2                            # tried again after the park
+
+
+def test_a_backup_without_credit_is_parked_too(req, catalogue):
+    (g, gf), (c, cf) = step(GEMINI, EstimatorQuotaExceeded("limit")), \
+        step(HAIKU, EstimatorNotConfigured("no credit"))
+    chain = FallbackEstimator([g, c], clock=lambda: 0.0)
+    for _ in range(3):
+        with pytest.raises(EstimatorQuotaExceeded):
+            chain.decompose(req, catalogue)
+    assert (gf.calls, cf.calls) == (1, 1)
+
+
+def test_quota_spent_and_backup_without_credit_is_reported_as_quota(req, catalogue):
+    (g, _), (c, _) = step(GEMINI, EstimatorQuotaExceeded("Gemini limit.")), \
+        step(HAIKU, EstimatorNotConfigured("No credit."))
+    with pytest.raises(EstimatorQuotaExceeded) as e:
+        FallbackEstimator([g, c]).decompose(req, catalogue)
+    assert "Gemini limit." in e.value.message and "No credit." in e.value.message

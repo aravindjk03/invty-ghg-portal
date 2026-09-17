@@ -17,6 +17,8 @@ does not track.
 
 gemini-2.5-flash was the documented free model, but on 2026-09-17 the API
 refused it for new users and named gemini-3.6-flash as the replacement.
+The free tier allows gemini-3.6-flash only 20 requests a day per project, so
+the other Gemini models above can be chained after it (see config.py).
 """
 from __future__ import annotations
 
@@ -52,9 +54,18 @@ PROFILES: dict[str, ModelProfile] = {
                      thinking="adaptive", supports_effort=True, supports_server_fallback=False),
         ModelProfile("claude-opus-5", "Claude Opus 5", "anthropic", Decimal("5"), Decimal("25"),
                      thinking="adaptive", supports_effort=True, supports_server_fallback=True),
-        ModelProfile("gemini-3.6-flash", "Gemini 3.6 Flash", "gemini", Decimal("0"), Decimal("0"),
+    ) + tuple(
+        # Each Gemini model has its own free-tier daily quota, so listing several in
+        # PCF_AI_PROVIDER multiplies the free estimates per day.
+        ModelProfile(model, label, "gemini", Decimal("0"), Decimal("0"),
                      thinking="provider_default", supports_effort=False,
-                     supports_server_fallback=False, billing="free_tier"),
+                     supports_server_fallback=False, billing="free_tier")
+        for model, label in (
+            ("gemini-3.8-flash", "Gemini 3.8 Flash"),
+            ("gemini-3.6-flash", "Gemini 3.6 Flash"),
+            ("gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite"),
+            ("gemini-3.1-flash-lite", "Gemini 3.1 Flash-Lite"),
+        )
     )
 }
 

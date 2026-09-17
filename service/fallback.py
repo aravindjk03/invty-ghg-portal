@@ -8,6 +8,12 @@ What moves on to the next provider:
   - quota exhausted, service unavailable, truncated or malformed output
   - a provider with no API key (skipped without a request)
 
+A provider that reports its quota is spent, or an account that cannot be used
+(e.g. no credit), is parked for PARK_SECONDS: later estimates skip it instead
+of spending a round trip on a request that will fail the same way.
+Several models from one provider can be chained (gemini:gemini-3.8-flash,...):
+each Gemini model has its own free daily quota.
+
 What does NOT move on:
   - a refusal. Routing a declined request to a different model to get it
     answered anyway would be working around that model's judgement.
@@ -20,6 +26,7 @@ provider that failed first.
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass, field, replace
 from typing import Callable, Optional
 
@@ -37,6 +44,11 @@ log = logging.getLogger("invty.pcf")
 FALL_THROUGH = (EstimatorQuotaExceeded, EstimatorUnavailable, EstimatorIncomplete,
                 EstimatorInvalidOutput, EstimatorNotConfigured)
 
+# A free-tier 429 usually means the DAILY quota is spent. Google's "retry in 45s"
+# hint is not reliable for that, so a quota failure parks the model for a while.
+PARK_SECONDS = 600.0
+PARKED_ON = (EstimatorQuotaExceeded, EstimatorNotConfigured)
+
 
 @dataclass
 class ProviderStep:
@@ -44,6 +56,8 @@ class ProviderStep:
     configured: Callable[[], bool]
     build: Callable[[], AIEstimator]
     _estimator: Optional[AIEstimator] = field(default=None, repr=False)
+    _parked_until: float = field(default=0.0, repr=False)
+    _parked_error: Optional[EstimatorError] = field(default=None, repr=False)
 
     def estimator(self) -> AIEstimator:
         if self._estimator is None:
@@ -52,10 +66,13 @@ class ProviderStep:
 
 
 class FallbackEstimator:
-    def __init__(self, steps: list[ProviderStep]):
+    def __init__(self, steps: list[ProviderStep], *,
+                 park_seconds: float = PARK_SECONDS,
+                 clock: Callable[[], float] = time.monotonic):
         if not steps:
             raise ValueError("At least one AI provider is required.")
         self.steps = list(steps)
+        self.park_seconds, self._clock = park_seconds, clock
 
     def decompose(self, request: EstimateRequest, catalogue: Catalogue) -> EstimatorResult:
         failed: list[str] = []                       # tried and failed: shown to the user
@@ -66,6 +83,10 @@ class FallbackEstimator:
             label = step.profile.label
             if not step.configured():
                 unconfigured.append(label)
+                continue
+            if step._parked_error is not None and self._clock() < step._parked_until:
+                failed.append(label)
+                tried_errors.append(step._parked_error)
                 continue
             try:
                 result = step.estimator().decompose(request, catalogue)
@@ -78,6 +99,9 @@ class FallbackEstimator:
             except FALL_THROUGH as exc:
                 log.warning("AI provider %s failed (%s); trying the next one",
                             step.profile.model, exc.code)
+                if isinstance(exc, PARKED_ON):
+                    step._parked_error = exc
+                    step._parked_until = self._clock() + self.park_seconds
                 failed.append(label)
                 tried_errors.append(exc)
                 continue
@@ -91,10 +115,17 @@ class FallbackEstimator:
             return EstimatorNotConfigured(
                 "No AI provider has an API key. Add one to service/.env and restart the "
                 "Product Carbon service.")
-        if len(tried) > 1 and all(isinstance(e, EstimatorQuotaExceeded) for e in tried):
+        quota = [e for e in tried if isinstance(e, EstimatorQuotaExceeded)]
+        if len(tried) > 1 and len(quota) == len(tried):
             error: EstimatorError = EstimatorQuotaExceeded(
                 "Every AI provider has reached its limit. Try again later. Products "
                 "already estimated still load.")
+        elif quota and len(quota) < len(tried) and all(isinstance(e, (EstimatorQuotaExceeded, EstimatorNotConfigured))
+                           for e in tried):
+            # e.g. every free model is out of quota and the paid backup has no credit:
+            # the limit is what the visitor should hear about, not the backup's billing.
+            detail = " ".join(e.message for e in tried)
+            error = EstimatorQuotaExceeded(f"Every usable AI provider has reached its limit. {detail}")
         else:
             error = tried[-1]
         if unconfigured:
