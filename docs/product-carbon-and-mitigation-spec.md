@@ -588,6 +588,56 @@ invalid Gemini key, Google's real rejection moved the chain on to the next
 provider and the response recorded Gemini as failed. The Claude call itself
 has not run live: no Anthropic key yet.
 
+### 15.5c Token economy (2026-09-17)
+
+Requested by the product owner: Claude must use very few tokens.
+
+**What was cut**
+
+1. **The catalogue listing.** The system prompt listed all 183 Tier A
+   catalogue rows so the model could map a line to a verified factor. With the
+   verified registry empty, that mapping has no effect, yet the listing was
+   about 80% of the prompt. The prompt now lists only materials that actually
+   have a verified factor (`Catalogue.restricted_to(registry.activity_keys())`),
+   which today is none. When ingestion lands, the relevant rows reappear
+   automatically, and the prompt fingerprint changes so stale cached answers
+   are not reused.
+2. **Output length.** Output tokens cost 5x input on Haiku. The prompt now asks
+   for 5 to 10 lines (merging minor inputs), a summary of at most three
+   sentences, at most three items per analysis list, and one-sentence rationales.
+3. **Prompt caching.** Unchanged in code. The trimmed prompt is below Haiku
+   4.5's 4,096-token caching minimum, so a rarely used backup no longer pays
+   the 1.25x cache-write surcharge on every call.
+
+**Measured live, same product and details before and after** (Gemini tokens;
+Claude's tokenizer differs, but the relative saving carries over):
+
+| Stainless steel bottle, 750 ml | Before | After | Change |
+|---|---|---|---|
+| System prompt | 19,485 chars | 3,881 chars | -80% |
+| Input tokens | 5,845 | 862 | -86% |
+| Output tokens | 4,326 | 2,586 | -41% |
+| Total | 10,171 | 3,448 | -67% |
+| Time | 26 s | 16 s | |
+
+Estimated Claude Haiku 4.5 cost per new estimate at those sizes: about $0.014
+(roughly 900 input tokens at $1/M plus 2,600 output at $5/M), down from about
+$0.02.
+
+**Run-to-run variation.** The same product gave a lifecycle of 11.4 kg CO2e on
+the first run and 14.9 kg on the second, mostly in the use phase (9.86 vs 13 kg
+of hot water and detergent). That is ordinary variation between AI answers and
+cannot be attributed to the shorter prompt from two runs. The cache keeps an
+answer stable once produced. An eval set (15.7) is the way to measure the
+variance and to confirm the shorter output did not lose accuracy.
+
+**Anthropic account status.** `/health` reports each provider's status. For
+Anthropic it calls token counting, which is not charged, at most once every
+ten minutes, and reports `ready`, `no_credit`, `key_rejected` or `unknown`. On
+2026-09-17 the configured key was valid but the account had no credit, so the
+page shows "Backup: Claude Haiku 4.5 needs account credit", and a Claude call
+now reports that plainly instead of "try again shortly".
+
 ### 15.6 Why the AI is not trained
 
 Fine-tuning a model on emission factors was considered and rejected:

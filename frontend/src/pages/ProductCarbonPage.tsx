@@ -74,10 +74,17 @@ function ServiceStatus() {
         health.data.providers.slice(1).map((p) => (
           <span key={p.model} className="text-xs text-brand-muted">
             Backup: {p.label}{' '}
-            {p.configured ? (
+            {p.status === 'ready' ? (
               <span className="text-status-success">ready</span>
             ) : (
-              <span className="text-status-warning">needs an API key</span>
+              <span className="text-status-warning">
+                {{
+                  needs_key: 'needs an API key',
+                  no_credit: 'needs account credit',
+                  key_rejected: 'key rejected',
+                  unknown: 'status unknown',
+                }[p.status]}
+              </span>
             )}
           </span>
         ))}

@@ -119,6 +119,7 @@ export const HealthSchema = z.object({
       label: z.string(),
       billing: z.enum(['estimated', 'free_tier']),
       configured: z.boolean(),
+      status: z.enum(['ready', 'needs_key', 'no_credit', 'key_rejected', 'unknown']),
     })
   ),
   engine_version: z.string(),
