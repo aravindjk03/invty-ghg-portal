@@ -1,7 +1,7 @@
 {
   "name": "invty-ghg-portal",
   "version": "1.0.0",
-  "description": "INVTY GHG Accounting Portal - Enterprise Scope 1, 2, 3 Carbon Inventory System",
+  "description": "IINVTY GHG Accounting Portal - Enterprise Scope 1, 2, 3 Carbon Inventory System",
   "private": true,
   "scripts": {
     "install:all": "npm --prefix backend install && npm --prefix frontend install",
@@ -22,6 +22,6 @@
     "esg",
     "sustainability"
   ],
-  "author": "INVTY Product & Engineering",
+  "author": "IINVTY Product & Engineering",
   "license": "UNLICENSED"
 }

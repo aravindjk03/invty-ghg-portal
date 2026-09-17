@@ -176,7 +176,7 @@ def public_error(exc: EstimatorError) -> HTTPException:
     return HTTPException(status_code=exc.status, detail={"code": exc.code, "message": message})
 
 
-app = FastAPI(title="INVTY Product Carbon Service", version=ENGINE_VERSION,
+app = FastAPI(title="IINVTY Product Carbon Service", version=ENGINE_VERSION,
               docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
                    allow_methods=["GET", "POST"], allow_headers=["Content-Type"])

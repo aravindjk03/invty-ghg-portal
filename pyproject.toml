@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ghg-core"
 version = "1.0.0"
-description = "INVTY GHG calculation core - pure, deterministic, dependency-light"
+description = "IINVTY GHG calculation core - pure, deterministic, dependency-light"
 requires-python = ">=3.11"
 dependencies = []                       # the engine itself needs nothing
 

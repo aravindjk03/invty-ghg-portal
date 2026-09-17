@@ -93,7 +93,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
     executeDownloadXlsx();
   };
 
-  const reportId = 'INVTY-2026-849201';
+  const reportId = 'IINVTY-2026-849201';
   const currentDate = new Date().toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -159,8 +159,8 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
-                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · GHG PORTAL</span>
                 </div>
                 <span>{companyName} · {reportingPeriod}</span>
                 <span className="font-mono">ID: {reportId}</span>
@@ -268,7 +268,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
               {/* Footer */}
               <div className="relative z-10 pt-4 border-t border-border flex items-center justify-between text-[11px] text-brand-muted font-mono">
-                <span>INVTY · {companyName} GHG Inventory</span>
+                <span>IINVTY · {companyName} GHG Inventory</span>
                 <span>Generated on {currentDate}</span>
                 <span>Page 1 of 3</span>
               </div>
@@ -301,8 +301,8 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
-                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · GHG PORTAL</span>
                 </div>
                 <span>Scope 1 & 2 Disclosures</span>
                 <span className="font-mono">ID: {reportId}</span>
@@ -397,7 +397,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
               {/* Footer */}
               <div className="relative z-10 pt-4 border-t border-border flex items-center justify-between text-[11px] text-brand-muted font-mono">
-                <span>INVTY · {companyName} GHG Inventory</span>
+                <span>IINVTY · {companyName} GHG Inventory</span>
                 <span>Generated on {currentDate}</span>
                 <span>Page 2 of 3</span>
               </div>
@@ -430,8 +430,8 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               {/* Repeating Header */}
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
-                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · GHG PORTAL</span>
+                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · GHG PORTAL</span>
                 </div>
                 <span>Methodology & Factor Registry</span>
                 <span className="font-mono">ID: {reportId}</span>
@@ -500,7 +500,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
               {/* Footer */}
               <div className="relative z-10 pt-4 border-t border-border flex items-center justify-between text-[11px] text-brand-muted font-mono">
-                <span>INVTY · {companyName} GHG Inventory</span>
+                <span>IINVTY · {companyName} GHG Inventory</span>
                 <span>Generated on {currentDate}</span>
                 <span>Page 3 of 3</span>
               </div>
@@ -532,8 +532,8 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
 
               <div className="relative z-10 flex items-center justify-between pb-4 border-b border-border text-xs text-brand-muted">
                 <div className="flex items-center gap-2">
-                  <img src="/invty-logo.png" alt="INVTY" className="w-4 h-4 object-contain" />
-                  <span className="font-mono font-bold text-brand-heading tracking-wider">INVTY · ANNEXE</span>
+                  <img src="/invty-logo.png" alt="IINVTY" className="w-4 h-4 object-contain" />
+                  <span className="font-mono font-bold text-brand-heading tracking-wider">IINVTY · ANNEXE</span>
                 </div>
                 <span>Complete Activity Audit Trail</span>
                 <span className="font-mono">Total {allEntries.length} lines</span>
@@ -574,7 +574,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               </div>
 
               <div className="relative z-10 pt-4 border-t border-border flex items-center justify-between text-[11px] text-brand-muted font-mono">
-                <span>INVTY · {companyName} GHG Inventory</span>
+                <span>IINVTY · {companyName} GHG Inventory</span>
                 <span>Annexe</span>
                 <span>Verified Audit Trail</span>
               </div>
@@ -720,7 +720,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                 ))}
               </div>
               <p className="text-[10px] text-brand-muted leading-tight">
-                Official INVTY logo watermark is blended into the document background using multiply mode, keeping tables and figures 100% legible.
+                Official IINVTY logo watermark is blended into the document background using multiply mode, keeping tables and figures 100% legible.
               </p>
             </div>
 

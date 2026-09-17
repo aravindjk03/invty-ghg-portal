@@ -1,12 +1,12 @@
 ---
 activation: Always On
 ---
-# INVTY GHG Accounting Portal — project map
+# IINVTY GHG Accounting Portal — project map
 
-A public web tool on the INVTY website. Any visitor enters energy, fuel and
+A public web tool on the IINVTY website. Any visitor enters energy, fuel and
 value-chain data and receives a calculated GHG inventory (Scope 1, 2, 3) plus a
-downloadable, INVTY-watermarked PDF report. Audience: Indian industrial and
-corporate professionals. It is also a lead-generation funnel for INVTY.
+downloadable, IINVTY-watermarked PDF report. Audience: Indian industrial and
+corporate professionals. It is also a lead-generation funnel for IINVTY.
 
 ## The specifications live in the repo. Read them, do not guess.
 

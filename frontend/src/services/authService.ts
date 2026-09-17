@@ -167,9 +167,9 @@ export const authService = {
         {
           type: 'email',
           email: 'admin@invty.com',
-          password: 'Invty@2026',
-          name: 'INVTY Enterprise Admin',
-          company: 'INVTY Sustainability Systems',
+          password: 'IINVTY@2026',
+          name: 'IINVTY Enterprise Admin',
+          company: 'IINVTY Sustainability Systems',
           role: 'ADMIN',
         },
         {
@@ -183,8 +183,8 @@ export const authService = {
         {
           type: 'mobile',
           phone: '+919876543210',
-          name: 'INVTY Enterprise Admin',
-          company: 'INVTY Sustainability Systems',
+          name: 'IINVTY Enterprise Admin',
+          company: 'IINVTY Sustainability Systems',
           role: 'ADMIN',
         },
       ];

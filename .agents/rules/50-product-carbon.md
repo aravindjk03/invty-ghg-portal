@@ -52,7 +52,7 @@ optional.
 Decision recorded 2026-09-16, at the product owner's request: on the Product
 Carbon page ONLY, the AI may propose per-line quantities and per-unit emission
 factor ranges for any product, so that a visitor can get a screening estimate
-for materials INVTY holds no verified data for.
+for materials IINVTY holds no verified data for.
 
 What stays absolute:
 

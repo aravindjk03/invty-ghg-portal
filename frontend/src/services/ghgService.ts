@@ -198,7 +198,7 @@ export const ghgService = {
   /**
    * Bug Guard #11: Pixel-accurate PDF generator with html2canvas and jsPDF
    */
-  async generatePdf(elementId: string, filename = 'INVTY_GHG_Verification_Report.pdf'): Promise<void> {
+  async generatePdf(elementId: string, filename = 'IINVTY_GHG_Verification_Report.pdf'): Promise<void> {
     const el = document.getElementById(elementId);
     if (!el) {
       window.print();

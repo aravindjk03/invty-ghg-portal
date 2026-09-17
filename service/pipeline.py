@@ -35,7 +35,7 @@ from .schemas import (AILine, Decomposition, DisplayRange, EstimateRequest,
 
 KG_PER_TONNE = Decimal(1000)
 
-# Commercial LCA databases INVTY holds no licence for. A public page must not
+# Commercial LCA databases IINVTY holds no licence for. A public page must not
 # attribute a figure to them, even as an unverified AI citation.
 NON_REDISTRIBUTABLE_SOURCES = ("ecoinvent", "gabi", "sphera")
 

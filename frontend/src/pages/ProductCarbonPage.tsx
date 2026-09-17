@@ -99,11 +99,11 @@ function HowItWorks() {
     },
     {
       title: 'The engine does the maths',
-      body: `INVTY's calculation engine multiplies and sums every input in exact decimal arithmetic. ${name} never states a total.`,
+      body: `IINVTY's calculation engine multiplies and sums every input in exact decimal arithmetic. ${name} never states a total.`,
     },
     {
       title: 'Verified data takes over',
-      body: 'Wherever INVTY holds a verified factor for a material, it replaces the AI estimate — and the page says which is which.',
+      body: 'Wherever IINVTY holds a verified factor for a material, it replaces the AI estimate — and the page says which is which.',
     },
   ];
   return (
@@ -262,7 +262,7 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
             Product Carbon Footprint
           </h1>
           <p className="text-[15px] text-brand-muted mt-1.5 max-w-[68ch] leading-relaxed">
-            Name any product or material. AI works out how it is made and used, and INVTY&apos;s calculation engine
+            Name any product or material. AI works out how it is made and used, and IINVTY&apos;s calculation engine
             computes the carbon from creating it and from using it.
           </p>
         </div>

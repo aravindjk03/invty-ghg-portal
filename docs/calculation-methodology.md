@@ -1,4 +1,4 @@
-# INVTY GHG Portal — Calculation Methodology & Coefficient Sourcing
+# IINVTY GHG Portal — Calculation Methodology & Coefficient Sourcing
 
 **Companion files:** `coefficient_ingestion_worklist.csv` · `emission_source_catalogue.csv`
 
@@ -340,6 +340,6 @@ Tests 5 and 6 are the ones that catch methodology errors rather than coding erro
 
 ## 7. Get a practitioner to sign off
 
-Everything above is a specification. Before this tool is public, a qualified GHG practitioner or an ISO 14064-3 verifier should review the methodology document and the ingested factor set. It is a small cost against publishing wrong numbers under the INVTY name to industry professionals who will check them.
+Everything above is a specification. Before this tool is public, a qualified GHG practitioner or an ISO 14064-3 verifier should review the methodology document and the ingested factor set. It is a small cost against publishing wrong numbers under the IINVTY name to industry professionals who will check them.
 
 I am also not a lawyer or a certified GHG verifier — treat this as engineering guidance to be validated, not as assurance.

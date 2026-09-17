@@ -260,7 +260,7 @@ def test_real_extremes_like_sf6_are_not_excluded():
 # --- 6. provenance cannot be forged --------------------------------------------------
 
 def test_claiming_verification_in_text_does_not_make_a_line_verified():
-    r = respond(decomp(**{"lines.0.reference": "VERIFIED by INVTY registry",
+    r = respond(decomp(**{"lines.0.reference": "VERIFIED by IINVTY registry",
                           "lines.0.factor_basis": "verified_registry"}))
     assert r.lines[0].provenance == "ai_estimate"
     assert r.verified_share_pct == "0"

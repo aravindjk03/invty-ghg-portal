@@ -1,4 +1,4 @@
-"""ghg_core - the INVTY GHG calculation core.
+"""ghg_core - the IINVTY GHG calculation core.
 
 Pure, deterministic, dependency-light. No database, no network, no UI.
 Ships with ZERO emission factor values: they are ingested from named

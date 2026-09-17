@@ -1,4 +1,4 @@
-# INVTY GHG Portal — Emission Source Catalogue & Scope Routing Rules
+# IINVTY GHG Portal — Emission Source Catalogue & Scope Routing Rules
 
 **Companion files:** `emission_source_catalogue.csv` · `emission_source_catalogue.json`
 **230 sources**, each mapped to a scope, a GHG Protocol category, default and allowed units, the gases it emits, and its factor source. These files are seed data — load them into the `emission_factor` / activity-catalogue tables directly.

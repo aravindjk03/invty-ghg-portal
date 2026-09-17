@@ -332,12 +332,12 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
           >
             <img
               src="/invty-logo.png"
-              alt="INVTY Logo"
+              alt="IINVTY Logo"
               className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
             />
             <div className="flex flex-col text-left">
               <span className="font-mono font-bold text-[14px] tracking-wider text-[#0F172A] leading-tight">
-                INVTY
+                IINVTY
               </span>
               <span className="text-[9px] uppercase tracking-widest text-[#94A3B8] font-semibold leading-tight">
                 GHG Portal
@@ -479,7 +479,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
       <Modal
         isOpen={helpOpen}
         onClose={() => setHelpOpen(false)}
-        title="INVTY GHG Accounting Standards & Guidance"
+        title="IINVTY GHG Accounting Standards & Guidance"
       >
         <div className="space-y-4 text-xs text-[#64748B] leading-relaxed">
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">

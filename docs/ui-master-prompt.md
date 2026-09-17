@@ -1,4 +1,4 @@
-# INVTY GHG Portal — UI Design System & Paste-Ready Master Prompt
+# IINVTY GHG Portal — UI Design System & Paste-Ready Master Prompt
 
 **Version** 1.0 · **Companion to** `INVTY_GHG_Portal_Architecture_Spec.md`
 **Purpose:** a copy-paste prompt that reliably produces the exact UI you want, plus the reasoning behind the design decisions encoded in it.
@@ -62,7 +62,7 @@ shadows or typography. Where I give a token value, use that value verbatim.
 
 ## PROJECT
 
-INVTY GHG Accounting Portal — a public web tool where industrial and corporate
+IINVTY GHG Accounting Portal — a public web tool where industrial and corporate
 professionals enter energy, fuel and value-chain data and receive a calculated
 greenhouse gas inventory (Scope 1, Scope 2, Scope 3) plus a downloadable,
 watermarked PDF report.
@@ -362,7 +362,7 @@ Do not build application screens yet. Foundation only.
 
 ````
 Using the design system built previously, create the Scope Hub screen — the
-home base of the INVTY GHG Portal.
+home base of the IINVTY GHG Portal.
 
 ## PURPOSE
 After a user has entered their company details, this screen lets them work on
@@ -372,7 +372,7 @@ cares about Scope 1 must never be forced through the others.
 ## LAYOUT — 12-column grid, max-width 1440px, 32px gutters
 
 TOP BAR (72px, sticky, --surface-raised, --nm-raised-sm, bottom border):
-- Left: INVTY wordmark
+- Left: IINVTY wordmark
 - Centre: breadcrumb "Acme Steel Pvt Ltd · FY 2025–26 · Operational control"
 - Right: "Save & exit" ghost button, settings icon, help icon
 
@@ -609,11 +609,11 @@ Print colours differ from screen: white page, --text-heading for headings,
 --text-body for body, scope colours unchanged so screen and print match.
 
 Every page carries:
-- A repeating header (except the cover): small INVTY mark left, report title
+- A repeating header (except the cover): small IINVTY mark left, report title
   centre, hairline rule beneath
-- A repeating footer: "INVTY · <Company> GHG Inventory <Period> · Page X of Y
+- A repeating footer: "IINVTY · <Company> GHG Inventory <Period> · Page X of Y
   · Generated <date> · Report ID <id>"
-- The INVTY WATERMARK behind all content:
+- The IINVTY WATERMARK behind all content:
 
 ```css
 @page { size: A4; margin: 20mm 18mm 22mm 18mm; }

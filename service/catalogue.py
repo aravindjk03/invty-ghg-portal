@@ -1,4 +1,4 @@
-"""The product carbon catalogue: which materials and routes INVTY will hold
+"""The product carbon catalogue: which materials and routes IINVTY will hold
 verified factors for. The AI may only map a line onto a key listed here."""
 from __future__ import annotations
 

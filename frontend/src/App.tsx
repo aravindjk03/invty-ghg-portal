@@ -85,7 +85,7 @@ function MainApp() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#EDF1F7] gap-4">
         <img
           src="/invty-logo.png"
-          alt="INVTY Logo"
+          alt="IINVTY Logo"
           className="w-14 h-14 object-contain drop-shadow-md animate-pulse"
         />
         <p className="text-sm text-gray-500 font-medium tracking-wide">Verifying session…</p>

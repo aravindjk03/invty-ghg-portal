@@ -131,7 +131,7 @@ function ProvenanceBanner({ data }: { data: EstimateResponse }) {
       <ShieldCheck size={20} className="text-status-success flex-shrink-0 mt-0.5" />
       <p className="text-sm text-brand-body">
         <span className="font-semibold text-brand-heading font-mono tabular-nums">{verified}%</span> of the
-        lifecycle total uses verified factors from INVTY&apos;s registry. The remainder are AI estimates,
+        lifecycle total uses verified factors from IINVTY&apos;s registry. The remainder are AI estimates,
         marked on each line.
       </p>
     </div>
@@ -531,10 +531,10 @@ function MethodNote({ data }: { data: EstimateResponse }) {
           proposed a quantity and an emission-factor range for each.
         </li>
         <li>
-          Inputs that match INVTY&apos;s verified factor registry use the verified value instead of the AI&apos;s.
+          Inputs that match IINVTY&apos;s verified factor registry use the verified value instead of the AI&apos;s.
         </li>
         <li>
-          INVTY&apos;s calculation engine (ghg_core {method.engine_version}) multiplied and summed every figure in exact
+          IINVTY&apos;s calculation engine (ghg_core {method.engine_version}) multiplied and summed every figure in exact
           decimal arithmetic. Ranges add all the low values and all the high values — a deliberately wide bracket,
           not a statistical confidence interval.
         </li>
