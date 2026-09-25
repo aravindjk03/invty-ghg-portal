@@ -36,6 +36,56 @@ marked unverified — see `docs/ghg-report-structure.md`.
 | **Chapter 7 Supplementary Material** (the GWP tables) | <https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf> |
 | Chapter 7 main text | <https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07.pdf> |
 
+## Round two — the gaps DESNZ and CEA do not cover
+
+All verified to download on 2026-09-25.
+
+**Capital goods and purchased goods, spend-based — EPA Supply Chain Factors v1.3**
+Page: <https://catalog.data.gov/dataset/supply-chain-greenhouse-gas-emission-factors-v1-3-by-naics-6>
+
+| File | Direct link |
+|---|---|
+| **By gas** (preferred — CO2, CH4, N2O separately) | <https://pasteur.epa.gov/uploads/10.23719/1531143/SupplyChainGHGEmissionFactors_v1.3.0_NAICS_byGHG_USD2022.csv> |
+| CO2e composite | <https://pasteur.epa.gov/uploads/10.23719/1531143/SupplyChainGHGEmissionFactors_v1.3.0_NAICS_CO2e_USD2022.csv> |
+
+kgCO2e per US dollar of spend, by NAICS industry code, in 2022 dollars. US
+industry structure, so it is a screening proxy for Indian procurement — label it
+as such. Public domain (US federal work).
+
+**Agriculture — IPCC 2006 Guidelines Volume 4**
+Index: <https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol4.html>
+
+| Chapter | Direct link |
+|---|---|
+| Ch 10 — Livestock: enteric fermentation and manure | <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_10_Ch10_Livestock.pdf> |
+| Ch 11 — N2O from managed soils, CO2 from lime and urea | <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_11_Ch11_N2O&CO2.pdf> |
+| Ch 5 — Cropland, including rice | <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_05_Ch5_Cropland.pdf> |
+| Ch 2 — Generic methods | <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_02_Ch2_Generic.pdf> |
+
+**Waste and wastewater — IPCC 2006 Guidelines Volume 5**
+Index: <https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol5.html>
+
+| Chapter | Direct link |
+|---|---|
+| **Ch 6 — Wastewater treatment and discharge** | <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/5_Volume5/V5_6_Ch6_Wastewater.pdf> |
+| Ch 3 — Solid waste disposal sites | <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/5_Volume5/V5_3_Ch3_SWDS.pdf> |
+
+These replace the per-cubic-metre wastewater values removed earlier: IPCC
+quantifies from organic load (COD/BOD) and nitrogen, not volume.
+
+**Indian transport — India GHG Program (WRI India, CII, TERI)**
+Page: <https://indiaghgp.org/transport-emission-factors>
+
+| Paper | Direct link |
+|---|---|
+| **Road transport technical paper** | <https://indiaghgp.org/sites/default/files/Road%20Transport%20Technical%20Paper.pdf> |
+| Rail transport | <https://indiaghgp.org/sites/default/files/Rail%20Transport%20Emission.pdf> |
+| Air transport | <https://indiaghgp.org/sites/default/files/AIR%20Transport%20Emission.pdf> |
+
+**Alternative for spend-based, if you prefer a global model to a US one:**
+EXIOBASE 3 on Zenodo — <https://zenodo.org/records/5589597>. Large download,
+research licence; check the terms before republishing values commercially.
+
 ## Start here — these two cover most of your gaps
 
 ### 1. UK Government GHG conversion factors (DESNZ, formerly DEFRA)
