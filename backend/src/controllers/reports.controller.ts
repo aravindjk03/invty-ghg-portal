@@ -1,21 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { CalculationService } from '../services/calculation.service';
-import { ActivityEntry } from '../types/ghg.types';
+
 
 export const reportGenSchema = z.object({
   companyName: z.string().min(1).default('Acme Steel Pvt Ltd'),
   reportingPeriod: z.string().min(1).default('FY 2025–26'),
   framework: z.string().default('GHG Protocol'),
   reportType: z.string().default('Screening'),
-  entries: z.array(z.any()).default([]),
+  // Totals come from the engine. This endpoint records them on the report; it
+  // does not recalculate them, because a second summation is a second answer.
+  summary: z
+    .object({
+      scope1: z.number(),
+      scope2Location: z.number(),
+      scope2Market: z.number(),
+      scope3: z.number(),
+      totalEmissions: z.number(),
+    })
+    .optional(),
 });
 
 export class ReportsController {
   public static generateReportMetadata(req: Request, res: Response, next: NextFunction): void {
     try {
-      const { companyName, reportingPeriod, framework, reportType, entries } = req.body;
-      const summary = CalculationService.summarizeInventory(entries as ActivityEntry[]);
+      const { companyName, reportingPeriod, framework, reportType, summary } = req.body;
 
       const reportId = `IINVTY-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 

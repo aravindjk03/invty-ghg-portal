@@ -9,7 +9,6 @@ import { ActivityRow } from '../components/ui/ActivityRow';
 import { Tooltip } from '../components/ui/Tooltip';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatIndianNumber } from '../engine/unitConverter';
-import { deriveCategory3Emissions } from '../engine/calculator';
 import Decimal from 'decimal.js';
 import { 
   ArrowLeft, 
@@ -65,9 +64,11 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
 
-  // Auto-derived Category 3 breakdown calculation
-  const s2LocDecimal = new Decimal(summary.scope2Location || 0);
-  const derivedCat3Total = deriveCategory3Emissions(scope1Entries, s2LocDecimal);
+  // Category 3 is whatever has been recorded against it. It is not derived from
+  // a percentage of Scopes 1 and 2: that had no published basis.
+  const cat3Recorded = scope3Entries
+    .filter((entry) => entry.category === 'cat3_fuel_energy')
+    .reduce((total, entry) => total + (entry.calculatedTco2e || 0), 0);
 
   // Helper to get entries for a specific category ID
   const getCategoryEntries = (catId: string) => {
@@ -182,36 +183,34 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border">
                 <h3 className="text-sm font-bold text-brand-heading flex items-center gap-2">
-                  Category 3: Fuel- and Energy-Related Activities (Auto-Derived Engine)
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                    Automated Synthesis
+                  Category 3: Fuel- and Energy-Related Activities
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                    Record as rows
                   </span>
                 </h3>
                 <span className="text-sm font-mono font-bold text-brand-heading">
-                  + {formatIndianNumber(derivedCat3Total.toNumber())} tCO₂e
+                  {formatIndianNumber(cat3Recorded)} tCO₂e recorded
                 </span>
               </div>
               <p className="text-xs text-brand-muted mt-2 leading-relaxed">
-                In accordance with Bug Guard Rule #10, Category 3 is calculated as an automated secondary pass directly from verified Scope 1 & Scope 2 lines. This structurally eliminates circular recalculation loops and guarantees 100% audit trail synchronization:
+                This category used to be derived automatically as 18% of Scope 1 plus 12% and 19% of
+                Scope 2. Those percentages had no published source, and they made this page disagree
+                with the report, so they have been removed. Well-to-tank and transmission losses are
+                now recorded as their own rows, each against a published factor — the DESNZ
+                &ldquo;WTT-&rdquo; factors and the CEA transmission loss rate are both in the library.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
                 <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of Scope 1 Fuels (18%)</span>
-                  <span className="font-mono font-bold text-brand-heading text-sm">
-                    {formatIndianNumber(new Decimal(summary.scope1).times(0.18).toNumber())} tCO₂e
-                  </span>
+                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of fuels burned</span>
+                  <span className="text-[11px] text-brand-body">Search &ldquo;WTT- fuels&rdquo; when adding a row.</span>
                 </div>
                 <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of Purchased Elec (12%)</span>
-                  <span className="font-mono font-bold text-brand-heading text-sm">
-                    {formatIndianNumber(s2LocDecimal.times(0.12).toNumber())} tCO₂e
-                  </span>
+                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of purchased electricity</span>
+                  <span className="text-[11px] text-brand-body">Search &ldquo;WTT- electricity&rdquo;.</span>
                 </div>
                 <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">India Grid T&D Losses (19%)</span>
-                  <span className="font-mono font-bold text-brand-heading text-sm">
-                    {formatIndianNumber(s2LocDecimal.times(0.19).toNumber())} tCO₂e
-                  </span>
+                  <span className="text-[11px] text-brand-muted font-semibold block">Transmission and distribution</span>
+                  <span className="text-[11px] text-brand-body">Search &ldquo;T&amp;D&rdquo;, or use the CEA loss rate for India.</span>
                 </div>
               </div>
             </div>
@@ -301,9 +300,9 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
             </div>
             <div className="h-7 w-px bg-border hidden sm:block" />
             <div>
-              <span className="text-brand-muted block">Auto-Derived Cat 3:</span>
-              <span className="text-sm font-mono font-bold text-purple-700">
-                {formatIndianNumber(derivedCat3Total.toNumber())} tCO₂e
+              <span className="text-brand-muted block">Cat 3 recorded:</span>
+              <span className="text-sm font-mono font-bold text-brand-heading">
+                {formatIndianNumber(cat3Recorded)} tCO₂e
               </span>
             </div>
             <div className="h-7 w-px bg-border hidden sm:block" />

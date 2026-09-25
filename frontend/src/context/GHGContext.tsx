@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessage } from '../types/ghg';
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
-import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
+import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { useEngineInventory } from '../report/useEngineInventory';
 import { GwpSetName } from '../types/inventory';
@@ -388,10 +388,33 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const scope2Calculated = useMemo(() => withEngineValues(scope2Entries), [withEngineValues, scope2Entries]);
   const scope3Calculated = useMemo(() => withEngineValues(scope3Entries), [withEngineValues, scope3Entries]);
 
-  const summary = useMemo<ScopeSummary>(
-    () => summarizeInventory(scope1Calculated, scope2Calculated, scope3Calculated, 'location'),
-    [scope1Calculated, scope2Calculated, scope3Calculated],
-  );
+  // The totals ARE the engine's totals, in tonnes. Nothing is re-added here:
+  // summing the rows again in the browser is how two figures for one inventory
+  // start to drift apart.
+  const summary = useMemo<ScopeSummary>(() => {
+    const totals = engine.result?.totals;
+    const tonnes = (kg?: string) => (kg ? Number(kg) / 1000 : 0);
+    const scope3Categories = new Set(
+      scope3Entries.filter((entry) => entry.engineActivityKey).map((entry) => entry.category));
+
+    return {
+      scope1: tonnes(totals?.scope1),
+      scope2Location: tonnes(totals?.scope2_location),
+      scope2Market: tonnes(totals?.scope2_market),
+      scope3: tonnes(totals?.scope3),
+      biogenicMemo: tonnes(totals?.memo?.biogenic_co2),
+      totalEmissions: tonnes(totals?.total_all),
+      dataQualityGrade: calculateDataQualityGrade(
+        [...scope1Calculated, ...scope2Calculated, ...scope3Calculated]),
+      coverage: {
+        scopesCompleted: [totals?.scope1, totals?.scope2_headline, totals?.scope3]
+          .filter((value) => Number(value) > 0).length,
+        totalScopes: 3,
+        scope3CategoriesIncluded: scope3Categories.size,
+        totalScope3Categories: 15,
+      },
+    };
+  }, [engine.result, scope1Calculated, scope2Calculated, scope3Calculated, scope3Entries]);
 
   const engineStatus = useMemo(() => {
     const unmappedCount = engine.unmapped.length;
