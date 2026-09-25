@@ -23,6 +23,7 @@ import {
   Zap,
   CheckCircle2
 } from 'lucide-react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 
 export interface Scope1PageProps {
   onNavigate: (page: string) => void;
@@ -184,6 +185,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
 
     return (
       <div className="space-y-3">
+      <EngineStatusBar />
         {entries.length > 0 ? (
           <>
             {renderColumnHeaders()}

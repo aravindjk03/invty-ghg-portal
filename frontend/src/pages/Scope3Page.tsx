@@ -18,6 +18,7 @@ import {
   Filter, 
   Calculator 
 } from 'lucide-react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 
 interface Scope3PageProps {
   onNavigate: (page: string) => void;
@@ -79,6 +80,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28">
+      <EngineStatusBar />
       {/* Top Breadcrumb & Badge */}
       <div className="flex items-center justify-between mb-6">
         <button

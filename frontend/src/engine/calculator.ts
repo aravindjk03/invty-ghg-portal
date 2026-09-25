@@ -228,9 +228,11 @@ export function summarizeInventory(
   for (const row of scope3Entries) {
     s3Total = s3Total.plus(new Decimal(row.calculatedTco2e || 0));
   }
-  // Add auto-derived Cat 3
-  const derivedCat3 = deriveCategory3Emissions(scope1Entries, s2LocTotal);
-  s3Total = s3Total.plus(derivedCat3);
+  // Category 3 is NOT derived from a percentage of Scopes 1 and 2. The earlier
+  // 18% / 12% / 19% had no published source, and it made the dashboard disagree
+  // with the report. Well-to-tank and T&D are recorded as their own rows, using
+  // the published WTT factors now in the library.
+
 
   // Bug Guard #9: Grand Total includes EXACTLY ONE Scope 2 view (default: location)
   const s2Headline = scope2ReportingPreference === 'market' ? s2MktTotal : s2LocTotal;
@@ -241,7 +243,6 @@ export function summarizeInventory(
 
   // Count active Scope 3 categories
   const s3CatSet = new Set(scope3Entries.map((e) => e.category));
-  s3CatSet.add('cat3'); // auto-derived
 
   return {
     scope1: Number(s1Total.toFixed(2)),

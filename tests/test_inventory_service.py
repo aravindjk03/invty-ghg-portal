@@ -113,3 +113,28 @@ def test_the_activity_list_can_be_searched_and_is_scoped():
     assert fuels and all(item.scope == "1" for item in fuels)
     assert all("diesel" in item.name.lower() or "diesel" in item.category_path.lower()
                for item in fuels)
+
+
+def test_a_source_published_only_as_co2e_still_calculates():
+    # DESNZ publishes waste, materials and hotel stays as a CO2e composite with
+    # no gas split. Those must still calculate, carrying the publisher's basis.
+    from service.inventory import activities_for
+
+    composite = next(a for a in activities_for("3")
+                     if a.gases == ("CO2e",) and a.unit == "tonnes")
+    record = {"record_id": "w1", "activity_key": composite.activity_key, "scope": "3",
+              "ghg_category": "3.5", "region": composite.region, "value": "10",
+              "unit": composite.unit}
+    response = calculate_inventory(request_for([record]), "f")
+    line = response.lines[0]
+    assert line.status == "calculated"
+    assert list(line.gas_breakdown) == ["CO2e"]
+    # A composite is already CO2e, so no GWP is applied on top of it.
+    assert line.gwp_applied["CO2e"] == "1"
+
+
+def test_an_activity_with_no_factor_at_all_still_fails():
+    record = {"record_id": "none", "activity_key": "desnz.2025.nothing_here", "scope": "1",
+              "ghg_category": "1.1", "region": "UK", "value": "1", "unit": "litres"}
+    response = calculate_inventory(request_for([record]), "f")
+    assert response.lines[0].status == "unavailable"

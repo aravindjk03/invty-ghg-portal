@@ -23,6 +23,7 @@ import {
   HelpCircle,
   AlertTriangle
 } from 'lucide-react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 
 interface Scope2PageProps {
   onNavigate: (page: string) => void;
@@ -90,6 +91,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28">
+      <EngineStatusBar />
       {/* Breadcrumb & Navigation */}
       <div className="flex items-center justify-between mb-6">
         <button

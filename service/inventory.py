@@ -65,20 +65,39 @@ def _desnz_activity_key(factor_id: str) -> str:
 def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, ...]]:
     """Build the factor registry and the list of activities a user can pick.
 
-    Only the per-gas rows are loaded. The publishers' CO2e composites are left
-    out on purpose: they carry the publisher's own GWP basis, which would defeat
-    the point of letting the customer choose one.
+    Per-gas rows are preferred, because they can be expressed under either GWP
+    set. Where a publisher gives only a CO2e composite - waste, materials, hotel
+    stays - that composite is loaded instead and keeps the publisher's own
+    basis, which the report states rather than pretending otherwise.
     """
     registry = InMemoryFactorRegistry()
     activities: dict[str, dict] = {}
 
     desnz = FACTOR_DIR / "desnz_2025.csv"
     if desnz.exists():
-        for row in csv.DictReader(desnz.open(encoding="utf-8")):
+        # Work out which activities publish a gas split. Where one exists it is
+        # used, because it can be expressed under either GWP set. Where the
+        # publisher gives only a CO2e composite - waste, materials, hotel stays -
+        # that composite is loaded instead and carries the publisher's own basis,
+        # which the report has to state.
+        rows = list(csv.DictReader(desnz.open(encoding="utf-8")))
+        has_gas_split = {
+            _desnz_activity_key(row["factor_id"])
+            for row in rows if IMPORT_GASES.get(row["gas"]) and row["gas_mass_kg_per_unit"]
+        }
+
+        for row in rows:
             gas = IMPORT_GASES.get(row["gas"])
-            if gas is None:                       # skips the CO2e composite
+            key_for_row = _desnz_activity_key(row["factor_id"])
+            composite_only = row["gas"] == "CO2e" and key_for_row not in has_gas_split
+
+            if gas is None and not composite_only:
                 continue
-            mass = _decimal(row["gas_mass_kg_per_unit"])
+            if composite_only:
+                gas = "CO2e"
+                mass = _decimal(row["value_kgco2e_per_unit"])
+            else:
+                mass = _decimal(row["gas_mass_kg_per_unit"])
             if mass is None:
                 continue
 
@@ -90,7 +109,7 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
                 reference_year=int(row["publication_year"] or 0),
                 gas=gas,
                 value=mass,
-                numerator_unit=f"kg{gas}",
+                numerator_unit="kgCO2e" if gas == "CO2e" else f"kg{gas}",
                 denominator_unit=row["unit"],
                 ef_basis=PHYSICAL_BASIS,
                 source_name=row["source"],
@@ -178,5 +197,9 @@ def run_inventory(
         registry,
         load_gwp(gwp_set_name),
         reporting_year=reporting_year,
+        # CO2e last: it is the publisher's composite, used only where no gas
+        # split is published. Where a split exists the three gases resolve and
+        # the composite is absent, so there is no double counting.
+        gases=("CO2", "CH4", "N2O", "CO2e"),
         scope2_headline_view=scope2_view,
     )

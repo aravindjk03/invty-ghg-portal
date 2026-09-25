@@ -64,6 +64,7 @@ _UNITS = {u.name: u for u in [
     _u("m3", VOLUME, "1"),
     _u("L", VOLUME, "0.001"),
     _u("kL", VOLUME, "1", note="kilolitre == 1 m3. The classic 1000x trap."),
+    _u("Ml", VOLUME, "1000", note="megalitre == 1,000 m3, used by water factors"),
     _u("gal", VOLUME, "0.003785411784", note="US liquid gallon, exact"),
     _u("scm", VOLUME, "1", gas_ref="standard",
        note="standard cubic metre - density must be quoted at the same state"),
@@ -108,6 +109,8 @@ _UNITS = {u.name: u for u in [
     _u("m2", AREA, "1"),
     _u("sqft", AREA, "0.09290304", note="exact by definition"),
     _u("FTE.yr", COUNT, "1", note="full-time-equivalent employee year"),
+    _u("FTE.hr", COUNT, "1", note="full-time-equivalent working hour, used by homeworking factors"),
+    _u("room.night", COUNT, "1", note="one room occupied for one night"),
 ]}
 
 # Things Indian users actually type.
@@ -134,6 +137,9 @@ _ALIASES = {
     "trhr": "TR-hr", "tr-hr": "TR-hr", "tr.hr": "TR-hr",
     "sq ft": "sqft", "sq.ft": "sqft", "ft2": "sqft", "m^2": "m2",
     "fte.yr": "FTE.yr", "fte-yr": "FTE.yr",
+    "per fte working hour": "FTE.hr", "fte.hr": "FTE.hr",
+    "room per night": "room.night", "room-night": "room.night",
+    "million litres": "Ml", "megalitre": "Ml", "ml (million litres)": "Ml",
     "mmbtu": "MMBtu", "kcal": "kcal",
 }
 

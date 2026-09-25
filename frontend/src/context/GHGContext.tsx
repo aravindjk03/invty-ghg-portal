@@ -3,6 +3,8 @@ import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessa
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
+import { useEngineInventory } from '../report/useEngineInventory';
+import { GwpSetName } from '../types/inventory';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
 import { User, authService } from '../services/authService';
 
@@ -23,6 +25,18 @@ interface GHGContextType {
   scope2Entries: ActivityEntry[];
   scope3Entries: ActivityEntry[];
   summary: ScopeSummary;
+  /** Which IPCC basis every figure is calculated under. */
+  gwpSet: GwpSetName;
+  setGwpSet: (set: GwpSetName) => void;
+  /** How the current figures were produced, and what could not be produced. */
+  engineStatus: {
+    state: 'calculated' | 'calculating' | 'unavailable' | 'nothing_mapped';
+    message?: string;
+    runId?: string;
+    engineVersion?: string;
+    unmappedCount: number;
+    excludedCount: number;
+  };
   scenario: WhatIfScenario;
   scenarioResult: ScenarioResult;
   toasts: ToastMessage[];
@@ -45,6 +59,8 @@ const STORAGE_KEY = 'INVTY_GHG_INVENTORY_DATA_V2';
 const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   {
     id: 's1-row-1',
+    engineActivityKey: 'desnz.2025.1_101_1011_8',
+    engineRegion: 'UK',
     facility: 'Plant 1 - Rolling Mill',
     scope: 'scope-1',
     category: 'stationary_combustion',
@@ -58,6 +74,8 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-2',
+    engineActivityKey: 'desnz.2025.1_100_1004_1',
+    engineRegion: 'UK',
     facility: 'Plant 1 - Re-heating Furnace',
     scope: 'scope-1',
     category: 'stationary_combustion',
@@ -70,6 +88,8 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-3',
+    engineActivityKey: 'desnz.2025.1_100_1003_15',
+    engineRegion: 'UK',
     facility: 'Billet Cutting Station',
     scope: 'scope-1',
     category: 'stationary_combustion',
@@ -82,6 +102,8 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-4',
+    engineActivityKey: 'desnz.2025.1_101_1011_8',
+    engineRegion: 'UK',
     facility: 'Logistics Fleet',
     scope: 'scope-1',
     category: 'mobile_combustion',
@@ -94,6 +116,8 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-5',
+    engineActivityKey: 'desnz.2025.1_101_1011_8',
+    engineRegion: 'UK',
     facility: 'Scrap Yard',
     scope: 'scope-1',
     category: 'mobile_combustion',
@@ -134,6 +158,8 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
 const INITIAL_SCOPE2_ENTRIES: ActivityEntry[] = [
   {
     id: 's2-row-1',
+    engineActivityKey: 'cea.grid.weighted_average_incl_res.incl_imports.2025_26',
+    engineRegion: 'IN',
     facility: 'Main Plant — Jamshedpur',
     scope: 'scope-2',
     category: 'purchased_electricity',
@@ -146,6 +172,8 @@ const INITIAL_SCOPE2_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's2-row-2',
+    engineActivityKey: 'cea.grid.weighted_average_incl_res.incl_imports.2025_26',
+    engineRegion: 'IN',
     facility: 'Main Plant — Captive Substation',
     scope: 'scope-2',
     category: 'market_instruments',
@@ -175,6 +203,8 @@ const INITIAL_SCOPE3_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's3-row-2',
+    engineActivityKey: 'desnz.2025.27_304_3110_14',
+    engineRegion: 'UK',
     facility: 'Inbound Raw Material Logistics',
     scope: 'scope-3',
     category: 'cat4_upstream_transport',
@@ -305,9 +335,85 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   // Bug Guard #6: Compute summary via useMemo from active entries (never store derived total in useState)
-  const summary = useMemo<ScopeSummary>(() => {
-    return summarizeInventory(scope1Entries, scope2Entries, scope3Entries, 'location');
-  }, [scope1Entries, scope2Entries, scope3Entries]);
+  // Every figure in the app comes from ghg_core. The browser holds the records
+  // and displays the result; it does not compute emissions itself, so there is
+  // no second method that could disagree with the report.
+  const [gwpSet, setGwpSet] = useState<GwpSetName>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('INVTY_GHG_REPORT_META_V1') || '{}');
+      return stored.gwpSet === 'AR6' ? 'AR6' : 'AR5';
+    } catch {
+      return 'AR5';
+    }
+  });
+
+  const allEntries = useMemo(
+    () => [...scope1Entries, ...scope2Entries, ...scope3Entries],
+    [scope1Entries, scope2Entries, scope3Entries],
+  );
+
+  const reportingYear = useMemo(
+    () => Number(reportingPeriod.match(/\d{4}/)?.[0]) || new Date().getFullYear(),
+    [reportingPeriod],
+  );
+
+  const engine = useEngineInventory(allEntries, gwpSet, reportingYear);
+
+  /** Engine result per record, in tonnes, with the reason when there is none. */
+  const engineByRecord = useMemo(() => {
+    const map = new Map<string, { tco2e: number; warning?: string }>();
+    engine.result?.lines.forEach((line) => {
+      map.set(line.record_id, {
+        tco2e: Number(line.emissions_kgco2e) / 1000,
+        warning: line.status === 'calculated' ? undefined : line.message,
+      });
+    });
+    engine.unmapped.forEach((entry) => map.set(entry.id, {
+      tco2e: 0,
+      warning: 'No published factor chosen, so this row is not calculated and is excluded from every total.',
+    }));
+    return map;
+  }, [engine.result, engine.unmapped]);
+
+  const withEngineValues = useCallback(
+    (entries: ActivityEntry[]): ActivityEntry[] => entries.map((entry) => {
+      const line = engineByRecord.get(entry.id);
+      if (!line) return entry;
+      return { ...entry, calculatedTco2e: line.tco2e, warning: line.warning };
+    }),
+    [engineByRecord],
+  );
+
+  const scope1Calculated = useMemo(() => withEngineValues(scope1Entries), [withEngineValues, scope1Entries]);
+  const scope2Calculated = useMemo(() => withEngineValues(scope2Entries), [withEngineValues, scope2Entries]);
+  const scope3Calculated = useMemo(() => withEngineValues(scope3Entries), [withEngineValues, scope3Entries]);
+
+  const summary = useMemo<ScopeSummary>(
+    () => summarizeInventory(scope1Calculated, scope2Calculated, scope3Calculated, 'location'),
+    [scope1Calculated, scope2Calculated, scope3Calculated],
+  );
+
+  const engineStatus = useMemo(() => {
+    const unmappedCount = engine.unmapped.length;
+    const excludedCount = engine.result?.excluded.length ?? 0;
+    if (engine.loading) return { state: 'calculating' as const, unmappedCount, excludedCount };
+    if (engine.error) {
+      return { state: 'unavailable' as const, message: engine.error, unmappedCount, excludedCount };
+    }
+    if (!engine.result) {
+      return {
+        state: 'nothing_mapped' as const,
+        message: 'No row names a published factor yet, so nothing can be calculated.',
+        unmappedCount, excludedCount,
+      };
+    }
+    return {
+      state: 'calculated' as const,
+      runId: engine.result.run_id,
+      engineVersion: engine.result.engine_version,
+      unmappedCount, excludedCount,
+    };
+  }, [engine]);
 
   // Live Scenario updates
   useEffect(() => {
@@ -324,17 +430,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updater = (prev: ActivityEntry[]) =>
         prev.map((row) => {
           if (row.id !== id) return row;
-          const merged = { ...row, ...updates, updatedAt: new Date().toISOString() };
-          const calc = calculateRowEmissions(
-            merged.amount,
-            merged.customFactorOverride ?? merged.emissionFactor.factorValue,
-            merged.fuelOrSource,
-            merged.unit,
-            merged.emissionFactor.unit
-          );
-          merged.calculatedTco2e = calc.calculatedTco2e;
-          merged.warning = calc.warning;
-          return merged;
+          // No arithmetic here: the engine recalculates the row and its value
+          // arrives through engineByRecord on the next render.
+          return { ...row, ...updates, updatedAt: new Date().toISOString() };
         });
 
       if (scope === 'scope-1') setScope1Entries(updater);
@@ -354,8 +452,6 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         || DEFAULT_FACTORS[0];
 
       const defaultAmount = factor.unit.toLowerCase() === 'kwh' ? 10000 : 100;
-      const calc = calculateRowEmissions(
-        defaultAmount, factor.factorValue, factor.fuelOrActivity, factor.unit, factor.unit);
 
       const newRow: ActivityEntry = {
         id: `${scope}-row-${Date.now()}`,
@@ -366,8 +462,8 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         amount: defaultAmount,
         unit: factor.unit,
         emissionFactor: factor,
-        calculatedTco2e: calc.calculatedTco2e,
-        warning: calc.warning,
+        calculatedTco2e: 0,
+        warning: 'Choose a published factor for this row so it can be calculated.',
         updatedAt: new Date().toISOString(),
       };
 
@@ -418,8 +514,7 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const mapped = entries.map((e, idx) => {
         const factor = e.emissionFactor || DEFAULT_FACTORS[0];
         const amount = e.amount || 0;
-        const calc = calculateRowEmissions(
-          amount, factor.factorValue, e.fuelOrSource || '', e.unit || factor.unit, factor.unit);
+
         return {
           id: `${scope}-import-${Date.now()}-${idx}`,
           facility: e.facility || 'Main Plant Facility',
@@ -429,8 +524,8 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           amount,
           unit: e.unit || factor.unit,
           emissionFactor: factor,
-          calculatedTco2e: calc.calculatedTco2e,
-          warning: calc.warning,
+          calculatedTco2e: 0,
+          warning: 'Choose a published factor for this row so it can be calculated.',
           updatedAt: new Date().toISOString(),
         } as ActivityEntry;
       });
@@ -449,27 +544,13 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const recalculateAll = useCallback(() => {
-    const recalc = (list: ActivityEntry[]) =>
-      list.map((row) => {
-        const calc = calculateRowEmissions(
-          row.amount,
-          row.customFactorOverride ?? row.emissionFactor.factorValue,
-          row.fuelOrSource,
-          row.unit,
-          row.emissionFactor.unit
-        );
-        return {
-          ...row,
-          calculatedTco2e: calc.calculatedTco2e,
-          warning: calc.warning,
-          updatedAt: new Date().toISOString(),
-        };
-      });
-
-    setScope1Entries(recalc);
-    setScope2Entries(recalc);
-    setScope3Entries(recalc);
-    addToast('info', 'Recalculated all emissions with latest factors');
+    // The engine is the only calculator. Touching updatedAt re-sends the records.
+    const touch = (list: ActivityEntry[]) =>
+      list.map((row) => ({ ...row, updatedAt: new Date().toISOString() }));
+    setScope1Entries(touch);
+    setScope2Entries(touch);
+    setScope3Entries(touch);
+    addToast('info', 'Recalculating with the engine…');
   }, [addToast]);
 
   const resetToDefaults = useCallback(() => {
@@ -514,10 +595,13 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentUser,
         authLoading,
         logout,
-        scope1Entries,
-        scope2Entries,
-        scope3Entries,
+        scope1Entries: scope1Calculated,
+        scope2Entries: scope2Calculated,
+        scope3Entries: scope3Calculated,
         summary,
+        gwpSet,
+        setGwpSet,
+        engineStatus,
         scenario,
         scenarioResult,
         toasts,
