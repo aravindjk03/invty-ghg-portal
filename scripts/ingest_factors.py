@@ -37,6 +37,15 @@ GAS_BY_UNIT_TEXT = {
 }
 
 
+# DESNZ converts CH4 and N2O to CO2e before publishing. Its 2025 methodology
+# paper, paragraph 1.7, states the GWPs used: CH4 = 28, N2O = 265 (IPCC AR5).
+# Dividing by those recovers the mass of each gas, which lets the engine express
+# the same factor under AR5 or AR6 rather than being locked to the publisher's
+# choice. CO2 needs no division: its GWP is 1 in every set.
+DESNZ_GWP_USED = {"CH4": 28, "N2O": 265, "CO2": 1}
+DESNZ_GWP_BASIS = "AR5 (DESNZ 2025 methodology paper para 1.7: CH4 = 28, N2O = 265)"
+
+
 @dataclass(frozen=True)
 class FactorRow:
     factor_id: str
@@ -46,6 +55,8 @@ class FactorRow:
     unit: str
     gas: str
     value_kgco2e_per_unit: str
+    gas_mass_kg_per_unit: str      # empty for a CO2e composite
+    co2e_basis: str                # the GWP set the published CO2e value used
     geography: str
     publication_year: int
     source: str
@@ -100,6 +111,15 @@ def read_desnz(path: Path, retrieved: str) -> Iterator[FactorRow]:
         if column_text and column_text not in name:
             name = f"{name} ({column_text})"
 
+        # Recover the gas mass where the row is a single gas.
+        gas_mass = ""
+        divisor = DESNZ_GWP_USED.get(gas)
+        if divisor:
+            try:
+                gas_mass = f"{float(value) / divisor:.10g}"
+            except ValueError:
+                gas_mass = ""
+
         year = 2025
         yield FactorRow(
             factor_id=f"desnz.2025.{identifier}",
@@ -109,6 +129,8 @@ def read_desnz(path: Path, retrieved: str) -> Iterator[FactorRow]:
             unit=record.get("UOM", ""),
             gas=gas,
             value_kgco2e_per_unit=value,
+            gas_mass_kg_per_unit=gas_mass,
+            co2e_basis=DESNZ_GWP_BASIS if gas != "CO2e" else DESNZ_GWP_BASIS,
             geography="UK",
             publication_year=year,
             source="DESNZ UK Government GHG conversion factors",
@@ -165,6 +187,8 @@ def read_cea(path: Path, retrieved: str) -> Iterator[FactorRow]:
                         unit="kWh",
                         gas="CO2",
                         value_kgco2e_per_unit=f"{value:.6f}",
+                        gas_mass_kg_per_unit=f"{value:.6f}",   # CO2 only: mass equals CO2e
+                        co2e_basis="CO2 only — no GWP applied",
                         geography="IN",
                         publication_year=int(published[:4]) if published[:4].isdigit() else 0,
                         source="CEA CO2 Baseline Database (Central Electricity Authority, India)",

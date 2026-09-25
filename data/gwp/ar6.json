@@ -1,0 +1,16 @@
+{
+  "name": "AR6",
+  "horizon_years": 100,
+  "source_name": "IPCC Sixth Assessment Report, WG1 Chapter 7 (Table 7.15; SF6 from Table 7.SM.7), 100-year GWP including carbon-cycle response",
+  "source_url": "https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07.pdf",
+  "notes": "Read from the published tables on 2026-09-25. Table 7.15 separates fossil from non-fossil methane and includes the chemical adjustments; the supplementary Table 7.SM.7 does not, which is why its methane value of 27.9 differs. SF6 is not in Table 7.15 and is taken from Table 7.SM.7 (https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf).",
+  "values": {
+    "CH4_fossil": 29.8,
+    "CH4_nonfossil": 27.0,
+    "N2O": 273,
+    "SF6": 24300,
+    "CF4": 7380,
+    "HFC-134a": 1526,
+    "HFC-32": 771
+  }
+}

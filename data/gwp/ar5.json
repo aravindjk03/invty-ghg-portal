@@ -1,0 +1,16 @@
+{
+  "name": "AR5",
+  "horizon_years": 100,
+  "source_name": "IPCC Fifth Assessment Report, WG1 Chapter 8 (Table 8.7 and Table 8.A.1), 100-year GWP without climate-carbon feedback",
+  "source_url": "https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf",
+  "notes": "Read from the published tables on 2026-09-25. This is the basis the DESNZ 2025 conversion factors were built on: its methodology paper states GWP for CH4 = 28 and GWP for N2O = 265. Fossil methane is higher by 2 over 100 years (Table 8.7 footnote b), giving 30. Values without the climate-carbon feedback, which is the convention used for corporate inventories.",
+  "values": {
+    "CH4_fossil": 30,
+    "CH4_nonfossil": 28,
+    "N2O": 265,
+    "SF6": 23500,
+    "NF3": 16100,
+    "CF4": 6630,
+    "HFC-134a": 1300
+  }
+}
