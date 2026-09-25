@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { CATALOGUE_SOURCES } from '../../data/catalogueData';
 import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../../data/factorCatalogue';
+import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
 
 export interface ActivityRowProps {
@@ -139,7 +140,21 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         className="hidden"
       />
 
-      {factorUnverified && (
+      {(['scope-1', 'scope-2', 'scope-3'] as const).includes(entry.scope as 'scope-1') && (
+        <EngineFactorPicker
+          scope={entry.scope.replace('scope-', '') as '1' | '2' | '3'}
+          hint={entry.fuelOrSource}
+          selectedKey={entry.engineActivityKey}
+          onSelect={(activity) => onUpdate({
+            engineActivityKey: activity.activity_key,
+            engineRegion: activity.region,
+            unit: activity.unit,
+            fuelOrSource: entry.fuelOrSource || activity.name,
+          })}
+        />
+      )}
+
+      {factorUnverified && !entry.engineActivityKey && (
         <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
           <strong>No published factor ingested for this source.</strong> It contributes 0 until you enter a
           factor value and cite its source, so the inventory never reports a made-up number. Use

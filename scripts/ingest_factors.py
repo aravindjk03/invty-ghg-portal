@@ -141,7 +141,17 @@ def read_desnz(path: Path, retrieved: str) -> Iterator[FactorRow]:
 
 
 def read_cea(path: Path, retrieved: str) -> Iterator[FactorRow]:
-    """CEA Results sheet: emission rates in tCO2/MWh, one column per financial year."""
+    """CEA Results sheet: emission rates in tCO2/MWh.
+
+    The sheet carries TWO blocks side by side - excluding imports and including
+    imports - each with its own twenty financial years. They are different
+    factors and are kept apart by column position; merging them silently
+    produces two values for the same year, which is how a wrong grid factor
+    reaches a report.
+
+    The CDM operating, build and combined margins are deliberately skipped:
+    they exist for project additionality, not corporate inventories.
+    """
     import openpyxl
 
     workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
@@ -157,46 +167,82 @@ def read_cea(path: Path, retrieved: str) -> Iterator[FactorRow]:
         if cells and cells[0].upper().startswith("DATE"):
             published = cells[1][:10] if len(cells) > 1 else ""
 
-    # The year header sits on the same row as "Emission Factors (tCO2/MWh)".
-    years: list[str] = []
+    # Locate each block: its label cell, and the columns its years sit in.
+    blocks: list[tuple[str, list[tuple[int, str]]]] = []
+    header_row_index = -1
+    for index, row in enumerate(rows):
+        cells = [_clean(cell) for cell in row]
+        if not any("emission factors" in cell.lower() and "tco2/mwh" in cell.lower()
+                   for cell in cells):
+            continue
+        header_row_index = index
+        current_label = ""
+        current_years: list[tuple[int, str]] = []
+        for column, cell in enumerate(cells):
+            if "emission factors" in cell.lower():
+                if current_label and current_years:
+                    blocks.append((current_label, current_years))
+                current_label = cell
+                current_years = []
+            elif cell and cell[0].isdigit() and "-" in cell:
+                current_years.append((column, cell))
+        if current_label and current_years:
+            blocks.append((current_label, current_years))
+        break
+
+    if header_row_index < 0 or not blocks:
+        return
+
+    def block_suffix(label: str) -> tuple[str, str]:
+        lowered = label.lower()
+        if "excl" in lowered:
+            return "excl_imports", "excluding imports"
+        if "incl" in lowered:
+            return "incl_imports", "including imports"
+        return "", ""
+
     wanted = {
-        "weighted average emission rate": ("cea.grid.weighted_average", "Grid electricity — weighted average emission rate"),
-        "weighted average grid emission rate": ("cea.grid.weighted_average_incl_res", "Grid electricity — weighted average including renewables"),
+        "weighted average emission rate":
+            ("cea.grid.weighted_average", "Grid electricity — weighted average emission rate"),
+        "weighted average grid emission rate":
+            ("cea.grid.weighted_average_incl_res",
+             "Grid electricity — weighted average including renewables"),
     }
 
-    for row in rows:
+    for row in rows[header_row_index + 1:]:
         cells = [_clean(cell) for cell in row]
-        joined = " ".join(cells).lower()
-        if "emission factors" in joined and "tco2/mwh" in joined:
-            years = [cell for cell in cells if cell and cell[0].isdigit() and "-" in cell]
-            continue
-        if not years:
-            continue
-
         label = next((cell for cell in cells[:5] if cell), "").lower()
-        for prefix, (key, name) in wanted.items():
-            if label.startswith(prefix):
-                values = [cell for cell in row if isinstance(cell, (int, float))]
-                for financial_year, value in zip(years, values):
+        match = next((value for prefix, value in wanted.items() if label.startswith(prefix)), None)
+        if match is None:
+            continue
+        key_stem, name_stem = match
+
+        for block_label, years in blocks:
+            suffix, description = block_suffix(block_label)
+            for column, financial_year in years:
+                value = row[column] if column < len(row) else None
+                if not isinstance(value, (int, float)):
+                    continue
+                key = f"{key_stem}.{suffix}.{financial_year.replace('-', '_')}" if suffix                     else f"{key_stem}.{financial_year.replace('-', '_')}"
+                yield FactorRow(
+                    factor_id=key,
+                    name=f"{name_stem}, {description}, FY {financial_year}".replace(" , ", " "),
+                    scope="2",
+                    category_path="Purchased electricity / India grid",
+                    unit="kWh",
+                    gas="CO2",
                     # tCO2 per MWh is numerically kgCO2 per kWh.
-                    yield FactorRow(
-                        factor_id=f"{key}.{financial_year.replace('-', '_')}",
-                        name=f"{name}, FY {financial_year}",
-                        scope="2",
-                        category_path="Purchased electricity / India grid",
-                        unit="kWh",
-                        gas="CO2",
-                        value_kgco2e_per_unit=f"{value:.6f}",
-                        gas_mass_kg_per_unit=f"{value:.6f}",   # CO2 only: mass equals CO2e
-                        co2e_basis="CO2 only — no GWP applied",
-                        geography="IN",
-                        publication_year=int(published[:4]) if published[:4].isdigit() else 0,
-                        source="CEA CO2 Baseline Database (Central Electricity Authority, India)",
-                        source_version=f"v{version}, published {published}",
-                        licence="Public sector information — attribute version and year",
-                        retrieved_on=retrieved,
-                    )
-                break
+                    value_kgco2e_per_unit=f"{value:.6f}",
+                    gas_mass_kg_per_unit=f"{value:.6f}",   # CO2 only: mass equals CO2e
+                    co2e_basis="CO2 only — no GWP applied",
+                    geography="IN",
+                    # The year the factor DESCRIBES, not the day it was published.
+                    publication_year=int(financial_year.split("-")[0]),
+                    source="CEA CO2 Baseline Database (Central Electricity Authority, India)",
+                    source_version=f"v{version}, published {published}, {block_label}",
+                    licence="Public sector information — attribute version and year",
+                    retrieved_on=retrieved,
+                )
 
 
 def write_csv(rows: list[FactorRow], path: Path) -> None:

@@ -81,7 +81,33 @@ export const ReportSettings: React.FC<Props> = ({ meta, onChange }) => {
 
       <hr className="border-border my-4" />
 
-      <Field label="GWP basis" value={meta.gwpBasis} placeholder="IPCC AR6, 100-year"
+      <span className="block text-[11px] font-semibold uppercase tracking-wider text-brand-muted mb-1">
+        GWP basis used for the calculation
+      </span>
+      <div className="flex gap-2 mb-1">
+        {(['AR5', 'AR6'] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => set({ gwpSet: option })}
+            className={`flex-1 rounded-md border px-3 py-1.5 text-xs font-semibold ${
+              meta.gwpSet === option
+                ? 'border-brand-link bg-brand-link/10 text-brand-link'
+                : 'border-border bg-surface text-brand-body'
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      <span className="block text-[11px] text-brand-muted mb-3">
+        Every figure is recalculated under the chosen set. AR5 matches the DESNZ 2025 factors as
+        published; AR6 is the newer science. The choice barely moves a fuel inventory and changes
+        refrigerant losses by about 17%.
+      </span>
+
+      <Field label="GWP basis, as stated in the report" value={meta.gwpBasis}
+        placeholder="IPCC AR5, 100-year"
         hint="Changing the GWP basis changes the inventory even when activity data does not."
         onChange={(v) => set({ gwpBasis: v })} />
       <Field label="Base year" value={meta.baseYear} placeholder="FY 2022–23"

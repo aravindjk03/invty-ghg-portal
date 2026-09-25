@@ -40,7 +40,9 @@ export interface ReportMeta {
   /** Share of electricity from contractual renewable instruments, 0-100. */
   renewableSharePercent?: number;
 
-  // GWP basis (part 19)
+  // GWP basis (part 19). gwpSet drives the calculation; gwpBasis is the
+  // sentence the report prints, filled in from the engine's own source record.
+  gwpSet: 'AR5' | 'AR6';
   gwpBasis: string;
 
   // Base year (parts 6, 25)
@@ -121,6 +123,7 @@ export const EMPTY_REPORT_META: ReportMeta = {
   contractualInstruments: [],
   renewableSharePercent: undefined,
 
+  gwpSet: 'AR5',
   gwpBasis: '',
 
   baseYear: '',

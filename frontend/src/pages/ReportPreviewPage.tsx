@@ -12,6 +12,8 @@ import { ReportSettings } from '../report/ReportSettings';
 import { buildReport } from '../report/build/buildReport';
 import { exportWorkbook } from '../report/export/workbook';
 import { loadReportMeta, saveReportMeta, ReportMeta } from '../report/model/reportMeta';
+import { useEngineInventory } from '../report/useEngineInventory';
+import { toTonnes } from '../types/inventory';
 
 export interface ReportPreviewPageProps {
   onNavigate: (page: string) => void;
@@ -53,6 +55,11 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
     [companyName, reportingPeriod, boundaryApproach, scope1Entries, scope2Entries, scope3Entries,
       summary, meta, framework],
   );
+
+  // Every figure in the report comes from the engine. A row without a published
+  // factor is not calculated here or anywhere else: it is listed instead.
+  const engine = useEngineInventory(
+    allEntries, meta.gwpSet, Number(reportingPeriod.match(/\d{4}/)?.[0]) || new Date().getFullYear());
 
   const updateMeta = (next: ReportMeta) => {
     setMeta(next);
@@ -202,6 +209,44 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                 Download calculation workbook (XLSX)
               </Button>
             </div>
+          </Card>
+
+          <Card className="p-5 bg-surface-raised border border-border">
+            <h4 className="text-sm font-bold text-brand-heading">Calculation engine</h4>
+            {engine.loading && <p className="text-xs text-brand-muted mt-2">Calculating…</p>}
+            {engine.error && <p className="text-xs text-status-danger mt-2">{engine.error}</p>}
+            {engine.result && (
+              <>
+                <table className="w-full text-xs mt-2">
+                  <tbody>
+                    <tr><td className="text-brand-muted py-0.5">Scope 1</td>
+                      <td className="text-right font-mono">{toTonnes(engine.result.totals.scope1).toFixed(3)} t</td></tr>
+                    <tr><td className="text-brand-muted py-0.5">Scope 2 ({engine.result.scope2_view})</td>
+                      <td className="text-right font-mono">{toTonnes(engine.result.totals.scope2_headline).toFixed(3)} t</td></tr>
+                    <tr><td className="text-brand-muted py-0.5">Scope 3</td>
+                      <td className="text-right font-mono">{toTonnes(engine.result.totals.scope3).toFixed(3)} t</td></tr>
+                    <tr className="border-t border-border"><td className="font-semibold py-1">Total 1 + 2</td>
+                      <td className="text-right font-mono font-semibold">{toTonnes(engine.result.totals.total_scope12).toFixed(3)} t</td></tr>
+                  </tbody>
+                </table>
+                <p className="text-[11px] text-brand-muted mt-2">
+                  ghg_core {engine.result.engine_version} · {engine.result.gwp_set} · run{' '}
+                  <span className="font-mono">{engine.result.run_id.slice(0, 10)}</span>
+                </p>
+              </>
+            )}
+            {(engine.unmapped.length > 0 || (engine.result?.excluded.length ?? 0) > 0) && (
+              <p className="text-[11px] text-[#8A5A00] bg-[#FFF8E6] border border-[#F0D9A0] rounded-md px-2 py-1.5 mt-2">
+                {engine.unmapped.length > 0 && (
+                  <>{engine.unmapped.length} row(s) have no published factor chosen and are excluded
+                  from every total. Open the Scope registers and pick one.{' '}</>
+                )}
+                {(engine.result?.excluded.length ?? 0) > 0 && (
+                  <>{engine.result?.excluded.length} row(s) could not be calculated; the reasons are
+                  in the report.</>
+                )}
+              </p>
+            )}
           </Card>
 
           <Card className="p-5 bg-surface-raised border border-border">

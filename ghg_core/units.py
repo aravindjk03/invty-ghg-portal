@@ -27,10 +27,14 @@ from .quantities import D
 MASS, VOLUME, ENERGY, DISTANCE, FREIGHT = "mass", "volume", "energy", "distance", "freight"
 CURRENCY, COUNT, AREA_TIME = "currency", "count", "area_time"
 AREA = "area"
+# Passenger distance is its own dimension: a passenger-kilometre must never be
+# convertible into a tonne-kilometre.
+PASSENGER = "passenger"
 
 CANONICAL = {
     MASS: "kg", VOLUME: "m3", ENERGY: "MJ", DISTANCE: "km",
     FREIGHT: "t.km", CURRENCY: None, COUNT: "unit", AREA_TIME: "m2.yr", AREA: "m2",
+    PASSENGER: "passenger.km",
 }
 
 
@@ -90,6 +94,10 @@ _UNITS = {u.name: u for u in [
     _u("t.km", FREIGHT, "1"),
     _u("kg.km", FREIGHT, "0.001"),
 
+    # ---- passenger transport ----
+    _u("passenger.km", PASSENGER, "1"),
+    _u("passenger.mi", PASSENGER, "1.609344", note="exact by definition"),
+
     # ---- pass-through ----
     _u("unit", COUNT, "1"),
     _u("night", COUNT, "1"),
@@ -114,7 +122,15 @@ _ALIASES = {
     "sm3": "scm", "nm^3": "Nm3", "normal m3": "Nm3",
     "kilometre": "km", "kilometer": "km", "kms": "km",
     "mile": "mi", "miles": "mi",
-    "tkm": "t.km", "t-km": "t.km", "tonne-km": "t.km",
+    "tkm": "t.km", "t-km": "t.km", "tonne-km": "t.km", "tonne.km": "t.km",
+    # Spellings used by the published workbooks we ingest.
+    "litres": "L", "liters": "L", "cubic metres": "m3", "cubic meters": "m3",
+    "pkm": "passenger.km", "passenger-km": "passenger.km", "pass.km": "passenger.km",
+    "passenger.mile": "passenger.mi", "passenger.miles": "passenger.mi",
+    # DESNZ publishes electricity and gas on a stated calorific basis. The basis
+    # belongs to the FACTOR, not the unit: the user picks the gross or net row,
+    # and both are measured in kWh.
+    "kwh (net cv)": "kWh", "kwh (gross cv)": "kWh",
     "trhr": "TR-hr", "tr-hr": "TR-hr", "tr.hr": "TR-hr",
     "sq ft": "sqft", "sq.ft": "sqft", "ft2": "sqft", "m^2": "m2",
     "fte.yr": "FTE.yr", "fte-yr": "FTE.yr",

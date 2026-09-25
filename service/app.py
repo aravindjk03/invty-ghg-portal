@@ -30,6 +30,9 @@ from .config import Settings, ai_credentials_present, gemini_api_key, load_env_f
 from .estimator import (AIEstimator, ClaudeEstimator, EstimatorError, EstimatorNotAProduct,
                         EstimatorNotConfigured, prompt_fingerprint)
 from .fallback import FallbackEstimator, ProviderStep
+from .inventory import GWP_SETS, load_gwp, load_registry
+from .inventory_api import (ActivityOut, InventoryRequest, InventoryResponse,
+                            calculate_inventory, list_activities)
 from .gemini import GeminiEstimator
 from .models import PROFILES, ModelProfile, estimate_cost_usd
 from .pipeline import build_response
@@ -243,6 +246,45 @@ def _from_cache(request: EstimateRequest, key: str) -> Optional[EstimateResponse
         return None
     spend.record_hit()
     return _respond(request, hit[0], cache_hit=True)
+
+
+# --- the organisation inventory ------------------------------------------------------------
+
+@app.get("/v1/inventory/activities", response_model=list[ActivityOut])
+def inventory_activities(scope: Optional[str] = None, region: Optional[str] = None,
+                         search: Optional[str] = None, limit: int = 200) -> list[ActivityOut]:
+    """The activities a user may record, from the ingested published factor sets."""
+    return list_activities(scope, region, search, max(1, min(limit, 2000)))
+
+
+@app.get("/v1/inventory/gwp-sets")
+def inventory_gwp_sets() -> list[dict]:
+    """Which GWP bases the customer can report on, and where each came from."""
+    sets = []
+    for name in GWP_SETS:
+        gwp = load_gwp(name)
+        sets.append({
+            "name": gwp.name,
+            "horizon_years": gwp.horizon_years,
+            "source_name": gwp.source_name,
+            "source_url": gwp.source_url,
+            "gases": sorted(gwp.values),
+        })
+    return sets
+
+
+@app.post("/v1/inventory/calculate", response_model=InventoryResponse)
+def inventory_calculate(request: InventoryRequest) -> InventoryResponse:
+    """Calculate the inventory under the chosen GWP set.
+
+    Every figure comes from ghg_core. A record whose factor or unit cannot be
+    resolved returns unavailable with the reason and is left out of the totals -
+    a missing factor is never treated as zero.
+    """
+    gwp = load_gwp(request.gwp_set)
+    log.info("inventory run records=%d gwp=%s year=%d view=%s",
+             len(request.records), request.gwp_set, request.reporting_year, request.scope2_view)
+    return calculate_inventory(request, f"{gwp.source_name} ({gwp.source_url})")
 
 
 @app.post("/v1/pcf/estimate", response_model=EstimateResponse)
