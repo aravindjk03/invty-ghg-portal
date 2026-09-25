@@ -7,7 +7,7 @@
  * default in a GHG report is worse than a blank: it cannot be traced to
  * evidence, and an assurance provider will treat it as a misstatement.
  */
-import { FacilityRecord, RevisionEntry } from './types';
+import { FacilityRecord, RefrigerantRow, RevisionEntry } from './types';
 
 const STORAGE_KEY = 'INVTY_GHG_REPORT_META_V1';
 
@@ -31,9 +31,14 @@ export interface ReportMeta {
   approachRationale: string;
   facilities: FacilityRecord[];
 
+  // Scope 1 fugitive (part 13)
+  refrigerants: RefrigerantRow[];
+
   // Scope 2 (part 14)
   scope2GuidanceVersion: string;
   contractualInstruments: string[];
+  /** Share of electricity from contractual renewable instruments, 0-100. */
+  renewableSharePercent?: number;
 
   // GWP basis (part 19)
   gwpBasis: string;
@@ -111,8 +116,10 @@ export const EMPTY_REPORT_META: ReportMeta = {
   approachRationale: '',
   facilities: [],
 
+  refrigerants: [],
   scope2GuidanceVersion: 'GHG Protocol Scope 2 Guidance (2015), as published',
   contractualInstruments: [],
+  renewableSharePercent: undefined,
 
   gwpBasis: '',
 

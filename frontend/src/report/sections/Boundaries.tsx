@@ -1,6 +1,6 @@
 /** Report parts 5-9: objective, period, principles, organizational and operational boundary. */
 import React from 'react';
-import { GhgInventoryReport } from '../model/types';
+import { FacilityRecord, GhgInventoryReport } from '../model/types';
 import { GapNote, KeyValues, num, Prose, ReportPage, SectionTitle, Table } from './primitives';
 
 export const ObjectivePage: React.FC<{ report: GhgInventoryReport }> = ({ report }) => {
@@ -35,6 +35,31 @@ export const ObjectivePage: React.FC<{ report: GhgInventoryReport }> = ({ report
   );
 };
 
+/** The boundary drawn as a tree, so the reader sees what sits under what. */
+const FacilityTree: React.FC<{ facilities: FacilityRecord[] }> = ({ facilities }) => {
+  const roots = facilities.filter((facility) => !facility.parent);
+  const childrenOf = (name: string) => facilities.filter((facility) => facility.parent === name);
+  const orphans = facilities.filter(
+    (facility) => facility.parent && !facilities.some((other) => other.name === facility.parent));
+
+  const render = (facility: FacilityRecord, depth: number): React.ReactNode => (
+    <React.Fragment key={facility.name}>
+      <div className="font-mono text-[11.5px] text-brand-body whitespace-pre">
+        {depth === 0 ? '' : `${'    '.repeat(depth - 1)}└── `}
+        {facility.name}
+        {!facility.included && <span className="text-[#8A5A00] italic"> (excluded)</span>}
+      </div>
+      {childrenOf(facility.name).map((child) => render(child, depth + 1))}
+    </React.Fragment>
+  );
+
+  return (
+    <div className="border border-border rounded-md bg-surface-raised p-3 mb-4">
+      {[...roots, ...orphans].map((facility) => render(facility, 0))}
+    </div>
+  );
+};
+
 export const BoundaryPage: React.FC<{ report: GhgInventoryReport }> = ({ report }) => {
   const { organizationalBoundary: org, operationalBoundary: ops } = report;
   return (
@@ -48,6 +73,8 @@ export const BoundaryPage: React.FC<{ report: GhgInventoryReport }> = ({ report 
           ['Rationale', org.approachRationale],
         ]}
       />
+
+      {org.facilities.length > 0 && <FacilityTree facilities={org.facilities} />}
 
       <Table
         headers={['Facility', 'Type', 'Location', 'Included', 'Note']}

@@ -53,6 +53,25 @@ export const ScopeOnePage: React.FC<{ report: GhgInventoryReport }> = ({ report 
 
       {s1.fugitiveMethodNote && <GapNote>{s1.fugitiveMethodNote}</GapNote>}
 
+      <SectionTitle number="13.1" note="Refrigerant purchased is not automatically refrigerant emitted. Each item states the method used: screening from purchases, mass balance, or a published leak rate.">
+        Refrigerant equipment register
+      </SectionTitle>
+      <Table
+        headers={['Equipment', 'Refrigerant', 'GWP', 'Initial charge kg', 'Recharge kg', 'Recovered kg', 'Loss kg', 'tCO2e', 'Method']}
+        align={['left', 'left', 'right', 'right', 'right', 'right', 'right', 'right', 'left']}
+        rows={s1.refrigerants.map((row) => [
+          row.equipment, row.refrigerant,
+          row.gwp !== undefined ? num(row.gwp, 0) : '—',
+          row.initialChargeKg !== undefined ? num(row.initialChargeKg, 2) : '—',
+          row.rechargeKg !== undefined ? num(row.rechargeKg, 2) : '—',
+          row.recoveredKg !== undefined ? num(row.recoveredKg, 2) : '—',
+          row.lossKg !== undefined ? num(row.lossKg, 2) : '—',
+          row.tco2e !== undefined ? num(row.tco2e, 3) : '—',
+          row.method,
+        ])}
+        emptyMessage="No refrigerant equipment recorded. List each chiller, HVAC unit, cold store, fire suppression system and SF6-containing switchgear with its charge, recharge, recovery and calculation method."
+      />
+
       {s1.other.map((block) => (
         <Block key={block.key} number="13.x" block={block} />
       ))}

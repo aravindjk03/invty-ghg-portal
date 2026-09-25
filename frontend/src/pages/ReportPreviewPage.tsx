@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { ReportDocument, REPORT_PARTS, ReportPartKey } from '../report/ReportDocument';
 import { ReportSettings } from '../report/ReportSettings';
 import { buildReport } from '../report/build/buildReport';
+import { exportWorkbook } from '../report/export/workbook';
 import { loadReportMeta, saveReportMeta, ReportMeta } from '../report/model/reportMeta';
 
 export interface ReportPreviewPageProps {
@@ -74,9 +75,11 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
   };
 
   const executeDownloadXlsx = () => {
-    ghgService.exportXlsx(
-      allEntries, summary, `${companyName.replace(/\s+/g, '_')}_GHG_Calculation_Workbook.xlsx`);
-    addToast('success', 'Calculation workbook exported (Annexure F)');
+    exportWorkbook(
+      report,
+      { scope1: scope1Entries, scope2: scope2Entries, scope3: scope3Entries },
+      `${companyName.replace(/\s+/g, '_')}_GHG_Master_${reportingPeriod.replace(/\s+/g, '_')}.xlsx`);
+    addToast('success', 'Calculation workbook exported — 43 sheets (Annexure F)');
   };
 
   const gated = (action: 'print' | 'xlsx') => {

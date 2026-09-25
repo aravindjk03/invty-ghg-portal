@@ -60,6 +60,10 @@ export interface ActivityEntry {
   notes?: string;
   evidenceFile?: string;
   customFactorOverride?: number;
+  /** YYYY-MM. Enables monthly analysis and the missing-month QA/QC check. */
+  periodMonth?: string;
+  /** Who owns this data in the organisation; shown in the evidence register. */
+  dataOwner?: string;
   updatedAt: string;
 }
 

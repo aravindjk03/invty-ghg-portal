@@ -39,7 +39,8 @@ rendered as "not applicable".
 | 18 | Emission factor register and hierarchy | `report/build/registers.ts` |
 | 19 | GWP basis | `report/model/reportMeta.ts`, `Methodology.tsx` |
 | 20 | Calculation formulas | `report/sections/Methodology.tsx` |
-| 21–23 | Monthly view, summary table | `report/sections/Analysis.tsx` |
+| 21 | Monthly analysis, missing months, outliers | `report/build/monthly.ts`, `report/sections/MonthlyAndReview.tsx` |
+| 23 | Emissions summary table | `report/sections/Analysis.tsx` |
 | 22, 33 | Production-normalised intensity | `buildIntensity` in `report/build/aggregate.ts` |
 | 24 | Trend analysis and commentary | `buildTrends` in `report/build/aggregate.ts` |
 | 25 | Base year and recalculation policy | `report/sections/Credibility.tsx` |
@@ -52,7 +53,9 @@ rendered as "not applicable".
 | 32 | GHG targets, gap and required annual reduction | `buildReport.ts`, `ActionAndAnnexures.tsx` |
 | 34 | GHG dashboard | `report/sections/FrontMatter.tsx` |
 | 35 | Annexures A–O | `buildAnnexures` in `report/build/registers.ts` |
-| 36–37 | Calculation workbook and architecture | XLSX export, `ghgService.exportXlsx` |
+| 36–37 | Calculation workbook, 43 numbered sheets | `report/export/workbook.ts` |
+| 38 | What a reviewer would question, tested | `buildReviewerFlags` in `report/build/review.ts` |
+| 39 | Eleven-level build hierarchy | `buildHierarchy` in `report/build/review.ts` |
 | 40 | Standards referenced | `buildReport.ts` |
 | 41 | Inventory / inventory report / verification package | `assessReadiness` |
 
@@ -70,6 +73,8 @@ frontend/src/report/
     registers.ts     Source, evidence and factor registers; annexure index
     quality.ts       Data quality, uncertainty, QA/QC, exclusions, readiness
     buildReport.ts   Assembles the whole report object
+  export/
+    workbook.ts      The calculation workbook: 43 numbered sheets (part 36)
   sections/          One component per group of report parts
   ReportDocument.tsx Page order and print layout
   ReportSettings.tsx The form for the metadata a verifier needs
@@ -93,6 +98,8 @@ Run automatically over the recorded inventory every time the report is built:
 | QC-10 | Energy data reconciled with finance records |
 | QC-11 | Reporting period defined |
 | QC-12 | GWP basis stated |
+| QC-13 | Records carry the month they belong to |
+| QC-14 | Fugitive emissions state their calculation method |
 
 QC-09 and QC-10 report **"cannot check"** rather than "pass": the portal does not
 hold stock movements or invoice values, so the check is impossible with the data
@@ -122,14 +129,31 @@ opinion under ISO 14064-3.
 not part of the production build (Vite builds `index.html` only) and the app does
 not import it.
 
+## The calculation workbook (Part 36)
+
+`report/export/workbook.ts` writes the numbered sheets: `01_Cover`,
+`02_Document_Control`, `03_Organizational_Boundary`, `04_Operational_Boundary`,
+`05_Emission_Source_Register`, `06`–`09` for each Scope 1 sub-category (the
+fugitive sheet carries the refrigerant register), `10`–`12` for Scope 2 records
+and both methods, `13`–`27` for Scope 3 categories 1 to 15, then
+`29_Emission_Factors`, `30_GWP`, `31_Data_Quality`, `32_Uncertainty`,
+`33_QA_QC`, `34_Base_Year`, `35_Exclusions`, `36_GHG_Summary`, `37_Intensity`,
+`38_Trends`, `39_Reduction_Targets`, `40_Mitigation_Actions`,
+`41_Evidence_Register`, `42_Management_Dashboard` and `43_Monthly_Analysis`.
+
+The report and the workbook are written from the same object, so the PDF and the
+spreadsheet can never disagree.
+
 ## What is not built yet
 
-- **Part 21, monthly analysis.** Entries carry no month, so seasonality and data
-  gaps cannot be shown. Needs a period field per record.
-- **Part 13, refrigerant register.** Fugitive emissions are reported as entries;
-  the charge / recharge / recovery register is not modelled yet.
-- **Part 36, the workbook.** The XLSX export is a flat audit trail rather than the
-  numbered sheets described in the report.
-- **Facilities, targets, mitigations and prior years** are in the data model and
-  render in the report, but only the core metadata has a form. The rest needs an
-  editor before a user can enter them.
+- **Forms for facilities, targets, mitigations, prior years and exclusions.**
+  They are in the data model, render in the report and export to the workbook,
+  but only document control, period, GWP, base year, production output,
+  renewable share and refrigerant equipment have an editor. The rest has to be
+  entered in code or storage until the editor is built.
+- **A month field on the inventory rows.** `periodMonth` exists on every record
+  and drives Part 21 and QC-13, but the Scope 1/2/3 registers do not yet offer a
+  way to set it.
+- **Gas-by-gas calculation.** Factors are held as CO₂e; CH₄ and N₂O are not
+  stored separately, so the multi-gas formula in Part 20 is documented rather
+  than applied per record.

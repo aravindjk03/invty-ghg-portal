@@ -97,6 +97,8 @@ export interface FacilityRecord {
   location: string;
   included: boolean;
   note: string;
+  /** Parent entity, so the boundary can be drawn as a tree (report part 8). */
+  parent?: string;
 }
 
 export interface OperationalBoundary {
@@ -125,6 +127,44 @@ export interface CategoryBlock {
   gapNote?: string;
 }
 
+/** Report part 13: one row per refrigerant-holding equipment item. */
+export interface RefrigerantRow {
+  equipment: string;
+  refrigerant: string;
+  gwp?: number;
+  initialChargeKg?: number;
+  rechargeKg?: number;
+  recoveredKg?: number;
+  lossKg?: number;
+  tco2e?: number;
+  method: string;
+}
+
+/** Report part 21: one row per calendar month of the reporting period. */
+export interface MonthlyRow {
+  month: string;
+  scope1: number;
+  scope2: number;
+  scope3: number;
+  total: number;
+  recordCount: number;
+  missing: boolean;
+}
+
+export interface MonthlySection {
+  rows: MonthlyRow[];
+  available: boolean;
+  missingMonths: string[];
+  observations: string[];
+}
+
+/** Report part 38: the statements a reviewer would challenge, tested against this report. */
+export interface ReviewerFlag {
+  statement: string;
+  present: boolean;
+  evidence: string;
+}
+
 export interface ScopeOneSection {
   total: number;
   stationary: CategoryBlock;
@@ -133,6 +173,7 @@ export interface ScopeOneSection {
   fugitive: CategoryBlock;
   other: CategoryBlock[];
   fugitiveMethodNote: string;
+  refrigerants: RefrigerantRow[];
 }
 
 export interface ScopeTwoSection {
@@ -354,6 +395,9 @@ export interface GhgInventoryReport {
   readiness: VerificationReadiness;
   mitigation: MitigationRow[];
   targets: TargetSection;
+  monthly: MonthlySection;
+  reviewerFlags: ReviewerFlag[];
+  buildHierarchy: { level: number; name: string; question: string; status: string }[];
   annexures: Annexure[];
   definitions: { term: string; meaning: string }[];
   standards: { name: string; appliesTo: string }[];

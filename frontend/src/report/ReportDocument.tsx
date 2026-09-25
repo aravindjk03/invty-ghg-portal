@@ -14,6 +14,7 @@ import { BaseYearPage, QaQcPage, QualityPage } from './sections/Credibility';
 import { CoverPage, DashboardPage, DocumentControlPage, ExecutiveSummaryPage } from './sections/FrontMatter';
 import { ScopeOnePage, ScopeThreePage, ScopeTwoPage } from './sections/Inventory';
 import { MethodologyPage, RegistersPage } from './sections/Methodology';
+import { MonthlyPage, ReviewerTestPage } from './sections/MonthlyAndReview';
 
 export interface ReportDocumentProps {
   report: GhgInventoryReport;
@@ -25,7 +26,8 @@ export interface ReportDocumentProps {
 export type ReportPartKey =
   | 'cover' | 'documentControl' | 'executiveSummary' | 'dashboard' | 'objective' | 'boundary'
   | 'scope1' | 'scope2' | 'scope3' | 'methodology' | 'registers' | 'summaryTable'
-  | 'intensityTrend' | 'baseYearExclusions' | 'quality' | 'qaqc' | 'action' | 'annexures';
+  | 'intensityTrend' | 'monthly' | 'baseYearExclusions' | 'quality' | 'qaqc' | 'reviewerTest'
+  | 'action' | 'annexures';
 
 export const REPORT_PARTS: { key: ReportPartKey; label: string; parts: string }[] = [
   { key: 'cover', label: 'Cover page', parts: '1-2' },
@@ -40,10 +42,12 @@ export const REPORT_PARTS: { key: ReportPartKey; label: string; parts: string }[
   { key: 'methodology', label: 'Methodology and GWP', parts: '16, 19-20' },
   { key: 'registers', label: 'Evidence and factor registers', parts: '17-18' },
   { key: 'summaryTable', label: 'Emissions summary', parts: '23' },
+  { key: 'monthly', label: 'Monthly analysis', parts: '21' },
   { key: 'intensityTrend', label: 'Intensity and trends', parts: '22, 24, 33' },
   { key: 'baseYearExclusions', label: 'Base year and exclusions', parts: '25-26' },
   { key: 'quality', label: 'Data quality and uncertainty', parts: '27-28' },
   { key: 'qaqc', label: 'QA/QC and internal verification', parts: '29-30' },
+  { key: 'reviewerTest', label: 'Reviewer test and hierarchy', parts: '38-39' },
   { key: 'action', label: 'Reduction measures and targets', parts: '31-32' },
   { key: 'annexures', label: 'Annexures and definitions', parts: '35-41' },
 ];
@@ -64,10 +68,12 @@ export const ReportDocument: React.FC<ReportDocumentProps> = ({ report, include,
     ['methodology', <MethodologyPage report={report} />],
     ['registers', <RegistersPage report={report} />],
     ['summaryTable', <SummaryTablePage report={report} />],
+    ['monthly', <MonthlyPage report={report} />],
     ['intensityTrend', <IntensityAndTrendPage report={report} />],
     ['baseYearExclusions', <BaseYearPage report={report} />],
     ['quality', <QualityPage report={report} />],
     ['qaqc', <QaQcPage report={report} />],
+    ['reviewerTest', <ReviewerTestPage report={report} />],
     ['action', <ActionPage report={report} />],
     ['annexures', <AnnexuresPage report={report} />],
   ];

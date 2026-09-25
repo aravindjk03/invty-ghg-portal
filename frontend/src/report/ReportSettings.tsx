@@ -93,6 +93,52 @@ export const ReportSettings: React.FC<Props> = ({ meta, onChange }) => {
 
       <hr className="border-border my-4" />
 
+      <Field label="Renewable electricity share (%)" type="number" value={meta.renewableSharePercent}
+        hint="Reported in the executive summary. Leave blank if no contractual instruments are held."
+        onChange={(v) => set({ renewableSharePercent: v === '' ? undefined : Number(v) })} />
+
+      <span className="block text-[11px] font-semibold uppercase tracking-wider text-brand-muted mb-1">
+        Refrigerant equipment (part 13)
+      </span>
+      {meta.refrigerants.map((row, index) => (
+        <div key={index} className="border border-border rounded-md p-2 mb-2 bg-surface">
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="Equipment" value={row.equipment}
+              onChange={(e) => set({ refrigerants: meta.refrigerants.map((r, i) =>
+                (i === index ? { ...r, equipment: e.target.value } : r)) })}
+              className="rounded border border-border px-2 py-1 text-xs" />
+            <input placeholder="Refrigerant (R-410A)" value={row.refrigerant}
+              onChange={(e) => set({ refrigerants: meta.refrigerants.map((r, i) =>
+                (i === index ? { ...r, refrigerant: e.target.value } : r)) })}
+              className="rounded border border-border px-2 py-1 text-xs" />
+            <input placeholder="Loss kg" type="number" value={row.lossKg ?? ''}
+              onChange={(e) => set({ refrigerants: meta.refrigerants.map((r, i) =>
+                (i === index ? { ...r, lossKg: e.target.value === '' ? undefined : Number(e.target.value) } : r)) })}
+              className="rounded border border-border px-2 py-1 text-xs" />
+            <input placeholder="GWP" type="number" value={row.gwp ?? ''}
+              onChange={(e) => set({ refrigerants: meta.refrigerants.map((r, i) =>
+                (i === index ? { ...r, gwp: e.target.value === '' ? undefined : Number(e.target.value) } : r)) })}
+              className="rounded border border-border px-2 py-1 text-xs" />
+          </div>
+          <input placeholder="Calculation method (mass balance / screening / leak rate)" value={row.method}
+            onChange={(e) => set({ refrigerants: meta.refrigerants.map((r, i) =>
+              (i === index ? { ...r, method: e.target.value } : r)) })}
+            className="w-full mt-2 rounded border border-border px-2 py-1 text-xs" />
+          <button type="button" className="text-[11px] text-status-danger mt-1"
+            onClick={() => set({ refrigerants: meta.refrigerants.filter((_, i) => i !== index) })}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <button type="button"
+        className="text-xs text-brand-link font-semibold mb-4"
+        onClick={() => set({ refrigerants: [...meta.refrigerants,
+          { equipment: '', refrigerant: '', method: '', lossKg: undefined, gwp: undefined }] })}>
+        + Add equipment
+      </button>
+
+      <hr className="border-border my-4" />
+
       <Field label="Production output for the period" type="number" value={meta.productionOutput}
         hint="Used for intensity. Without it, intensity cannot be reported."
         onChange={(v) => set({ productionOutput: v === '' ? undefined : Number(v) })} />
