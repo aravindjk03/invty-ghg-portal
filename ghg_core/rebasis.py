@@ -72,6 +72,40 @@ def rebase(
     return RebasedFactor(total, gwp_set.name, contributions)
 
 
+@dataclass(frozen=True)
+class BlendGwp:
+    """A refrigerant blend's GWP under one set, with the arithmetic shown."""
+    blend: str
+    gwp_set_name: str
+    value: Decimal
+    components: Mapping[str, Decimal]
+
+
+def blend_gwp(blend: str, composition: Mapping[str, Decimal | str | float],
+              gwp_set: GwpSet) -> BlendGwp:
+    """A blend's GWP is the mass-weighted sum of its components' GWPs.
+
+    IPCC publishes the components, not the mixture, so this is computed rather
+    than looked up - and it is computed under whichever set the customer reports
+    on. A component the set does not carry raises, naming the source.
+    """
+    total = ZERO
+    contributions: dict[str, Decimal] = {}
+    fractions = sum(D(fraction) for fraction in composition.values())
+    if abs(fractions - D(1)) > D("0.001"):
+        raise ValueError(
+            f"Composition of {blend} sums to {fractions}, not 1. A blend's mass "
+            f"fractions must be complete before its GWP means anything.")
+
+    for component, fraction in composition.items():
+        share = D(fraction)
+        contribution = share * gwp_set.gwp(component)
+        contributions[component] = contribution
+        total += contribution
+
+    return BlendGwp(blend, gwp_set.name, total, contributions)
+
+
 def difference_percent(under_a: Decimal, under_b: Decimal) -> Decimal:
     """How much moving from set A to set B changes a figure, as a percentage."""
     if under_a == ZERO:

@@ -245,6 +245,51 @@ def read_cea(path: Path, retrieved: str) -> Iterator[FactorRow]:
                 )
 
 
+def read_epa_supply_chain(path: Path, retrieved: str) -> Iterator[FactorRow]:
+    """EPA Supply Chain GHG Emission Factors: kgCO2e per US dollar of spend.
+
+    The composite file is used, not the per-gas one. EPA states the composite
+    uses IPCC AR5 100-year GWPs; the per-gas file covers eighteen gases, and
+    loading only the three this library carries GWPs for would silently drop the
+    fluorinated ones and understate the factor.
+
+    "With margins" is the factor to use against a purchase price, because it
+    includes the wholesale, retail and transport margins inside what was paid.
+
+    These are US industry averages. They are a screening proxy for procurement
+    anywhere else, and the report says so rather than implying otherwise.
+    """
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            code = _clean(row.get("2017 NAICS Code"))
+            title = _clean(row.get("2017 NAICS Title"))
+            value = _clean(row.get("Supply Chain Emission Factors with Margins"))
+            if not code or not value:
+                continue
+            try:
+                float(value)
+            except ValueError:
+                continue
+
+            yield FactorRow(
+                factor_id=f"epa.useeio.v1_3.naics{code}",
+                name=f"Purchased goods and services — {title} (spend-based)",
+                scope="3",
+                category_path=f"Purchased goods and services / NAICS {code}",
+                unit="USD",
+                gas="CO2e",
+                value_kgco2e_per_unit=value,
+                gas_mass_kg_per_unit="",          # a composite cannot be rebased
+                co2e_basis="AR5 (EPA: 100-year GWPs from IPCC AR5)",
+                geography="US",
+                publication_year=2022,
+                source="EPA Supply Chain GHG Emission Factors v1.3 (USEEIO), purchaser price, 2022 USD",
+                source_version="v1.3.0, NAICS-6, with margins",
+                licence="US federal work — public domain",
+                retrieved_on=retrieved,
+            )
+
+
 def write_csv(rows: list[FactorRow], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -258,6 +303,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--desnz", type=Path, help="DESNZ flat-format workbook")
     parser.add_argument("--cea", type=Path, help="CEA CO2 Baseline Database workbook")
+    parser.add_argument("--epa", type=Path,
+                        help="EPA Supply Chain GHG Emission Factors, CO2e CSV")
     args = parser.parse_args()
     retrieved = dt.date.today().isoformat()
 
@@ -272,6 +319,9 @@ def main() -> None:
             for scope in sorted({r.scope for r in composites})))
         print(f"  -> {OUT_DIR / 'desnz_2025.csv'}")
 
+    if args.epa:
+        _report_epa(args.epa, retrieved)
+
     if args.cea:
         rows = list(read_cea(args.cea, retrieved))
         write_csv(rows, OUT_DIR / "cea_grid.csv")
@@ -280,6 +330,17 @@ def main() -> None:
         if latest:
             print(f"  latest: {latest.name} = {latest.value_kgco2e_per_unit} kgCO2/kWh")
         print(f"  -> {OUT_DIR / 'cea_grid.csv'}")
+
+
+def _report_epa(path: Path, retrieved: str) -> None:
+    rows = list(read_epa_supply_chain(path, retrieved))
+    write_csv(rows, OUT_DIR / "epa_supply_chain.csv")
+    print(f"EPA: {len(rows)} spend-based factors (NAICS-6 commodities)")
+    if rows:
+        values = sorted(float(r.value_kgco2e_per_unit) for r in rows)
+        print(f"  kgCO2e per USD: lowest {values[0]:.4f}, median {values[len(values)//2]:.4f}, "
+              f"highest {values[-1]:.4f}")
+    print(f"  -> {OUT_DIR / 'epa_supply_chain.csv'}")
 
 
 if __name__ == "__main__":
