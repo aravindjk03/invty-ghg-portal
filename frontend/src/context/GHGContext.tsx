@@ -327,9 +327,10 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const merged = { ...row, ...updates, updatedAt: new Date().toISOString() };
           const calc = calculateRowEmissions(
             merged.amount,
-            merged.emissionFactor.factorValue,
+            merged.customFactorOverride ?? merged.emissionFactor.factorValue,
             merged.fuelOrSource,
-            merged.unit
+            merged.unit,
+            merged.emissionFactor.unit
           );
           merged.calculatedTco2e = calc.calculatedTco2e;
           merged.warning = calc.warning;
@@ -353,7 +354,8 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         || DEFAULT_FACTORS[0];
 
       const defaultAmount = factor.unit.toLowerCase() === 'kwh' ? 10000 : 100;
-      const calc = calculateRowEmissions(defaultAmount, factor.factorValue, factor.fuelOrActivity, factor.unit);
+      const calc = calculateRowEmissions(
+        defaultAmount, factor.factorValue, factor.fuelOrActivity, factor.unit, factor.unit);
 
       const newRow: ActivityEntry = {
         id: `${scope}-row-${Date.now()}`,
@@ -416,7 +418,8 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const mapped = entries.map((e, idx) => {
         const factor = e.emissionFactor || DEFAULT_FACTORS[0];
         const amount = e.amount || 0;
-        const calc = calculateRowEmissions(amount, factor.factorValue, e.fuelOrSource || '', e.unit || '');
+        const calc = calculateRowEmissions(
+          amount, factor.factorValue, e.fuelOrSource || '', e.unit || factor.unit, factor.unit);
         return {
           id: `${scope}-import-${Date.now()}-${idx}`,
           facility: e.facility || 'Main Plant Facility',
@@ -450,9 +453,10 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       list.map((row) => {
         const calc = calculateRowEmissions(
           row.amount,
-          row.emissionFactor.factorValue,
+          row.customFactorOverride ?? row.emissionFactor.factorValue,
           row.fuelOrSource,
-          row.unit
+          row.unit,
+          row.emissionFactor.unit
         );
         return {
           ...row,

@@ -158,36 +158,16 @@ export const authService = {
   },
 
   async getDemoAccounts(): Promise<DemoAccount[]> {
+    // No fallback list: seeded credentials live on the server, which serves them
+    // only outside production. A hardcoded copy here would ship the password in
+    // the published JavaScript for anyone to read.
     try {
       const res = await fetch(`${env.API_BASE_URL}/auth/demo-accounts`);
+      if (!res.ok) return [];
       const data = await res.json();
       return data.accounts || [];
     } catch {
-      return [
-        {
-          type: 'email',
-          email: 'admin@invty.com',
-          password: 'IINVTY@2026',
-          name: 'IINVTY Enterprise Admin',
-          company: 'IINVTY Sustainability Systems',
-          role: 'ADMIN',
-        },
-        {
-          type: 'email',
-          email: 'demo@company.com',
-          password: 'Demo@1234',
-          name: 'Rajesh Sharma',
-          company: 'Tata Heavy Engineering Ltd',
-          role: 'ESG_ANALYST',
-        },
-        {
-          type: 'mobile',
-          phone: '+919876543210',
-          name: 'IINVTY Enterprise Admin',
-          company: 'IINVTY Sustainability Systems',
-          role: 'ADMIN',
-        },
-      ];
+      return [];
     }
   },
 

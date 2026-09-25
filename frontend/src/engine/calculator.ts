@@ -1,8 +1,20 @@
 import Decimal from 'decimal.js';
-import { parseIndianNumber } from './unitConverter';
+import { convertUnit, getUnitDimension, parseIndianNumber } from './unitConverter';
 import { ActivityEntry, ScopeSummary, QualityGrade } from '../types/ghg';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_EVEN });
+
+/**
+ * Catalogue sources that represent a contractual instrument, and therefore
+ * belong to the market-based Scope 2 total rather than the location-based one.
+ */
+export const MARKET_INSTRUMENT_KEYS = new Set([
+  'elec.grid.market_residual',
+  'elec.ppa_renewable',
+  'elec.green_tariff',
+  'elec.irec',
+  'elec.supplier_specific',
+]);
 
 export interface CalculatedRowResult {
   calculatedTco2e: number;
@@ -19,7 +31,13 @@ export function calculateRowEmissions(
   amount: number | string | null | undefined,
   factorValue: number,
   fuelOrSource = '',
-  unit = ''
+  unit = '',
+  /**
+   * The unit the factor is published per (the catalogue's default unit). When it
+   * differs from the unit the activity was recorded in, the quantity is
+   * converted first. Omit only when the two are known to match.
+   */
+  factorUnit = ''
 ): CalculatedRowResult {
   const decAmount = parseIndianNumber(amount);
   if (decAmount === null || decAmount.isZero()) {
@@ -29,8 +47,35 @@ export function calculateRowEmissions(
   const isCo2Capture = fuelOrSource.toLowerCase().includes('co2_captured') || fuelOrSource.toLowerCase().includes('captured');
   const decFactor = new Decimal(factorValue);
 
-  // tCO2e = (amount * factorValue) / 1000
-  let tco2e = decAmount.times(decFactor).dividedBy(new Decimal(1000));
+  // A factor is published per ONE unit. Recording coal in kg against a factor
+  // published per tonne overstates the result a thousandfold, so convert the
+  // quantity into the factor's unit before multiplying, and refuse the row when
+  // that conversion is not defensible.
+  let quantity = decAmount;
+  const target = (factorUnit || unit).trim();
+  if (target && unit && target.toLowerCase() !== unit.toLowerCase()) {
+    try {
+      quantity = convertUnit(decAmount, unit, target, fuelOrSource);
+    } catch (error) {
+      return {
+        calculatedTco2e: 0,
+        decimalTco2e: new Decimal(0),
+        warning: (error as Error).message,
+      };
+    }
+    if (getUnitDimension(unit) === 'count' && getUnitDimension(target) === 'count'
+        && unit.toLowerCase() !== target.toLowerCase()) {
+      return {
+        calculatedTco2e: 0,
+        decimalTco2e: new Decimal(0),
+        warning: `This factor is published per ${target}, but the quantity is recorded in ${unit}. `
+          + `Record the activity in ${target}, or choose a factor published for ${unit}.`,
+      };
+    }
+  }
+
+  // tCO2e = (quantity in the factor's unit * factorValue) / 1000
+  let tco2e = quantity.times(decFactor).dividedBy(new Decimal(1000));
 
   if (isCo2Capture && tco2e.isPositive()) {
     // CCU / CCS is a deduction
@@ -92,11 +137,13 @@ export function calculateDataQualityGrade(entries: ActivityEntry[]): QualityGrad
   let count = 0;
 
   for (const entry of entries) {
-    if (entry.calculatedTco2e !== 0) {
-      const tier = entry.emissionFactor?.qualityTier || 'Secondary';
-      totalScore = totalScore.plus(new Decimal(scoreMap[tier] || 3));
-      count++;
-    }
+    // Rows that compute to zero still count. A source whose factor has not been
+    // ingested contributes nothing to the total but everything to the question
+    // of how good this inventory is, so it is scored as Estimated.
+    const hasFactor = (entry.customFactorOverride ?? entry.emissionFactor?.factorValue ?? 0) > 0;
+    const tier = hasFactor ? (entry.emissionFactor?.qualityTier || 'Secondary') : 'Estimated';
+    totalScore = totalScore.plus(new Decimal(scoreMap[tier] || 3));
+    count++;
   }
 
   if (count === 0) return 'C';
@@ -161,7 +208,10 @@ export function summarizeInventory(
 
   // 2. Scope 2: Distinguish location-based vs market-based
   for (const row of scope2Entries) {
-    const isMarket = row.category?.toLowerCase().includes('market') || row.fuelOrSource?.toLowerCase().includes('market');
+    // Decided by the catalogue key or the category, never by a name the user can
+    // edit: renaming a row must not move it between the two Scope 2 methods.
+    const isMarket = row.category === 'market_instruments' || MARKET_INSTRUMENT_KEYS.has(
+      (row.emissionFactor?.id ?? '').toLowerCase());
     if (isMarket) {
       s2MktTotal = s2MktTotal.plus(new Decimal(row.calculatedTco2e || 0));
     } else {

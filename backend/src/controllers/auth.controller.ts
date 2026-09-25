@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { dbService } from '../db/database';
+import { env } from '../config/env';
 
 const signupSchema = z.object({
   email: z.string().email('Valid business email address is required'),
@@ -384,6 +385,16 @@ export const authController = {
 
   // 8. Demo Accounts List for quick dev/testing
   getDemoAccounts: (_req: Request, res: Response) => {
+    // Seeded credentials are a development convenience. In production this
+    // endpoint does not exist, so the passwords never leave the server.
+    if (env.NODE_ENV === 'production') {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Demo accounts are not available.' },
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
     res.status(200).json({
       success: true,
       accounts: [

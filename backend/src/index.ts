@@ -8,6 +8,11 @@ import apiRoutes from './routes';
 
 const app = express();
 
+// Behind a reverse proxy (Render, nginx, Cloudflare) the client address arrives
+// in X-Forwarded-For. Without this every visitor shares one rate-limit bucket,
+// so one busy user locks out everybody else. One hop: the platform's proxy.
+app.set('trust proxy', 1);
+
 // Security and utility middleware pipeline
 app.use(helmetMiddleware);
 app.use(corsMiddleware);
