@@ -245,15 +245,27 @@ const DEFAULT_FACTOR_MAP: Record<string, number> = {
   'memo.offsets_retired': 1000.0,
 };
 
+// A source with no ingested value is marked UNVERIFIED and carries 0, never a
+// stand-in number. A fabricated factor is worse than a blank: it calculates,
+// looks official, and cannot be traced to a published source. The UI refuses to
+// compute from an unverified factor until a value and its source are entered.
 const enriched = entries.map((e: any) => {
-  const factor = DEFAULT_FACTOR_MAP[e.activity_key] ?? 1.0;
+  const value = DEFAULT_FACTOR_MAP[e.activity_key];
+  const verified = value !== undefined;
   return {
     ...e,
-    factorValue: factor,
-    qualityTier: e.factor_source?.includes('CEA') || e.factor_source?.includes('DESNZ') ? 'Primary' : 'Secondary',
-    publicationYear: 2024,
+    factorValue: verified ? value : 0,
+    verified,
+    qualityTier: !verified
+      ? 'Estimated'
+      : e.factor_source?.includes('CEA') || e.factor_source?.includes('DESNZ') ? 'Primary' : 'Secondary',
+    publicationYear: verified ? 2024 : 0,
   };
 });
+
+const unverified = enriched.filter((e: any) => !e.verified).length;
+console.log(`catalogue: ${enriched.length} sources, ${enriched.length - unverified} with an ingested factor, ` +
+  `${unverified} awaiting ingestion`);
 
 fs.writeFileSync(
   path.resolve(process.cwd(), 'src/data/emission_source_catalogue.json'),
@@ -274,6 +286,8 @@ export interface CatalogueSource {
   factor_source: string;
   notes: string;
   factorValue: number;
+  /** False when no published value has been ingested yet; factorValue is then 0. */
+  verified: boolean;
   qualityTier: 'Primary' | 'Secondary' | 'Proxy' | 'Estimated';
   publicationYear: number;
 }

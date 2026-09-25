@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useMemo, useEffect, useCall
 import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessage } from '../types/ghg';
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { summarizeInventory, calculateRowEmissions } from '../engine/calculator';
+import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
 import { User, authService } from '../services/authService';
 
@@ -344,16 +345,12 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addRow = useCallback(
     (scope: 'scope-1' | 'scope-2' | 'scope-3', category: string) => {
-      // Extract prefix like cat1, cat2, cat15
-      const catPrefix = category.startsWith('cat') ? category.split('_')[0] : '';
-      const factor =
-        (catPrefix ? DEFAULT_FACTORS.find((f) => f.id.startsWith(`${catPrefix}.`)) : null) ||
-        DEFAULT_FACTORS.find((f) => f.category.toLowerCase().includes(category.toLowerCase())) ||
-        (scope === 'scope-1'
-          ? DEFAULT_FACTORS[0]
-          : scope === 'scope-2'
-          ? DEFAULT_FACTORS.find((f) => f.id === 'elec.grid.location') || DEFAULT_FACTORS[0]
-          : DEFAULT_FACTORS.find((f) => f.id === 'cat1.material.steel') || DEFAULT_FACTORS[0]);
+      // A new row starts on a source that belongs to ITS scope and category, and
+      // prefers one whose factor has actually been ingested.
+      const available = factorsFor(scope, category);
+      const factor = available.find((candidate) => isVerified(candidate.id))
+        || available[0]
+        || DEFAULT_FACTORS[0];
 
       const defaultAmount = factor.unit.toLowerCase() === 'kwh' ? 10000 : 100;
       const calc = calculateRowEmissions(defaultAmount, factor.factorValue, factor.fuelOrActivity, factor.unit);

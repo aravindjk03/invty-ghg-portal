@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { clsx } from 'clsx';
 import { ActivityEntry } from '../../types/ghg';
 import { 
@@ -13,7 +13,8 @@ import {
   Paperclip,
   Check
 } from 'lucide-react';
-import { DEFAULT_FACTORS } from '../../services/ghgService';
+import { CATALOGUE_SOURCES } from '../../data/catalogueData';
+import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../../data/factorCatalogue';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
 
 export interface ActivityRowProps {
@@ -62,20 +63,30 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     requestAnimationFrame(animate);
   }, [entry.calculatedTco2e]);
 
-  // Available fuel options for current category or scope
-  const categoryFactors = DEFAULT_FACTORS.filter(
-    (f) => f.category === entry.category || f.scope === entry.scope
+  // Only the sources that belong to THIS scope and category. A stationary
+  // combustion row offers fuels burned in fixed equipment, not refrigerants,
+  // grid electricity or air travel.
+  const groupedSources = useMemo(
+    () => groupedSourcesFor(entry.scope, entry.category),
+    [entry.scope, entry.category],
   );
+  const units = useMemo(() => unitsFor(entry.emissionFactor.id), [entry.emissionFactor.id]);
+  const factorUnverified = !isVerified(entry.emissionFactor.id)
+    && entry.customFactorOverride === undefined;
 
   const handleFuelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedFactor = DEFAULT_FACTORS.find((f) => f.id === e.target.value);
-    if (selectedFactor) {
+    const source = CATALOGUE_SOURCES.find((item) => item.activity_key === e.target.value);
+    if (source) {
+      const selectedFactor = toEmissionFactor(source);
       onUpdate({
         fuelOrSource: selectedFactor.fuelOrActivity,
         emissionFactor: selectedFactor,
         unit: selectedFactor.unit,
+        customFactorOverride: undefined,
+        warning: source.verified ? undefined
+          : 'No published factor has been ingested for this source yet. Enter the factor value and its source before this row is reported.',
       });
-      setOverrideFactorValue(String(selectedFactor.factorValue));
+      setOverrideFactorValue(source.verified ? String(selectedFactor.factorValue) : '');
     }
   };
 
@@ -128,6 +139,14 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         className="hidden"
       />
 
+      {factorUnverified && (
+        <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
+          <strong>No published factor ingested for this source.</strong> It contributes 0 until you enter a
+          factor value and cite its source, so the inventory never reports a made-up number. Use
+          “Override emission factor” below, and record where the value came from.
+        </div>
+      )}
+
       {/* Upper Control Grid (Strictly Aligned) */}
       <div className="grid grid-cols-12 gap-3 items-center w-full">
         {/* Facility Name (3 cols) */}
@@ -150,10 +169,14 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
             aria-label="Emission Source"
             className="w-full h-10 bg-surface-raised border border-border rounded-md px-3 text-xs md:text-sm text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600 cursor-pointer truncate"
           >
-            {categoryFactors.map((factor) => (
-              <option key={factor.id} value={factor.id}>
-                {factor.fuelOrActivity}
-              </option>
+            {groupedSources.map(([group, sources]) => (
+              <optgroup key={group} label={group}>
+                {sources.map((source) => (
+                  <option key={source.activity_key} value={source.activity_key}>
+                    {source.display_name}{source.verified ? '' : '  — factor not ingested'}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
@@ -170,11 +193,22 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
           />
         </div>
 
-        {/* Unit Badge (1 col) */}
+        {/* Unit (1 col) - only the units this source may be recorded in */}
         <div className="col-span-5 sm:col-span-2 lg:col-span-1">
+          {units.length > 1 ? (
+            <select
+              value={entry.unit}
+              onChange={(event) => onUpdate({ unit: event.target.value })}
+              aria-label="Unit"
+              className="w-full h-10 bg-surface-raised border border-border rounded-md px-2 text-xs font-mono text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600 cursor-pointer"
+            >
+              {units.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+            </select>
+          ) : (
           <span className="inline-flex items-center justify-center w-full h-10 bg-surface-sunken border border-border rounded-md text-xs font-mono text-brand-muted select-none font-semibold truncate px-1">
             {entry.unit}
           </span>
+          )}
         </div>
 
         {/* Live Result + Action Menu (3 cols) */}
