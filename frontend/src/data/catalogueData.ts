@@ -847,10 +847,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 0.05,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "mobile.diesel",
@@ -1289,10 +1289,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "N2O — dominant gas, not CO2",
-    "factorValue": 300,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "process.adipic_acid",
@@ -1306,10 +1306,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "N2O — dominant gas",
-    "factorValue": 450,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "process.urea_production",
@@ -1522,7 +1522,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "1",
     "ghg_category": "1.3",
     "category_name": "Process emissions",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "HFC",
     "factor_source": "IPCC 2006 Vol.2",
@@ -2037,10 +2037,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 28,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "fugitive.ch4_ng_distribution",
@@ -2054,10 +2054,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 28,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "fugitive.ch4_coal_mine",
@@ -2066,8 +2066,8 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "t",
-    "allowed_units": "t",
+    "default_unit": "kg",
+    "allowed_units": "kg|t",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
@@ -2139,10 +2139,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "IPCC Vol.5 Ch.6 — nitrogen in effluent. Pairs with fugitive.ch4_wastewater.",
-    "factorValue": 273,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "fugitive.hfc_foam",
@@ -2236,7 +2236,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
@@ -2258,10 +2258,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4,CO2",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 22,
-    "verified": true,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "mobile.offroad.excavator",
@@ -4446,7 +4446,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Biogenic memo item",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "CO2",
     "factor_source": "DESNZ",

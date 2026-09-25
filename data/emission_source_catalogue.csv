@@ -87,7 +87,7 @@ process.ferroalloys,Ferroalloy production,Process,1,1.3,Process emissions,t,kg|t
 process.ethylene_petchem,Petrochemical — ethylene / olefins,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
 process.carbon_black,Carbon black production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
 process.pulp_paper_lime_kiln,Pulp & paper — lime kiln,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
-process.hfc23_byproduct,HFC-23 by-product from HCFC-22 manufacture,Process,1,1.3,Process emissions,t,kg|t,HFC,IPCC 2006 Vol.2,"GWP ~12,700 — tiny masses are material"
+process.hfc23_byproduct,HFC-23 by-product from HCFC-22 manufacture,Process,1,1.3,Process emissions,kg,kg|t,HFC,IPCC 2006 Vol.2,"GWP ~12,700 — tiny masses are material"
 process.titanium_dioxide,Titanium dioxide production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
 process.phosphoric_acid,Phosphoric acid production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
 process.lead_production,Lead production,Process,1,1.3,Process emissions,t,kg|t,CO2,IPCC 2006 Vol.2,
@@ -119,7 +119,7 @@ fugitive.fire_hfc227ea,Fire suppression — HFC-227ea / FM-200,Fugitive — othe
 fugitive.fire_novec,Fire suppression — Novec 1230,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,other,Manufacturer data,GWP ~1
 fugitive.ch4_wastewater,Methane — on-site anaerobic wastewater treatment,Fugitive — other,1,1.4,Fugitive emissions,m3,m3|kL|kg,CH4,IPCC 2006 Vol.2,
 fugitive.ch4_ng_distribution,Methane — on-site gas distribution leaks,Fugitive — other,1,1.4,Fugitive emissions,m3,m3|scm,CH4,IPCC 2006 Vol.2,
-fugitive.ch4_coal_mine,Methane — coal mining,Fugitive — other,1,1.4,Fugitive emissions,t,t,CH4,IPCC 2006 Vol.2,
+fugitive.ch4_coal_mine,Methane — coal mining,Fugitive — other,1,1.4,Fugitive emissions,kg,kg|t,CH4,IPCC 2006 Vol.2,
 fugitive.co2_welding,CO2 — welding shielding gas,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,CO2,IPCC 2006 Vol.2,
 fugitive.n2o_medical,N2O — medical / laboratory use,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,N2O,IPCC AR6,
 fugitive.co2_beverage,CO2 — carbonation / beverage dispense,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,CO2,IPCC 2006 Vol.2,
@@ -129,7 +129,7 @@ fugitive.hfc_aerosol,HFCs — aerosols and solvents,Fugitive — other,1,1.4,Fug
 fugitive.sf6_magnesium,SF6 — magnesium casting cover gas,Fugitive — other,1,1.4,Fugitive emissions,kg,kg,SF6,IPCC AR6,
 flare.process_vent,Process vent — flared,Flaring and venting,1,1.1,Stationary combustion,m3,m3|t,"CO2,CH4,N2O",IPCC 2006 Vol.2,IPCC 1B2
 flare.biogas,Biogas / landfill gas flared,Flaring and venting,1,1.1,Stationary combustion,m3,m3,"CH4,N2O",IPCC 2006 Vol.2,Biogenic CO2 to memo
-vent.process_ch4,Process vent — unflared methane,Flaring and venting,1,1.4,Fugitive emissions,t,kg|t,CH4,IPCC 2006 Vol.2,
+vent.process_ch4,Process vent — unflared methane,Flaring and venting,1,1.4,Fugitive emissions,kg,kg|t,CH4,IPCC 2006 Vol.2,
 vent.oil_gas,Oil & gas venting,Flaring and venting,1,1.4,Fugitive emissions,m3,m3,"CH4,CO2",IPCC 2006 Vol.2,
 mobile.offroad.excavator,"Excavator — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
 mobile.offroad.dozer,"Bulldozer — owned, diesel",Off-road mobile plant,1,1.2,Mobile combustion,L,L|kL|m3|gal,"CO2,CH4,N2O",DESNZ,
@@ -259,7 +259,7 @@ cat12.reuse,EOL — reuse,Cat 8-15 — Other,3,3.12,End-of-life treatment of sol
 cat13.leased_downstream,Downstream leased assets,Cat 8-15 — Other,3,3.13,Downstream leased assets,kWh,kWh|m2,CO2e,reuse S1/S2 engines,
 cat14.franchises,Franchises,Cat 8-15 — Other,3,3.14,Franchises,kWh,kWh|outlet,CO2e,reuse S1/S2 engines,
 cat15.investments,Investments (PCAF-style attribution),Cat 8-15 — Other,3,3.15,Investments,INR,INR|USD,CO2e,PCAF,Phase 2. Attribution factor = outstanding amount / investee enterprise value
-memo.biogenic_co2,Biogenic CO2 from biomass / biofuel combustion,Memo — outside scopes,memo,memo,Biogenic memo item,t,kg|t,CO2,DESNZ,GHG Protocol requires this be reported SEPARATELY from the scopes. Its CH4 and N2O DO stay in Scope 1.
+memo.biogenic_co2,Biogenic CO2 from biomass / biofuel combustion,Memo — outside scopes,memo,memo,Biogenic memo item,kg,kg|t,CO2,DESNZ,GHG Protocol requires this be reported SEPARATELY from the scopes. Its CH4 and N2O DO stay in Scope 1.
 memo.biogenic_co2_scope3,Biogenic CO2 arising in Scope 3 activities,Memo — outside scopes,memo,memo,Biogenic memo item,t,kg|t,CO2,DESNZ,"GHG Protocol requires biogenic CO2 be reported separately FOR EACH SCOPE in which it arises — biofuel in Cat 4, composting/AD/incineration of biogenic waste in Cat 5, biofuel sold in Cat 11."
 memo.montreal_r22,R-22 / HCFC-22 refrigerant,Memo — outside scopes,memo,memo,Montreal Protocol gas,kg,kg|g,HCFC,IPCC AR6,"Montreal Protocol substance — reported separately, NEVER added to the Scope 1 total"
 memo.montreal_cfc,"CFCs (R-11, R-12) and halons",Memo — outside scopes,memo,memo,Montreal Protocol gas,kg,kg|g,CFC,IPCC AR6,"Reported separately, outside the scopes"
