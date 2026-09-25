@@ -154,6 +154,29 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
                 "year": int(row["publication_year"] or 0), "gases": {"CO2"},
             }
 
+    india = FACTOR_DIR / "india_transport.csv"
+    if india.exists():
+        for row in csv.DictReader(india.open(encoding="utf-8")):
+            value = _decimal(row["gas_mass_kg_per_unit"])
+            if value is None:
+                continue
+            key = row["factor_id"]
+            registry.add(EmissionFactor(
+                version_id=key, activity_key=key, region=row["geography"],
+                reference_year=int(row["publication_year"] or 0), gas="CO2",
+                value=value, numerator_unit="kgCO2", denominator_unit=row["unit"],
+                ef_basis=PHYSICAL_BASIS, source_name=row["source"],
+                source_table_ref=row["source_version"],
+                source_url="https://indiaghgp.org/transport-emission-factors",
+                factor_set_id="indiaghgp-road",
+            ))
+            activities[key] = {
+                "name": row["name"], "scope": row["scope"],
+                "category_path": row["category_path"], "unit": row["unit"],
+                "region": row["geography"], "source": row["source"],
+                "year": int(row["publication_year"] or 0), "gases": {"CO2"},
+            }
+
     epa = FACTOR_DIR / "epa_supply_chain.csv"
     if epa.exists():
         for row in csv.DictReader(epa.open(encoding="utf-8")):
