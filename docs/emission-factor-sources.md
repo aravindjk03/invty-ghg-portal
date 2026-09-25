@@ -8,6 +8,34 @@ report.
 value, unit, publication year, geography and a named source. Anything else stays
 marked unverified — see `docs/ghg-report-structure.md`.
 
+## Exact download links (each verified to download on 2026-09-25)
+
+**DESNZ 2025 GHG conversion factors** — publication page:
+<https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025>
+
+| File | Direct link | Why |
+|---|---|---|
+| **Flat format** (easiest to import) | <https://assets.publishing.service.gov.uk/media/6846b6ea57f3515d9611f0dd/ghg-conversion-factors-2025-flat-format.xlsx> | One long table, built for loading into a database |
+| **Full set** | <https://assets.publishing.service.gov.uk/media/6846a4f55e92539572806125/ghg-conversion-factors-2025-full-set.xlsx> | Every factor with the CO2 / CH4 / N2O breakdown |
+| Condensed set | <https://assets.publishing.service.gov.uk/media/6846a4e6d25e6f6afd4c0180/ghg-conversion-factors-2025-condensed-set.xlsx> | The common subset |
+| Methodology paper | <https://assets.publishing.service.gov.uk/media/6846b0870392ed9b784c0187/2025-GHG-CF-methodology-paper.pdf> | How each factor was derived — cite this |
+| Major changes | <https://assets.publishing.service.gov.uk/media/6846b6d04d039a010411f0c9/2025-GHG-CF-major-changes-document.pdf> | What moved since last year |
+
+**CEA CO2 Baseline Database (India)** — page:
+<https://cea.nic.in/cdm-co2-baseline-database/?lang=en>
+
+| File | Direct link |
+|---|---|
+| **Database v20.0 (FY 2023-24)** | <https://cea.nic.in/wp-content/uploads/2021/03/CO2_Database_Version_20.0_2023_24.xlsx> |
+| User guide v20.0 | <https://cea.nic.in/wp-content/uploads/2021/03/User_Guide_Version_20.0.pdf> |
+
+**IPCC AR6 global warming potentials** — Table 7.SM.7:
+
+| File | Direct link |
+|---|---|
+| **Chapter 7 Supplementary Material** (the GWP tables) | <https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf> |
+| Chapter 7 main text | <https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07.pdf> |
+
 ## Start here — these two cover most of your gaps
 
 ### 1. UK Government GHG conversion factors (DESNZ, formerly DEFRA)
