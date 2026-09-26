@@ -16,10 +16,14 @@ interface Props {
   /** What the row is about, used as the opening search term. */
   hint: string;
   selectedKey?: string;
+  /** What that factor is called, so the row never has to show a raw key. */
+  selectedName?: string;
   onSelect: (activity: SelectableActivity) => void;
 }
 
-export const EngineFactorPicker: React.FC<Props> = ({ scope, hint, selectedKey, onSelect }) => {
+export const EngineFactorPicker: React.FC<Props> = ({
+  scope, hint, selectedKey, selectedName, onSelect,
+}) => {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState(hint);
   const [results, setResults] = useState<SelectableActivity[]>([]);
@@ -52,7 +56,7 @@ export const EngineFactorPicker: React.FC<Props> = ({ scope, hint, selectedKey, 
         {selectedKey ? <CheckCircle2 size={12} className="text-status-success" />
           : <AlertCircle size={12} className="text-status-warning" />}
         {selectedKey
-          ? `Published factor: ${selected?.name ?? selectedKey}`
+          ? `Published factor: ${selected?.name ?? selectedName ?? selectedKey}`
           : 'No published factor chosen — this row will not be calculated'}
       </button>
 

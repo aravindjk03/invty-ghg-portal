@@ -1,0 +1,213 @@
+catalogue_key,catalogue_name,unit,engine_activity_key,engine_name,engine_region,engine_source
+cat1.material.water_supply,Water supply,cubic metres,desnz.2025.17_404_4005_1,Water supply / Water supply / Water supply,UK,DESNZ UK Government GHG conversion factors
+cat1.material.water_supply,Water supply,million litres,desnz.2025.17_404_4005_10,Water supply / Water supply / Water supply,UK,DESNZ UK Government GHG conversion factors
+cat4.air_freight,Air freight,tonne.km,desnz.2025.27_317_3158_14,"Freighting goods / Freight flights / International, to / from non-UK (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat4.courier,Courier / parcel,km,desnz.2025.27_303_3102_4,Freighting goods / Vans / Average (up to 3.5 tonnes) (Diesel),UK,DESNZ UK Government GHG conversion factors
+cat4.courier,Courier / parcel,miles,desnz.2025.27_303_3102_9,Freighting goods / Vans / Average (up to 3.5 tonnes) (Diesel),UK,DESNZ UK Government GHG conversion factors
+cat4.courier,Courier / parcel,tonne.km,desnz.2025.27_303_3102_14,Freighting goods / Vans / Average (up to 3.5 tonnes) (Diesel),UK,DESNZ UK Government GHG conversion factors
+cat4.rail,Rail freight,tonne.km,desnz.2025.27_315_3151_14,Freighting goods / Rail / Freight train,UK,DESNZ UK Government GHG conversion factors
+cat4.road_hgv,Road freight — HGV by size/load,km,desnz.2025.27_304_3140_4,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+cat4.road_hgv,Road freight — HGV by size/load,miles,desnz.2025.27_304_3140_9,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+cat4.road_hgv,Road freight — HGV by size/load,tonne.km,desnz.2025.27_304_3140_14,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+cat4.road_lcv,Road freight — LCV / van,km,desnz.2025.27_303_3102_4,Freighting goods / Vans / Average (up to 3.5 tonnes) (Diesel),UK,DESNZ UK Government GHG conversion factors
+cat4.road_lcv,Road freight — LCV / van,miles,desnz.2025.27_303_3102_9,Freighting goods / Vans / Average (up to 3.5 tonnes) (Diesel),UK,DESNZ UK Government GHG conversion factors
+cat4.road_lcv,Road freight — LCV / van,tonne.km,desnz.2025.27_303_3102_14,Freighting goods / Vans / Average (up to 3.5 tonnes) (Diesel),UK,DESNZ UK Government GHG conversion factors
+cat4.sea_bulk,Sea freight — bulk carrier,tonne.km,desnz.2025.27_320_3221_14,Freighting goods / Cargo ship / Bulk carrier / Average,UK,DESNZ UK Government GHG conversion factors
+cat4.sea_container,Sea freight — container,tonne.km,desnz.2025.27_320_3235_14,Freighting goods / Cargo ship / Container ship / Average,UK,DESNZ UK Government GHG conversion factors
+cat5.anaerobic_digestion,Anaerobic digestion,tonnes,desnz.2025.20_507_5307_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Anaerobic digestion),UK,DESNZ UK Government GHG conversion factors
+cat5.composting,Composting,tonnes,desnz.2025.20_507_5305_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Composting),UK,DESNZ UK Government GHG conversion factors
+cat5.incineration_energy,Incineration with energy recovery,tonnes,desnz.2025.20_507_5311_15,Waste disposal / Refuse / Commercial and industrial waste (Incineration with Energy Recovery),UK,DESNZ UK Government GHG conversion factors
+cat5.landfill_mixed,Landfill — mixed municipal waste,tonnes,desnz.2025.20_507_5313_15,Waste disposal / Refuse / Commercial and industrial waste (Landfill),UK,DESNZ UK Government GHG conversion factors
+cat5.landfill_organic,Landfill — organic waste,tonnes,desnz.2025.20_507_5306_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Landfill),UK,DESNZ UK Government GHG conversion factors
+cat5.wastewater_treated,Wastewater sent for off-site treatment,cubic metres,desnz.2025.18_405_4006_1,Water treatment / Water treatment / Water treatment,UK,DESNZ UK Government GHG conversion factors
+cat5.wastewater_treated,Wastewater sent for off-site treatment,million litres,desnz.2025.18_405_4006_10,Water treatment / Water treatment / Water treatment,UK,DESNZ UK Government GHG conversion factors
+cat6.air_domestic_economy,"Air — domestic, economy",passenger.km,desnz.2025.21_316_3160_11,"Business travel- air / Flights / Domestic, to / from UK / Average passenger (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat6.air_long_haul_business,"Air — long haul, business",passenger.km,desnz.2025.21_316_3174_11,"Business travel- air / Flights / Long-haul, to / from UK / Business class (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat6.air_long_haul_economy,"Air — long haul, economy",passenger.km,desnz.2025.21_316_3170_11,"Business travel- air / Flights / Long-haul, to / from UK / Economy class (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat6.air_long_haul_first,"Air — long haul, first",passenger.km,desnz.2025.21_316_3176_11,"Business travel- air / Flights / Long-haul, to / from UK / First class (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat6.air_long_haul_premium,"Air — long haul, premium economy",passenger.km,desnz.2025.21_316_3172_11,"Business travel- air / Flights / Long-haul, to / from UK / Premium economy class (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat6.air_short_haul_economy,"Air — short haul, economy",passenger.km,desnz.2025.21_316_3164_11,"Business travel- air / Flights / Short-haul, to / from UK / Economy class (With RF)",UK,DESNZ UK Government GHG conversion factors
+cat6.bus_coach,Bus / coach,passenger.km,desnz.2025.25_314_3146_11,Business travel- land / Bus / Coach,UK,DESNZ UK Government GHG conversion factors
+cat6.ferry,Ferry,passenger.km,desnz.2025.23_318_3190_11,Business travel- sea / Ferry / Average (all passenger),UK,DESNZ UK Government GHG conversion factors
+cat6.hotel_nights,Hotel stays,Room per night,desnz.2025.29_600_4020_13,Hotel stay / Hotel stay / India,UK,DESNZ UK Government GHG conversion factors
+cat9.downstream_transport,Downstream transportation & distribution,km,desnz.2025.27_304_3140_4,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+cat9.downstream_transport,Downstream transportation & distribution,miles,desnz.2025.27_304_3140_9,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+cat9.downstream_transport,Downstream transportation & distribution,tonne.km,desnz.2025.27_304_3140_14,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+elec.ev_charging_onsite,Electricity — charging owned EVs at own facility,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+elec.grid.location,Grid electricity — location-based,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+elec.open_access,Electricity — open access / third-party sale (India),kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+elec.submetered_tenant,Electricity — sub-metered from landlord,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+fuel.biodiesel.stationary,Biodiesel (B100) — stationary,GJ,desnz.2025.2_103_1032_2,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
+fuel.biodiesel.stationary,Biodiesel (B100) — stationary,kg,desnz.2025.2_103_1032_3,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
+fuel.biodiesel.stationary,Biodiesel (B100) — stationary,litres,desnz.2025.2_103_1032_8,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
+fuel.biogas,Biogas,kWh,desnz.2025.2_105_1047_5,Bioenergy / Biogas / Biogas,UK,DESNZ UK Government GHG conversion factors
+fuel.biogas,Biogas,tonnes,desnz.2025.2_105_1047_15,Bioenergy / Biogas / Biogas,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.agri_residue,Agricultural residue — other,kWh,desnz.2025.2_104_1046_5,Bioenergy / Biomass / Grass / straw,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.agri_residue,Agricultural residue — other,tonnes,desnz.2025.2_104_1046_15,Bioenergy / Biomass / Grass / straw,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.wood_chips,Wood chips,kWh,desnz.2025.2_104_1044_5,Bioenergy / Biomass / Wood chips,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.wood_chips,Wood chips,tonnes,desnz.2025.2_104_1044_15,Bioenergy / Biomass / Wood chips,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.wood_logs,Wood logs,kWh,desnz.2025.2_104_1043_5,Bioenergy / Biomass / Wood logs,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.wood_logs,Wood logs,tonnes,desnz.2025.2_104_1043_15,Bioenergy / Biomass / Wood logs,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.wood_pellets,Wood pellets,kWh,desnz.2025.2_104_1045_5,Bioenergy / Biomass / Wood pellets,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.wood_pellets,Wood pellets,tonnes,desnz.2025.2_104_1045_15,Bioenergy / Biomass / Wood pellets,UK,DESNZ UK Government GHG conversion factors
+fuel.butane,Butane,kWh (Gross CV),desnz.2025.1_100_1000_6,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
+fuel.butane,Butane,kWh (Net CV),desnz.2025.1_100_1000_7,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
+fuel.butane,Butane,litres,desnz.2025.1_100_1000_8,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
+fuel.butane,Butane,tonnes,desnz.2025.1_100_1000_15,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
+fuel.cng.stationary,CNG — stationary,kWh (Gross CV),desnz.2025.1_100_1001_6,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+fuel.cng.stationary,CNG — stationary,kWh (Net CV),desnz.2025.1_100_1001_7,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+fuel.cng.stationary,CNG — stationary,litres,desnz.2025.1_100_1001_8,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+fuel.cng.stationary,CNG — stationary,tonnes,desnz.2025.1_100_1001_15,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+fuel.coal.coking,Coal — coking / metallurgical,kWh (Gross CV),desnz.2025.1_102_1028_6,Fuels / Solid fuels / Coking coal,UK,DESNZ UK Government GHG conversion factors
+fuel.coal.coking,Coal — coking / metallurgical,kWh (Net CV),desnz.2025.1_102_1028_7,Fuels / Solid fuels / Coking coal,UK,DESNZ UK Government GHG conversion factors
+fuel.coal.coking,Coal — coking / metallurgical,tonnes,desnz.2025.1_102_1028_15,Fuels / Solid fuels / Coking coal,UK,DESNZ UK Government GHG conversion factors
+fuel.coal.imported_steam,Coal — imported steam coal,kWh (Gross CV),desnz.2025.1_102_1025_6,Fuels / Solid fuels / Coal (industrial),UK,DESNZ UK Government GHG conversion factors
+fuel.coal.imported_steam,Coal — imported steam coal,kWh (Net CV),desnz.2025.1_102_1025_7,Fuels / Solid fuels / Coal (industrial),UK,DESNZ UK Government GHG conversion factors
+fuel.coal.imported_steam,Coal — imported steam coal,tonnes,desnz.2025.1_102_1025_15,Fuels / Solid fuels / Coal (industrial),UK,DESNZ UK Government GHG conversion factors
+fuel.coke.petroleum,Petroleum coke (petcoke),kWh (Gross CV),desnz.2025.1_102_1029_6,Fuels / Solid fuels / Petroleum coke,UK,DESNZ UK Government GHG conversion factors
+fuel.coke.petroleum,Petroleum coke (petcoke),kWh (Net CV),desnz.2025.1_102_1029_7,Fuels / Solid fuels / Petroleum coke,UK,DESNZ UK Government GHG conversion factors
+fuel.coke.petroleum,Petroleum coke (petcoke),tonnes,desnz.2025.1_102_1029_15,Fuels / Solid fuels / Petroleum coke,UK,DESNZ UK Government GHG conversion factors
+fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",kWh (Gross CV),desnz.2025.1_101_1012_6,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
+fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",kWh (Net CV),desnz.2025.1_101_1012_7,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
+fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",litres,desnz.2025.1_101_1012_8,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
+fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",tonnes,desnz.2025.1_101_1012_15,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
+fuel.ethanol.stationary,Ethanol — stationary,GJ,desnz.2025.2_103_1031_2,Bioenergy / Biofuel / Bioethanol,UK,DESNZ UK Government GHG conversion factors
+fuel.ethanol.stationary,Ethanol — stationary,kg,desnz.2025.2_103_1031_3,Bioenergy / Biofuel / Bioethanol,UK,DESNZ UK Government GHG conversion factors
+fuel.ethanol.stationary,Ethanol — stationary,litres,desnz.2025.2_103_1031_8,Bioenergy / Biofuel / Bioethanol,UK,DESNZ UK Government GHG conversion factors
+fuel.furnace_oil,Furnace oil / heavy fuel oil,kWh (Gross CV),desnz.2025.1_101_1013_6,Fuels / Liquid fuels / Fuel oil,UK,DESNZ UK Government GHG conversion factors
+fuel.furnace_oil,Furnace oil / heavy fuel oil,kWh (Net CV),desnz.2025.1_101_1013_7,Fuels / Liquid fuels / Fuel oil,UK,DESNZ UK Government GHG conversion factors
+fuel.furnace_oil,Furnace oil / heavy fuel oil,litres,desnz.2025.1_101_1013_8,Fuels / Liquid fuels / Fuel oil,UK,DESNZ UK Government GHG conversion factors
+fuel.furnace_oil,Furnace oil / heavy fuel oil,tonnes,desnz.2025.1_101_1013_15,Fuels / Liquid fuels / Fuel oil,UK,DESNZ UK Government GHG conversion factors
+fuel.kerosene_sko,Kerosene / SKO,kWh (Gross CV),desnz.2025.1_101_1010_6,Fuels / Liquid fuels / Burning oil,UK,DESNZ UK Government GHG conversion factors
+fuel.kerosene_sko,Kerosene / SKO,kWh (Net CV),desnz.2025.1_101_1010_7,Fuels / Liquid fuels / Burning oil,UK,DESNZ UK Government GHG conversion factors
+fuel.kerosene_sko,Kerosene / SKO,litres,desnz.2025.1_101_1010_8,Fuels / Liquid fuels / Burning oil,UK,DESNZ UK Government GHG conversion factors
+fuel.kerosene_sko,Kerosene / SKO,tonnes,desnz.2025.1_101_1010_15,Fuels / Liquid fuels / Burning oil,UK,DESNZ UK Government GHG conversion factors
+fuel.landfill_gas,Landfill gas,kWh,desnz.2025.2_105_1048_5,Bioenergy / Biogas / Landfill gas,UK,DESNZ UK Government GHG conversion factors
+fuel.landfill_gas,Landfill gas,tonnes,desnz.2025.2_105_1048_15,Bioenergy / Biogas / Landfill gas,UK,DESNZ UK Government GHG conversion factors
+fuel.ldo,Light diesel oil (LDO),kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+fuel.ldo,Light diesel oil (LDO),kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+fuel.ldo,Light diesel oil (LDO),litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+fuel.ldo,Light diesel oil (LDO),tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+fuel.lng,LNG,kWh (Gross CV),desnz.2025.1_100_1002_6,Fuels / Gaseous fuels / LNG,UK,DESNZ UK Government GHG conversion factors
+fuel.lng,LNG,kWh (Net CV),desnz.2025.1_100_1002_7,Fuels / Gaseous fuels / LNG,UK,DESNZ UK Government GHG conversion factors
+fuel.lng,LNG,litres,desnz.2025.1_100_1002_8,Fuels / Gaseous fuels / LNG,UK,DESNZ UK Government GHG conversion factors
+fuel.lng,LNG,tonnes,desnz.2025.1_100_1002_15,Fuels / Gaseous fuels / LNG,UK,DESNZ UK Government GHG conversion factors
+fuel.lpg.stationary,LPG — stationary,kWh (Gross CV),desnz.2025.1_100_1003_6,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+fuel.lpg.stationary,LPG — stationary,kWh (Net CV),desnz.2025.1_100_1003_7,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+fuel.lpg.stationary,LPG — stationary,litres,desnz.2025.1_100_1003_8,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+fuel.lpg.stationary,LPG — stationary,tonnes,desnz.2025.1_100_1003_15,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+fuel.lubricants,Lubricants (combusted),kWh (Gross CV),desnz.2025.1_101_1015_6,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
+fuel.lubricants,Lubricants (combusted),kWh (Net CV),desnz.2025.1_101_1015_7,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
+fuel.lubricants,Lubricants (combusted),litres,desnz.2025.1_101_1015_8,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
+fuel.lubricants,Lubricants (combusted),tonnes,desnz.2025.1_101_1015_15,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
+fuel.naphtha,Naphtha,kWh (Gross CV),desnz.2025.1_101_1016_6,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
+fuel.naphtha,Naphtha,kWh (Net CV),desnz.2025.1_101_1016_7,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
+fuel.naphtha,Naphtha,litres,desnz.2025.1_101_1016_8,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
+fuel.naphtha,Naphtha,tonnes,desnz.2025.1_101_1016_15,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas,cubic metres,desnz.2025.1_100_1004_1,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas,kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas,kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas,tonnes,desnz.2025.1_100_1004_15,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.png,Piped natural gas (PNG),cubic metres,desnz.2025.1_100_1004_1,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.png,Piped natural gas (PNG),kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.png,Piped natural gas (PNG),kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.png,Piped natural gas (PNG),tonnes,desnz.2025.1_100_1004_15,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.propane,Propane,kWh (Gross CV),desnz.2025.1_100_1007_6,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
+fuel.propane,Propane,kWh (Net CV),desnz.2025.1_100_1007_7,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
+fuel.propane,Propane,litres,desnz.2025.1_100_1007_8,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
+fuel.propane,Propane,tonnes,desnz.2025.1_100_1007_15,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
+fuel.waste_oil,Waste oil (combusted),kWh (Gross CV),desnz.2025.1_101_1022_6,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors
+fuel.waste_oil,Waste oil (combusted),kWh (Net CV),desnz.2025.1_101_1022_7,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors
+fuel.waste_oil,Waste oil (combusted),litres,desnz.2025.1_101_1022_8,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors
+fuel.waste_oil,Waste oil (combusted),tonnes,desnz.2025.1_101_1022_15,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors
+fugitive.nf3,NF3 — electronics manufacturing,kg,desnz.2025.3_200_2098_3,Refrigerant & other / Kyoto protocol products / Nitrogen trifluoride (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r125,R-125 (HFC-125),kg,desnz.2025.3_200_2020_3,Refrigerant & other / Kyoto protocol products / HFC-125 (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r134a,R-134a (HFC-134a),kg,desnz.2025.3_200_2026_3,Refrigerant & other / Kyoto protocol products / HFC-134a (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r143a,R-143a (HFC-143a),kg,desnz.2025.3_200_2032_3,Refrigerant & other / Kyoto protocol products / HFC-143a (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r23,R-23 (HFC-23),kg,desnz.2025.3_200_2011_3,Refrigerant & other / Kyoto protocol products / HFC-23 (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r32,R-32 (HFC-32),kg,desnz.2025.3_200_2014_3,Refrigerant & other / Kyoto protocol products / HFC-32 (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r404a,R-404A (blend),kg,desnz.2025.3_201_2122_3,Refrigerant & other / Blends / R404A (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r407c,R-407C (blend),kg,desnz.2025.3_201_2137_3,Refrigerant & other / Blends / R407C (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r410a,R-410A (blend),kg,desnz.2025.3_201_2158_3,Refrigerant & other / Blends / R410A (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r417a,R-417A (blend),kg,desnz.2025.3_201_2191_3,Refrigerant & other / Blends / R417A (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.refrigerant.r507a,R-507A (blend),kg,desnz.2025.3_201_2332_3,Refrigerant & other / Blends / R507A (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+fugitive.sf6,SF6 — electrical switchgear,kg,desnz.2025.3_200_2077_3,Refrigerant & other / Kyoto protocol products / Sulphur hexafluoride (SF6) (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+heat.purchased,Purchased heat / hot water,kWh,desnz.2025.10_401_4003_5,Heat and steam / Heat and steam / District heat and steam / kWh,UK,DESNZ UK Government GHG conversion factors
+mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,kWh (Gross CV),desnz.2025.1_101_1009_6,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
+mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,kWh (Net CV),desnz.2025.1_101_1009_7,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
+mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,litres,desnz.2025.1_101_1009_8,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
+mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,tonnes,desnz.2025.1_101_1009_15,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
+mobile.avgas,Aviation gasoline — owned aircraft,kWh (Gross CV),desnz.2025.1_101_1008_6,Fuels / Liquid fuels / Aviation spirit,UK,DESNZ UK Government GHG conversion factors
+mobile.avgas,Aviation gasoline — owned aircraft,kWh (Net CV),desnz.2025.1_101_1008_7,Fuels / Liquid fuels / Aviation spirit,UK,DESNZ UK Government GHG conversion factors
+mobile.avgas,Aviation gasoline — owned aircraft,litres,desnz.2025.1_101_1008_8,Fuels / Liquid fuels / Aviation spirit,UK,DESNZ UK Government GHG conversion factors
+mobile.avgas,Aviation gasoline — owned aircraft,tonnes,desnz.2025.1_101_1008_15,Fuels / Liquid fuels / Aviation spirit,UK,DESNZ UK Government GHG conversion factors
+mobile.biodiesel_blend,Biodiesel blend (B7/B20),GJ,desnz.2025.2_103_1032_2,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
+mobile.biodiesel_blend,Biodiesel blend (B7/B20),kg,desnz.2025.2_103_1032_3,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
+mobile.biodiesel_blend,Biodiesel blend (B7/B20),litres,desnz.2025.2_103_1032_8,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
+mobile.cng,CNG — owned/leased vehicles,kWh (Gross CV),desnz.2025.1_100_1001_6,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+mobile.cng,CNG — owned/leased vehicles,kWh (Net CV),desnz.2025.1_100_1001_7,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+mobile.cng,CNG — owned/leased vehicles,litres,desnz.2025.1_100_1001_8,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+mobile.cng,CNG — owned/leased vehicles,tonnes,desnz.2025.1_100_1001_15,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+mobile.diesel,Diesel — owned/leased vehicles,kWh (Gross CV),desnz.2025.1_101_1011_6,Fuels / Liquid fuels / Diesel (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.diesel,Diesel — owned/leased vehicles,kWh (Net CV),desnz.2025.1_101_1011_7,Fuels / Liquid fuels / Diesel (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.diesel,Diesel — owned/leased vehicles,litres,desnz.2025.1_101_1011_8,Fuels / Liquid fuels / Diesel (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.diesel,Diesel — owned/leased vehicles,tonnes,desnz.2025.1_101_1011_15,Fuels / Liquid fuels / Diesel (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.ethanol_blend,Ethanol blend (E10/E20),GJ,desnz.2025.2_103_1031_2,Bioenergy / Biofuel / Bioethanol,UK,DESNZ UK Government GHG conversion factors
+mobile.ethanol_blend,Ethanol blend (E10/E20),kg,desnz.2025.2_103_1031_3,Bioenergy / Biofuel / Bioethanol,UK,DESNZ UK Government GHG conversion factors
+mobile.ethanol_blend,Ethanol blend (E10/E20),litres,desnz.2025.2_103_1031_8,Bioenergy / Biofuel / Bioethanol,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_diesel,Forklift / material handling — diesel,kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_diesel,Forklift / material handling — diesel,kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_diesel,Forklift / material handling — diesel,litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_diesel,Forklift / material handling — diesel,tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_lpg,Forklift — LPG,kWh (Gross CV),desnz.2025.1_100_1003_6,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_lpg,Forklift — LPG,kWh (Net CV),desnz.2025.1_100_1003_7,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_lpg,Forklift — LPG,litres,desnz.2025.1_100_1003_8,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.forklift_lpg,Forklift — LPG,tonnes,desnz.2025.1_100_1003_15,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.lpg_auto,Auto LPG,kWh (Gross CV),desnz.2025.1_100_1003_6,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.lpg_auto,Auto LPG,kWh (Net CV),desnz.2025.1_100_1003_7,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.lpg_auto,Auto LPG,litres,desnz.2025.1_100_1003_8,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.lpg_auto,Auto LPG,tonnes,desnz.2025.1_100_1003_15,Fuels / Gaseous fuels / LPG,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_gas_oil,Marine gas oil — owned vessel,kWh (Gross CV),desnz.2025.1_101_1023_6,Fuels / Liquid fuels / Marine gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_gas_oil,Marine gas oil — owned vessel,kWh (Net CV),desnz.2025.1_101_1023_7,Fuels / Liquid fuels / Marine gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_gas_oil,Marine gas oil — owned vessel,litres,desnz.2025.1_101_1023_8,Fuels / Liquid fuels / Marine gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_gas_oil,Marine gas oil — owned vessel,tonnes,desnz.2025.1_101_1023_15,Fuels / Liquid fuels / Marine gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_hfo,Heavy fuel oil / bunker — owned vessel,kWh (Gross CV),desnz.2025.1_101_1024_6,Fuels / Liquid fuels / Marine fuel oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_hfo,Heavy fuel oil / bunker — owned vessel,kWh (Net CV),desnz.2025.1_101_1024_7,Fuels / Liquid fuels / Marine fuel oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_hfo,Heavy fuel oil / bunker — owned vessel,litres,desnz.2025.1_101_1024_8,Fuels / Liquid fuels / Marine fuel oil,UK,DESNZ UK Government GHG conversion factors
+mobile.marine_hfo,Heavy fuel oil / bunker — owned vessel,tonnes,desnz.2025.1_101_1024_15,Fuels / Liquid fuels / Marine fuel oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.crane,"Crane — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.crane,"Crane — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.crane,"Crane — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.crane,"Crane — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.dozer,"Bulldozer — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.dozer,"Bulldozer — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.dozer,"Bulldozer — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.dozer,"Bulldozer — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.excavator,"Excavator — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.excavator,"Excavator — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.excavator,"Excavator — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.excavator,"Excavator — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.genset_mobile,"Mobile generator — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.genset_mobile,"Mobile generator — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.genset_mobile,"Mobile generator — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.genset_mobile,"Mobile generator — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.haul_truck,"Mining haul truck — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.haul_truck,"Mining haul truck — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.haul_truck,"Mining haul truck — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.haul_truck,"Mining haul truck — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.loader,"Wheel loader — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.loader,"Wheel loader — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.loader,"Wheel loader — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.loader,"Wheel loader — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.tractor,"Tractor / farm equipment — owned, diesel",kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.tractor,"Tractor / farm equipment — owned, diesel",kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.tractor,"Tractor / farm equipment — owned, diesel",litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.offroad.tractor,"Tractor / farm equipment — owned, diesel",tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.petrol,Petrol / gasoline — owned/leased vehicles,kWh (Gross CV),desnz.2025.1_101_1017_6,Fuels / Liquid fuels / Petrol (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.petrol,Petrol / gasoline — owned/leased vehicles,kWh (Net CV),desnz.2025.1_101_1017_7,Fuels / Liquid fuels / Petrol (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.petrol,Petrol / gasoline — owned/leased vehicles,litres,desnz.2025.1_101_1017_8,Fuels / Liquid fuels / Petrol (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.petrol,Petrol / gasoline — owned/leased vehicles,tonnes,desnz.2025.1_101_1017_15,Fuels / Liquid fuels / Petrol (average biofuel blend),UK,DESNZ UK Government GHG conversion factors
+mobile.rail_diesel,Diesel — owned locomotive / siding shunter,kWh (Gross CV),desnz.2025.1_101_1014_6,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.rail_diesel,Diesel — owned locomotive / siding shunter,kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.rail_diesel,Diesel — owned locomotive / siding shunter,litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+mobile.rail_diesel,Diesel — owned locomotive / siding shunter,tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors

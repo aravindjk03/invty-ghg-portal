@@ -3,6 +3,8 @@ import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessa
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
+import { mappingFor } from '../services/catalogueMap';
+import { useCatalogueMap } from '../services/useCatalogueMap';
 import { useEngineInventory } from '../report/useEngineInventory';
 import { useMethodResults } from '../report/useMethodResults';
 import { MethodEntry, MethodKey, MethodResult, emptyInput } from '../types/methods';
@@ -315,6 +317,11 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  // Which published factor calculates each source a user may pick. Until it
+  // arrives, rows keep whatever key they were saved with, and nothing is
+  // invented for the ones that have none.
+  const catalogueMap = useCatalogueMap();
+
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const addToast = useCallback((type: ToastMessage['type'], message: string, duration = 4000) => {
@@ -371,9 +378,39 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  /**
+   * Attach the published factor a row's source maps to.
+   *
+   * A row stores which SOURCE it is (its catalogue key, on the emission
+   * factor) and which UNIT it was entered in. Which published factor that
+   * resolves to is not the user's business to look up, and until this existed
+   * they had to: every row said "no published factor chosen" and the whole
+   * inventory came to 0.00.
+   *
+   * A row the user has already pointed at a specific factor keeps it. A source
+   * with no published factor gets nothing, and stays uncalculated.
+   */
+  const resolved = useCallback((entries: ActivityEntry[]): ActivityEntry[] => {
+    if (catalogueMap.size === 0) return entries;
+    return entries.map((entry) => {
+      if (entry.engineActivityKey) return entry;
+      const mapping = mappingFor(catalogueMap, entry.emissionFactor?.id, entry.unit);
+      if (!mapping) return entry;
+      return {
+        ...entry,
+        engineActivityKey: mapping.activity_key,
+        engineRegion: mapping.region,
+      };
+    });
+  }, [catalogueMap]);
+
+  const scope1Resolved = useMemo(() => resolved(scope1Entries), [resolved, scope1Entries]);
+  const scope2Resolved = useMemo(() => resolved(scope2Entries), [resolved, scope2Entries]);
+  const scope3Resolved = useMemo(() => resolved(scope3Entries), [resolved, scope3Entries]);
+
   const allEntries = useMemo(
-    () => [...scope1Entries, ...scope2Entries, ...scope3Entries],
-    [scope1Entries, scope2Entries, scope3Entries],
+    () => [...scope1Resolved, ...scope2Resolved, ...scope3Resolved],
+    [scope1Resolved, scope2Resolved, scope3Resolved],
   );
 
   const reportingYear = useMemo(
@@ -433,9 +470,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [engineByRecord],
   );
 
-  const scope1Calculated = useMemo(() => withEngineValues(scope1Entries), [withEngineValues, scope1Entries]);
-  const scope2Calculated = useMemo(() => withEngineValues(scope2Entries), [withEngineValues, scope2Entries]);
-  const scope3Calculated = useMemo(() => withEngineValues(scope3Entries), [withEngineValues, scope3Entries]);
+  const scope1Calculated = useMemo(() => withEngineValues(scope1Resolved), [withEngineValues, scope1Resolved]);
+  const scope2Calculated = useMemo(() => withEngineValues(scope2Resolved), [withEngineValues, scope2Resolved]);
+  const scope3Calculated = useMemo(() => withEngineValues(scope3Resolved), [withEngineValues, scope3Resolved]);
 
   // The totals ARE the engine's totals, in tonnes. Nothing is re-added here:
   // summing the rows again in the browser is how two figures for one inventory
@@ -444,7 +481,7 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const totals = engine.result?.totals;
     const tonnes = (kg?: string) => (kg ? Number(kg) / 1000 : 0);
     const scope3Categories = new Set(
-      scope3Entries.filter((entry) => entry.engineActivityKey).map((entry) => entry.category));
+      scope3Resolved.filter((entry) => entry.engineActivityKey).map((entry) => entry.category));
 
     // The methods are Scope 1 sources, so their CO2e joins Scope 1 and the
     // grand total. They are calculated by the same engine under the same GWP
@@ -470,7 +507,7 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
     };
   }, [engine.result, methods.totalCo2eKg, scope1Calculated, scope2Calculated,
-      scope3Calculated, scope3Entries]);
+      scope3Calculated, scope3Resolved]);
 
   const engineStatus = useMemo(() => {
     const unmappedCount = engine.unmapped.length;

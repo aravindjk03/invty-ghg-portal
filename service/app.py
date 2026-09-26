@@ -31,8 +31,9 @@ from .estimator import (AIEstimator, ClaudeEstimator, EstimatorError, EstimatorN
                         EstimatorNotConfigured, prompt_fingerprint)
 from .fallback import FallbackEstimator, ProviderStep
 from .inventory import GWP_SETS, load_gwp, load_registry
-from .inventory_api import (ActivityOut, InventoryRequest, InventoryResponse,
-                            calculate_inventory, list_activities)
+from .inventory_api import (ActivityOut, CatalogueMappingOut, InventoryRequest,
+                            InventoryResponse, calculate_inventory, catalogue_mappings,
+                            list_activities)
 from .gemini import GeminiEstimator
 from .methods_api import MethodRequest, MethodResponse, calculate_method, list_methods
 from .models import PROFILES, ModelProfile, estimate_cost_usd
@@ -256,6 +257,18 @@ def inventory_activities(scope: Optional[str] = None, region: Optional[str] = No
                          search: Optional[str] = None, limit: int = 200) -> list[ActivityOut]:
     """The activities a user may record, from the ingested published factor sets."""
     return list_activities(scope, region, search, max(1, min(limit, 2000)))
+
+
+@app.get("/v1/inventory/catalogue-map", response_model=list[CatalogueMappingOut])
+def inventory_catalogue_map() -> list[CatalogueMappingOut]:
+    """Which published factor calculates each source a user may pick, per unit.
+
+    Without this join a user could choose "Diesel - stationary", see a factor on
+    the row, and still get nothing: the row named no published factor, so the
+    engine refused it. The browser now attaches the factor as the source is
+    chosen.
+    """
+    return catalogue_mappings()
 
 
 @app.get("/v1/inventory/gwp-sets")

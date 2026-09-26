@@ -26,6 +26,7 @@ from ghg_core.quantities import D
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FACTOR_DIR = REPO_ROOT / "data" / "factors"
 GWP_DIR = REPO_ROOT / "data" / "gwp"
+CATALOGUE_MAP = REPO_ROOT / "data" / "catalogue_engine_map.csv"
 
 # The gas label used by the ingested tables -> the engine's gas name.
 IMPORT_GASES = {"CO2": "CO2", "CH4": "CH4", "N2O": "N2O"}
@@ -255,3 +256,47 @@ def run_inventory(
         gases=("CO2", "CH4", "N2O", "CO2e"),
         scope2_headline_view=scope2_view,
     )
+
+
+@dataclass(frozen=True)
+class CatalogueMapping:
+    """Which published factor calculates one catalogue source, in one unit."""
+    catalogue_key: str
+    catalogue_name: str
+    unit: str
+    activity_key: str
+    engine_name: str
+    region: str
+    source: str
+
+
+@functools.lru_cache(maxsize=1)
+def load_catalogue_map() -> tuple[CatalogueMapping, ...]:
+    """The join between what a user may pick and what the registry can resolve.
+
+    Written by `scripts/map_catalogue_to_engine.py`, which transcribes it rather
+    than guessing: a source with no row here has no published factor in any
+    ingested set, and stays uncalculated by design.
+
+    A row whose activity key is not in the registry is dropped, so the browser
+    is never offered a mapping the engine would then refuse.
+    """
+    if not CATALOGUE_MAP.exists():
+        return ()
+    registry, _ = load_registry()
+    known = registry.activity_keys()
+    mappings = []
+    with CATALOGUE_MAP.open(encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            if row["engine_activity_key"] not in known:
+                continue
+            mappings.append(CatalogueMapping(
+                catalogue_key=row["catalogue_key"],
+                catalogue_name=row["catalogue_name"],
+                unit=row["unit"],
+                activity_key=row["engine_activity_key"],
+                engine_name=row["engine_name"],
+                region=row["engine_region"],
+                source=row["engine_source"],
+            ))
+    return tuple(mappings)

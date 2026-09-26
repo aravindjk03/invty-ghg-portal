@@ -17,6 +17,7 @@ import { CATALOGUE_SOURCES } from '../../data/catalogueData';
 import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../../data/factorCatalogue';
 import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
+import { useCatalogueMap } from '../../services/useCatalogueMap';
 
 export interface ActivityRowProps {
   entry: ActivityEntry;
@@ -72,8 +73,20 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     [entry.scope, entry.category],
   );
   const units = useMemo(() => unitsFor(entry.emissionFactor.id), [entry.emissionFactor.id]);
+  const catalogueMap = useCatalogueMap();
   const factorUnverified = !isVerified(entry.emissionFactor.id)
     && entry.customFactorOverride === undefined;
+  // The engine calculates a row only when it names a published factor.
+  const engineFactorAttached = Boolean(entry.engineActivityKey);
+  // What that factor is called. A row should never show a raw activity key.
+  const engineFactorName = useMemo(() => {
+    if (!entry.engineActivityKey) return undefined;
+    for (const rows of catalogueMap.values()) {
+      const match = rows.find((row) => row.activity_key === entry.engineActivityKey);
+      if (match) return `${match.engine_name} (per ${match.unit})`;
+    }
+    return undefined;
+  }, [catalogueMap, entry.engineActivityKey]);
 
   const handleFuelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const source = CATALOGUE_SOURCES.find((item) => item.activity_key === e.target.value);
@@ -84,8 +97,13 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         emissionFactor: selectedFactor,
         unit: selectedFactor.unit,
         customFactorOverride: undefined,
-        warning: source.verified ? undefined
-          : 'No published factor has been ingested for this source yet. Enter the factor value and its source before this row is reported.',
+        // The row is now about a different source, so whatever published factor
+        // it pointed at no longer applies. Clearing it lets the catalogue map
+        // attach the right one; keeping it would calculate diesel against the
+        // factor for coal.
+        engineActivityKey: undefined,
+        engineRegion: undefined,
+        warning: undefined,
       });
       setOverrideFactorValue(source.verified ? String(selectedFactor.factorValue) : '');
     }
@@ -145,6 +163,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
           scope={entry.scope.replace('scope-', '') as '1' | '2' | '3'}
           hint={entry.fuelOrSource}
           selectedKey={entry.engineActivityKey}
+          selectedName={engineFactorName}
           onSelect={(activity) => onUpdate({
             engineActivityKey: activity.activity_key,
             engineRegion: activity.region,
@@ -340,20 +359,33 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
       {/* Lower Provenance & Quality Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border/40 text-[11px] text-brand-muted">
         <div className="flex items-center gap-2">
-          {/* Data Quality Tier Pip */}
-          <span
-            className={clsx('w-2 h-2 rounded-full flex-shrink-0', tierColor)}
-            title={`Quality Tier: ${entry.emissionFactor.qualityTier}`}
-          />
-          <span className="font-medium text-brand-body">
-            {entry.emissionFactor.qualityTier} Quality
-          </span>
-          <span>·</span>
-          {/* Factor value and source citation */}
-          <span className="font-mono">
-            {entry.emissionFactor.factorValue} kgCO₂e/{entry.unit}
-          </span>
-          <span>({entry.emissionFactor.source})</span>
+          {/*
+            Only a row the engine will actually calculate may show a factor and
+            a quality tier. Printing "2.6865 kgCO2e/L · Primary Quality" beside
+            "this row is not calculated" told the reader two different things
+            about the same row, and the number shown was not the one that would
+            have been used.
+          */}
+          {engineFactorAttached ? (
+            <>
+              <span
+                className={clsx('w-2 h-2 rounded-full flex-shrink-0', tierColor)}
+                title={`Quality Tier: ${entry.emissionFactor.qualityTier}`}
+              />
+              <span className="font-medium text-brand-body">
+                {entry.customFactorOverride !== undefined ? 'Estimated' : 'Published'} factor
+              </span>
+              <span>·</span>
+              <span className="font-mono">calculated by the engine, gas by gas</span>
+            </>
+          ) : (
+            <>
+              <span className="w-2 h-2 rounded-full flex-shrink-0 bg-status-warning" />
+              <span className="font-medium text-status-warning">
+                No published factor — not calculated
+              </span>
+            </>
+          )}
 
           {entry.evidenceFile && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">

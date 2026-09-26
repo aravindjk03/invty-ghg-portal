@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ghg_core.engine import ActivityRecord, CalculationRun
 
-from .inventory import GWP_SETS, activities_for, run_inventory
+from .inventory import GWP_SETS, activities_for, load_catalogue_map, run_inventory
 
 
 class _Strict(BaseModel):
@@ -87,6 +87,16 @@ class InventoryResponse(_Strict):
     lines: list[LineOut]
     totals: TotalsOut
     excluded: list[dict]
+
+
+class CatalogueMappingOut(_Strict):
+    catalogue_key: str
+    catalogue_name: str
+    unit: str
+    activity_key: str
+    engine_name: str
+    region: str
+    source: str
 
 
 class ActivityOut(_Strict):
@@ -192,5 +202,28 @@ def list_activities(scope: Optional[str], region: Optional[str], search: Optiona
     ]
 
 
+def catalogue_mappings() -> list[CatalogueMappingOut]:
+    """Which published factor calculates each catalogue source, per unit.
+
+    The browser attaches these as a user picks a source, so a row that CAN be
+    calculated is, without anyone having to hunt through the factor library. A
+    source absent from this list has no published factor and stays honestly
+    uncalculated.
+    """
+    return [
+        CatalogueMappingOut(
+            catalogue_key=mapping.catalogue_key,
+            catalogue_name=mapping.catalogue_name,
+            unit=mapping.unit,
+            activity_key=mapping.activity_key,
+            engine_name=mapping.engine_name,
+            region=mapping.region,
+            source=mapping.source,
+        )
+        for mapping in load_catalogue_map()
+    ]
+
+
 __all__ = ["GWP_SETS", "InventoryRequest", "InventoryResponse", "ActivityOut",
-           "calculate_inventory", "list_activities"]
+           "CatalogueMappingOut", "calculate_inventory", "catalogue_mappings",
+           "list_activities"]
