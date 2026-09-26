@@ -21,8 +21,10 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Sprout
 } from 'lucide-react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 
 export interface Scope1PageProps {
   onNavigate: (page: string) => void;
@@ -184,11 +186,13 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
 
     return (
       <div className="space-y-3">
+      <EngineStatusBar />
         {entries.length > 0 ? (
           <>
             {renderColumnHeaders()}
             {entries.map((row) => (
               <ActivityRow
+                  onNavigate={onNavigate}
                 key={row.id}
                 entry={row}
                 onUpdate={(up) => updateRow('scope-1', row.id, up)}
@@ -379,6 +383,38 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
               )}
             </div>
           </Accordion>
+
+          {/* Scope 1 does not end at the accordions above. Livestock, land,
+              effluent and buried waste are Scope 1 too; none of them can be a
+              factor per unit, so they are calculated by method. Saying so here
+              is what stops them being left out of a report entirely. */}
+          <Card className="p-5 border border-border">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sprout size={18} className="text-scope-1" />
+                  <h3 className="text-[15px] font-bold text-brand-heading">
+                    Livestock, land, effluent and buried waste
+                  </h3>
+                </div>
+                <p className="text-[13px] leading-normal text-brand-muted">
+                  These are Scope 1 as well, but none of them is a factor per unit of activity:
+                  a landfill&apos;s methane depends on what was buried in earlier years, and a
+                  fertiliser&apos;s nitrous oxide on what happened to the nitrogen after it
+                  reached the soil. They are calculated as IPCC methods and their total is
+                  already included in the Scope 1 figure shown here.
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onNavigate('methods')}
+                rightIcon={<ArrowRight size={14} />}
+              >
+                Open IPCC methods
+              </Button>
+            </div>
+          </Card>
         </div>
 
         {/* Right Column: Scoped to Scope 1 (Cols 9 to 12) */}

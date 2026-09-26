@@ -12,6 +12,8 @@ export interface CatalogueSource {
   factor_source: string;
   notes: string;
   factorValue: number;
+  /** False when no published value has been ingested yet; factorValue is then 0. */
+  verified: boolean;
   qualityTier: 'Primary' | 'Secondary' | 'Proxy' | 'Estimated';
   publicationYear: number;
 }
@@ -30,6 +32,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2670,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -46,6 +49,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2415,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -62,6 +66,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2100,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -78,6 +83,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1850,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -94,6 +100,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "If used as a reductant not a fuel, route to process emissions 1.3",
     "factorValue": 3100,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -110,6 +117,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Ask for GCV band; Indian coal has high ash and low GCV — do not use imported-coal factors",
     "factorValue": 1950,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -126,6 +134,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2450,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -142,6 +151,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 3250,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -158,6 +168,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 3150,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -174,6 +185,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "CO2 is biogenic — memo item, outside scopes",
     "factorValue": 110,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -190,6 +202,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 15,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -206,6 +219,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 14,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -222,6 +236,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 16,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -238,6 +253,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 18,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -254,6 +270,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 22,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -270,6 +287,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 25,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -286,6 +304,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 20,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -302,6 +321,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 21,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -318,6 +338,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 19,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -334,6 +355,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 17,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -350,6 +372,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "BIOGENIC CO2 calculated but reported OUTSIDE scopes as memo; only CH4 and N2O enter Scope 1",
     "factorValue": 20,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -366,6 +389,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Split fossil vs biogenic carbon fraction",
     "factorValue": 850,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -382,6 +406,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Split fossil vs biogenic fraction",
     "factorValue": 1100,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -398,6 +423,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2800,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -414,6 +440,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Most common Indian DG-set fuel",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -430,6 +457,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2.75,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -446,6 +474,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 3180,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -462,6 +491,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.54,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -478,6 +508,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 3120,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -494,6 +525,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Sold by mass in India, by volume in UK — unit trap",
     "factorValue": 2.9431,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -510,6 +542,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.98,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -526,6 +559,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 3.01,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -542,6 +576,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2750,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -558,6 +593,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Biogenic CO2 → memo item",
     "factorValue": 0.15,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -574,6 +610,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Biogenic CO2 → memo item",
     "factorValue": 0.12,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -590,6 +627,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2.95,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -606,6 +644,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2.92,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -622,6 +661,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Ask net or gross CV — a ~10% error if mismatched",
     "factorValue": 2.0282,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -638,6 +678,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.0282,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -654,6 +695,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.75,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -670,6 +712,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Biogenic CO2 → memo item",
     "factorValue": 0.25,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -686,6 +729,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Biogenic CO2 → memo item",
     "factorValue": 0.3,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -702,6 +746,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 0.85,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -718,6 +763,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Steel plants — recovered process gas burned for energy",
     "factorValue": 0.72,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -734,6 +780,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 0.65,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -750,6 +797,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 0.9,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -766,6 +814,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Hydrogen combustion produces water, NOT CO2. CO2 factor is 0. SMR CO2 belongs in process.hydrogen_smr (1.3) if made on site, or Cat 3.3 if bought.",
     "factorValue": 0,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -782,6 +831,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Zero at combustion; record for energy balance",
     "factorValue": 0,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -797,9 +847,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 0.05,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "mobile.diesel",
@@ -814,6 +865,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Fuel-based method preferred over distance-based",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -830,6 +882,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.31,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -846,6 +899,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.75,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -862,6 +916,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 1.55,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -878,6 +933,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Split fossil and biogenic fractions by blend ratio",
     "factorValue": 2.45,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -894,6 +950,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "India is moving to E20 — blend ratio must be a user input",
     "factorValue": 2.15,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -910,6 +967,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Fallback only; flag as lower data quality than fuel-based",
     "factorValue": 0.17,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -926,6 +984,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Fallback only",
     "factorValue": 0.85,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -942,6 +1001,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.035,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -958,6 +1018,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -974,6 +1035,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.9431,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -990,6 +1052,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "SCOPE 1 ONLY if the aircraft is owned or leased. A commercial flight ticket is Scope 3 Category 6.",
     "factorValue": 2.54,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -1006,6 +1069,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.35,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -1022,6 +1086,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 3200,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -1038,6 +1103,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 3150,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -1054,6 +1120,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -1070,6 +1137,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Tier 2: clinker production x CaO content. Do not use cement output.",
     "factorValue": 525,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1086,6 +1154,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 750,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1102,6 +1171,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 860,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1118,6 +1188,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Common in steel and glass",
     "factorValue": 440,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1134,6 +1205,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 415,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1150,6 +1222,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "MUTUALLY EXCLUSIVE with fuel.coke.metallurgical, fuel.blast_furnace_gas, fuel.coke_oven_gas and fuel.converter_gas. IPCC Vol.3 Ch.4 accounts for integrated steel by ONE carbon balance. Engine must enforce a method flag: carbon-balance OR fuel-based, never both.",
     "factorValue": 1800,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1166,6 +1239,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Very common in India",
     "factorValue": 1150,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1182,6 +1256,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 3667,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1198,6 +1273,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1600,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1213,9 +1289,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "N2O — dominant gas, not CO2",
-    "factorValue": 300,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "process.adipic_acid",
@@ -1229,9 +1306,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "N2O — dominant gas",
-    "factorValue": 450,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "process.urea_production",
@@ -1246,6 +1324,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Net of CO2 consumed",
     "factorValue": 730,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1262,6 +1341,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 670,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1278,6 +1358,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 9000,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1294,6 +1375,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1500,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1310,6 +1392,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "CF4 and C2F6 — very high GWP",
     "factorValue": 1200,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1326,6 +1409,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 210,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1342,6 +1426,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 180,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1358,6 +1443,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1100,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1374,6 +1460,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1400,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1390,6 +1477,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1200,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1406,6 +1494,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2400,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1422,6 +1511,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 480,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1432,12 +1522,13 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "1",
     "ghg_category": "1.3",
     "category_name": "Process emissions",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "HFC",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "GWP ~12,700 — tiny masses are material",
     "factorValue": 12700,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1454,6 +1545,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1400,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1470,6 +1562,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 150,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1486,6 +1579,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 520,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1502,6 +1596,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 430,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1518,6 +1613,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 2300,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1534,6 +1630,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "NEGATIVE entry. Without this, process totals are overstated for any plant with CCS/CCU.",
     "factorValue": -1000,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1550,6 +1647,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Escape hatch so a user with their own calculation is never blocked",
     "factorValue": 1000,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1566,6 +1664,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Simplified material balance: new-charge losses + servicing top-up + disposal losses",
     "factorValue": 1430,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1582,6 +1681,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Blend — GWP must be mass-weighted from components; AR6 has no blend value",
     "factorValue": 2088,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1598,6 +1698,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Blend — derive GWP from composition",
     "factorValue": 3922,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1614,6 +1715,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Blend — derive GWP from composition",
     "factorValue": 1774,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1630,6 +1732,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Simplified material balance: new-charge losses + servicing top-up + disposal losses",
     "factorValue": 675,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1646,6 +1749,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "AR6 GWP100 is ~0.5 — footnote it or it reads as a bug",
     "factorValue": 0.5,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1662,6 +1766,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Simplified material balance: new-charge losses + servicing top-up + disposal losses",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1678,6 +1783,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Blend",
     "factorValue": 3985,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1694,6 +1800,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Blend",
     "factorValue": 2346,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1710,6 +1817,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Very high GWP",
     "factorValue": 14800,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1726,6 +1834,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Simplified material balance: new-charge losses + servicing top-up + disposal losses",
     "factorValue": 3500,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1742,6 +1851,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "Simplified material balance: new-charge losses + servicing top-up + disposal losses",
     "factorValue": 4470,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1758,6 +1868,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "GWP ~3, near zero",
     "factorValue": 3,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1774,6 +1885,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "GWP 0",
     "factorValue": 0,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1790,6 +1902,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
     "notes": "GWP 1",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1806,6 +1919,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Burned fuel = combustion (IPCC 1A), NOT fugitive. Only vented unburnt acetylene is fugitive.",
     "factorValue": 3.38,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1822,6 +1936,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "GWP ~25,200 — a few kg is material",
     "factorValue": 25200,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1838,6 +1953,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 17200,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1854,6 +1970,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 7390,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1870,6 +1987,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1886,6 +2004,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 3220,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1902,6 +2021,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Manufacturer data",
     "notes": "GWP ~1",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1917,9 +2037,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 28,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "fugitive.ch4_ng_distribution",
@@ -1933,9 +2054,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 28,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "fugitive.ch4_coal_mine",
@@ -1944,12 +2066,13 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "t",
-    "allowed_units": "t",
+    "default_unit": "kg",
+    "allowed_units": "kg|t",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 28,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1966,6 +2089,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1982,6 +2106,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 273,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -1998,6 +2123,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2013,9 +2139,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "IPCC Vol.5 Ch.6 — nitrogen in effluent. Pairs with fugitive.ch4_wastewater.",
-    "factorValue": 273,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "fugitive.hfc_foam",
@@ -2030,6 +2157,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 1000,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2046,6 +2174,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 1200,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2062,6 +2191,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "",
     "factorValue": 25200,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2078,6 +2208,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "IPCC 1B2",
     "factorValue": 2.1,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2094,6 +2225,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Biogenic CO2 to memo",
     "factorValue": 0.15,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2104,12 +2236,13 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
     "factorValue": 28,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2125,9 +2258,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4,CO2",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 22,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "mobile.offroad.excavator",
@@ -2142,6 +2276,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2158,6 +2293,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2174,6 +2310,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2190,6 +2327,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2206,6 +2344,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2222,6 +2361,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2238,6 +2378,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 2.6865,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2253,9 +2394,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "agri.manure_management",
@@ -2269,9 +2411,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "agri.fertiliser_n2o",
@@ -2285,9 +2428,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "Direct and indirect N2O",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "agri.urea_application",
@@ -2301,9 +2445,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "agri.lime_application",
@@ -2317,9 +2462,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "agri.rice_cultivation",
@@ -2333,9 +2479,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "land.use_change",
@@ -2349,9 +2496,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2",
     "factor_source": "GHG Protocol Land Sector & Removals Guidance",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "land.removals_biochar",
@@ -2365,9 +2513,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2",
     "factor_source": "GHG Protocol Land Sector & Removals Guidance",
     "notes": "Removals are reported SEPARATELY from gross emissions, never netted off",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "elec.grid.location",
@@ -2382,6 +2531,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "CEA (India) / eGRID (US) / DESNZ (UK) / IEA",
     "notes": "Use CEA weighted average emission rate, NOT the OM/BM/combined-margin CDM figures",
     "factorValue": 0.716,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2398,6 +2548,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "AIB (EU) / Green-e (US)",
     "notes": "No residual mix published for India — substitute grid average and footnote it",
     "factorValue": 0.82,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2414,6 +2565,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Contract / supplier",
     "notes": "Market-based only; still counts at grid factor for location-based",
     "factorValue": 0,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2430,6 +2582,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier disclosure",
     "notes": "",
     "factorValue": 0,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2446,6 +2599,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Certificate registry",
     "notes": "Must be retired, not merely purchased; record certificate IDs",
     "factorValue": 0,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2462,6 +2616,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "CEA / contract",
     "notes": "",
     "factorValue": 0.716,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2478,6 +2633,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier",
     "notes": "",
     "factorValue": 0.68,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2494,6 +2650,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "CEA / grid",
     "notes": "SCOPE 2, not Scope 1. An owned EV has no tailpipe combustion; its electricity is purchased energy.",
     "factorValue": 0.716,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2510,6 +2667,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier disclosure",
     "notes": "Market-based hierarchy tier 3: contracts > supplier-specific rate > residual mix > grid average",
     "factorValue": 0.65,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2526,6 +2684,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "CEA / landlord",
     "notes": "Scope 2 if you control the space; otherwise Cat 8/13. Boundary declaration decides.",
     "factorValue": 0.716,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2541,9 +2700,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "none",
     "factor_source": "n/a",
     "notes": "NOT Scope 2. Scope 2 Guidance 5.4: energy produced and consumed by the same entity generates no Scope 2. Record for energy balance only.",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "elec.selfgen_wind_onsite",
@@ -2557,9 +2717,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "none",
     "factor_source": "n/a",
     "notes": "NOT Scope 2. Record for energy balance only.",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "elec.exported",
@@ -2573,9 +2734,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "none",
     "factor_source": "n/a",
     "notes": "Scope 2 Guidance 5.4 scenario 4: exclude generation sold back to the grid. Never subtracted from any total.",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "steam.purchased",
@@ -2590,6 +2752,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier factor / DESNZ default",
     "notes": "",
     "factorValue": 180,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2606,6 +2769,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier factor / DESNZ default",
     "notes": "",
     "factorValue": 55,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2622,6 +2786,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier factor",
     "notes": "",
     "factorValue": 45,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2638,6 +2803,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "Supplier factor",
     "notes": "Rare; usually metered as electricity instead",
     "factorValue": 0.08,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2654,6 +2820,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 1800,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2670,6 +2837,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 750,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2686,6 +2854,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Primary is ~10x secondary — must be distinguished",
     "factorValue": 8500,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2702,6 +2871,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 4200,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2718,6 +2888,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 2100,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2734,6 +2905,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 2000,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2750,6 +2922,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 2400,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2766,6 +2939,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 2500,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2782,6 +2956,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 950,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2798,6 +2973,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 850,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2814,6 +2990,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 320,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2830,6 +3007,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 1600,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2846,6 +3024,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 12000,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2862,6 +3041,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 1500,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2878,6 +3058,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 1400,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2894,6 +3075,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Treatment of the same water is Category 5",
     "factorValue": 0.35,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2910,6 +3092,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 0.00042,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2926,6 +3109,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available",
     "factorValue": 0.00035,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -2942,6 +3126,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "EXIOBASE / USEEIO",
     "notes": "Must deflate to the factor's base year and convert currency at a dated rate — skipping this is wrong by tens of percent",
     "factorValue": 0.00045,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -2957,9 +3142,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "EXIOBASE / EEIO",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat2.buildings",
@@ -2973,9 +3159,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "EEIO / ecoinvent",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat2.vehicles",
@@ -2989,9 +3176,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "EEIO",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat2.it_hardware",
@@ -3005,9 +3193,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "EEIO / manufacturer LCA",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat2.spend_based",
@@ -3021,9 +3210,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "EXIOBASE / USEEIO",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat3.wtt_fuels",
@@ -3038,6 +3228,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "AUTO-DERIVED from Scope 1 entries. Zero extra user input — compute it and show it appearing.",
     "factorValue": 0.2,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3054,6 +3245,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "AUTO-DERIVED from Scope 2",
     "factorValue": 0.12,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3070,6 +3262,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "CEA / DESNZ",
     "notes": "AUTO-DERIVED. India T&D losses are high (~17-20%) — materially larger than EU/US",
     "factorValue": 0.18,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3086,6 +3279,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "AUTO-DERIVED",
     "factorValue": 0.03,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3101,9 +3295,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "CEA / grid",
     "notes": "The Scope 3 Standard's fourth Cat 3 sub-activity. Applies to utilities, traders and resellers only.",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.road_hgv",
@@ -3118,6 +3313,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Third-party or hired trucks. Own trucks are Scope 1.2.",
     "factorValue": 0.115,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3133,9 +3329,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.rail",
@@ -3150,6 +3347,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.025,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3166,6 +3364,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.015,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3181,9 +3380,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.air_freight",
@@ -3198,6 +3398,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Roughly 50-100x sea per t.km — usually a hotspot",
     "factorValue": 1.25,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3213,9 +3414,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.pipeline",
@@ -3229,9 +3431,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.cold_chain",
@@ -3245,9 +3448,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Add refrigerant leakage separately",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.warehousing_3pl",
@@ -3261,9 +3465,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat4.spend_based",
@@ -3277,9 +3482,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.landfill_mixed",
@@ -3293,9 +3499,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.landfill_organic",
@@ -3309,9 +3516,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Highest CH4 of any waste route",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.incineration",
@@ -3325,9 +3533,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.incineration_energy",
@@ -3341,9 +3550,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.composting",
@@ -3357,9 +3567,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.anaerobic_digestion",
@@ -3373,9 +3584,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.recycling_metal",
@@ -3389,9 +3601,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.recycling_plastic",
@@ -3405,9 +3618,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.recycling_paper",
@@ -3421,9 +3635,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.recycling_glass",
@@ -3437,9 +3652,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.hazardous",
@@ -3453,9 +3669,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.ewaste",
@@ -3469,9 +3686,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.construction_debris",
@@ -3485,9 +3703,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.sewage_sludge",
@@ -3501,9 +3720,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat5.wastewater_treated",
@@ -3517,9 +3737,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "On-site anaerobic treatment is Scope 1.4 fugitive instead",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.air_domestic_economy",
@@ -3534,6 +3755,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "A commercial ticket. Company-owned aircraft is Scope 1.2.",
     "factorValue": 0.145,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3550,6 +3772,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.125,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3566,6 +3789,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.102,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3581,9 +3805,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.air_long_haul_business",
@@ -3598,6 +3823,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Roughly 2-3x economy per km — cabin class matters",
     "factorValue": 0.295,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3613,9 +3839,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.rail",
@@ -3630,6 +3857,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.035,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3646,6 +3874,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "",
     "factorValue": 0.19,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3661,9 +3890,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.personal_car_reimbursed",
@@ -3677,9 +3907,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Scope 3, not Scope 1 — the company does not own the vehicle",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.bus_coach",
@@ -3693,9 +3924,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.ferry",
@@ -3709,9 +3941,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.hotel_nights",
@@ -3726,6 +3959,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Factor varies widely by country",
     "factorValue": 42,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3741,9 +3975,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat6.air_rf_uplift",
@@ -3757,9 +3992,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "A user-selectable multiplier (~1.9x). Must be disclosed in the report when applied.",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.car_petrol",
@@ -3774,6 +4010,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
     "factorValue": 0.17,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3789,9 +4026,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.car_ev",
@@ -3805,9 +4043,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.two_wheeler",
@@ -3822,6 +4061,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
     "factorValue": 0.035,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3837,9 +4077,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.metro_rail",
@@ -3854,6 +4095,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
     "factorValue": 0.028,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -3869,9 +4111,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.company_bus",
@@ -3885,9 +4128,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.walk_cycle",
@@ -3901,9 +4145,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.carpool",
@@ -3917,9 +4162,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat7.wfh",
@@ -3933,9 +4179,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Homeworking energy factor x days",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat8.leased_upstream",
@@ -3949,9 +4196,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "reuse S1/S2 engines",
     "notes": "Only if NOT already inside your consolidation boundary — the most common double-count in the whole inventory",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat9.downstream_transport",
@@ -3965,9 +4213,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat9.warehousing",
@@ -3981,9 +4230,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Cat 9 explicitly includes retail and storage",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat9.retail",
@@ -3997,9 +4247,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat10.processing_sold",
@@ -4013,9 +4264,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "site-specific",
     "notes": "Applies to intermediate goods only — a steel maker whose coil is processed by a customer",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat11.use_energy_direct",
@@ -4029,9 +4281,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "For energy-using products this usually dwarfs everything else. Needs lifetime x annual use x factor.",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat11.use_indirect",
@@ -4045,9 +4298,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "product-specific",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat11.sold_fuels",
@@ -4061,9 +4315,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "IPCC 2006 Vol.2",
     "notes": "For fuel distributors this is nearly the entire footprint",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat12.landfill",
@@ -4077,9 +4332,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Mass of product sold x material composition x disposal route split",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat12.incineration",
@@ -4093,9 +4349,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Mass of product sold x material composition x disposal route split",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat12.recycling",
@@ -4109,9 +4366,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Mass of product sold x material composition x disposal route split",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat12.reuse",
@@ -4125,9 +4383,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Mass of product sold x material composition x disposal route split",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat13.leased_downstream",
@@ -4141,9 +4400,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "reuse S1/S2 engines",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat14.franchises",
@@ -4157,9 +4417,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "reuse S1/S2 engines",
     "notes": "",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "cat15.investments",
@@ -4173,9 +4434,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "PCAF",
     "notes": "Phase 2. Attribution factor = outstanding amount / investee enterprise value",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "memo.biogenic_co2",
@@ -4184,12 +4446,13 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Biogenic memo item",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "CO2",
     "factor_source": "DESNZ",
     "notes": "GHG Protocol requires this be reported SEPARATELY from the scopes. Its CH4 and N2O DO stay in Scope 1.",
     "factorValue": 1,
+    "verified": true,
     "qualityTier": "Primary",
     "publicationYear": 2024
   },
@@ -4205,9 +4468,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2",
     "factor_source": "DESNZ",
     "notes": "GHG Protocol requires biogenic CO2 be reported separately FOR EACH SCOPE in which it arises — biofuel in Cat 4, composting/AD/incineration of biogenic waste in Cat 5, biofuel sold in Cat 11.",
-    "factorValue": 1,
-    "qualityTier": "Primary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "memo.montreal_r22",
@@ -4222,6 +4486,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "IPCC AR6",
     "notes": "Montreal Protocol substance — reported separately, NEVER added to the Scope 1 total",
     "factorValue": 1810,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   },
@@ -4237,9 +4502,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CFC",
     "factor_source": "IPCC AR6",
     "notes": "Reported separately, outside the scopes",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "memo.avoided_exported_renewable",
@@ -4253,9 +4519,10 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "gases": "CO2e",
     "factor_source": "n/a",
     "notes": "Never netted off the inventory total. Memo disclosure only.",
-    "factorValue": 1,
-    "qualityTier": "Secondary",
-    "publicationYear": 2024
+    "factorValue": 0,
+    "verified": false,
+    "qualityTier": "Estimated",
+    "publicationYear": 0
   },
   {
     "activity_key": "memo.offsets_retired",
@@ -4270,6 +4537,7 @@ export const CATALOGUE_SOURCES: CatalogueSource[] = [
     "factor_source": "registry",
     "notes": "Reported separately from gross emissions. Gross totals are never reduced by offsets.",
     "factorValue": 1000,
+    "verified": true,
     "qualityTier": "Secondary",
     "publicationYear": 2024
   }

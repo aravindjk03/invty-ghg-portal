@@ -24,29 +24,57 @@ export const SummaryRail: React.FC<SummaryRailProps> = ({
 
   const displayTotal = scopedTo === 'scope-1' ? summary.scope1 : summary.totalEmissions;
 
-  // Animated count-up
+  // Animated count-up.
+  //
+  // The figure must be correct even when the animation never runs. A browser
+  // does not schedule animation frames for a hidden tab, and the totals arrive
+  // from the engine a moment after mount - so a user who switched tabs while it
+  // loaded came back to "TOTAL EMISSIONS 0.0" sitting beside a Scope 1 of 327.
+  // The end value is therefore committed directly whenever frames cannot be
+  // relied on, and on cleanup, and the animation is only ever decoration.
   useEffect(() => {
-    const start = animatedTotal;
     const end = displayTotal;
+
+    const reducedMotion = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    if (document.hidden || reducedMotion || !Number.isFinite(end)) {
+      setAnimatedTotal(Number.isFinite(end) ? end : 0);
+      return undefined;
+    }
+
+    let frame = 0;
+    let settled = false;
+    const start = animatedTotal;
     const duration = 300;
     const startTime = performance.now();
 
     const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const current = start + (end - start) * easeOut;
-
-      setAnimatedTotal(Number(current.toFixed(1)));
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easeOut = 1 - (1 - progress) ** 3;
+      setAnimatedTotal(Number((start + (end - start) * easeOut).toFixed(1)));
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        frame = requestAnimationFrame(animate);
       } else {
+        settled = true;
         setAnimatedTotal(end);
       }
     };
+    frame = requestAnimationFrame(animate);
 
-    requestAnimationFrame(animate);
+    // If the frames stop - the tab is hidden mid-animation, the pane is
+    // collapsed - the total still lands on the right number.
+    const settle = window.setTimeout(() => {
+      if (!settled) setAnimatedTotal(end);
+    }, duration + 200);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
+      setAnimatedTotal(end);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayTotal]);
 
   // Compute percentages

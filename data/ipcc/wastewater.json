@@ -1,0 +1,53 @@
+{
+  "source_name": "IPCC 2006 Guidelines, Volume 5 Chapter 6 (Wastewater Treatment and Discharge)",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/5_Volume5/V5_6_Ch6_Wastewater.pdf",
+  "read_on": "2026-09-25",
+  "read_from": "Table 6.2 (page 6.12), Table 6.3 (page 6.13), and section 6.3.1.2 (page 6.25)",
+  "tier": 1,
+  "equations": {
+    "6.2": "EF_j = Bo x MCF_j",
+    "6.3": "TOW = P x BOD x 0.001 x I x 365",
+    "6.7": "N2O = N_effluent x EF_effluent x 44/28"
+  },
+  "methane": {
+    "bo_per_kg_bod": {"value": 0.6, "unit": "kg CH4 per kg BOD",
+                      "note": "Table 6.2 default for domestic wastewater"},
+    "bo_per_kg_cod": {"value": 0.25, "unit": "kg CH4 per kg COD",
+                      "note": "Table 6.2. A COD-based Bo converts to a BOD basis by multiplying by 2.4."},
+    "cod_to_bod_factor": 2.4,
+    "mcf": {
+      "sea_river_lake_discharge": {"value": 0.1, "range": [0.0, 0.2], "treated": false,
+                                   "note": "Rivers with high organic loading can turn anaerobic"},
+      "stagnant_sewer": {"value": 0.5, "range": [0.4, 0.8], "treated": false, "note": "Open and warm"},
+      "flowing_sewer": {"value": 0.0, "range": [0.0, 0.0], "treated": false,
+                        "note": "Fast moving, clean"},
+      "centralised_aerobic_well_managed": {"value": 0.0, "range": [0.0, 0.1], "treated": true},
+      "centralised_aerobic_overloaded": {"value": 0.3, "range": [0.2, 0.4], "treated": true,
+                                         "note": "Not well managed, overloaded"},
+      "anaerobic_digester_sludge": {"value": 0.8, "range": [0.8, 1.0], "treated": true,
+                                    "note": "CH4 recovery is not included in the factor"},
+      "anaerobic_reactor": {"value": 0.8, "range": [0.8, 1.0], "treated": true,
+                            "note": "CH4 recovery is not included in the factor"},
+      "anaerobic_shallow_lagoon": {"value": 0.2, "range": [0.0, 0.3], "treated": true,
+                                   "note": "Less than 2 metres deep"},
+      "anaerobic_deep_lagoon": {"value": 0.8, "range": [0.8, 1.0], "treated": true,
+                                "note": "More than 2 metres deep"},
+      "septic_system": {"value": 0.5, "range": [0.5, 0.5], "treated": true,
+                        "note": "Half of BOD settles in the anaerobic tank"},
+      "latrine_dry_small_family": {"value": 0.1, "range": [0.05, 0.15], "treated": true},
+      "latrine_dry_communal": {"value": 0.5, "range": [0.4, 0.6], "treated": true},
+      "latrine_wet_climate_flush": {"value": 0.7, "range": [0.7, 1.0], "treated": true},
+      "latrine_sediment_removed": {"value": 0.1, "range": [0.1, 0.1], "treated": true,
+                                   "note": "Regular sediment removal for fertiliser"}
+    }
+  },
+  "nitrous_oxide": {
+    "ef_effluent": {"value": 0.005, "range": [0.0005, 0.25],
+                    "unit": "kg N2O-N per kg N discharged"},
+    "n_to_n2o": "44/28",
+    "protein_nitrogen_fraction": {"value": 0.16, "unit": "kg N per kg protein", "symbol": "F_NPR"},
+    "non_consumed_protein": {"developed": 1.4, "developing": 1.1, "symbol": "F_NON-CON"},
+    "industrial_commercial_protein": {"value": 1.25, "symbol": "F_IND-COM"},
+    "sludge_nitrogen_default": 0
+  }
+}

@@ -60,6 +60,18 @@ export interface ActivityEntry {
   notes?: string;
   evidenceFile?: string;
   customFactorOverride?: number;
+  /** YYYY-MM. Enables monthly analysis and the missing-month QA/QC check. */
+  periodMonth?: string;
+  /**
+   * The activity key in the published factor library (DESNZ, CEA). When set,
+   * ghg_core calculates this row gas by gas under the chosen GWP set; without
+   * it the row cannot be calculated from published data.
+   */
+  engineActivityKey?: string;
+  /** Region the factor applies to, e.g. IN or UK. */
+  engineRegion?: string;
+  /** Who owns this data in the organisation; shown in the evidence register. */
+  dataOwner?: string;
   updatedAt: string;
 }
 

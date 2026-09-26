@@ -1,0 +1,30 @@
+{
+  "name": "AR6",
+  "horizon_years": 100,
+  "source_name": "IPCC Sixth Assessment Report, WG1 Chapter 7: CH4 and N2O from Table 7.15 (with chemical adjustments), halocarbons and SF6 from Table 7.SM.7, 100-year GWP",
+  "source_url": "https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07.pdf",
+  "notes": "Read from the published tables on 2026-09-25. Table 7.15 separates fossil from non-fossil methane and includes the chemical adjustments, so it is used for CH4 and N2O. Halocarbons and SF6 are taken from Table 7.SM.7 so that they share one basis; that table excludes the carbon-cycle response, which is why HFC-134a is 1,530 here and 1,526 in Table 7.15. The difference is far inside the table's own uncertainty range.",
+  "values": {
+    "CH4_fossil": 29.8,
+    "CH4_nonfossil": 27.0,
+    "N2O": 273,
+    "SF6": 24300,
+    "CF4": 7380,
+    "HFC-134a": 1530,
+    "HFC-32": 771,
+    "HCFC-22": 1960,
+    "HFC-23": 14600,
+    "HFC-125": 3740,
+    "HFC-134": 1260,
+    "HFC-143": 364,
+    "HFC-143a": 5810,
+    "HFC-152a": 164,
+    "HFC-227ea": 3600,
+    "HFC-236fa": 8690,
+    "HFC-245fa": 962,
+    "HFC-365mfc": 914,
+    "HFC-43-10mee": 1600,
+    "HFO-1234yf": 0.501,
+    "HFO-1234ze(E)": 1.37
+  }
+}

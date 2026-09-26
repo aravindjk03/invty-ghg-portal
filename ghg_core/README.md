@@ -1,6 +1,6 @@
 # ghg_core
 
-The calculation core of the INVTY GHG portal. Pure Python, no database, no
+The calculation core of the IINVTY GHG portal. Pure Python, no database, no
 network, no UI. It computes a greenhouse gas inventory from activity records and
 emission factors, and it is deliberately hard to use incorrectly.
 

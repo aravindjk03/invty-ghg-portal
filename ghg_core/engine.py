@@ -14,7 +14,7 @@ from dataclasses import dataclass, field, asdict
 from decimal import Decimal
 from typing import Optional, Sequence
 
-from .errors import DoubleCountError
+from .errors import DoubleCountError, FactorNotFoundError
 from .factors import (ENERGY_BASIS, Flag, FactorProvider, FactorResolution,
                       assert_basis_compatible)
 from .gwp import CH4_FOSSIL, CH4_NONFOSSIL, CO2, GwpSet
@@ -55,6 +55,9 @@ class ActivityRecord:
     scope2_view: Optional[str] = None             # "location" | "market"
     data_quality_tier: str = DQ_SECONDARY
     note: str = ""
+    # Required when activity_key is a pcf.* material - see factors.PCF_PREFIX.
+    production_route: Optional[str] = None
+    system_boundary: Optional[str] = None
 
     def __post_init__(self):
         if self.value is not None:
@@ -202,13 +205,21 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
     first: Optional[FactorResolution] = None
     norm_val, norm_unit = to_canonical(rec.value, rec.unit)[:2]
 
+    first_error: Optional[Exception] = None
+
     for gas in gases:
         try:
-            res = registry.resolve(rec.activity_key, rec.region, reporting_year, gas)
-        except Exception:
-            if gas == gases[0]:
-                raise            # no factor at all for the primary gas -> fail loudly
-            continue             # a fuel may legitimately emit only some gases
+            res = registry.resolve(
+                rec.activity_key, rec.region, reporting_year, gas,
+                production_route=rec.production_route,
+                system_boundary=rec.system_boundary)
+        except Exception as exc:                 # noqa: BLE001
+            # A fuel legitimately emits only some gases, and some publishers give
+            # only a CO2e composite for a source. What must never pass silently
+            # is an activity with NO factor at all, so the error is kept and
+            # raised below if nothing resolves.
+            first_error = first_error or exc
+            continue
         first = first or res
         f = res.factor
 
@@ -242,6 +253,11 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
         gas_breakdown[gas] = gas_breakdown.get(gas, ZERO) + mass_gas
         gwp_applied[gas] = gwp
         total_co2e += mass_gas * gwp
+
+    if not gas_breakdown:
+        # Nothing resolved: a missing factor is not zero.
+        raise first_error if first_error else FactorNotFoundError(
+            f"No factor for activity_key={rec.activity_key!r} in any gas.")
 
     flags = [f.value for f in (first.flags if first else ())]
     dq = rec.data_quality_tier

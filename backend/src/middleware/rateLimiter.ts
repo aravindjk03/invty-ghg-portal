@@ -60,3 +60,24 @@ export const leadRateLimiter = rateLimit({
     timestamp: new Date().toISOString(),
   },
 });
+
+/**
+ * Credential endpoints: sign-in, sign-up and OTP. Ten attempts per fifteen
+ * minutes per address makes password and six-digit OTP guessing impractical
+ * while leaving room for someone who genuinely mistypes.
+ */
+export const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_ATTEMPTS',
+      message: 'Too many sign-in attempts. Please wait fifteen minutes and try again.',
+    },
+    timestamp: new Date().toISOString(),
+  },
+});

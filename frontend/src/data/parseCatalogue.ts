@@ -93,7 +93,6 @@ const DEFAULT_FACTOR_MAP: Record<string, number> = {
   'fuel.converter_gas': 0.90,
   'fuel.hydrogen.grey': 0.0,
   'fuel.hydrogen.green': 0.0,
-  'fuel.ammonia_fuel': 0.05,
   // Mobile
   'mobile.diesel': 2.6865,
   'mobile.petrol': 2.31,
@@ -128,8 +127,6 @@ const DEFAULT_FACTOR_MAP: Record<string, number> = {
   'process.iron_steel_dri': 1150.0,
   'process.iron_steel_eaf_electrode': 3667.0,
   'process.ammonia_production': 1600.0,
-  'process.nitric_acid': 300.0,
-  'process.adipic_acid': 450.0,
   'process.urea_production': 730.0,
   'process.methanol_production': 670.0,
   'process.hydrogen_smr': 9000.0,
@@ -173,20 +170,16 @@ const DEFAULT_FACTOR_MAP: Record<string, number> = {
   'fugitive.fire_co2': 1.0,
   'fugitive.fire_hfc227ea': 3220.0,
   'fugitive.fire_novec': 1.0,
-  'fugitive.ch4_wastewater': 28.0,
-  'fugitive.ch4_ng_distribution': 28.0,
   'fugitive.ch4_coal_mine': 28.0,
   'fugitive.co2_welding': 1.0,
   'fugitive.n2o_medical': 273.0,
   'fugitive.co2_beverage': 1.0,
-  'fugitive.n2o_wastewater': 273.0,
   'fugitive.hfc_foam': 1000.0,
   'fugitive.hfc_aerosol': 1200.0,
   'fugitive.sf6_magnesium': 25200.0,
   'flare.process_vent': 2.1,
   'flare.biogas': 0.15,
   'vent.process_ch4': 28.0,
-  'vent.oil_gas': 22.0,
   // Scope 2
   'elec.grid.location': 0.716, // CEA baseline v19 India
   'elec.grid.market_residual': 0.820,
@@ -245,15 +238,27 @@ const DEFAULT_FACTOR_MAP: Record<string, number> = {
   'memo.offsets_retired': 1000.0,
 };
 
+// A source with no ingested value is marked UNVERIFIED and carries 0, never a
+// stand-in number. A fabricated factor is worse than a blank: it calculates,
+// looks official, and cannot be traced to a published source. The UI refuses to
+// compute from an unverified factor until a value and its source are entered.
 const enriched = entries.map((e: any) => {
-  const factor = DEFAULT_FACTOR_MAP[e.activity_key] ?? 1.0;
+  const value = DEFAULT_FACTOR_MAP[e.activity_key];
+  const verified = value !== undefined;
   return {
     ...e,
-    factorValue: factor,
-    qualityTier: e.factor_source?.includes('CEA') || e.factor_source?.includes('DESNZ') ? 'Primary' : 'Secondary',
-    publicationYear: 2024,
+    factorValue: verified ? value : 0,
+    verified,
+    qualityTier: !verified
+      ? 'Estimated'
+      : e.factor_source?.includes('CEA') || e.factor_source?.includes('DESNZ') ? 'Primary' : 'Secondary',
+    publicationYear: verified ? 2024 : 0,
   };
 });
+
+const unverified = enriched.filter((e: any) => !e.verified).length;
+console.log(`catalogue: ${enriched.length} sources, ${enriched.length - unverified} with an ingested factor, ` +
+  `${unverified} awaiting ingestion`);
 
 fs.writeFileSync(
   path.resolve(process.cwd(), 'src/data/emission_source_catalogue.json'),
@@ -274,6 +279,8 @@ export interface CatalogueSource {
   factor_source: string;
   notes: string;
   factorValue: number;
+  /** False when no published value has been ingested yet; factorValue is then 0. */
+  verified: boolean;
   qualityTier: 'Primary' | 'Secondary' | 'Proxy' | 'Estimated';
   publicationYear: number;
 }
