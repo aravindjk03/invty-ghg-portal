@@ -73,6 +73,10 @@ Index: <https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol5.html>
 These replace the per-cubic-metre wastewater values removed earlier: IPCC
 quantifies from organic load (COD/BOD) and nitrogen, not volume.
 
+All six of these chapters are now implemented as methods rather than factors —
+see [the IPCC methods](ipcc-methods.md) for which equations, which tables, and
+what each one refuses to guess.
+
 **Indian transport — India GHG Program (WRI India, CII, TERI)**
 Page: <https://indiaghgp.org/transport-emission-factors>
 

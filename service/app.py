@@ -19,7 +19,7 @@ from collections import Counter
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import Body, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from ghg_core import ENGINE_VERSION, InMemoryFactorRegistry
@@ -34,6 +34,7 @@ from .inventory import GWP_SETS, load_gwp, load_registry
 from .inventory_api import (ActivityOut, InventoryRequest, InventoryResponse,
                             calculate_inventory, list_activities)
 from .gemini import GeminiEstimator
+from .methods_api import MethodRequest, MethodResponse, calculate_method, list_methods
 from .models import PROFILES, ModelProfile, estimate_cost_usd
 from .pipeline import build_response
 from .ratelimit import SlidingWindowLimiter
@@ -285,6 +286,36 @@ def inventory_calculate(request: InventoryRequest) -> InventoryResponse:
     log.info("inventory run records=%d gwp=%s year=%d view=%s",
              len(request.records), request.gwp_set, request.reporting_year, request.scope2_view)
     return calculate_inventory(request, f"{gwp.source_name} ({gwp.source_url})")
+
+
+# --- the IPCC methods that are not factors per unit ----------------------------------------
+
+@app.get("/v1/methods")
+def methods_catalogue() -> list[dict]:
+    """The sources that are equations rather than a factor per unit of activity.
+
+    Served so the browser can build a form for each without hard-coding what
+    the method needs or where it came from.
+    """
+    return list_methods()
+
+
+@app.post("/v1/methods/calculate", response_model=MethodResponse)
+def methods_calculate(request: MethodRequest = Body(..., discriminator="method")) -> MethodResponse:
+    """Run one IPCC method and state the answer under the chosen GWP set.
+
+    The methods return masses of CH4, N2O and CO2; the GWP set is applied here,
+    which is why the same calculation can be stated under AR5 or AR6 without
+    being run again. A parameter IPCC never published raises rather than
+    defaulting to zero.
+    """
+    log.info("method run method=%s gwp=%s", request.method, request.gwp_set)
+    try:
+        return calculate_method(request)
+    except (KeyError, ValueError) as exc:
+        # These carry the reason and what to do about it, and none of them
+        # contain anything the caller did not send.
+        raise HTTPException(status_code=422, detail=str(exc).strip("'")) from None
 
 
 @app.post("/v1/pcf/estimate", response_model=EstimateResponse)

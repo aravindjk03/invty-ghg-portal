@@ -1,0 +1,576 @@
+{
+  "source_name": "IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 5 Chapter 3 (Solid Waste Disposal) with the waste data of Chapter 2",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/5_Volume5/V5_3_Ch3_SWDS.pdf",
+  "source_url_waste_data": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/5_Volume5/V5_2_Ch2_Waste_Data.pdf",
+  "read_on": "2026-09-26",
+  "read_from": "Chapter 3 Tables 3.1 (printed page 3.14), 3.2 (3.15) and 3.3 (3.17); Chapter 2 Tables 2.3 (2.12), 2.4 (2.14), 2.5 and 2.6 (2.16), read from the published pages",
+  "tier": 1,
+  "method": {
+    "name": "First Order Decay (FOD)",
+    "equations": {
+      "3.1": "CH4 emitted = (CH4 generated - recovered) x (1 - OX)",
+      "3.2": "DDOCm = W x DOC x DOCf x MCF",
+      "3.4": "DDOCma(T) = DDOCmd(T) + DDOCma(T-1) x e^-k",
+      "3.5": "DDOCm decomp(T) = DDOCma(T-1) x (1 - e^-k)",
+      "3.6": "CH4 generated(T) = DDOCm decomp(T) x F x 16/12"
+    },
+    "note": "Decay begins on 1 January of the year AFTER deposition, so waste buried this year emits nothing this year. A single year of tonnage cannot produce an estimate: the model needs the history of what was buried.",
+    "delay_not_implemented": "Annex 3A.1 gives an adjustment for reaction start dates earlier than 1 January of the following year. That adjustment is not implemented here; the equations above are used as printed.",
+    "carbon_dioxide": "IPCC reports no CO2 from a disposal site under Waste. The carbon that degrades to CO2 is biogenic, and the fossil part of the waste does not degrade."
+  },
+  "mcf": {
+    "unit": "fraction",
+    "note": "Table 3.1. The methane CORRECTION factor here is not the methane CONVERSION factor used for manure and wastewater.",
+    "values": {
+      "managed_anaerobic": 1.0,
+      "managed_semi_aerobic": 0.5,
+      "unmanaged_deep": 0.8,
+      "unmanaged_shallow": 0.4,
+      "uncategorised": 0.6
+    },
+    "definitions": {
+      "managed_anaerobic": "Controlled placement of waste, some control of scavenging and fires, and at least one of cover material, mechanical compacting or levelling.",
+      "managed_semi_aerobic": "Controlled placement and all of: permeable cover material, leachate drainage, regulating pondage and a gas ventilation system.",
+      "unmanaged_deep": "Not meeting the managed criteria, 5 metres deep or more, and/or a high water table at near ground level.",
+      "unmanaged_shallow": "Not meeting the managed criteria and less than 5 metres deep.",
+      "uncategorised": "Only where a country cannot classify its sites into the four categories above."
+    }
+  },
+  "oxidation_factor": {
+    "unit": "fraction",
+    "note": "Table 3.2. The default is zero. 0.1 is for a managed site covered with CH4-oxidising material such as soil or compost; anything higher has to be documented and supported by data. Recovered methane is subtracted BEFORE oxidation is applied.",
+    "values": {
+      "default": 0,
+      "managed_covered_with_oxidising_material": 0.1
+    }
+  },
+  "doc_f": {
+    "value": 0.5,
+    "note": "The fraction of degradable organic carbon that actually decomposes. 0.5 is recommended where the site is anaerobic and the DOC values include lignin, which the Table 2.4 values do."
+  },
+  "f": {
+    "value": 0.5,
+    "note": "The fraction of CH4 by volume in the generated landfill gas. Most waste generates gas that is about half methane; only material with substantial fat or oil generates much more."
+  },
+  "k": {
+    "unit": "per year",
+    "note": "Table 3.3. k = ln(2)/half-life.",
+    "climate_zones": {
+      "boreal_temperate_dry": "mean annual temperature at or below 20 C, MAP/PET below 1",
+      "boreal_temperate_wet": "mean annual temperature at or below 20 C, MAP/PET above 1",
+      "tropical_dry": "mean annual temperature above 20 C, mean annual precipitation below 1000 mm",
+      "tropical_moist_wet": "mean annual temperature above 20 C, mean annual precipitation at or above 1000 mm"
+    },
+    "tropical_caveat": "The chapter says information on k in tropical conditions is limited and those values are indicative, mostly derived from temperate ones.",
+    "values": {
+      "paper_textiles": {
+        "boreal_temperate_dry": {
+          "value": 0.04,
+          "range": [
+            0.03,
+            0.05
+          ]
+        },
+        "boreal_temperate_wet": {
+          "value": 0.06,
+          "range": [
+            0.05,
+            0.07
+          ]
+        },
+        "tropical_dry": {
+          "value": 0.045,
+          "range": [
+            0.04,
+            0.06
+          ]
+        },
+        "tropical_moist_wet": {
+          "value": 0.07,
+          "range": [
+            0.06,
+            0.085
+          ]
+        }
+      },
+      "wood_straw": {
+        "boreal_temperate_dry": {
+          "value": 0.02,
+          "range": [
+            0.01,
+            0.03
+          ]
+        },
+        "boreal_temperate_wet": {
+          "value": 0.03,
+          "range": [
+            0.02,
+            0.04
+          ]
+        },
+        "tropical_dry": {
+          "value": 0.025,
+          "range": [
+            0.02,
+            0.04
+          ]
+        },
+        "tropical_moist_wet": {
+          "value": 0.035,
+          "range": [
+            0.03,
+            0.05
+          ]
+        }
+      },
+      "other_non_food_organic": {
+        "boreal_temperate_dry": {
+          "value": 0.05,
+          "range": [
+            0.04,
+            0.06
+          ]
+        },
+        "boreal_temperate_wet": {
+          "value": 0.1,
+          "range": [
+            0.06,
+            0.1
+          ]
+        },
+        "tropical_dry": {
+          "value": 0.065,
+          "range": [
+            0.05,
+            0.08
+          ]
+        },
+        "tropical_moist_wet": {
+          "value": 0.17,
+          "range": [
+            0.15,
+            0.2
+          ]
+        }
+      },
+      "food_sewage_sludge": {
+        "boreal_temperate_dry": {
+          "value": 0.06,
+          "range": [
+            0.05,
+            0.08
+          ]
+        },
+        "boreal_temperate_wet": {
+          "value": 0.185,
+          "range": [
+            0.1,
+            0.2
+          ]
+        },
+        "tropical_dry": {
+          "value": 0.085,
+          "range": [
+            0.07,
+            0.1
+          ]
+        },
+        "tropical_moist_wet": {
+          "value": 0.4,
+          "range": [
+            0.17,
+            0.7
+          ]
+        }
+      },
+      "bulk": {
+        "boreal_temperate_dry": {
+          "value": 0.05,
+          "range": [
+            0.04,
+            0.06
+          ]
+        },
+        "boreal_temperate_wet": {
+          "value": 0.09,
+          "range": [
+            0.08,
+            0.1
+          ]
+        },
+        "tropical_dry": {
+          "value": 0.065,
+          "range": [
+            0.05,
+            0.08
+          ]
+        },
+        "tropical_moist_wet": {
+          "value": 0.17,
+          "range": [
+            0.15,
+            0.2
+          ]
+        }
+      }
+    },
+    "group_for_component": {
+      "paper_cardboard": "paper_textiles",
+      "textiles": "paper_textiles",
+      "wood": "wood_straw",
+      "garden_and_park": "other_non_food_organic",
+      "food": "food_sewage_sludge",
+      "sewage_sludge": "food_sewage_sludge",
+      "bulk": "bulk"
+    },
+    "group_not_published": {
+      "nappies": "Table 3.3 has no row for nappies, and they are part paper, part plastic and part excreta. Give a k, or split the stream.",
+      "rubber_and_leather": "Table 3.3 has no row for rubber and leather, and Table 2.4 brackets its DOC because natural rubber is unlikely to degrade anaerobically."
+    }
+  },
+  "doc": {
+    "unit": "fraction of wet waste (the table prints percentages)",
+    "msw_components": {
+      "paper_cardboard": {
+        "default": 40,
+        "range": [
+          36,
+          45
+        ],
+        "dry_matter_percent": 90
+      },
+      "textiles": {
+        "default": 24,
+        "range": [
+          20,
+          40
+        ],
+        "dry_matter_percent": 80
+      },
+      "food": {
+        "default": 15,
+        "range": [
+          8,
+          20
+        ],
+        "dry_matter_percent": 40
+      },
+      "wood": {
+        "default": 43,
+        "range": [
+          39,
+          46
+        ],
+        "dry_matter_percent": 85
+      },
+      "garden_and_park": {
+        "default": 20,
+        "range": [
+          18,
+          22
+        ],
+        "dry_matter_percent": 40
+      },
+      "nappies": {
+        "default": 24,
+        "range": [
+          18,
+          32
+        ],
+        "dry_matter_percent": 40
+      },
+      "rubber_and_leather": {
+        "default": 39,
+        "range": [
+          39,
+          39
+        ],
+        "dry_matter_percent": 84,
+        "note": "Table 2.4 prints this value in brackets: natural rubbers would likely not degrade under anaerobic conditions at a disposal site, so treating it as degradable overstates the methane."
+      },
+      "plastics": {
+        "default": 0,
+        "dry_matter_percent": 100,
+        "note": "No DOC: the carbon is fossil, and Table 2.4 prints a dash."
+      },
+      "metal": {
+        "default": 0,
+        "dry_matter_percent": 100,
+        "note": "No DOC."
+      },
+      "glass": {
+        "default": 0,
+        "dry_matter_percent": 100,
+        "note": "No DOC."
+      },
+      "other_inert": {
+        "default": 0,
+        "dry_matter_percent": 90,
+        "note": "No DOC; total carbon 3 percent of dry weight, all of it fossil."
+      }
+    },
+    "industrial_waste": {
+      "food_beverages_tobacco": 15,
+      "textile": 24,
+      "wood_and_wood_products": 43,
+      "pulp_and_paper": 40,
+      "petroleum_solvents_plastics": 0,
+      "rubber": 39,
+      "construction_and_demolition": 4,
+      "other_manufacturing": 1
+    },
+    "other_waste": {
+      "clinical_waste": 15
+    },
+    "hazardous_waste_note": "Table 2.6 gives no DOC for hazardous waste - it is recorded as not available, which is not the same as zero."
+  },
+  "msw_composition": {
+    "unit": "percent of wet waste",
+    "note": "Table 2.3 regional defaults, for use only where a site has no composition of its own. Several rows are incomplete in the published table, and the blanks are kept as nulls rather than filled in; a row with blanks does not add to 100 and cannot be used on its own.",
+    "warning": "The chapter advises against combining IPCC default composition with country-specific disposal tonnages without checking that the inert part matches.",
+    "totals_warning": "Most rows do not add to 100 percent, even where no cell is blank - Eastern Asia adds to 80.5 and Eastern Africa to 92.6 - because the rows come from different country studies. The shortfall is recorded below as row_total_percent so it can be seen rather than silently scaled away.",
+    "components": [
+      "food",
+      "paper_cardboard",
+      "wood",
+      "textiles",
+      "rubber_and_leather",
+      "plastics",
+      "metal",
+      "glass",
+      "other_inert"
+    ],
+    "regions": {
+      "eastern_asia": {
+        "food": 26.2,
+        "paper_cardboard": 18.8,
+        "wood": 3.5,
+        "textiles": 3.5,
+        "rubber_and_leather": 1.0,
+        "plastics": 14.3,
+        "metal": 2.7,
+        "glass": 3.1,
+        "other_inert": 7.4
+      },
+      "south_central_asia": {
+        "food": 40.3,
+        "paper_cardboard": 11.3,
+        "wood": 7.9,
+        "textiles": 2.5,
+        "rubber_and_leather": 0.8,
+        "plastics": 6.4,
+        "metal": 3.8,
+        "glass": 3.5,
+        "other_inert": 21.9
+      },
+      "south_eastern_asia": {
+        "food": 43.5,
+        "paper_cardboard": 12.9,
+        "wood": 9.9,
+        "textiles": 2.7,
+        "rubber_and_leather": 0.9,
+        "plastics": 7.2,
+        "metal": 3.3,
+        "glass": 4.0,
+        "other_inert": 16.3
+      },
+      "western_asia_middle_east": {
+        "food": 41.1,
+        "paper_cardboard": 18.0,
+        "wood": 9.8,
+        "textiles": 2.9,
+        "rubber_and_leather": 0.6,
+        "plastics": 6.3,
+        "metal": 1.3,
+        "glass": 2.2,
+        "other_inert": 5.4
+      },
+      "eastern_africa": {
+        "food": 53.9,
+        "paper_cardboard": 7.7,
+        "wood": 7.0,
+        "textiles": 1.7,
+        "rubber_and_leather": 1.1,
+        "plastics": 5.5,
+        "metal": 1.8,
+        "glass": 2.3,
+        "other_inert": 11.6
+      },
+      "middle_africa": {
+        "food": 43.4,
+        "paper_cardboard": 16.8,
+        "wood": 6.5,
+        "textiles": 2.5,
+        "rubber_and_leather": null,
+        "plastics": 4.5,
+        "metal": 3.5,
+        "glass": 2.0,
+        "other_inert": 1.5
+      },
+      "northern_africa": {
+        "food": 51.1,
+        "paper_cardboard": 16.5,
+        "wood": 2.0,
+        "textiles": 2.5,
+        "rubber_and_leather": null,
+        "plastics": 4.5,
+        "metal": 3.5,
+        "glass": 2.0,
+        "other_inert": 1.5
+      },
+      "southern_africa": {
+        "food": 23.0,
+        "paper_cardboard": 25.0,
+        "wood": 15.0,
+        "textiles": null,
+        "rubber_and_leather": null,
+        "plastics": null,
+        "metal": null,
+        "glass": null,
+        "other_inert": null
+      },
+      "western_africa": {
+        "food": 40.4,
+        "paper_cardboard": 9.8,
+        "wood": 4.4,
+        "textiles": 1.0,
+        "rubber_and_leather": null,
+        "plastics": 3.0,
+        "metal": 1.0,
+        "glass": null,
+        "other_inert": null
+      },
+      "eastern_europe": {
+        "food": 30.1,
+        "paper_cardboard": 21.8,
+        "wood": 7.5,
+        "textiles": 4.7,
+        "rubber_and_leather": 1.4,
+        "plastics": 6.2,
+        "metal": 3.6,
+        "glass": 10.0,
+        "other_inert": 14.6
+      },
+      "northern_europe": {
+        "food": 23.8,
+        "paper_cardboard": 30.6,
+        "wood": 10.0,
+        "textiles": 2.0,
+        "rubber_and_leather": null,
+        "plastics": 13.0,
+        "metal": 7.0,
+        "glass": 8.0,
+        "other_inert": null
+      },
+      "southern_europe": {
+        "food": 36.9,
+        "paper_cardboard": 17.0,
+        "wood": 10.6,
+        "textiles": null,
+        "rubber_and_leather": null,
+        "plastics": null,
+        "metal": null,
+        "glass": null,
+        "other_inert": null
+      },
+      "western_europe": {
+        "food": 24.2,
+        "paper_cardboard": 27.5,
+        "wood": 11.0,
+        "textiles": null,
+        "rubber_and_leather": null,
+        "plastics": null,
+        "metal": null,
+        "glass": null,
+        "other_inert": null
+      },
+      "australia_new_zealand": {
+        "food": 36.0,
+        "paper_cardboard": 30.0,
+        "wood": 24.0,
+        "textiles": null,
+        "rubber_and_leather": null,
+        "plastics": null,
+        "metal": null,
+        "glass": null,
+        "other_inert": null
+      },
+      "rest_of_oceania": {
+        "food": 67.5,
+        "paper_cardboard": 6.0,
+        "wood": 2.5,
+        "textiles": null,
+        "rubber_and_leather": null,
+        "plastics": null,
+        "metal": null,
+        "glass": null,
+        "other_inert": null
+      },
+      "north_america": {
+        "food": 33.9,
+        "paper_cardboard": 23.2,
+        "wood": 6.2,
+        "textiles": 3.9,
+        "rubber_and_leather": 1.4,
+        "plastics": 8.5,
+        "metal": 4.6,
+        "glass": 6.5,
+        "other_inert": 9.8
+      },
+      "central_america": {
+        "food": 43.8,
+        "paper_cardboard": 13.7,
+        "wood": 13.5,
+        "textiles": 2.6,
+        "rubber_and_leather": 1.8,
+        "plastics": 6.7,
+        "metal": 2.6,
+        "glass": 3.7,
+        "other_inert": 12.3
+      },
+      "south_america": {
+        "food": 44.9,
+        "paper_cardboard": 17.1,
+        "wood": 4.7,
+        "textiles": 2.6,
+        "rubber_and_leather": 0.7,
+        "plastics": 10.8,
+        "metal": 2.9,
+        "glass": 3.3,
+        "other_inert": 13.0
+      },
+      "caribbean": {
+        "food": 46.9,
+        "paper_cardboard": 17.0,
+        "wood": 2.4,
+        "textiles": 5.1,
+        "rubber_and_leather": 1.9,
+        "plastics": 9.9,
+        "metal": 5.0,
+        "glass": 5.7,
+        "other_inert": 3.5
+      }
+    },
+    "row_total_percent": {
+      "eastern_asia": 80.5,
+      "south_central_asia": 98.4,
+      "south_eastern_asia": 100.7,
+      "western_asia_middle_east": 87.6,
+      "eastern_africa": 92.6,
+      "middle_africa": 80.7,
+      "northern_africa": 83.6,
+      "southern_africa": 63.0,
+      "western_africa": 59.6,
+      "eastern_europe": 99.9,
+      "northern_europe": 94.4,
+      "southern_europe": 64.5,
+      "western_europe": 62.7,
+      "australia_new_zealand": 90.0,
+      "rest_of_oceania": 76.0,
+      "north_america": 98.0,
+      "central_america": 100.7,
+      "south_america": 100.0,
+      "caribbean": 97.4
+    }
+  }
+}
