@@ -17,6 +17,9 @@ export const METHOD_KEYS = [
   'manure_management',
   'wastewater',
   'solid_waste',
+  'mineral_industry',
+  'chemical_industry',
+  'metal_industry',
 ] as const;
 export type MethodKey = (typeof METHOD_KEYS)[number];
 
@@ -155,13 +158,73 @@ export type SolidWasteInput = {
   recovered_ch4_kg: number;
 };
 
+/** One carbonate calcined outside cement, lime or glass — flux, soda ash, ceramics. */
+export interface CarbonateInputRow {
+  carbonate: string;
+  tonnes: number;
+  fraction_calcined: number;
+}
+
+/** One step of an iron and steel works, and its output. */
+export interface SteelStepRow {
+  step: string;
+  tonnes: number;
+}
+
+export type MineralIndustryInput = {
+  method: 'mineral_industry';
+  clinker_tonnes: number;
+  kiln_dust_recycled: boolean;
+  clinker_cao_content?: string | null;
+  lime_tonnes: number;
+  lime_type: string;
+  glass_tonnes: number;
+  glass_type?: string | null;
+  cullet_ratio?: number | null;
+  carbonates: CarbonateInputRow[];
+};
+
+export type ChemicalIndustryInput = {
+  method: 'chemical_industry';
+  ammonia_tonnes: number;
+  ammonia_process: string;
+  ammonia_co2_recovered_tonnes: number;
+  nitric_acid_tonnes: number;
+  nitric_acid_plant_type?: string | null;
+  adipic_acid_tonnes: number;
+  adipic_acid_abatement?: string | null;
+  carbide_tonnes: number;
+  carbide_type: string;
+  carbide_basis: 'product' | 'petroleum_coke' | 'carbide_used';
+  titanium_dioxide_tonnes: number;
+  titanium_dioxide_product: string;
+};
+
+export type MetalIndustryInput = {
+  method: 'metal_industry';
+  steel_steps: SteelStepRow[];
+  ferroalloy_tonnes: number;
+  ferroalloy_type?: string | null;
+  aluminium_tonnes: number;
+  aluminium_cell_technology?: string | null;
+  magnesium_tonnes: number;
+  magnesium_sf6_consumed_kg?: number | null;
+  lead_tonnes: number;
+  lead_route: string;
+  zinc_tonnes: number;
+  zinc_process: string;
+};
+
 export type MethodInput =
   | ManagedSoilsInput
   | LimeAndUreaInput
   | EntericInput
   | ManureInput
   | WastewaterInput
-  | SolidWasteInput;
+  | SolidWasteInput
+  | MineralIndustryInput
+  | ChemicalIndustryInput
+  | MetalIndustryInput;
 
 /**
  * A saved method calculation in the inventory.
@@ -219,6 +282,25 @@ export const emptyInput = (method: MethodKey, reportingYear: number): MethodInpu
       return {
         method, streams: [], inventory_year: reportingYear,
         climate_zone: 'tropical_moist_wet', recovered_ch4_kg: 0,
+      };
+    case 'mineral_industry':
+      return {
+        method, clinker_tonnes: 0, kiln_dust_recycled: false, lime_tonnes: 0,
+        lime_type: 'default_mix', glass_tonnes: 0, carbonates: [],
+      };
+    case 'chemical_industry':
+      return {
+        method, ammonia_tonnes: 0, ammonia_process: 'average_natural_gas',
+        ammonia_co2_recovered_tonnes: 0, nitric_acid_tonnes: 0,
+        adipic_acid_tonnes: 0, carbide_tonnes: 0, carbide_type: 'calcium_carbide',
+        carbide_basis: 'product', titanium_dioxide_tonnes: 0,
+        titanium_dioxide_product: 'rutile_tio2_chloride_route',
+      };
+    case 'metal_industry':
+      return {
+        method, steel_steps: [], ferroalloy_tonnes: 0, aluminium_tonnes: 0,
+        magnesium_tonnes: 0, lead_tonnes: 0, lead_route: 'default_mix',
+        zinc_tonnes: 0, zinc_process: 'default_mix',
       };
     default: {
       const exhaustive: never = method;

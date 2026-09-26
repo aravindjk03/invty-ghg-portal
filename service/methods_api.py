@@ -19,14 +19,20 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ghg_core.methods import (EntericParameters, Herd, LivestockGroup, ManureParameters,
+from ghg_core.methods import (CarbonateInput, EntericParameters, Herd,
+                              IndustrialParameters, LivestockGroup, ManureParameters,
                               ManureStream, NitrogenInputs, SolidWasteParameters,
-                              WastewaterParameters,
-                              TreatmentPathway, WasteStream, enteric_ch4, liming_co2,
+                              SteelStep, TreatmentPathway, WasteStream,
+                              WastewaterParameters, adipic_acid_n2o,
+                              aluminium_emissions, ammonia_co2, carbide_emissions,
+                              carbonate_co2, cement_clinker_co2, enteric_ch4,
+                              ferroalloy_co2, glass_co2, iron_and_steel_emissions,
+                              lead_co2, lime_co2, liming_co2, magnesium_sf6,
                               managed_soil_n2o, manure_ch4, manure_n2o,
-                              nitrogen_in_effluent, organic_load_from_population,
-                              solid_waste_ch4, urea_co2, urea_nitrogen, wastewater_ch4,
-                              wastewater_n2o)
+                              nitric_acid_n2o, nitrogen_in_effluent,
+                              organic_load_from_population, solid_waste_ch4,
+                              titanium_dioxide_co2, urea_co2, urea_nitrogen,
+                              wastewater_ch4, wastewater_n2o, zinc_co2)
 from ghg_core.quantities import D, ZERO
 from ghg_core.rebasis import rebase
 
@@ -104,6 +110,42 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
                             "decade ago is still decaying. The model needs the disposal history.",
         "needs": ["tonnes disposed in each year, not just this year",
                   "the kind of site and the climate zone"],
+    },
+    {
+        "key": "mineral_industry",
+        "name": "CO2 from cement, lime, glass and carbonates",
+        "scope": "1",
+        "gases": ["CO2"],
+        "source": "IPCC 2006 Volume 3 Chapter 2, Equations 2.4 and 2.8 and Tables 2.1, 2.4, 2.6",
+        "why_not_a_factor": "The CO2 comes out of the limestone, not out of the fuel that "
+                            "heats it. For a cement works this is usually more than half the "
+                            "inventory, and no fuel factor covers any of it.",
+        "needs": ["tonnes of clinker, lime or glass made",
+                  "tonnes of any other carbonate calcined, and how much of it calcined"],
+    },
+    {
+        "key": "chemical_industry",
+        "name": "CO2 and N2O from ammonia, nitric acid, adipic acid and carbides",
+        "scope": "1",
+        "gases": ["CO2", "N2O", "CH4"],
+        "source": "IPCC 2006 Volume 3 Chapter 3, Tables 3.1, 3.3, 3.4, 3.7, 3.8, 3.9",
+        "why_not_a_factor": "A nitric acid plant makes N2O in the reaction itself, and how "
+                            "much depends on the plant type and on whether its abatement was "
+                            "actually running.",
+        "needs": ["tonnes of product", "the process route and any abatement fitted"],
+    },
+    {
+        "key": "metal_industry",
+        "name": "CO2, CH4, PFCs and SF6 from iron, steel, ferroalloys, aluminium and more",
+        "scope": "1",
+        "gases": ["CO2", "CH4", "CF4", "C2F6", "SF6"],
+        "source": "IPCC 2006 Volume 3 Chapter 4, Tables 4.1, 4.2, 4.5, 4.10, 4.15, 4.20, "
+                  "4.21, 4.24",
+        "why_not_a_factor": "The carbon is the reductant, not a fuel, and an aluminium cell "
+                            "makes CF4 and C2F6 during an anode effect. The route matters "
+                            "more than the tonnage: scrap through an arc furnace is a "
+                            "eighteenth of iron through a basic oxygen furnace.",
+        "needs": ["tonnes of each product", "the furnace or cell technology"],
     },
 )
 
@@ -214,8 +256,65 @@ class SolidWasteRequest(_Base):
     recovered_ch4_kg: Decimal = ZERO
 
 
+class CarbonateIn(_Strict):
+    carbonate: str = Field(min_length=1, max_length=64)
+    tonnes: Decimal = ZERO
+    fraction_calcined: Decimal = Field(default=Decimal(1), gt=0, le=1)
+
+
+class MineralIndustryRequest(_Base):
+    method: Literal["mineral_industry"]
+    clinker_tonnes: Decimal = ZERO
+    kiln_dust_recycled: bool = False
+    clinker_cao_content: Optional[str] = None
+    lime_tonnes: Decimal = ZERO
+    lime_type: str = "default_mix"
+    glass_tonnes: Decimal = ZERO
+    glass_type: Optional[str] = None
+    cullet_ratio: Optional[Decimal] = Field(default=None, ge=0, lt=1)
+    carbonates: list[CarbonateIn] = Field(default_factory=list, max_length=40)
+
+
+class ChemicalIndustryRequest(_Base):
+    method: Literal["chemical_industry"]
+    ammonia_tonnes: Decimal = ZERO
+    ammonia_process: str = "average_natural_gas"
+    ammonia_co2_recovered_tonnes: Decimal = ZERO
+    nitric_acid_tonnes: Decimal = ZERO
+    nitric_acid_plant_type: Optional[str] = None
+    adipic_acid_tonnes: Decimal = ZERO
+    adipic_acid_abatement: Optional[str] = None
+    carbide_tonnes: Decimal = ZERO
+    carbide_type: str = "calcium_carbide"
+    carbide_basis: Literal["product", "petroleum_coke", "carbide_used"] = "product"
+    titanium_dioxide_tonnes: Decimal = ZERO
+    titanium_dioxide_product: str = "rutile_tio2_chloride_route"
+
+
+class SteelStepIn(_Strict):
+    step: str = Field(min_length=1, max_length=64)
+    tonnes: Decimal = ZERO
+
+
+class MetalIndustryRequest(_Base):
+    method: Literal["metal_industry"]
+    steel_steps: list[SteelStepIn] = Field(default_factory=list, max_length=20)
+    ferroalloy_tonnes: Decimal = ZERO
+    ferroalloy_type: Optional[str] = None
+    aluminium_tonnes: Decimal = ZERO
+    aluminium_cell_technology: Optional[str] = None
+    magnesium_tonnes: Decimal = ZERO
+    magnesium_sf6_consumed_kg: Optional[Decimal] = None
+    lead_tonnes: Decimal = ZERO
+    lead_route: str = "default_mix"
+    zinc_tonnes: Decimal = ZERO
+    zinc_process: str = "default_mix"
+
+
 MethodRequest = (ManagedSoilsRequest | LimeAndUreaRequest | EntericRequest
-                 | ManureRequest | WastewaterRequest | SolidWasteRequest)
+                 | ManureRequest | WastewaterRequest | SolidWasteRequest
+                 | MineralIndustryRequest | ChemicalIndustryRequest
+                 | MetalIndustryRequest)
 
 
 # --- response ---------------------------------------------------------------
@@ -508,6 +607,126 @@ def _solid_waste(request: SolidWasteRequest) -> MethodResponse:
     )
 
 
+def _accumulate(results, gases: dict, working: dict, notes: list) -> None:
+    """Fold one process line into the answer, keeping its working and its notes."""
+    for result in results:
+        for gas, mass in result.gas_masses_kg.items():
+            if mass == ZERO:
+                continue
+            gases[gas] = gases.get(gas, ZERO) + mass
+        working[f"{result.process}_basis"] = result.basis
+        for name, value in result.components.items():
+            working[f"{result.process}_{name}"] = value
+        notes.extend(result.notes)
+
+
+def _mineral_industry(request: MineralIndustryRequest) -> MethodResponse:
+    lines = []
+    if D(request.clinker_tonnes) > ZERO:
+        lines.append(cement_clinker_co2(
+            D(request.clinker_tonnes),
+            kiln_dust_recycled=request.kiln_dust_recycled,
+            cao_content=request.clinker_cao_content))
+    if D(request.lime_tonnes) > ZERO:
+        lines.append(lime_co2(D(request.lime_tonnes), lime_type=request.lime_type))
+    if D(request.glass_tonnes) > ZERO:
+        lines.append(glass_co2(D(request.glass_tonnes), glass_type=request.glass_type,
+                               cullet_ratio=request.cullet_ratio))
+    carbonates = [CarbonateInput(item.carbonate, D(item.tonnes), D(item.fraction_calcined))
+                  for item in request.carbonates if D(item.tonnes) > ZERO]
+    if carbonates:
+        lines.append(carbonate_co2(carbonates))
+
+    gases: dict[str, Decimal] = {}
+    working: dict[str, object] = {}
+    notes: list[str] = []
+    _accumulate(lines, gases, working, notes)
+    if not gases:
+        notes.append("Nothing was recorded, so nothing was calculated.")
+    return _respond(
+        "mineral_industry", gases, gwp_set_name=request.gwp_set,
+        source="IPCC 2006 Volume 3 Chapter 2, Equations 2.4 and 2.8 and Tables 2.1, 2.4, 2.6",
+        working=working, notes=notes)
+
+
+def _chemical_industry(request: ChemicalIndustryRequest) -> MethodResponse:
+    lines = []
+    if D(request.ammonia_tonnes) > ZERO:
+        lines.append(ammonia_co2(
+            D(request.ammonia_tonnes), process=request.ammonia_process,
+            co2_recovered_tonnes=D(request.ammonia_co2_recovered_tonnes)))
+    if D(request.nitric_acid_tonnes) > ZERO:
+        if not request.nitric_acid_plant_type:
+            raise ValueError(
+                "Nitric acid needs the plant type: the published N2O factor runs from 2 to "
+                "9 kg per tonne depending on it, so the tonnage alone says nothing.")
+        lines.append(nitric_acid_n2o(D(request.nitric_acid_tonnes),
+                                     plant_type=request.nitric_acid_plant_type))
+    if D(request.adipic_acid_tonnes) > ZERO:
+        lines.append(adipic_acid_n2o(D(request.adipic_acid_tonnes),
+                                     abatement=request.adipic_acid_abatement))
+    if D(request.carbide_tonnes) > ZERO:
+        lines.append(carbide_emissions(D(request.carbide_tonnes),
+                                       carbide=request.carbide_type,
+                                       basis=request.carbide_basis))
+    if D(request.titanium_dioxide_tonnes) > ZERO:
+        lines.append(titanium_dioxide_co2(D(request.titanium_dioxide_tonnes),
+                                          product=request.titanium_dioxide_product))
+
+    gases: dict[str, Decimal] = {}
+    working: dict[str, object] = {}
+    notes: list[str] = []
+    _accumulate(lines, gases, working, notes)
+    if not gases:
+        notes.append("Nothing was recorded, so nothing was calculated.")
+    return _respond(
+        "chemical_industry", gases, gwp_set_name=request.gwp_set,
+        source="IPCC 2006 Volume 3 Chapter 3, Tables 3.1, 3.3, 3.4, 3.7, 3.8, 3.9",
+        working=working, notes=notes)
+
+
+def _metal_industry(request: MetalIndustryRequest) -> MethodResponse:
+    lines = []
+    steps = [SteelStep(item.step, D(item.tonnes)) for item in request.steel_steps
+             if D(item.tonnes) > ZERO]
+    if steps:
+        lines.append(iron_and_steel_emissions(steps))
+    if D(request.ferroalloy_tonnes) > ZERO:
+        if not request.ferroalloy_type:
+            raise ValueError(
+                "Ferroalloys need the alloy: the factor runs from 1.3 to 5.0 tonnes of CO2 "
+                "per tonne depending on which one.")
+        lines.append(ferroalloy_co2(D(request.ferroalloy_tonnes),
+                                    alloy=request.ferroalloy_type))
+    if D(request.aluminium_tonnes) > ZERO:
+        if not request.aluminium_cell_technology:
+            raise ValueError(
+                "Aluminium needs the cell technology (cwpb, swpb, vss or hss): it sets both "
+                "the anode CO2 and the perfluorocarbons.")
+        lines.append(aluminium_emissions(
+            D(request.aluminium_tonnes),
+            cell_technology=request.aluminium_cell_technology))
+    if D(request.magnesium_tonnes) > ZERO or request.magnesium_sf6_consumed_kg is not None:
+        lines.append(magnesium_sf6(D(request.magnesium_tonnes),
+                                   sf6_consumed_kg=request.magnesium_sf6_consumed_kg))
+    if D(request.lead_tonnes) > ZERO:
+        lines.append(lead_co2(D(request.lead_tonnes), route=request.lead_route))
+    if D(request.zinc_tonnes) > ZERO:
+        lines.append(zinc_co2(D(request.zinc_tonnes), process=request.zinc_process))
+
+    gases: dict[str, Decimal] = {}
+    working: dict[str, object] = {}
+    notes: list[str] = []
+    _accumulate(lines, gases, working, notes)
+    if not gases:
+        notes.append("Nothing was recorded, so nothing was calculated.")
+    return _respond(
+        "metal_industry", gases, gwp_set_name=request.gwp_set,
+        source="IPCC 2006 Volume 3 Chapter 4, Tables 4.1, 4.2, 4.5, 4.10, 4.15, 4.20, "
+               "4.21, 4.24",
+        working=working, notes=notes)
+
+
 _CALCULATORS = {
     "managed_soils": _managed_soils,
     "lime_and_urea": _lime_and_urea,
@@ -515,6 +734,9 @@ _CALCULATORS = {
     "manure_management": _manure,
     "wastewater": _wastewater,
     "solid_waste": _solid_waste,
+    "mineral_industry": _mineral_industry,
+    "chemical_industry": _chemical_industry,
+    "metal_industry": _metal_industry,
 }
 
 
@@ -541,6 +763,7 @@ def _method_options() -> dict[str, dict]:
     manure = ManureParameters.load()
     water = WastewaterParameters.load()
     waste = SolidWasteParameters.load()
+    industry = IndustrialParameters.load()
 
     manure_species = sorted({
         species
@@ -583,6 +806,34 @@ def _method_options() -> dict[str, dict]:
             },
         },
         "lime_and_urea": {"mass_unit": _labelled(["tonne", "kg"])},
+        "mineral_industry": {
+            "lime_type": _labelled(["default_mix", *sorted(industry.group("lime")["values"])]),
+            "glass_type": _labelled(sorted(industry.group("glass")["values"])),
+            "carbonate": _labelled(sorted(industry.group("carbonates")["values"])),
+            "clinker_cao_content": _labelled(
+                sorted(industry.group("cement")["cao_variants"]["values"])),
+        },
+        "chemical_industry": {
+            "ammonia_process": _labelled(sorted(industry.group("ammonia")["values"])),
+            "nitric_acid_plant_type": _labelled(
+                sorted(industry.group("nitric_acid")["values"])),
+            "adipic_acid_abatement": _labelled(
+                sorted(industry.group("adipic_acid")["destruction_factor"]["values"])),
+            "carbide_type": _labelled(["calcium_carbide", "silicon_carbide"]),
+            "carbide_basis": _labelled(["product", "petroleum_coke", "carbide_used"]),
+            "titanium_dioxide_product": _labelled(
+                sorted(industry.group("titanium_dioxide")["values"])),
+            "not_published": dict(industry.group("titanium_dioxide")["not_published"]),
+        },
+        "metal_industry": {
+            "steel_step": _labelled(sorted(industry.group("iron_and_steel")["values"])),
+            "ferroalloy_type": _labelled(sorted(industry.group("ferroalloys")["values"])),
+            "aluminium_cell_technology": _labelled(
+                sorted(industry.group("aluminium")["pfc"]["values"])),
+            "lead_route": _labelled(sorted(industry.group("lead")["values"])),
+            "zinc_process": _labelled(sorted(industry.group("zinc")["values"])),
+            "not_published": dict(industry.group("zinc")["not_published"]),
+        },
     }
 
 
@@ -594,4 +845,6 @@ def list_methods() -> list[dict]:
 
 __all__ = ["GWP_SETS", "METHOD_CATALOGUE", "MethodRequest", "MethodResponse",
            "ManagedSoilsRequest", "LimeAndUreaRequest", "EntericRequest", "ManureRequest",
-           "WastewaterRequest", "SolidWasteRequest", "calculate_method", "list_methods"]
+           "WastewaterRequest", "SolidWasteRequest", "MineralIndustryRequest",
+           "ChemicalIndustryRequest", "MetalIndustryRequest",
+           "calculate_method", "list_methods"]

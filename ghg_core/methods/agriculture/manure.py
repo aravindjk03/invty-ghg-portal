@@ -29,9 +29,10 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-from ..quantities import D, ZERO
+from ...quantities import D, ZERO
+from ..errors import ReportedElsewhere
 
-PARAMETERS_PATH = (Path(__file__).resolve().parent.parent.parent
+PARAMETERS_PATH = (Path(__file__).resolve().parents[3]
                    / "data" / "ipcc" / "manure_management.json")
 
 # Stated under Equations 10.25, 10.27 and 10.29.
@@ -72,10 +73,6 @@ _VOLATILISATION_SYSTEM = {
     "poultry_manure_with_litter": "poultry_with_litter",
     "poultry_manure_without_litter": "poultry_without_litter",
 }
-
-
-class NotManureManagement(KeyError):
-    """The system belongs to another inventory category, not to this one."""
 
 
 def climate_band(temperature_c: Decimal | str | float) -> str:
@@ -197,7 +194,7 @@ class ManureParameters:
 
     def ef3(self, system: str) -> Decimal:
         if system in REPORTED_ELSEWHERE:
-            raise NotManureManagement(REPORTED_ELSEWHERE[system])
+            raise ReportedElsewhere(REPORTED_ELSEWHERE[system])
         values = self.nitrous_oxide["ef3"]["values"]
         try:
             return D(str(values[system]))

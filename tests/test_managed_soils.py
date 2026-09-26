@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 
 from ghg_core.methods import NitrogenInputs, managed_soil_n2o, nitrogen_in
-from ghg_core.methods.managed_soils import N_TO_N2O, SoilParameters
+from ghg_core.methods.agriculture.managed_soils import N_TO_N2O, SoilParameters
 from ghg_core.quantities import D
 
 

@@ -20,16 +20,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Mapping, Optional
 
-from ..quantities import D, ZERO
+from ...quantities import D, ZERO
+from ..errors import FactorNotPublished
 
-PARAMETERS_PATH = (Path(__file__).resolve().parent.parent.parent
+PARAMETERS_PATH = (Path(__file__).resolve().parents[3]
                    / "data" / "ipcc" / "enteric_fermentation.json")
 
 CATTLE_CATEGORIES = ("dairy", "other")
-
-
-class FactorNotPublished(KeyError):
-    """IPCC publishes no Tier 1 factor for this animal. Not the same as zero."""
 
 
 @dataclass(frozen=True)

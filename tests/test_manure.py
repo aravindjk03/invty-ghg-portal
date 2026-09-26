@@ -7,9 +7,9 @@ results are worked by hand from the equations in the module docstrings.
 import pytest
 
 from ghg_core.methods import (LivestockGroup, ManureParameters, ManureStream,
-                              NotManureManagement, annual_n_excretion, climate_band,
+                              ReportedElsewhere, annual_n_excretion, climate_band,
                               manure_ch4, manure_n2o)
-from ghg_core.methods.manure import N_TO_N2O
+from ghg_core.methods.agriculture.manure import N_TO_N2O
 from ghg_core.quantities import D
 
 
@@ -155,13 +155,13 @@ def test_leaching_is_zero_unless_the_country_has_a_fraction_of_its_own():
 
 def test_pasture_is_refused_and_pointed_at_managed_soils():
     # Counting grazing here as well as under managed soils would double it.
-    with pytest.raises(NotManureManagement, match="managed soils"):
+    with pytest.raises(ReportedElsewhere, match="managed soils"):
         manure_n2o([ManureStream("dairy_cattle", 100, "pasture_range_paddock",
                                  typical_animal_mass_kg=400)], region="asia")
 
 
 def test_dung_burned_as_fuel_is_refused_and_pointed_at_fuel_combustion():
-    with pytest.raises(NotManureManagement, match="Fuel Combustion"):
+    with pytest.raises(ReportedElsewhere, match="Fuel Combustion"):
         manure_n2o([ManureStream("dairy_cattle", 100, "burned_for_fuel",
                                  typical_animal_mass_kg=400)], region="asia")
 

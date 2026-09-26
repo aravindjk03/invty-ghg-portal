@@ -9,7 +9,7 @@ import pytest
 from ghg_core.methods import (TreatmentPathway, WastewaterParameters,
                               nitrogen_in_effluent, organic_load_from_population,
                               wastewater_ch4, wastewater_n2o)
-from ghg_core.methods.wastewater import N_TO_N2O
+from ghg_core.methods.waste.wastewater import N_TO_N2O
 from ghg_core.quantities import D
 
 

@@ -22,6 +22,29 @@ export const METHOD_FOR_SOURCE: Record<string, MethodKey> = {
   'agri.lime_application': 'lime_and_urea',
   'fugitive.ch4_wastewater': 'wastewater',
   'fugitive.n2o_wastewater': 'wastewater',
+
+  // Industrial processes: the carbon leaves the raw material, not the fuel.
+  'process.cement_clinker': 'mineral_industry',
+  'process.lime_calcination': 'mineral_industry',
+  'process.dolomite_calcination': 'mineral_industry',
+  'process.limestone_flux': 'mineral_industry',
+  'process.soda_ash_use': 'mineral_industry',
+  'process.glass_carbonates': 'mineral_industry',
+  'process.ceramics': 'mineral_industry',
+  'process.ammonia_production': 'chemical_industry',
+  'process.nitric_acid': 'chemical_industry',
+  'process.adipic_acid': 'chemical_industry',
+  'process.calcium_carbide': 'chemical_industry',
+  'process.silicon_carbide': 'chemical_industry',
+  'process.titanium_dioxide': 'chemical_industry',
+  'process.iron_steel_bf': 'metal_industry',
+  'process.iron_steel_dri': 'metal_industry',
+  'process.ferroalloys': 'metal_industry',
+  'process.aluminium_anode': 'metal_industry',
+  'process.aluminium_pfc': 'metal_industry',
+  'process.lead_production': 'metal_industry',
+  'process.zinc_production': 'metal_industry',
+  'fugitive.sf6_magnesium': 'metal_industry',
 };
 
 export const METHOD_NAME: Record<MethodKey, string> = {
@@ -31,6 +54,9 @@ export const METHOD_NAME: Record<MethodKey, string> = {
   manure_management: 'CH₄ and N₂O from manure management',
   wastewater: 'CH₄ and N₂O from wastewater',
   solid_waste: 'CH₄ from solid waste disposal',
+  mineral_industry: 'CO₂ from cement, lime, glass and carbonates',
+  chemical_industry: 'CO₂ and N₂O from ammonia, nitric acid, adipic acid and carbides',
+  metal_industry: 'CO₂, CH₄, PFCs and SF₆ from iron, steel, ferroalloys and aluminium',
 };
 
 /**

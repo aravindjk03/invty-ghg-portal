@@ -6,7 +6,7 @@ head counts here are invented; the expected results are worked by hand.
 import pytest
 
 from ghg_core.methods import Herd, enteric_ch4
-from ghg_core.methods.enteric import EntericParameters, FactorNotPublished
+from ghg_core.methods.agriculture.enteric import EntericParameters, FactorNotPublished
 from ghg_core.quantities import D
 
 

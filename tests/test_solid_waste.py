@@ -8,7 +8,7 @@ import pytest
 
 from ghg_core.methods import (SolidWasteParameters, WasteStream, solid_waste_ch4,
                               streams_from_composition)
-from ghg_core.methods.solid_waste import C_TO_CH4
+from ghg_core.methods.waste.solid_waste import C_TO_CH4
 from ghg_core.quantities import D
 
 

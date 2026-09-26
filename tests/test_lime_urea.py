@@ -6,7 +6,7 @@ The activity data here is invented; the expected results are worked by hand.
 import pytest
 
 from ghg_core.methods import liming_co2, urea_co2, urea_nitrogen
-from ghg_core.methods.lime_urea import C_TO_CO2, CarbonateParameters
+from ghg_core.methods.agriculture.lime_urea import C_TO_CO2, CarbonateParameters
 from ghg_core.quantities import D
 
 

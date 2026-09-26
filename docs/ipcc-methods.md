@@ -1,18 +1,21 @@
 # The IPCC methods: sources that are not a factor per unit
 
 Almost everything in this library is a factor per unit of activity — a litre of
-diesel, a kilowatt hour, a tonne-kilometre. Six sources are not, and each one is
+diesel, a kilowatt hour, a tonne-kilometre. Nine sources are not, and each one is
 a source that gets reported wrongly, or not at all, when it is forced into a
 factor:
 
 | Source | Why a factor per unit is wrong | Implemented in |
 |---|---|---|
-| N₂O from managed soils | Depends on how much **nitrogen** reached the soil and what happened to the part that volatilised or leached, not on the mass of product bought | `ghg_core/methods/managed_soils.py` |
-| CO₂ from liming and urea | Limestone and dolomite carry different carbon; urea is a CO₂ source **and** a nitrogen input | `ghg_core/methods/lime_urea.py` |
-| CH₄ from enteric fermentation | The factor per head differs by region because animal size and milk yield differ | `ghg_core/methods/enteric.py` |
-| CH₄ and N₂O from manure management | Methane depends on the **average annual temperature** where the manure sits; nitrous oxide on how it is stored | `ghg_core/methods/manure.py` |
-| CH₄ and N₂O from wastewater | A per-m³ factor assumes a strength of effluent nobody measured | `ghg_core/methods/wastewater.py` |
-| CH₄ from solid waste disposal | Waste buried this year emits nothing this year; waste buried a decade ago is still decaying | `ghg_core/methods/solid_waste.py` |
+| N₂O from managed soils | Depends on how much **nitrogen** reached the soil and what happened to the part that volatilised or leached, not on the mass of product bought | `ghg_core/methods/agriculture/managed_soils.py` |
+| CO₂ from liming and urea | Limestone and dolomite carry different carbon; urea is a CO₂ source **and** a nitrogen input | `ghg_core/methods/agriculture/lime_urea.py` |
+| CH₄ from enteric fermentation | The factor per head differs by region because animal size and milk yield differ | `ghg_core/methods/agriculture/enteric.py` |
+| CH₄ and N₂O from manure management | Methane depends on the **average annual temperature** where the manure sits; nitrous oxide on how it is stored | `ghg_core/methods/agriculture/manure.py` |
+| CH₄ and N₂O from wastewater | A per-m³ factor assumes a strength of effluent nobody measured | `ghg_core/methods/waste/wastewater.py` |
+| CH₄ from solid waste disposal | Waste buried this year emits nothing this year; waste buried a decade ago is still decaying | `ghg_core/methods/waste/solid_waste.py` |
+| CO₂ from cement, lime, glass and carbonates | The CO₂ comes out of the **limestone**, not the fuel that heats it | `ghg_core/methods/industry/processes.py` |
+| CO₂ and N₂O from ammonia, nitric acid, adipic acid, carbides | A nitric acid plant makes N₂O in the reaction itself, and how much depends on the plant type and whether abatement ran | `ghg_core/methods/industry/processes.py` |
+| CO₂, CH₄, PFCs and SF₆ from iron, steel, ferroalloys, aluminium, magnesium, lead, zinc | The carbon is the reductant, not a fuel; an aluminium cell makes CF₄ during an anode effect | `ghg_core/methods/industry/processes.py` |
 
 Every method returns a **mass of gas** — CH₄, N₂O or CO₂ — never CO₂e. The GWP
 set the customer reports on is applied afterwards, which is what lets one
@@ -36,6 +39,7 @@ value that does not appear on the published page).
 | `manure_management.json` | V4 Ch 10 | 10.14–10.16, 10.19, 10.21–10.23 |
 | `wastewater.json` | V5 Ch 6 | 6.2, 6.3 and §6.3.1.2 |
 | `solid_waste.json` | V5 Ch 3 and V5 Ch 2 | 3.1–3.3, 2.3–2.6 |
+| `industrial_processes.json` | V3 Ch 2, 3, 4 | 2.1, 2.4, 2.6; 3.1, 3.3, 3.4, 3.7–3.9; 4.1, 4.2, 4.5, 4.10, 4.15, 4.20, 4.21, 4.24 |
 
 ## The equations, as implemented
 
@@ -85,6 +89,48 @@ biogenic and the fossil carbon does not degrade.
 
 The Annex 3A.1 adjustment for a reaction start earlier than 1 January is **not**
 implemented; the equations are used as printed.
+
+## The industrial processes (Volume 3)
+
+For a cement works or a steel mill these are usually the **larger half** of the
+inventory, and no fuel factor covers any of them.
+
+**Minerals** — clinker by Equation 2.4 (0.51 × 1.02 for kiln dust), lime by
+Equation 2.8, glass net of cullet, and the carbonates calcined anywhere else by
+their own chemistry. Three things the module refuses to let slide:
+
+- **The activity is clinker, not cement.** A plant grinding imported clinker
+  calcined nothing; a plant exporting clinker still calcined all of it. Every
+  answer says so, because applying the factor to cement tonnage is the usual
+  mistake.
+- **Lime made and lime spread are different sources.** Manufacture is here;
+  agricultural liming goes through managed soils. Counting both doubles it.
+- **Cullet already released its carbonate CO₂.** With no measured ratio the
+  IPCC Tier 1 assumption of 50% is used, and the answer says it was assumed.
+
+**Chemicals** — ammonia by route (the factor covers fuel *and* feedstock
+together, so that fuel must not also appear under stationary combustion), nitric
+acid by plant type, adipic acid with abatement, the carbides and titanium
+dioxide. Adipic acid abatement is **two** numbers: what the technology destroys
+while running, times how much of the year it ran. Using the destruction factor
+alone assumes the unit never stopped.
+
+**Metals** — coke, sinter, pellet, pig iron, DRI and the three steelmaking
+routes; ferroalloys; aluminium anode CO₂ and PFCs; magnesium SF₆; lead; zinc.
+
+- **The route matters more than the tonnage.** Scrap through an electric arc
+  furnace is 0.08 tCO₂ per tonne; iron through a basic oxygen furnace is 1.46 —
+  eighteen times more.
+- **Double counting is flagged.** The BOF and open hearth factors already
+  include the blast furnace, so a works reporting pig iron beside BOF steel is
+  told it has counted the same carbon twice.
+- **The perfluorocarbons are usually the larger part.** For 100 t of aluminium
+  on CWPB cells: 160 tCO₂e of anode carbon, 345 tCO₂e of CF₄ and C₂F₆.
+- **Magnesium prefers the gas actually bought.** Cover gas use varies by orders
+  of magnitude between foundries, so a purchase figure beats the default.
+
+Titanium slag and the electro-thermic zinc route **raise**: IPCC records one as
+confidential and the other as unknown, and neither is zero.
 
 ## Biogenic methane
 

@@ -31,9 +31,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-from ..quantities import D, ZERO
+from ...quantities import D, ZERO
 
-PARAMETERS_PATH = (Path(__file__).resolve().parent.parent.parent
+PARAMETERS_PATH = (Path(__file__).resolve().parents[3]
                    / "data" / "ipcc" / "solid_waste.json")
 
 # Stated under Equations 3.3 and 3.6.

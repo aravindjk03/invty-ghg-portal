@@ -27,9 +27,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Mapping, Optional
 
-from ..quantities import D, ZERO
+from ...quantities import D, ZERO
 
-PARAMETERS_PATH = (Path(__file__).resolve().parent.parent.parent
+PARAMETERS_PATH = (Path(__file__).resolve().parents[3]
                    / "data" / "ipcc" / "lime_and_urea.json")
 
 # Stated in both sections: multiply CO2-C by 44/12 to convert it into CO2.

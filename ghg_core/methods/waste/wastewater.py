@@ -24,9 +24,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-from ..quantities import D, ZERO
+from ...quantities import D, ZERO
 
-PARAMETERS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "ipcc" / "wastewater.json"
+PARAMETERS_PATH = Path(__file__).resolve().parents[3] / "data" / "ipcc" / "wastewater.json"
 
 N_TO_N2O = D(44) / D(28)
 

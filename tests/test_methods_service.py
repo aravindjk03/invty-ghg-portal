@@ -9,16 +9,19 @@ import pytest
 pytest.importorskip("fastapi")
 
 from ghg_core.quantities import D  # noqa: E402
-from service.methods_api import (EntericRequest, LimeAndUreaRequest,  # noqa: E402
-                                 ManagedSoilsRequest, ManureRequest, SolidWasteRequest,
-                                 WastewaterRequest, calculate_method, list_methods)
+from service.methods_api import (ChemicalIndustryRequest, EntericRequest,  # noqa: E402
+                                 LimeAndUreaRequest, ManagedSoilsRequest, ManureRequest,
+                                 MetalIndustryRequest, MineralIndustryRequest,
+                                 SolidWasteRequest, WastewaterRequest, calculate_method,
+                                 list_methods)
 
 
 def test_every_method_says_what_it_is_and_where_it_came_from():
     methods = list_methods()
     assert {m["key"] for m in methods} == {
         "managed_soils", "lime_and_urea", "enteric_fermentation",
-        "manure_management", "wastewater", "solid_waste"}
+        "manure_management", "wastewater", "solid_waste",
+        "mineral_industry", "chemical_industry", "metal_industry"}
     for method in methods:
         assert "IPCC 2006" in method["source"]
         assert method["why_not_a_factor"]
@@ -183,3 +186,77 @@ def test_a_parameter_that_ipcc_never_published_is_refused_not_defaulted_to_zero(
             method="solid_waste", inventory_year=2026, climate_zone="tropical_moist_wet",
             streams=[{"component": "nappies", "site_type": "unmanaged_deep",
                       "tonnes_by_year": {2020: 100}}]))
+
+
+# --- the industrial processes (Volume 3) ------------------------------------
+
+def test_a_cement_works_reports_the_carbon_that_came_out_of_the_limestone():
+    # 100,000 tonnes of clinker. This is process CO2: no fuel factor covers it,
+    # and for a cement works it is usually more than half the inventory.
+    result = calculate_method(MineralIndustryRequest(
+        method="mineral_industry", clinker_tonnes=100_000))
+    assert D(result.co2e_kg) == D(100_000) * D("0.51") * D("1.02") * D(1000)
+    assert any("clinker, not cement" in note for note in result.notes)
+
+
+def test_a_mineral_line_can_carry_several_products_at_once():
+    combined = calculate_method(MineralIndustryRequest(
+        method="mineral_industry", clinker_tonnes=1000, lime_tonnes=1000,
+        glass_tonnes=1000))
+    clinker_only = calculate_method(MineralIndustryRequest(
+        method="mineral_industry", clinker_tonnes=1000))
+    assert D(combined.co2e_kg) > D(clinker_only.co2e_kg)
+
+
+def test_nitric_acid_without_a_plant_type_is_refused_not_guessed():
+    # The published factor runs from 2 to 9 kg N2O per tonne depending on it.
+    with pytest.raises(ValueError, match="plant type"):
+        calculate_method(ChemicalIndustryRequest(
+            method="chemical_industry", nitric_acid_tonnes=1000))
+
+
+def test_nitric_acid_n2o_dwarfs_its_tonnage_once_the_gwp_is_applied():
+    result = calculate_method(ChemicalIndustryRequest(
+        method="chemical_industry", nitric_acid_tonnes=1000,
+        nitric_acid_plant_type="high_pressure"))
+    assert result.gas_masses_kg == {"N2O": "9000"}
+    # 9 tonnes of N2O is well over two thousand tonnes of CO2e.
+    assert D(result.co2e_kg) > D(2_000_000)
+
+
+def test_an_aluminium_smelter_reports_its_perfluorocarbons():
+    result = calculate_method(MetalIndustryRequest(
+        method="metal_industry", aluminium_tonnes=100,
+        aluminium_cell_technology="cwpb", gwp_set="AR6"))
+    assert set(result.gas_masses_kg) == {"CO2", "CF4", "C2F6"}
+    # The anode effects are the larger part: 345 of the 505 tonnes of CO2e.
+    pfc = D(result.co2e_by_gas["CF4"]) + D(result.co2e_by_gas["C2F6"])
+    assert pfc > D(result.co2e_by_gas["CO2"])
+
+
+def test_aluminium_without_a_cell_technology_is_refused():
+    with pytest.raises(ValueError, match="cell technology"):
+        calculate_method(MetalIndustryRequest(
+            method="metal_industry", aluminium_tonnes=100))
+
+
+def test_a_steel_works_can_report_every_step_on_one_line():
+    result = calculate_method(MetalIndustryRequest(
+        method="metal_industry",
+        steel_steps=[{"step": "coke_oven", "tonnes": 1000},
+                     {"step": "sinter", "tonnes": 2000},
+                     {"step": "steel_basic_oxygen_furnace", "tonnes": 5000}]))
+    assert set(result.gas_masses_kg) == {"CO2", "CH4"}
+    assert D(result.working["iron_and_steel_sinter_tco2"]) == D(2000) * D("0.20")
+
+
+def test_the_industrial_options_come_from_the_published_tables():
+    options = {m["key"]: m["options"] for m in list_methods()}
+    assert "high_pressure" in [c["value"] for c in
+                               options["chemical_industry"]["nitric_acid_plant_type"]]
+    assert "cwpb" in [c["value"] for c in
+                      options["metal_industry"]["aluminium_cell_technology"]]
+    assert "steel_electric_arc_furnace" in [c["value"] for c in
+                                            options["metal_industry"]["steel_step"]]
+    # A process IPCC records as unknown is named as such, not offered silently.
+    assert "electro_thermic" in options["metal_industry"]["not_published"]

@@ -3,8 +3,23 @@
 #
 # Set up: render.com -> New -> Blueprint -> pick this repository and branch.
 # Render asks for every value marked `sync: false`; paste the keys there, never
-# in this file. Free services sleep when idle, and their disk is reset on each
-# deploy: demo accounts are re-seeded and cached estimates are recomputed.
+# in this file.
+#
+# Two things to know before a customer sees this:
+#
+#  1. A FREE service sleeps after fifteen minutes idle and takes about a minute
+#     to wake. While the engine sleeps, every figure on the page reads "the
+#     calculation engine is not reachable" - correct behaviour, but a poor first
+#     impression. Moving iinvty-insity-edge-ai to `starter` is the single change
+#     that most improves how the product feels. It is a paid plan, so it is left
+#     as `free` here for you to decide.
+#
+#  2. The backend keeps its accounts and saved inventories in a SQLite file
+#     under backend/data. On Render that disk is EPHEMERAL: every deploy wipes
+#     it, and a customer's saved inventory goes with it. The `disk` block below
+#     mounts persistent storage at that path so it survives. A disk is available
+#     on paid instance types only; on free, expect the data to reset and say so
+#     to anyone using it.
 services:
   # Login, inventory and reports API (Express + node:sqlite).
   - type: web
@@ -15,6 +30,12 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
+    # Where the SQLite file lives (backend/data/invty_portal.db). Without this
+    # the accounts and every saved inventory are gone on the next deploy.
+    disk:
+      name: iinvty-data
+      mountPath: /opt/render/project/src/backend/data
+      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "24"              # node:sqlite needs Node 22.5 or later

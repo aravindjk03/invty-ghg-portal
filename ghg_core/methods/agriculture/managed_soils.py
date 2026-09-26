@@ -24,9 +24,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Mapping, Optional
 
-from ..quantities import D, ZERO
+from ...quantities import D, ZERO
 
-PARAMETERS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "ipcc" / "managed_soils.json"
+PARAMETERS_PATH = Path(__file__).resolve().parents[3] / "data" / "ipcc" / "managed_soils.json"
 
 # N2O = N2O-N x 44/28 (molecular mass ratio), stated under Equation 11.1.
 N_TO_N2O = D(44) / D(28)

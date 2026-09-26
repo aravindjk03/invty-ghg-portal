@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useId, useMemo, useRef } from 'react';
 import { clsx } from 'clsx';
 import { ActivityEntry } from '../../types/ghg';
 import { 
@@ -78,6 +78,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   );
   const units = useMemo(() => unitsFor(entry.emissionFactor.id), [entry.emissionFactor.id]);
   const catalogueMap = useCatalogueMap();
+  const monthFieldId = useId();
   const factorUnverified = !isVerified(entry.emissionFactor.id)
     && entry.customFactorOverride === undefined;
   // The engine calculates a row only when it names a published factor.
@@ -386,6 +387,42 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
           </div>
         </div>
       )}
+
+      {/*
+        The month this activity falls in.
+
+        The engine already accepts it and the report already has a monthly
+        analysis and a missing-month QA/QC check — but there was nowhere to
+        enter it, so every row was undated and the check could only ever report
+        "cannot be assessed". A verifier asks for the period split first.
+      */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <label htmlFor={`${monthFieldId}`} className="text-[11px] font-medium text-brand-muted">
+          Period
+        </label>
+        <input
+          id={monthFieldId}
+          type="month"
+          value={entry.periodMonth || ''}
+          onChange={(e) => onUpdate({ periodMonth: e.target.value || undefined })}
+          aria-label="Reporting month for this activity"
+          className="h-8 bg-surface-raised border border-border rounded-md px-2 text-[12px] text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600"
+        />
+        {entry.periodMonth ? (
+          <button
+            type="button"
+            onClick={() => onUpdate({ periodMonth: undefined })}
+            className="text-[11px] text-brand-muted hover:text-brand-body underline"
+          >
+            clear
+          </button>
+        ) : (
+          <span className="text-[11px] text-brand-muted">
+            Optional. A dated row joins the monthly analysis; an undated one is reported for
+            the year as a whole.
+          </span>
+        )}
+      </div>
 
       {/* Lower Provenance & Quality Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border/40 text-[11px] text-brand-muted">

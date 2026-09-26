@@ -8,8 +8,8 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, ArrowLeft, Beef, FlaskConical, Leaf, Loader2, Plus, Sprout,
-  Trash2, Droplets, Trash,
+  AlertTriangle, ArrowLeft, Beef, Factory, FlaskConical, Hammer, Leaf, Loader2,
+  Mountain, Plus, Sprout, Trash2, Droplets, Trash,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -19,13 +19,17 @@ import {
   EntericForm, LimeAndUreaForm, ManagedSoilsForm, ManureForm, MethodIdentity,
   SolidWasteForm, WastewaterForm,
 } from '../components/methods/MethodForms';
+import {
+  ChemicalIndustryForm, MetalIndustryForm, MineralIndustryForm,
+} from '../components/methods/IndustryForms';
 import { Switch } from '../components/methods/MethodFields';
 import { MethodResultPanel } from '../components/methods/MethodResultPanel';
 import { useGHG } from '../context/GHGContext';
 import { getMethodCatalogue } from '../services/methodsService';
 import {
-  EntericInput, LimeAndUreaInput, ManagedSoilsInput, ManureInput, MethodEntry,
-  MethodInfo, MethodInput, MethodKey, SolidWasteInput, WastewaterInput,
+  ChemicalIndustryInput, EntericInput, LimeAndUreaInput, ManagedSoilsInput,
+  ManureInput, MetalIndustryInput, MethodEntry, MethodInfo, MethodInput, MethodKey,
+  MineralIndustryInput, SolidWasteInput, WastewaterInput,
 } from '../types/methods';
 
 export interface MethodsPageProps {
@@ -39,6 +43,9 @@ const ICONS: Record<MethodKey, React.ReactNode> = {
   manure_management: <Leaf size={18} />,
   wastewater: <Droplets size={18} />,
   solid_waste: <Trash size={18} />,
+  mineral_industry: <Mountain size={18} />,
+  chemical_industry: <FlaskConical size={18} />,
+  metal_industry: <Hammer size={18} />,
 };
 
 export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
@@ -94,6 +101,12 @@ export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
         return <WastewaterForm input={entry.input as WastewaterInput} info={info} onChange={onChange} />;
       case 'solid_waste':
         return <SolidWasteForm input={entry.input as SolidWasteInput} info={info} onChange={onChange} />;
+      case 'mineral_industry':
+        return <MineralIndustryForm input={entry.input as MineralIndustryInput} info={info} onChange={onChange} />;
+      case 'chemical_industry':
+        return <ChemicalIndustryForm input={entry.input as ChemicalIndustryInput} info={info} onChange={onChange} />;
+      case 'metal_industry':
+        return <MetalIndustryForm input={entry.input as MetalIndustryInput} info={info} onChange={onChange} />;
       default:
         return null;
     }
@@ -118,11 +131,11 @@ export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
               IPCC methods
             </h1>
             <p className="text-[15px] text-brand-muted mt-1">
-              Six sources cannot be a factor per unit of activity. A landfill&apos;s methane
-              depends on what was buried in earlier years; a fertiliser&apos;s nitrous oxide on
-              what happened to the nitrogen after it reached the soil; a herd&apos;s methane on
-              the region and the climate. They are calculated here, by the same engine and under
-              the same {gwpSet} basis as the rest of the inventory.
+              Nine sources cannot be a factor per unit of activity. A landfill&apos;s methane
+              depends on what was buried in earlier years; a cement kiln&apos;s CO₂ comes out of
+              the limestone whatever heats it; an aluminium cell makes CF₄ during an anode
+              effect. They are calculated here, by the same engine and under the same {gwpSet}
+              basis as the rest of the inventory.
             </p>
           </div>
 
@@ -213,10 +226,11 @@ export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
               No method sources recorded
             </h3>
             <p className="text-[13px] text-brand-muted max-w-lg mx-auto">
-              If the site has livestock, applies fertiliser or lime, treats its own effluent or
-              sends waste to a disposal site, those are Scope 1 sources and belong here. Leaving
-              them out understates the inventory; there is no factor per tonne that can stand in
-              for them.
+              If the site has livestock, applies fertiliser, treats its own effluent, sends
+              waste to a disposal site, or makes cement, lime, glass, chemicals or metal, those
+              are Scope 1 sources and belong here. For a cement works or a steel mill they are
+              usually the larger half of the inventory. Leaving them out understates it; no
+              factor per tonne of fuel can stand in for them.
             </p>
           </Card>
         ) : (
