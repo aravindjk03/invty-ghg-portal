@@ -44,29 +44,46 @@ fuel.biogas,Biogas,kWh,desnz.2025.2_105_1047_5,Bioenergy / Biogas / Biogas,UK,DE
 fuel.biogas,Biogas,tonnes,desnz.2025.2_105_1047_15,Bioenergy / Biogas / Biogas,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.agri_residue,Agricultural residue — other,kWh,desnz.2025.2_104_1046_5,Bioenergy / Biomass / Grass / straw,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.agri_residue,Agricultural residue — other,tonnes,desnz.2025.2_104_1046_15,Bioenergy / Biomass / Grass / straw,UK,DESNZ UK Government GHG conversion factors
+fuel.biomass.bagasse,Bagasse,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.biomass.briquettes,Biomass briquettes,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.biomass.coconut_shell,Coconut shell,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.biomass.groundnut_shell,Groundnut shell,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.biomass.mustard_husk,Mustard husk,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.biomass.rice_husk,Rice husk,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.biomass.sawdust,Sawdust,tonnes,ipcc.2006.energy.other_primary_solid_biomass,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.biomass.wood_chips,Wood chips,kWh,desnz.2025.2_104_1044_5,Bioenergy / Biomass / Wood chips,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.wood_chips,Wood chips,tonnes,desnz.2025.2_104_1044_15,Bioenergy / Biomass / Wood chips,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.wood_logs,Wood logs,kWh,desnz.2025.2_104_1043_5,Bioenergy / Biomass / Wood logs,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.wood_logs,Wood logs,tonnes,desnz.2025.2_104_1043_15,Bioenergy / Biomass / Wood logs,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.wood_pellets,Wood pellets,kWh,desnz.2025.2_104_1045_5,Bioenergy / Biomass / Wood pellets,UK,DESNZ UK Government GHG conversion factors
 fuel.biomass.wood_pellets,Wood pellets,tonnes,desnz.2025.2_104_1045_15,Bioenergy / Biomass / Wood pellets,UK,DESNZ UK Government GHG conversion factors
+fuel.blast_furnace_gas,Blast furnace gas,tonnes,ipcc.2006.energy.blast_furnace_gas,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.butane,Butane,kWh (Gross CV),desnz.2025.1_100_1000_6,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
 fuel.butane,Butane,kWh (Net CV),desnz.2025.1_100_1000_7,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
 fuel.butane,Butane,litres,desnz.2025.1_100_1000_8,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
 fuel.butane,Butane,tonnes,desnz.2025.1_100_1000_15,Fuels / Gaseous fuels / Butane,UK,DESNZ UK Government GHG conversion factors
+fuel.charcoal,Charcoal,tonnes,ipcc.2006.energy.charcoal,Stationary combustion / IPCC default / Biomass,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.cng.stationary,CNG — stationary,kWh (Gross CV),desnz.2025.1_100_1001_6,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
 fuel.cng.stationary,CNG — stationary,kWh (Net CV),desnz.2025.1_100_1001_7,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
 fuel.cng.stationary,CNG — stationary,litres,desnz.2025.1_100_1001_8,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
 fuel.cng.stationary,CNG — stationary,tonnes,desnz.2025.1_100_1001_15,Fuels / Gaseous fuels / CNG,UK,DESNZ UK Government GHG conversion factors
+fuel.coal.anthracite,Coal — anthracite,tonnes,ipcc.2006.energy.anthracite,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.coal.bituminous,Coal — bituminous,tonnes,ipcc.2006.energy.other_bituminous_coal,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.coal.coking,Coal — coking / metallurgical,kWh (Gross CV),desnz.2025.1_102_1028_6,Fuels / Solid fuels / Coking coal,UK,DESNZ UK Government GHG conversion factors
 fuel.coal.coking,Coal — coking / metallurgical,kWh (Net CV),desnz.2025.1_102_1028_7,Fuels / Solid fuels / Coking coal,UK,DESNZ UK Government GHG conversion factors
 fuel.coal.coking,Coal — coking / metallurgical,tonnes,desnz.2025.1_102_1028_15,Fuels / Solid fuels / Coking coal,UK,DESNZ UK Government GHG conversion factors
 fuel.coal.imported_steam,Coal — imported steam coal,kWh (Gross CV),desnz.2025.1_102_1025_6,Fuels / Solid fuels / Coal (industrial),UK,DESNZ UK Government GHG conversion factors
 fuel.coal.imported_steam,Coal — imported steam coal,kWh (Net CV),desnz.2025.1_102_1025_7,Fuels / Solid fuels / Coal (industrial),UK,DESNZ UK Government GHG conversion factors
 fuel.coal.imported_steam,Coal — imported steam coal,tonnes,desnz.2025.1_102_1025_15,Fuels / Solid fuels / Coal (industrial),UK,DESNZ UK Government GHG conversion factors
+fuel.coal.indian_domestic,Coal — Indian domestic (grade-specified),tonnes,ipcc.2006.energy.sub_bituminous_coal,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.coal.lignite,Coal — lignite / brown coal,tonnes,ipcc.2006.energy.lignite,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.coal.sub_bituminous,Coal — sub-bituminous,tonnes,ipcc.2006.energy.sub_bituminous_coal,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.coke.metallurgical,Coke — metallurgical,tonnes,ipcc.2006.energy.coke_oven_coke,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.coke.petroleum,Petroleum coke (petcoke),kWh (Gross CV),desnz.2025.1_102_1029_6,Fuels / Solid fuels / Petroleum coke,UK,DESNZ UK Government GHG conversion factors
 fuel.coke.petroleum,Petroleum coke (petcoke),kWh (Net CV),desnz.2025.1_102_1029_7,Fuels / Solid fuels / Petroleum coke,UK,DESNZ UK Government GHG conversion factors
 fuel.coke.petroleum,Petroleum coke (petcoke),tonnes,desnz.2025.1_102_1029_15,Fuels / Solid fuels / Petroleum coke,UK,DESNZ UK Government GHG conversion factors
+fuel.coke_oven_gas,Coke oven gas,tonnes,ipcc.2006.energy.coke_oven_gas,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
+fuel.converter_gas,Converter / LD gas,tonnes,ipcc.2006.energy.oxygen_steel_furnace_gas,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",kWh (Gross CV),desnz.2025.1_101_1012_6,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
 fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",kWh (Net CV),desnz.2025.1_101_1012_7,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
 fuel.diesel.stationary,"Diesel / HSD — stationary (DG set, boiler)",litres,desnz.2025.1_101_1012_8,Fuels / Liquid fuels / Diesel (100% mineral diesel),UK,DESNZ UK Government GHG conversion factors
@@ -100,6 +117,7 @@ fuel.lubricants,Lubricants (combusted),kWh (Gross CV),desnz.2025.1_101_1015_6,Fu
 fuel.lubricants,Lubricants (combusted),kWh (Net CV),desnz.2025.1_101_1015_7,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
 fuel.lubricants,Lubricants (combusted),litres,desnz.2025.1_101_1015_8,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
 fuel.lubricants,Lubricants (combusted),tonnes,desnz.2025.1_101_1015_15,Fuels / Liquid fuels / Lubricants,UK,DESNZ UK Government GHG conversion factors
+fuel.msw,Municipal solid waste (as fuel),tonnes,ipcc.2006.energy.municipal_waste_fossil,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.naphtha,Naphtha,kWh (Gross CV),desnz.2025.1_101_1016_6,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
 fuel.naphtha,Naphtha,kWh (Net CV),desnz.2025.1_101_1016_7,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
 fuel.naphtha,Naphtha,litres,desnz.2025.1_101_1016_8,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
@@ -112,10 +130,12 @@ fuel.png,Piped natural gas (PNG),cubic metres,desnz.2025.1_100_1004_1,Fuels / Ga
 fuel.png,Piped natural gas (PNG),kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
 fuel.png,Piped natural gas (PNG),kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
 fuel.png,Piped natural gas (PNG),tonnes,desnz.2025.1_100_1004_15,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.producer_gas,Producer gas / syngas,tonnes,ipcc.2006.energy.gas_works_gas,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.propane,Propane,kWh (Gross CV),desnz.2025.1_100_1007_6,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
 fuel.propane,Propane,kWh (Net CV),desnz.2025.1_100_1007_7,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
 fuel.propane,Propane,litres,desnz.2025.1_100_1007_8,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
 fuel.propane,Propane,tonnes,desnz.2025.1_100_1007_15,Fuels / Gaseous fuels / Propane,UK,DESNZ UK Government GHG conversion factors
+fuel.rdf,Refuse-derived fuel (RDF),tonnes,ipcc.2006.energy.municipal_waste_fossil,Stationary combustion / IPCC default / Fossil,GLOBAL,"IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy)"
 fuel.waste_oil,Waste oil (combusted),kWh (Gross CV),desnz.2025.1_101_1022_6,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors
 fuel.waste_oil,Waste oil (combusted),kWh (Net CV),desnz.2025.1_101_1022_7,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors
 fuel.waste_oil,Waste oil (combusted),litres,desnz.2025.1_101_1022_8,Fuels / Liquid fuels / Waste oils,UK,DESNZ UK Government GHG conversion factors

@@ -178,6 +178,37 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
                 "year": int(row["publication_year"] or 0), "gases": {"CO2"},
             }
 
+    # IPCC 2006 Volume 2 defaults, per tonne of fuel. These cover what DESNZ
+    # does not: anthracite, lignite, sub-bituminous coal, charcoal, bagasse and
+    # the other solid biomass an Indian plant burns, waste as a fuel, and the
+    # works gases of an integrated steel mill. Gas by gas, so either GWP set
+    # applies; biomass CO2 arrives as a separate memo activity and never joins
+    # a scope total.
+    ipcc_energy = FACTOR_DIR / "ipcc_energy.csv"
+    if ipcc_energy.exists():
+        for row in csv.DictReader(ipcc_energy.open(encoding="utf-8")):
+            value = _decimal(row["gas_mass_kg_per_unit"])
+            if value is None:
+                continue
+            key = row["factor_id"].rsplit(".", 1)[0] if row["scope"] != "memo"                 else row["factor_id"]
+            registry.add(EmissionFactor(
+                version_id=row["factor_id"], activity_key=key, region=row["geography"],
+                reference_year=int(row["publication_year"] or 0), gas=row["gas"],
+                value=value, numerator_unit=f"kg{row['gas']}",
+                denominator_unit=row["unit"],
+                ef_basis=PHYSICAL_BASIS, source_name=row["source"],
+                source_table_ref=row["source_version"],
+                source_url="https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol2.html",
+                factor_set_id="ipcc-2006-energy",
+            ))
+            entry = activities.setdefault(key, {
+                "name": row["name"].rsplit(" — ", 1)[0], "scope": row["scope"],
+                "category_path": row["category_path"], "unit": row["unit"],
+                "region": row["geography"], "source": row["source"],
+                "year": int(row["publication_year"] or 0), "gases": set(),
+            })
+            entry["gases"].add(row["gas"])
+
     epa = FACTOR_DIR / "epa_supply_chain.csv"
     if epa.exists():
         for row in csv.DictReader(epa.open(encoding="utf-8")):

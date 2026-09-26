@@ -261,6 +261,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
                       {entries.map((row) => (
                         <ActivityRow
+                  onNavigate={onNavigate}
                           key={row.id}
                           entry={row}
                           onUpdate={(updates) => updateRow('scope-3', row.id, updates)}

@@ -192,6 +192,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
             {renderColumnHeaders()}
             {entries.map((row) => (
               <ActivityRow
+                  onNavigate={onNavigate}
                 key={row.id}
                 entry={row}
                 onUpdate={(up) => updateRow('scope-1', row.id, up)}

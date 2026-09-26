@@ -270,6 +270,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             ) : (
               electricityEntries.map((row) => (
                 <ActivityRow
+                  onNavigate={onNavigate}
                   key={row.id}
                   entry={row}
                   onUpdate={(updates) => updateRow('scope-2', row.id, updates)}
@@ -310,6 +311,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             ) : (
               steamHeatEntries.map((row) => (
                 <ActivityRow
+                  onNavigate={onNavigate}
                   key={row.id}
                   entry={row}
                   onUpdate={(updates) => updateRow('scope-2', row.id, updates)}
@@ -363,6 +365,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             ) : (
               memoEnergyEntries.map((row) => (
                 <ActivityRow
+                  onNavigate={onNavigate}
                   key={row.id}
                   entry={row}
                   onUpdate={(updates) => updateRow('scope-2', row.id, updates)}

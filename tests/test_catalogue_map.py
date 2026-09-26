@@ -85,12 +85,39 @@ def test_every_mapping_actually_calculates(mappings):
     assert not failures, "mapped factors that do not calculate:\n  " + "\n  ".join(failures)
 
 
-def test_a_source_with_no_published_factor_is_left_out_rather_than_invented(mappings):
-    # Rice husk, bagasse and the rest are real sources that no ingested set
-    # publishes a factor for. They stay uncalculated on purpose: the report
-    # lists them, and nobody reports a made-up number for them.
+def test_the_fuels_an_indian_plant_burns_are_mapped(mappings):
+    # DESNZ publishes UK fuels and has none of these. They come from the IPCC
+    # 2006 energy defaults, per tonne, and without them a cement works, steel
+    # mill or bagasse boiler reports nothing at all.
     mapped = {mapping.catalogue_key for mapping in mappings}
-    for key in ("fuel.biomass.rice_husk", "fuel.biomass.bagasse", "fuel.coal.anthracite"):
+    for key in ("fuel.coal.anthracite", "fuel.coal.lignite", "fuel.coal.sub_bituminous",
+                "fuel.biomass.bagasse", "fuel.biomass.rice_husk", "fuel.charcoal",
+                "fuel.blast_furnace_gas", "fuel.coke_oven_gas", "fuel.msw"):
+        assert key in mapped, f"{key} has no published factor mapped to it"
+
+
+def test_biomass_carries_its_combustion_gases_not_its_biogenic_carbon(mappings):
+    # Burning bagasse emits CH4 and N2O into Scope 1; its CO2 is biogenic and is
+    # a memo item under the GHG Protocol. Putting that CO2 in Scope 1 would
+    # overstate a bagasse boiler by an order of magnitude.
+    _, activities = load_registry()
+    gases = {activity.activity_key: set(activity.gases) for activity in activities}
+    bagasse = next(m for m in mappings if m.catalogue_key == "fuel.biomass.bagasse")
+    assert gases[bagasse.activity_key] == {"CH4", "N2O"}
+
+    memo = next(a for a in activities
+                if a.activity_key.endswith("other_primary_solid_biomass.biogenic_co2"))
+    assert memo.scope == "memo"
+
+
+def test_a_source_with_no_published_factor_is_left_out_rather_than_invented(mappings):
+    # Process emissions are real sources that no ingested factor set covers:
+    # clinker calcination and nitric acid need the IPCC industrial-processes
+    # methods, not a factor per tonne of product. They stay uncalculated on
+    # purpose, the report lists them, and nobody reports a made-up number.
+    mapped = {mapping.catalogue_key for mapping in mappings}
+    for key in ("process.cement_clinker", "process.nitric_acid", "process.ammonia_production",
+                "fuel.hydrogen.green"):
         assert key not in mapped
 
 

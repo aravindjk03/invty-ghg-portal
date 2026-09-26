@@ -172,6 +172,34 @@ DESNZ_BY_NAME: dict[str, str] = {
 
 #: catalogue activity_key -> an engine activity key outside DESNZ, given in full.
 DIRECT: dict[str, str] = {
+    # --- IPCC 2006 Volume 2 defaults, per tonne ----------------------------
+    # The fuels an Indian plant burns that DESNZ does not publish. Ingested by
+    # scripts/ingest_ipcc_energy.py from the net calorific value and the kg/TJ
+    # factor; biomass carries CH4 and N2O only, its CO2 being a memo item.
+    "fuel.coal.anthracite": "ipcc.2006.energy.anthracite",
+    "fuel.coal.bituminous": "ipcc.2006.energy.other_bituminous_coal",
+    "fuel.coal.sub_bituminous": "ipcc.2006.energy.sub_bituminous_coal",
+    "fuel.coal.lignite": "ipcc.2006.energy.lignite",
+    # India's domestic coal is graded, and no published set gives a factor for
+    # a named Indian grade. Sub-bituminous is the closest IPCC class for it,
+    # and the report states which default was used.
+    "fuel.coal.indian_domestic": "ipcc.2006.energy.sub_bituminous_coal",
+    "fuel.coke.metallurgical": "ipcc.2006.energy.coke_oven_coke",
+    "fuel.charcoal": "ipcc.2006.energy.charcoal",
+    "fuel.biomass.briquettes": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.biomass.bagasse": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.biomass.rice_husk": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.biomass.groundnut_shell": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.biomass.mustard_husk": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.biomass.coconut_shell": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.biomass.sawdust": "ipcc.2006.energy.other_primary_solid_biomass",
+    "fuel.msw": "ipcc.2006.energy.municipal_waste_fossil",
+    "fuel.rdf": "ipcc.2006.energy.municipal_waste_fossil",
+    "fuel.blast_furnace_gas": "ipcc.2006.energy.blast_furnace_gas",
+    "fuel.coke_oven_gas": "ipcc.2006.energy.coke_oven_gas",
+    "fuel.converter_gas": "ipcc.2006.energy.oxygen_steel_furnace_gas",
+    "fuel.producer_gas": "ipcc.2006.energy.gas_works_gas",
+
     # CEA publishes the Indian grid; this is the all-India weighted average
     # including imports, which is the figure a site without a state-level
     # factor should report on.
@@ -215,14 +243,21 @@ def load_engine() -> tuple[dict, dict]:
     activities: dict[str, dict] = {}
     by_name: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
 
-    for name in ("desnz_2025", "cea_grid", "india_transport", "epa_supply_chain"):
+    for name in ("desnz_2025", "cea_grid", "india_transport", "epa_supply_chain",
+                 "ipcc_energy"):
         path = REPO / "data" / "factors" / f"{name}.csv"
         if not path.exists():
             continue
         with path.open(encoding="utf-8", errors="replace") as handle:
             for row in csv.DictReader(handle):
-                key = (re.sub(r"_\d+$", "", row["factor_id"])
-                       if name == "desnz_2025" else row["factor_id"])
+                if name == "desnz_2025":
+                    key = re.sub(r"_\d+$", "", row["factor_id"])
+                elif name == "ipcc_energy":
+                    # One activity per fuel; the last segment names the gas.
+                    key = (row["factor_id"].rsplit(".", 1)[0]
+                           if row["scope"] != "memo" else row["factor_id"])
+                else:
+                    key = row["factor_id"]
                 record = activities.setdefault(key, {
                     "name": row["name"].replace("�", "-"),
                     "path": row["category_path"].replace("�", "-"),

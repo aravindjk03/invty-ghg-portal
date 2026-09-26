@@ -18,12 +18,15 @@ import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../..
 import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
 import { useCatalogueMap } from '../../services/useCatalogueMap';
+import { METHOD_NAME, METHOD_NOT_IMPLEMENTED, methodFor } from '../../data/methodSources';
 
 export interface ActivityRowProps {
   entry: ActivityEntry;
   onUpdate: (updates: Partial<ActivityEntry>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  /** Lets a row send the user to the page that can actually calculate it. */
+  onNavigate?: (page: string) => void;
 }
 
 export const ActivityRow: React.FC<ActivityRowProps> = ({
@@ -31,6 +34,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   onUpdate,
   onDelete,
   onDuplicate,
+  onNavigate,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [displayResult, setDisplayResult] = useState(entry.calculatedTco2e);
@@ -78,6 +82,10 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     && entry.customFactorOverride === undefined;
   // The engine calculates a row only when it names a published factor.
   const engineFactorAttached = Boolean(entry.engineActivityKey);
+  // Some sources cannot be a factor per unit at all. They are calculated as
+  // IPCC methods, on their own page, and counted in Scope 1 from there.
+  const method = methodFor(entry.emissionFactor?.id);
+  const methodNotImplemented = METHOD_NOT_IMPLEMENTED[entry.emissionFactor?.id ?? ''];
   // What that factor is called. A row should never show a raw activity key.
   const engineFactorName = useMemo(() => {
     if (!entry.engineActivityKey) return undefined;
@@ -158,7 +166,30 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         className="hidden"
       />
 
-      {(['scope-1', 'scope-2', 'scope-3'] as const).includes(entry.scope as 'scope-1') && (
+      {method && (
+        <div className="mb-2 rounded-md border border-blue-200 bg-blue-50/70 px-3 py-2 text-[11.5px] text-brand-body">
+          <strong>{METHOD_NAME[method]}</strong> cannot be a factor per unit of activity — it
+          depends on the region, the climate, or what happened in earlier years. It is
+          calculated on the IPCC methods page, and its total is already counted in Scope 1.
+          {onNavigate && (
+            <button
+              type="button"
+              onClick={() => onNavigate('methods')}
+              className="ml-1 font-semibold text-brand-link hover:underline"
+            >
+              Record it there →
+            </button>
+          )}
+        </div>
+      )}
+
+      {methodNotImplemented && (
+        <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
+          {methodNotImplemented}
+        </div>
+      )}
+
+      {!method && (['scope-1', 'scope-2', 'scope-3'] as const).includes(entry.scope as 'scope-1') && (
         <EngineFactorPicker
           scope={entry.scope.replace('scope-', '') as '1' | '2' | '3'}
           hint={entry.fuelOrSource}
@@ -173,7 +204,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         />
       )}
 
-      {factorUnverified && !entry.engineActivityKey && (
+      {factorUnverified && !entry.engineActivityKey && !method && !methodNotImplemented && (
         <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
           <strong>No published factor ingested for this source.</strong> It contributes 0 until you enter a
           factor value and cite its source, so the inventory never reports a made-up number. Use
