@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
+import { ChemicalSafetyPanel } from '../components/pcf/ChemicalSafetyPanel';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
@@ -354,6 +355,13 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
         {estimate.isError && !estimate.isPending && <Failure error={estimate.error} onRetry={retry} />}
         {estimate.isSuccess && <EstimateResult data={estimate.data} />}
         {estimate.isIdle && <HowItWorks />}
+
+        {/*
+          The other half of the question. A carbon figure says what a material
+          costs the climate; whoever handles it wants to know whether it will
+          burn or harm them, and that is a different source entirely.
+        */}
+        <ChemicalSafetyPanel initialQuery={submitted?.product ?? ''} />
       </div>
     </div>
   );

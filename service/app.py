@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from ghg_core import ENGINE_VERSION, InMemoryFactorRegistry
 
 from .cache import DecompositionCache, cache_key
+from .chemical_safety import ChemicalSafetyUnavailable, look_up as look_up_chemical
 from .catalogue import Catalogue
 from .config import Settings, ai_credentials_present, gemini_api_key, load_env_file
 from .estimator import (AIEstimator, ClaudeEstimator, EstimatorError, EstimatorNotAProduct,
@@ -329,6 +330,45 @@ def methods_calculate(request: MethodRequest = Body(..., discriminator="method")
         # These carry the reason and what to do about it, and none of them
         # contain anything the caller did not send.
         raise HTTPException(status_code=422, detail=str(exc).strip("'")) from None
+
+
+# --- chemical safety ------------------------------------------------------------------------
+
+@app.get("/v1/chemical-safety")
+def chemical_safety(name: str) -> dict:
+    """What PubChem publishes about a named substance.
+
+    A carbon figure says what a material costs the climate; it says nothing
+    about whether it will burn or poison the person handling it. This answers
+    that from PubChem, quoting the GHS statements as published rather than
+    rewording them, and it never guesses at a name it cannot match.
+    """
+    if len(name) > 200:
+        raise HTTPException(status_code=422, detail="That is too long to be a substance name.")
+    try:
+        result = look_up_chemical(name)
+    except ChemicalSafetyUnavailable as error:
+        # 503, not 500: the service is fine, its upstream is busy. The message
+        # says so, because "unavailable" must not read as "no hazards found".
+        raise HTTPException(status_code=503, detail=str(error)) from None
+
+    return {
+        "query": result.query,
+        "matched": result.matched,
+        "cid": result.cid,
+        "name": result.name,
+        "molecular_formula": result.molecular_formula,
+        "molecular_weight": result.molecular_weight,
+        "signal_word": result.signal_word,
+        "hazard_statements": [
+            {"code": hazard.code, "statement": hazard.statement}
+            for hazard in result.hazard_statements
+        ],
+        "precautionary_codes": list(result.precautionary_codes),
+        "source": "PubChem, U.S. National Library of Medicine",
+        "source_url": result.source_url,
+        "notes": list(result.notes),
+    }
 
 
 @app.post("/v1/pcf/estimate", response_model=EstimateResponse)
