@@ -89,14 +89,27 @@ money.
 verification before the first estimate, and an alert when the ceiling is hit.
 **Effort: half a day.**
 
-### 10. The website has two calculation engines
-`frontend/src/engine/` (TypeScript: calculator, factorResolver, unitConverter,
-scopeRouter) duplicates logic that `ghg_core` owns in Python. Two engines drift,
-and an auditor will find the difference.
+### 10. The website has two calculation engines — DONE
+`frontend/src/engine/` duplicated logic that `ghg_core` owns. Resolved: the
+browser calculates nothing. `calculator.ts` is down to `calculateIntensity` and
+`calculateDataQualityGrade`, and every emission figure comes from `ghg_core`
+through the service.
 
-**Fix:** decide which is authoritative (it should be `ghg_core`), and make the
-other call it or be deleted. **Effort: 1–2 days** — schedule after launch unless
-the numbers already disagree.
+## Done since this list was written
+
+- **The IPCC methods.** Nine sources that cannot be a factor per unit — managed
+  soils, lime and urea, enteric fermentation, manure, wastewater, solid waste,
+  and the Volume 3 mineral, chemical and metal processes — are calculated by
+  `ghg_core.methods` and reachable from the Methods page. For a cement works or
+  a steel mill those are the larger half of the inventory.
+- **The catalogue/engine join.** 106 of 266 catalogue sources now resolve to a
+  published factor automatically. Before this every row read "no published
+  factor chosen" and the whole inventory came to 0.00.
+- **The IPCC energy defaults.** The fuels DESNZ does not publish — anthracite,
+  lignite, bagasse, rice husk, blast furnace gas, waste as fuel — per tonne,
+  with biomass CO2 kept out of Scope 1 as the GHG Protocol requires.
+- **A month field on every activity row.** The engine and the report already
+  handled periods; there had been nowhere to enter one.
 
 ## P2 — after launch
 
@@ -104,6 +117,10 @@ the numbers already disagree.
 - Accessibility pass: keyboard navigation and contrast.
 - Mobile layout review of the Product Carbon results.
 - A staging environment, so changes are not tested in production.
-- Chemical safety data on the Product Carbon page (design discussed 2026-09-17,
-  not started).
+- ~~Chemical safety data on the Product Carbon page~~ — DONE, 2026-09-27.
+  `GET /v1/chemical-safety` reads PubChem; the panel sits under the estimate.
+  One thing still to check: PubChem's edge refuses Python's HTTP client from
+  the development machine (503, while curl gets 200 from the same address), so
+  a successful live lookup has not been seen. Thirty seconds of checking once
+  it is on Render will settle it.
 - Merge the long-running feature branch into `main` and keep branches short.
