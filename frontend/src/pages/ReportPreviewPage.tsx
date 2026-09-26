@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { ReportDocument, REPORT_PARTS, ReportPartKey } from '../report/ReportDocument';
 import { ReportSettings } from '../report/ReportSettings';
 import { buildReport } from '../report/build/buildReport';
+import { buildMethodSources } from '../report/build/methodSources';
 import { exportWorkbook } from '../report/export/workbook';
 import { loadReportMeta, saveReportMeta, ReportMeta } from '../report/model/reportMeta';
 import { useEngineInventory } from '../report/useEngineInventory';
@@ -30,6 +31,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
   const {
     summary, companyName, reportingPeriod, boundaryApproach,
     scope1Entries, scope2Entries, scope3Entries, addToast,
+    methodEntries, methodResults, methodErrors,
   } = useGHG();
 
   const [framework, setFramework] = useState<'GHG Protocol' | 'BRSR Core' | 'ISO 14064-1'>('GHG Protocol');
@@ -46,14 +48,21 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
     [scope1Entries, scope2Entries, scope3Entries],
   );
 
+  // The method sources come from the same engine run the dashboard shows, so
+  // the report cannot state a different Scope 1 total from the screen behind it.
+  const methodSources = useMemo(
+    () => buildMethodSources(methodEntries, methodResults, methodErrors),
+    [methodEntries, methodResults, methodErrors],
+  );
+
   const report = useMemo(
     () => buildReport({
       companyName, reportingPeriod, boundaryApproach,
-      scope1Entries, scope2Entries, scope3Entries, summary, meta,
+      scope1Entries, scope2Entries, scope3Entries, summary, meta, methodSources,
       frameworks: FRAMEWORK_SETS[framework],
     }),
     [companyName, reportingPeriod, boundaryApproach, scope1Entries, scope2Entries, scope3Entries,
-      summary, meta, framework],
+      summary, meta, methodSources, framework],
   );
 
   // Every figure in the report comes from the engine. A row without a published

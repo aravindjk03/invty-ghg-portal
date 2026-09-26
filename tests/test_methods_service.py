@@ -25,6 +25,39 @@ def test_every_method_says_what_it_is_and_where_it_came_from():
         assert method["needs"]
 
 
+def test_every_form_gets_its_choices_from_the_published_tables():
+    # A screen must never type out a species, region, treatment system or site
+    # type of its own: if it offers something IPCC does not publish, the method
+    # would refuse it, and if a table gains a row the form has to gain it too.
+    options = {method["key"]: method["options"] for method in list_methods()}
+
+    regions = [choice["value"] for choice in options["enteric_fermentation"]["cattle_region"]]
+    assert "indian_subcontinent" in regions and "north_america" in regions
+
+    manure = options["manure_management"]
+    assert "dairy_cows" in [choice["value"] for choice in manure["species"]]
+    assert "dry_lot" in [choice["value"] for choice in manure["system"]]
+    # Table 10.19 has no Indian Subcontinent column, and the form must not imply one.
+    assert "indian_subcontinent" not in [c["value"] for c in manure["excretion_region"]]
+
+    waste = options["solid_waste"]
+    assert "managed_anaerobic" in [choice["value"] for choice in waste["site_type"]]
+    assert "tropical_moist_wet" in [choice["value"] for choice in waste["climate_zone"]]
+    assert "nappies" in waste["no_decay_rate"]
+
+    assert "anaerobic_reactor" in [c["value"] for c in options["wastewater"]["system"]]
+    assert [c["label"] for c in options["wastewater"]["load_basis"]] == ["BOD", "COD"]
+
+
+def test_the_options_only_offer_what_the_method_will_accept():
+    # Every published choice has to round-trip through the calculator.
+    options = {method["key"]: method["options"] for method in list_methods()}
+    for region in [choice["value"] for choice in options["enteric_fermentation"]["cattle_region"]]:
+        result = calculate_method(EntericRequest(
+            method="enteric_fermentation", dairy_cattle=1, cattle_region=region))
+        assert D(result.gas_masses_kg["CH4"]) > D(0)
+
+
 def test_the_answer_carries_the_gas_masses_as_well_as_the_carbon_dioxide_equivalent():
     result = calculate_method(EntericRequest(
         method="enteric_fermentation", dairy_cattle=100, other_cattle=50))

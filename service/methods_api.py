@@ -19,7 +19,9 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ghg_core.methods import (Herd, LivestockGroup, ManureStream, NitrogenInputs,
+from ghg_core.methods import (EntericParameters, Herd, LivestockGroup, ManureParameters,
+                              ManureStream, NitrogenInputs, SolidWasteParameters,
+                              WastewaterParameters,
                               TreatmentPathway, WasteStream, enteric_ch4, liming_co2,
                               managed_soil_n2o, manure_ch4, manure_n2o,
                               nitrogen_in_effluent, organic_load_from_population,
@@ -520,8 +522,74 @@ def calculate_method(request: MethodRequest) -> MethodResponse:
     return _CALCULATORS[request.method](request)
 
 
+def _labelled(keys) -> list[dict]:
+    """A machine key with a readable label, so no screen invents its own wording."""
+    return [{"value": key,
+             # BOD and COD are already how they are written; the rest are slugs.
+             "label": key if key.isupper() else key.replace("_", " ").strip().capitalize()}
+            for key in keys]
+
+
+def _method_options() -> dict[str, dict]:
+    """The choices each method actually accepts, read from the parameter files.
+
+    Served so a screen never hard-codes a species, a region, a treatment system
+    or a site type. If a table gains a row, the form gains it too; if a screen
+    offers something IPCC does not publish, the method would refuse it anyway.
+    """
+    enteric = EntericParameters.load()
+    manure = ManureParameters.load()
+    water = WastewaterParameters.load()
+    waste = SolidWasteParameters.load()
+
+    manure_species = sorted({
+        species
+        for block in manure.methane["cattle_swine_buffalo"].values()
+        for species in block["species"]
+    } | set(manure.methane["other_livestock"])
+      | set(manure.methane["poultry_developed"])
+      | set(manure.methane["fixed_factors"]))
+
+    return {
+        "enteric_fermentation": {
+            "cattle_region": _labelled(sorted(enteric.cattle_by_region)),
+            "other_animals": _labelled(sorted(enteric.other_livestock)),
+            "not_published": dict(enteric.not_published),
+        },
+        "manure_management": {
+            "region": _labelled(sorted(manure.methane["cattle_swine_buffalo"])),
+            "species": _labelled(manure_species),
+            "excretion_region": _labelled(manure.nitrous_oxide["excretion_rate"]["regions"]),
+            "category": _labelled(sorted(manure.nitrous_oxide["excretion_rate"]["values"])),
+            "system": _labelled(sorted(manure.nitrous_oxide["ef3"]["values"])),
+            "reported_elsewhere": dict(manure.nitrous_oxide["ef3"]["reported_elsewhere"]),
+        },
+        "wastewater": {
+            "system": _labelled(sorted(water.mcf)),
+            "load_basis": _labelled(["BOD", "COD"]),
+        },
+        "solid_waste": {
+            "site_type": _labelled(waste.values["mcf"]["values"]),
+            "component": _labelled(waste.values["k"]["group_for_component"]),
+            "industrial_component": _labelled(waste.values["doc"]["industrial_waste"]),
+            "climate_zone": _labelled(waste.values["k"]["climate_zones"]),
+            "climate_zone_help": dict(waste.values["k"]["climate_zones"]),
+            "composition_region": _labelled(sorted(waste.values["msw_composition"]["regions"])),
+            "no_decay_rate": dict(waste.values["k"]["group_not_published"]),
+        },
+        "managed_soils": {
+            "nitrogen_content_examples": {
+                "urea": "0.46", "DAP": "0.18", "ammonium sulphate": "0.21",
+            },
+        },
+        "lime_and_urea": {"mass_unit": _labelled(["tonne", "kg"])},
+    }
+
+
 def list_methods() -> list[dict]:
-    return [dict(entry) for entry in METHOD_CATALOGUE]
+    """Every method, with the choices its form needs."""
+    options = _method_options()
+    return [{**entry, "options": options.get(entry["key"], {})} for entry in METHOD_CATALOGUE]
 
 
 __all__ = ["GWP_SETS", "METHOD_CATALOGUE", "MethodRequest", "MethodResponse",

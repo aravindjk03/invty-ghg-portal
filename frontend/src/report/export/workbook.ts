@@ -109,6 +109,22 @@ export function exportWorkbook(
     })),
   ]);
 
+  // The IPCC methods are Scope 1 too, and their working is what an assurance
+  // provider asks for first, so it travels with the workbook.
+  add('09a_Scope_1_IPCC_Methods', report.scope1.methods.map((row) => ({
+    Source: row.label,
+    Facility: row.facility || '—',
+    Method: row.method,
+    'Gas masses (kg)': row.refusedReason
+      ? 'Not calculated'
+      : row.gasMasses.map((gas) => `${gas.gas} ${gas.kg}`).join(', '),
+    'Emissions tCO2e': row.refusedReason ? '' : row.tco2e,
+    'GWP basis': row.gwpSet || '—',
+    'IPCC reference': row.source,
+    Notes: row.notes.join(' '),
+    'Not calculated because': row.refusedReason || '',
+  })));
+
   add('10_Scope_2_Electricity', entryRows(report.scope2.entries));
   add('11_Scope_2_Location', [{ Method: 'Location-based', 'tCO2e': report.scope2.locationBased }]);
   add('12_Scope_2_Market', [

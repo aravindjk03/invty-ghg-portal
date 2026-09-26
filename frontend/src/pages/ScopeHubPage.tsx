@@ -148,7 +148,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-border">
+              <div className="mt-6 pt-4 border-t border-border flex flex-col gap-2">
                 <Button
                   variant="primary"
                   fullWidth
@@ -160,6 +160,20 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   rightIcon={<ArrowRight size={14} />}
                 >
                   Open Scope 1 Register
+                </Button>
+                {/* Livestock, fertiliser, effluent and landfill are Scope 1 too,
+                    but none of them is a factor per unit, so they live elsewhere. */}
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate('methods');
+                  }}
+                  rightIcon={<ArrowRight size={14} />}
+                >
+                  Livestock, land, effluent &amp; waste (IPCC methods)
                 </Button>
               </div>
             </Card>

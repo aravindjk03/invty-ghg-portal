@@ -8,7 +8,12 @@ coverage/
 
 # Production Build Outputs
 dist/
-build/
+# Anchored to the repository root: a bare "build/" also matched
+# frontend/src/report/build/, which is source code, and quietly kept the whole
+# report builder out of the repository.
+/build/
+frontend/build/
+backend/build/
 *.tsbuildinfo
 
 # Environment variables - NEVER COMMIT SECRETS

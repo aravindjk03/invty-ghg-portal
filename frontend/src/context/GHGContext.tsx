@@ -4,6 +4,8 @@ import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { useEngineInventory } from '../report/useEngineInventory';
+import { useMethodResults } from '../report/useMethodResults';
+import { MethodEntry, MethodKey, MethodResult, emptyInput } from '../types/methods';
 import { GwpSetName } from '../types/inventory';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
 import { User, authService } from '../services/authService';
@@ -24,6 +26,15 @@ interface GHGContextType {
   scope1Entries: ActivityEntry[];
   scope2Entries: ActivityEntry[];
   scope3Entries: ActivityEntry[];
+  /** The IPCC sources that are equations rather than a factor per unit. */
+  methodEntries: MethodEntry[];
+  /** What the engine made of each one, keyed by entry id. */
+  methodResults: Map<string, MethodResult>;
+  methodErrors: Map<string, string>;
+  methodsLoading: boolean;
+  addMethodEntry: (method: MethodKey, label?: string) => string;
+  updateMethodEntry: (id: string, updates: Partial<MethodEntry>) => void;
+  deleteMethodEntry: (id: string) => void;
   summary: ScopeSummary;
   /** Which IPCC basis every figure is calculated under. */
   gwpSet: GwpSetName;
@@ -292,6 +303,18 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  // The IPCC methods. Only the INPUTS live here: the answers are recalculated
+  // by the engine on every change, including a change of GWP basis, so a figure
+  // stated under AR5 can never survive into an AR6 report.
+  const [methodEntries, setMethodEntries] = useState<MethodEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_METHODS`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const addToast = useCallback((type: ToastMessage['type'], message: string, duration = 4000) => {
@@ -312,10 +335,11 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem(`${STORAGE_KEY}_S1`, JSON.stringify(scope1Entries));
       localStorage.setItem(`${STORAGE_KEY}_S2`, JSON.stringify(scope2Entries));
       localStorage.setItem(`${STORAGE_KEY}_S3`, JSON.stringify(scope3Entries));
+      localStorage.setItem(`${STORAGE_KEY}_METHODS`, JSON.stringify(methodEntries));
     } catch (e) {
       console.warn('Failed to save GHG data to localStorage:', e);
     }
-  }, [scope1Entries, scope2Entries, scope3Entries]);
+  }, [scope1Entries, scope2Entries, scope3Entries, methodEntries]);
 
   // Scenario Simulator State
   const [scenario, setScenario] = useState<WhatIfScenario>({
@@ -358,6 +382,31 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const engine = useEngineInventory(allEntries, gwpSet, reportingYear);
+  const methods = useMethodResults(methodEntries, gwpSet);
+
+  const addMethodEntry = useCallback((method: MethodKey, label?: string): string => {
+    const id = `method-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setMethodEntries((prev) => [...prev, {
+      id,
+      method,
+      label: label || '',
+      facility: '',
+      input: emptyInput(method, reportingYear),
+      // A new entry starts out of the totals: half-filled inputs would either
+      // be refused or, worse, quietly understate the source.
+      included: false,
+    }]);
+    return id;
+  }, [reportingYear]);
+
+  const updateMethodEntry = useCallback((id: string, updates: Partial<MethodEntry>) => {
+    setMethodEntries((prev) => prev.map((entry) => (
+      entry.id === id ? { ...entry, ...updates } : entry)));
+  }, []);
+
+  const deleteMethodEntry = useCallback((id: string) => {
+    setMethodEntries((prev) => prev.filter((entry) => entry.id !== id));
+  }, []);
 
   /** Engine result per record, in tonnes, with the reason when there is none. */
   const engineByRecord = useMemo(() => {
@@ -397,24 +446,31 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const scope3Categories = new Set(
       scope3Entries.filter((entry) => entry.engineActivityKey).map((entry) => entry.category));
 
+    // The methods are Scope 1 sources, so their CO2e joins Scope 1 and the
+    // grand total. They are calculated by the same engine under the same GWP
+    // set, just through equations instead of a factor per unit.
+    const methodTonnes = methods.totalCo2eKg / 1000;
+
     return {
-      scope1: tonnes(totals?.scope1),
+      scope1: tonnes(totals?.scope1) + methodTonnes,
       scope2Location: tonnes(totals?.scope2_location),
       scope2Market: tonnes(totals?.scope2_market),
       scope3: tonnes(totals?.scope3),
       biogenicMemo: tonnes(totals?.memo?.biogenic_co2),
-      totalEmissions: tonnes(totals?.total_all),
+      totalEmissions: tonnes(totals?.total_all) + methodTonnes,
       dataQualityGrade: calculateDataQualityGrade(
         [...scope1Calculated, ...scope2Calculated, ...scope3Calculated]),
       coverage: {
-        scopesCompleted: [totals?.scope1, totals?.scope2_headline, totals?.scope3]
-          .filter((value) => Number(value) > 0).length,
+        scopesCompleted: [tonnes(totals?.scope1) + methodTonnes,
+          Number(totals?.scope2_headline), Number(totals?.scope3)]
+          .filter((value) => value > 0).length,
         totalScopes: 3,
         scope3CategoriesIncluded: scope3Categories.size,
         totalScope3Categories: 15,
       },
     };
-  }, [engine.result, scope1Calculated, scope2Calculated, scope3Calculated, scope3Entries]);
+  }, [engine.result, methods.totalCo2eKg, scope1Calculated, scope2Calculated,
+      scope3Calculated, scope3Entries]);
 
   const engineStatus = useMemo(() => {
     const unmappedCount = engine.unmapped.length;
@@ -621,6 +677,13 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         scope1Entries: scope1Calculated,
         scope2Entries: scope2Calculated,
         scope3Entries: scope3Calculated,
+        methodEntries,
+        methodResults: methods.byEntry,
+        methodErrors: methods.errors,
+        methodsLoading: methods.loading,
+        addMethodEntry,
+        updateMethodEntry,
+        deleteMethodEntry,
         summary,
         gwpSet,
         setGwpSet,

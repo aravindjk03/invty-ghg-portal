@@ -23,6 +23,7 @@ import {
   X,
   LucideIcon,
   Package,
+  Sprout,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -62,6 +63,14 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(239,68,68,0.18),rgba(234,88,12,0.18))',
     activeTextClass: 'text-red-600',
     activeIconStyle: { color: '#dc2626' },
+  },
+  {
+    icon: Sprout,
+    label: 'Methods',
+    page: 'methods',
+    gradient: 'linear-gradient(135deg,rgba(132,204,22,0.18),rgba(22,163,74,0.18))',
+    activeTextClass: 'text-lime-700',
+    activeIconStyle: { color: '#4d7c0f' },
   },
   {
     icon: Zap,

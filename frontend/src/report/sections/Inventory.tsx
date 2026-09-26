@@ -72,6 +72,42 @@ export const ScopeOnePage: React.FC<{ report: GhgInventoryReport }> = ({ report 
         emptyMessage="No refrigerant equipment recorded. List each chiller, HVAC unit, cold store, fire suppression system and SF6-containing switchgear with its charge, recharge, recovery and calculation method."
       />
 
+      <SectionTitle
+        number="13.2"
+        note="These Scope 1 sources are published as equations with parameters, not as a factor per unit of activity, so each states the chapter and the equations it was calculated from. Their total is included in the Scope 1 figure above."
+      >
+        IPCC method sources — {num(s1.methodsTotal)} tCO2e
+      </SectionTitle>
+      <Table
+        headers={['Source', 'Facility', 'Method', 'Gas masses (kg)', 'tCO2e', 'Basis', 'IPCC reference']}
+        align={['left', 'left', 'left', 'left', 'right', 'left', 'left']}
+        rows={s1.methods.map((row) => [
+          row.label,
+          row.facility || '—',
+          row.method,
+          row.refusedReason
+            ? 'Not calculated'
+            : row.gasMasses.map((gas) => `${gas.gas} ${num(gas.kg, 3)}`).join(', ') || '—',
+          row.refusedReason ? '—' : num(row.tco2e, 3),
+          row.gwpSet || '—',
+          row.source,
+        ])}
+        emptyMessage="No IPCC method sources recorded. Livestock, managed soils, lime and urea, manure, wastewater treatment and solid waste disposal are Scope 1 sources that cannot be read off a factor table; confirm the site has none rather than assuming it."
+      />
+
+      {s1.methods.filter((row) => row.refusedReason).map((row) => (
+        <GapNote key={`refused-${row.label}`}>
+          {row.label} ({row.method}) could not be calculated and is excluded from every total:{' '}
+          {row.refusedReason}
+        </GapNote>
+      ))}
+
+      {s1.methods.flatMap((row) => row.notes.map((note) => (
+        <Prose key={`${row.label}-${note}`}>
+          <strong>{row.label}:</strong> {note}
+        </Prose>
+      )))}
+
       {s1.other.map((block) => (
         <Block key={block.key} number="13.x" block={block} />
       ))}

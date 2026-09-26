@@ -174,6 +174,28 @@ export interface ScopeOneSection {
   other: CategoryBlock[];
   fugitiveMethodNote: string;
   refrigerants: RefrigerantRow[];
+  /** Report part 13.2: the Scope 1 sources calculated as IPCC equations. */
+  methods: MethodSourceRow[];
+  methodsTotal: number;
+}
+
+/**
+ * Report part 13.2: one Scope 1 source that is an IPCC method rather than a
+ * factor per unit of activity — livestock, managed soils, lime and urea,
+ * manure, wastewater, or a solid waste disposal site.
+ */
+export interface MethodSourceRow {
+  label: string;
+  facility: string;
+  method: string;
+  source: string;
+  gwpSet: string;
+  gasMasses: { gas: string; kg: number }[];
+  tco2e: number;
+  /** What the method needed the reader to see: a substituted region, an unreported source. */
+  notes: string[];
+  /** Set when the engine refused it; then tco2e is zero and the source is excluded. */
+  refusedReason?: string;
 }
 
 export interface ScopeTwoSection {
