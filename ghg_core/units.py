@@ -241,10 +241,17 @@ def convert(value, from_unit: str, to_unit: str,
             f"supplier's own factor per {src.name} and cite it.")
 
     if fuel is None:
+        # Name both ways out. "This is physics" was true and useless: the
+        # reader is a person with a steam bill in tonnes and a factor per
+        # kilowatt hour, and what they need to know is that the bridge is a
+        # property of the material, which either they or their supplier has.
         raise FuelPropertyRequiredError(
-            f"Cannot convert {src.name} ({src.dimension}) to {dst.name} "
-            f"({dst.dimension}) without a dated, sourced fuel property. "
-            f"This is physics, not unit arithmetic.")
+            f"This factor is published per {dst.name} and the quantity is in "
+            f"{src.name}. Crossing {src.dimension} to {dst.dimension} needs a "
+            f"dated, sourced property of the material - a calorific value for a "
+            f"fuel, a density for a liquid, the enthalpy for steam - and none is "
+            f"on file. Enter the quantity in {dst.name}, or use a supplier's own "
+            f"factor per {src.name} and cite it.")
 
     _check_gas_reference(src, fuel)
     _check_gas_reference(dst, fuel)

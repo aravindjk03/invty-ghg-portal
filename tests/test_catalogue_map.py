@@ -151,7 +151,7 @@ BROWSER_UNITS = {
     "kg": ["kg", "tonnes"], "t": ["tonnes", "kg"], "lb": ["kg", "tonnes"],
     "g": ["kg"], "kwh": ["kWh", "kWh (Net CV)", "kWh (Gross CV)"],
     "mwh": ["kWh", "kWh (Net CV)", "kWh (Gross CV)"],
-    "gj": ["GJ", "kWh (Net CV)"], "mmbtu": ["kWh (Net CV)", "GJ"],
+    "gj": ["GJ", "kWh (Net CV)", "kWh"], "mmbtu": ["kWh (Net CV)", "GJ", "kWh"],
     "km": ["km"], "mi": ["km"], "t.km": ["tonne.km"],
     "pax.km": ["passenger.km"], "pax.mi": ["passenger.mi", "passenger.km"],
     "passenger.km": ["passenger.km"], "night": ["Room per night"],

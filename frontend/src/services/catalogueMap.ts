@@ -48,8 +48,11 @@ const UNIT_EQUIVALENTS: Record<string, string[]> = {
   g: ['kg'],
   kwh: ['kWh', 'kWh (Net CV)', 'kWh (Gross CV)'],
   mwh: ['kWh', 'kWh (Net CV)', 'kWh (Gross CV)'],
-  gj: ['GJ', 'kWh (Net CV)'],
-  mmbtu: ['kWh (Net CV)', 'GJ'],
+  // Plain kWh last: for a FUEL the net and gross calorific bases are different
+  // measurements and the right one must win, but heat and steam are published
+  // in plain kilowatt hours and a gigajoule is 277.78 of them exactly.
+  gj: ['GJ', 'kWh (Net CV)', 'kWh'],
+  mmbtu: ['kWh (Net CV)', 'GJ', 'kWh'],
   km: ['km'],
   mi: ['km'],
   't.km': ['tonne.km'],

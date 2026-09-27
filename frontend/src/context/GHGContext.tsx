@@ -12,14 +12,20 @@ import { MethodEntry, MethodKey, MethodResult, emptyInput } from '../types/metho
 import { GwpSetName } from '../types/inventory';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
 import { User, authService } from '../services/authService';
+import {
+  DEFAULT_PERIOD, ReportingPeriod, periodLabel, periodSpan, reportingYearOf,
+} from '../report/reportingPeriod';
 
 interface GHGContextType {
   companyName: string;
+  /** What to call the period. Derived from `period`, never set on its own. */
   reportingPeriod: string;
+  /** The period the WHOLE inventory covers: one setting, every scope. */
+  period: ReportingPeriod;
+  setPeriod: (period: ReportingPeriod) => void;
   boundaryApproach: ConsolidationBoundary;
   steelMethod: IntegratedSteelMethod;
   setCompanyName: (name: string) => void;
-  setReportingPeriod: (period: string) => void;
   setBoundaryApproach: (boundary: ConsolidationBoundary) => void;
   setSteelMethod: (method: IntegratedSteelMethod) => void;
   currentUser: User | null;
@@ -244,7 +250,29 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const stored = authService.getStoredUser();
     return stored?.companyName || 'Acme Steel Pvt Ltd';
   });
-  const [reportingPeriod, setReportingPeriod] = useState<string>('FY 2025–26');
+  // One period for the whole inventory. Stored as a start month and a length
+  // so the label, the factor vintage and the months a row may be dated in all
+  // come from the same place and cannot disagree.
+  const [period, setPeriod] = useState<ReportingPeriod>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_PERIOD`);
+      const parsed = saved ? JSON.parse(saved) : null;
+      return parsed && typeof parsed.start === 'string' && typeof parsed.months === 'number'
+        ? parsed : DEFAULT_PERIOD;
+    } catch {
+      return DEFAULT_PERIOD;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_PERIOD`, JSON.stringify(period));
+    } catch {
+      // A browser refusing storage must not stop the page working.
+    }
+  }, [period]);
+
+  const reportingPeriod = useMemo(() => periodLabel(period), [period]);
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
 
@@ -448,10 +476,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     [scope1Resolved, scope2Resolved, scope3Resolved],
   );
 
-  const reportingYear = useMemo(
-    () => Number(reportingPeriod.match(/\d{4}/)?.[0]) || new Date().getFullYear(),
-    [reportingPeriod],
-  );
+  const reportingYear = useMemo(() => reportingYearOf(period), [period]);
 
   const engine = useEngineInventory(allEntries, gwpSet, reportingYear);
   const methods = useMethodResults(methodEntries, gwpSet);
@@ -482,11 +507,19 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
 
   /** Engine result per record, in tonnes, with the reason when there is none. */
   const engineByRecord = useMemo(() => {
-    const map = new Map<string, { tco2e: number; warning?: string }>();
+    const map = new Map<string, {
+      tco2e: number; warning?: string;
+      factorValue?: number; factorSource?: string; factorUnit?: string;
+    }>();
     engine.result?.lines.forEach((line) => {
       map.set(line.record_id, {
         tco2e: Number(line.emissions_kgco2e) / 1000,
         warning: line.status === 'calculated' ? undefined : line.message,
+        // What the engine actually multiplied by, so the report never prints
+        // one number beside a total produced by another.
+        factorValue: line.factor_value != null ? Number(line.factor_value) : undefined,
+        factorSource: line.factor_source ?? undefined,
+        factorUnit: line.factor_unit ?? undefined,
       });
     });
     engine.unmapped.forEach((entry) => map.set(entry.id, {
@@ -507,6 +540,9 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         calculatedTco2e: line.tco2e,
         marketTco2e: market?.tco2e,
         warning: line.warning,
+        engineFactorValue: line.factorValue,
+        engineFactorSource: line.factorSource,
+        engineFactorUnit: line.factorUnit,
       };
     }),
     [engineByRecord],
@@ -743,10 +779,11 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
       value={{
         companyName,
         reportingPeriod,
+        period,
+        setPeriod,
         boundaryApproach,
         steelMethod,
         setCompanyName,
-        setReportingPeriod,
         setBoundaryApproach,
         setSteelMethod,
         currentUser,

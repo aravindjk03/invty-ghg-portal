@@ -18,6 +18,9 @@ import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../..
 import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
 import { useCatalogueMap } from '../../services/useCatalogueMap';
+import {
+  ReportingPeriod, isInPeriod, periodEnd, periodLabel,
+} from '../../report/reportingPeriod';
 import { METHOD_NAME, METHOD_NOT_IMPLEMENTED, methodFor } from '../../data/methodSources';
 
 export interface ActivityRowProps {
@@ -27,6 +30,12 @@ export interface ActivityRowProps {
   onDuplicate: () => void;
   /** Lets a row send the user to the page that can actually calculate it. */
   onNavigate?: (page: string) => void;
+  /**
+   * The period the whole inventory covers. Passed in rather than read from the
+   * context: a row importing the context makes a module cycle, which is why
+   * the catalogue map is a standalone hook as well.
+   */
+  period: ReportingPeriod;
 }
 
 export const ActivityRow: React.FC<ActivityRowProps> = ({
@@ -35,10 +44,12 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   onDelete,
   onDuplicate,
   onNavigate,
+  period,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [displayResult, setDisplayResult] = useState(entry.calculatedTco2e);
   const [isOverridingFactor, setIsOverridingFactor] = useState(false);
+  const [showMonth, setShowMonth] = useState(false);
   const [overrideFactorSource, setOverrideFactorSource] = useState(
     entry.customFactorSource ?? '');
   const [overrideError, setOverrideError] = useState<string | null>(null);
@@ -432,38 +443,52 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
       )}
 
       {/*
-        The month this activity falls in.
+        An OPTIONAL month within the reporting period.
 
-        The engine already accepts it and the report already has a monthly
-        analysis and a missing-month QA/QC check — but there was nowhere to
-        enter it, so every row was undated and the check could only ever report
-        "cannot be assessed". A verifier asks for the period split first.
+        The period itself is set once, at the top of the page, and covers every
+        scope. This is only for splitting a row across the months of it, which
+        the report's monthly analysis and its missing-month check use. It stays
+        out of the way until someone asks for it: a date field on every row
+        made it look as though the period had to be set row by row.
       */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <label htmlFor={`${monthFieldId}`} className="text-[11px] font-medium text-brand-muted">
-          Period
-        </label>
-        <input
-          id={monthFieldId}
-          type="month"
-          value={entry.periodMonth || ''}
-          onChange={(e) => onUpdate({ periodMonth: e.target.value || undefined })}
-          aria-label="Reporting month for this activity"
-          className="h-8 bg-surface-raised border border-border rounded-md px-2 text-[12px] text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600"
-        />
-        {entry.periodMonth ? (
+        {entry.periodMonth || showMonth ? (
+          <>
+            <label htmlFor={monthFieldId} className="text-[11px] font-medium text-brand-muted">
+              Month
+            </label>
+            <input
+              id={monthFieldId}
+              type="month"
+              value={entry.periodMonth || ''}
+              min={period.start}
+              max={periodEnd(period)}
+              onChange={(e) => onUpdate({ periodMonth: e.target.value || undefined })}
+              aria-label="Month this activity falls in"
+              className="h-8 bg-surface-raised border border-border rounded-md px-2 text-[12px] text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600"
+            />
+            <button
+              type="button"
+              onClick={() => { onUpdate({ periodMonth: undefined }); setShowMonth(false); }}
+              className="text-[11px] text-brand-muted hover:text-brand-body underline"
+            >
+              clear
+            </button>
+            {!isInPeriod(period, entry.periodMonth) && (
+              <span className="text-[11px] font-medium text-status-warning">
+                Outside {periodLabel(period)} — this row would be reported in a period
+                the inventory does not cover.
+              </span>
+            )}
+          </>
+        ) : (
           <button
             type="button"
-            onClick={() => onUpdate({ periodMonth: undefined })}
-            className="text-[11px] text-brand-muted hover:text-brand-body underline"
+            onClick={() => setShowMonth(true)}
+            className="text-[11px] text-brand-link hover:underline"
           >
-            clear
+            + Split this row by month
           </button>
-        ) : (
-          <span className="text-[11px] text-brand-muted">
-            Optional. A dated row joins the monthly analysis; an undated one is reported for
-            the year as a whole.
-          </span>
         )}
       </div>
 
@@ -478,7 +503,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-raised px-2.5 py-1.5 text-[11px]">
           <span className="text-brand-muted">
             <strong className="text-brand-body">Location-based</strong>{' '}
-            {entry.calculatedTco2e?.toFixed(2) ?? '0.00'} tCO₂e at the grid average
+            {entry.calculatedTco2e?.toFixed(2) ?? '0.00'} tCO₂e at the published factor
           </span>
           <span className="text-border">|</span>
           <span className="text-brand-muted">
@@ -486,7 +511,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
             {entry.marketTco2e.toFixed(2)} tCO₂e{' '}
             {entry.customFactorOverride !== undefined && entry.customFactorSource
               ? 'at your contracted rate'
-              : 'at the grid average — no contracted rate on this row, and India publishes no residual mix'}
+              : 'at the same published factor — no contracted rate on this row, and India publishes no residual mix'}
           </span>
         </div>
       )}

@@ -159,7 +159,7 @@ elec.submetered_tenant,Electricity — sub-metered from landlord,Purchased elect
 elec.selfgen_solar_onsite,Self-generated solar consumed on site,Memo — energy balance,memo,memo,Energy balance memo,kWh,kWh|MWh,none,n/a,NOT Scope 2. Scope 2 Guidance 5.4: energy produced and consumed by the same entity generates no Scope 2. Record for energy balance only.
 elec.selfgen_wind_onsite,Self-generated wind consumed on site,Memo — energy balance,memo,memo,Energy balance memo,kWh,kWh|MWh,none,n/a,NOT Scope 2. Record for energy balance only.
 elec.exported,Electricity exported to grid,Memo — energy balance,memo,memo,Energy balance memo,kWh,kWh|MWh,none,n/a,Scope 2 Guidance 5.4 scenario 4: exclude generation sold back to the grid. Never subtracted from any total.
-steam.purchased,Purchased steam,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",t,kg|t|GJ|MMBtu,"CO2,CH4,N2O",Supplier factor / DESNZ default,
+steam.purchased,Purchased steam,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|MMBtu|kWh|t|kg,"CO2,CH4,N2O",Supplier factor / DESNZ default,
 heat.purchased,Purchased heat / hot water,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|MMBtu|kWh,"CO2,CH4,N2O",Supplier factor / DESNZ default,
 cooling.chilled_water,Purchased chilled water / district cooling,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|kWh|TR-hr,"CO2,CH4,N2O",Supplier factor,
 compressed_air.purchased,Purchased compressed air,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",m3,m3|kWh,"CO2,CH4,N2O",Supplier factor,Rare; usually metered as electricity instead

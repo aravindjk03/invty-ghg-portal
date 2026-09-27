@@ -69,6 +69,7 @@ cat6.rental_car,Rental car,km,desnz.2025.25_301_3074_4,Business travel- land / C
 cat6.rental_car,Rental car,miles,desnz.2025.25_301_3074_9,Business travel- land / Cars (by size) / Average car (Unknown),UK,DESNZ UK Government GHG conversion factors
 cat6.taxi,Taxi / ride-hailing,km,desnz.2025.25_313_3141_4,Business travel- land / Taxis / Regular taxi,UK,DESNZ UK Government GHG conversion factors
 cat6.taxi,Taxi / ride-hailing,passenger.km,desnz.2025.25_313_3141_11,Business travel- land / Taxis / Regular taxi,UK,DESNZ UK Government GHG conversion factors
+cat7.auto_rickshaw,Commute — auto rickshaw,km,indiaghgp.road.three_wheeler.three_wheeler_cng,India road — Three-wheeler CNG,IN,"India GHG Program (WRI India, CII, TERI) — India Specific Road Transport Emission Factors"
 cat7.bus,Commute — bus,passenger.km,desnz.2025.25_314_3145_11,Business travel- land / Bus / Average local bus,UK,DESNZ UK Government GHG conversion factors
 cat7.car_diesel,"Commute — car, diesel",km,desnz.2025.25_301_3069_4,Business travel- land / Cars (by size) / Average car (Diesel),UK,DESNZ UK Government GHG conversion factors
 cat7.car_diesel,"Commute — car, diesel",miles,desnz.2025.25_301_3069_9,Business travel- land / Cars (by size) / Average car (Diesel),UK,DESNZ UK Government GHG conversion factors
@@ -328,3 +329,4 @@ mobile.rail_diesel,Diesel — owned locomotive / siding shunter,kWh (Gross CV),d
 mobile.rail_diesel,Diesel — owned locomotive / siding shunter,kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
 mobile.rail_diesel,Diesel — owned locomotive / siding shunter,litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
 mobile.rail_diesel,Diesel — owned locomotive / siding shunter,tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+steam.purchased,Purchased steam,kWh,desnz.2025.10_401_4003_5,Heat and steam / Heat and steam / District heat and steam / kWh,UK,DESNZ UK Government GHG conversion factors

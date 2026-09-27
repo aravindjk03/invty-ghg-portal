@@ -41,6 +41,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
     addBatchEntries,
     saveToStorage,
     addToast,
+    period,
   } = useGHG();
 
   const [entryMode, setEntryMode] = useState<Record<string, 'guided' | 'csv' | 'quick'>>({
@@ -192,6 +193,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
             {renderColumnHeaders()}
             {entries.map((row) => (
               <ActivityRow
+                period={period}
                   onNavigate={onNavigate}
                 key={row.id}
                 entry={row}

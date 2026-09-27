@@ -81,6 +81,10 @@ class LineResult:
     normalised_unit: Optional[str]
     factor_version_id: Optional[str]
     factor_value: Optional[Decimal]
+    #: What the factor is PER - its denominator. Without it a report prints a
+    #: bare number in a column headed "Factor" and the reader cannot tell
+    #: whether it is per litre, per tonne or per kilowatt hour.
+    factor_unit: Optional[str]
     factor_source: Optional[str]
     factor_reference_year: Optional[int]
     gas_breakdown: dict[str, Decimal]
@@ -187,7 +191,8 @@ def _blank_line(rec: ActivityRecord, status: str, message: str) -> LineResult:
         record_id=rec.record_id, activity_key=rec.activity_key, scope=rec.scope,
         ghg_category=rec.ghg_category, normalised_value=None,
         normalised_unit=None, factor_version_id=None, factor_value=None,
-        factor_source=None, factor_reference_year=None, gas_breakdown={},
+        factor_unit=None, factor_source=None, factor_reference_year=None,
+        gas_breakdown={},
         gwp_applied={}, emissions_kgco2e=ZERO, biogenic_co2_kg=ZERO,
         memo_bucket=rec.memo_bucket, scope2_view=rec.scope2_view,
         resolution_flags=[], data_quality_tier=rec.data_quality_tier,
@@ -274,6 +279,7 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
         normalised_unit=norm_unit,
         factor_version_id=first.factor.version_id if first else None,
         factor_value=first.factor.value if first else None,
+        factor_unit=first.factor.denominator_unit if first else None,
         factor_source=f"{first.factor.source_name} · {first.factor.source_table_ref}"
         if first else None,
         factor_reference_year=first.factor.reference_year if first else None,

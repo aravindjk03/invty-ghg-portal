@@ -60,6 +60,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
     deleteRow,
     duplicateRow,
     saveToStorage,
+    period,
   } = useGHG();
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
@@ -261,6 +262,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
                       {entries.map((row) => (
                         <ActivityRow
+                period={period}
                   onNavigate={onNavigate}
                           key={row.id}
                           entry={row}

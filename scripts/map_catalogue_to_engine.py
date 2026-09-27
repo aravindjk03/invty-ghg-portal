@@ -129,6 +129,13 @@ DESNZ_BY_NAME: dict[str, str] = {
     # the steam, which only the supplier knows, so it stays unmapped. District
     # cooling has no published factor at all and is not this one.
     "heat.purchased": "Heat and steam / Heat and steam / District heat and steam / kWh",
+    # Steam bought in energy units is the same purchase as heat, and a
+    # gigajoule converts to a kilowatt hour exactly. Bought by the TONNE it
+    # does not: that needs the enthalpy of the steam as delivered - its
+    # pressure and temperature - which only the supplier knows. The row offers
+    # both, so a site metering in GJ or MMBtu calculates and one metering in
+    # tonnes is told to use the supplier's own figure.
+    "steam.purchased": "Heat and steam / Heat and steam / District heat and steam / kWh",
 
     # --- Scope 3, cat 4: upstream transport --------------------------------
     # Where DESNZ splits a mode by load or fuel, the average is the defensible
@@ -347,6 +354,12 @@ DIRECT: dict[str, str] = {
     "cat2.vehicles": "epa.useeio.v1_3.naics336111",
     "cat2.it_hardware": "epa.useeio.v1_3.naics334111",
     "cat4.warehousing_3pl": "epa.useeio.v1_3.naics493110",
+
+    # An auto rickshaw is a three-wheeler, which the India GHG Program
+    # publishes per kilometre and DESNZ has no equivalent for. CNG is the fleet
+    # most Indian cities run on after the conversion orders, and the row names
+    # the fuel it used.
+    "cat7.auto_rickshaw": "indiaghgp.road.three_wheeler.three_wheeler_cng",
 
     # --- Scope 2, the contractual instruments -------------------------------
     # Every one of these is a kilowatt hour drawn from the Indian grid, and the

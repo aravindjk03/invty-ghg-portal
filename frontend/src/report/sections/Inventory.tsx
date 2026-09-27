@@ -13,10 +13,13 @@ const EntryTable: React.FC<{ entries: ActivityEntry[] }> = ({ entries }) => (
       entry.fuelOrSource,
       num(entry.amount, 3),
       entry.unit,
-      num(entry.customFactorOverride ?? entry.emissionFactor?.factorValue ?? 0, 4),
-      entry.emissionFactor
-        ? `${entry.emissionFactor.source} ${entry.emissionFactor.publicationYear || ''}`.trim()
-        : 'Not recorded',
+      // The factor the ENGINE used. The catalogue ships a value of its own for
+      // the picker, and printing that here would put a number beside a total
+      // it did not produce.
+      entry.engineFactorValue !== undefined
+        ? `${num(entry.engineFactorValue, 4)}${entry.engineFactorUnit ? ` /${entry.engineFactorUnit}` : ''}`
+        : '—',
+      entry.engineFactorSource ?? 'Not calculated',
       num(entry.calculatedTco2e, 3),
       entry.evidenceFile || <span className="text-[#8A5A00] italic">None attached</span>,
     ])}

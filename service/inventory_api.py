@@ -70,6 +70,8 @@ class LineOut(_Strict):
     gas_breakdown: dict[str, str]
     gwp_applied: dict[str, str]
     factor_value: Optional[str]
+    #: What the factor is per, so a report can say "per litre" beside it.
+    factor_unit: Optional[str]
     factor_source: Optional[str]
     factor_reference_year: Optional[int]
     factor_version_id: Optional[str]
@@ -169,6 +171,7 @@ def to_response(run: CalculationRun, request: InventoryRequest, gwp_source: str)
                 gas_breakdown={gas: as_text(value) for gas, value in line.gas_breakdown.items()},
                 gwp_applied={gas: as_text(value) for gas, value in line.gwp_applied.items()},
                 factor_value=None if line.factor_value is None else as_text(line.factor_value),
+                factor_unit=line.factor_unit,
                 factor_source=line.factor_source,
                 factor_reference_year=line.factor_reference_year,
                 factor_version_id=line.factor_version_id,

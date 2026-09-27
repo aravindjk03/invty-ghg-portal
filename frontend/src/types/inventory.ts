@@ -70,6 +70,8 @@ export const LineSchema = z.object({
   gas_breakdown: z.record(z.string()),
   gwp_applied: z.record(z.string()),
   factor_value: z.string().nullable(),
+  /** What the factor is per, so a report can say "per litre" beside it. */
+  factor_unit: z.string().nullable().default(null),
   factor_source: z.string().nullable(),
   factor_reference_year: z.number().nullable(),
   factor_version_id: z.string().nullable(),

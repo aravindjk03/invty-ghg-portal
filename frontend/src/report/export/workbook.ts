@@ -24,9 +24,10 @@ const entryRows = (entries: ActivityEntry[]): Row[] =>
     'Activity data': entry.amount,
     Unit: entry.unit,
     'Factor ID': entry.emissionFactor?.id ?? '',
-    'Factor value': entry.customFactorOverride ?? entry.emissionFactor?.factorValue ?? '',
-    'Factor unit': entry.emissionFactor?.unit ?? '',
-    'Factor source': entry.emissionFactor?.source ?? '',
+    // What the engine multiplied by, not what the catalogue ships for the picker.
+    'Factor value': entry.engineFactorValue ?? '',
+    'Factor unit': entry.engineFactorUnit ?? '',
+    'Factor source': entry.engineFactorSource ?? '',
     'Factor year': entry.emissionFactor?.publicationYear ?? '',
     'Quality tier': entry.emissionFactor?.qualityTier ?? '',
     'Emissions tCO2e': entry.calculatedTco2e,

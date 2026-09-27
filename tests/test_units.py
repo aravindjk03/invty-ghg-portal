@@ -124,3 +124,19 @@ def test_a_spend_based_factor_met_by_a_mass_says_what_to_do():
     assert "per USD of spend" in message
     assert "supplier's own factor per t" in message
     assert "physics" not in message
+
+
+def test_a_mass_against_an_energy_factor_names_both_ways_out():
+    """A steam bill in tonnes against a factor per kilowatt hour. The bridge is
+    the enthalpy of the steam, which the supplier has and this engine does
+    not — so say that, and say what to do instead."""
+    import pytest
+    from ghg_core.errors import FuelPropertyRequiredError
+    from ghg_core.units import convert
+
+    with pytest.raises(FuelPropertyRequiredError) as error:
+        convert(100, "t", "kWh")
+    message = str(error.value)
+    assert "enthalpy for steam" in message
+    assert "Enter the quantity in kWh" in message
+    assert "supplier's own factor per t" in message

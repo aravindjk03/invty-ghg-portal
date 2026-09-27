@@ -8,9 +8,10 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, Loader2, Plug } from 'lucide-react';
 import { useGHG } from '../../context/GHGContext';
+import { PeriodPicker } from './PeriodPicker';
 
 export const EngineStatusBar: React.FC = () => {
-  const { engineStatus, gwpSet, setGwpSet } = useGHG();
+  const { engineStatus, gwpSet, setGwpSet, period, setPeriod } = useGHG();
   const { state, message, runId, engineVersion, unmappedCount, excludedCount } = engineStatus;
 
   const tone = {
@@ -55,7 +56,12 @@ export const EngineStatusBar: React.FC = () => {
         </span>
       )}
 
-      <span className="ml-auto flex items-center gap-1.5">
+      {/* One period for the whole inventory, on every page that records one. */}
+      <span className="ml-auto">
+        <PeriodPicker period={period} onChange={setPeriod} />
+      </span>
+
+      <span className="flex items-center gap-1.5">
         <Plug size={12} className="text-brand-muted" />
         <span className="text-brand-muted">GWP basis</span>
         {(['AR5', 'AR6'] as const).map((option) => (

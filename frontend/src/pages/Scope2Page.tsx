@@ -40,6 +40,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
     addBatchEntries,
     addToast,
     saveToStorage,
+    period,
   } = useGHG();
 
   const [entryMode, setEntryMode] = useState<'guided' | 'csv' | 'quick'>('guided');
@@ -270,6 +271,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             ) : (
               electricityEntries.map((row) => (
                 <ActivityRow
+                period={period}
                   onNavigate={onNavigate}
                   key={row.id}
                   entry={row}
@@ -311,6 +313,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             ) : (
               steamHeatEntries.map((row) => (
                 <ActivityRow
+                period={period}
                   onNavigate={onNavigate}
                   key={row.id}
                   entry={row}
@@ -365,6 +368,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             ) : (
               memoEnergyEntries.map((row) => (
                 <ActivityRow
+                period={period}
                   onNavigate={onNavigate}
                   key={row.id}
                   entry={row}
