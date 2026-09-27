@@ -27,6 +27,44 @@ export interface SessionRecord {
   expires_at: string;
 }
 
+/** What an account may do. `free` gets a fixed number of AI estimates. */
+export type Plan = 'free' | 'premium';
+
+export interface Entitlement {
+  userId: string;
+  plan: Plan;
+  estimatesUsed: number;
+  estimatesLimit: number | null;   // null = no limit (premium)
+  estimatesRemaining: number | null;
+  firstUsedAt?: string | null;
+  lastUsedAt?: string | null;
+  upgradedAt?: string | null;
+}
+
+/** The outcome of trying to spend one estimate. */
+export interface Reservation {
+  allowed: boolean;
+  entitlement: Entitlement;
+  ledgerId?: string;
+}
+
+export interface LeadRow {
+  id: string;
+  name: string;
+  workEmail: string;
+  companyName: string;
+  sector: string;
+  phone?: string;
+  primaryNeed: string;
+  /** What they were trying to do when asked. 'premium' is an upgrade request. */
+  requestedAction?: string;
+  referralSource: string;
+  annualTurnoverOrProduction?: string;
+  inventoryStats?: Record<string, unknown>;
+  capturedAt: string;
+  ipAddress?: string;
+}
+
 export interface SafeUser {
   id: string;
   email: string;
@@ -92,6 +130,55 @@ class DatabaseService {
         expires_at TEXT NOT NULL,
         created_at TEXT NOT NULL
       );
+
+      -- What a customer is entitled to. One row per account, created on first
+      -- use. The count lives here, in the database, and not in the browser:
+      -- a quota a visitor can clear by opening developer tools is not a quota.
+      CREATE TABLE IF NOT EXISTS entitlements (
+        user_id TEXT PRIMARY KEY,
+        plan TEXT NOT NULL DEFAULT 'free',
+        estimates_used INTEGER NOT NULL DEFAULT 0,
+        first_used_at TEXT,
+        last_used_at TEXT,
+        upgraded_at TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      -- Every estimate that consumed a credit, so a disputed bill can be
+      -- answered with a list rather than a number.
+      CREATE TABLE IF NOT EXISTS estimate_ledger (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        product TEXT NOT NULL,
+        plan_at_time TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        refunded_at TEXT,
+        refund_reason TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_ledger_user ON estimate_ledger(user_id);
+
+      -- Someone asking to be contacted: for a report, or to be put on Premium.
+      -- On disk rather than in memory, because a restart losing the request of
+      -- a customer who tried to pay is worse than any bug in this file.
+      CREATE TABLE IF NOT EXISTS leads (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        work_email TEXT NOT NULL,
+        company_name TEXT NOT NULL,
+        sector TEXT,
+        phone TEXT,
+        primary_need TEXT,
+        requested_action TEXT,
+        referral_source TEXT,
+        annual_scale TEXT,
+        inventory_stats TEXT,
+        captured_at TEXT NOT NULL,
+        ip_address TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_leads_captured ON leads(captured_at);
     `);
 
     // Schema migrations for existing SQLite file
@@ -359,6 +446,181 @@ class DatabaseService {
 
     stmt.run(token, userId, now.toISOString(), expiresAt.toISOString());
     return token;
+  }
+
+  // ── Entitlements ──────────────────────────────────────────────────────────
+  //
+  // The free allowance is deliberately small: it is a trial, not a tier. It is
+  // read from FREE_ESTIMATE_LIMIT so it can be changed without a deploy, and
+  // it is enforced HERE rather than in the browser or in the AI service,
+  // because this is the only process that owns the account.
+
+  public get freeEstimateLimit(): number {
+    const configured = Number(process.env.FREE_ESTIMATE_LIMIT);
+    return Number.isFinite(configured) && configured >= 0 ? Math.floor(configured) : 2;
+  }
+
+  private entitlementRow(userId: string): { plan: Plan; estimates_used: number;
+    first_used_at: string | null; last_used_at: string | null;
+    upgraded_at: string | null } {
+    const existing = this.db
+      .prepare('SELECT plan, estimates_used, first_used_at, last_used_at, upgraded_at '
+               + 'FROM entitlements WHERE user_id = ?')
+      .get(userId) as any;
+    if (existing) return existing;
+
+    this.db
+      .prepare('INSERT OR IGNORE INTO entitlements (user_id, plan, estimates_used) '
+               + "VALUES (?, 'free', 0)")
+      .run(userId);
+    return { plan: 'free', estimates_used: 0, first_used_at: null, last_used_at: null,
+             upgraded_at: null };
+  }
+
+  private toEntitlement(userId: string, row: { plan: Plan; estimates_used: number;
+    first_used_at: string | null; last_used_at: string | null;
+    upgraded_at: string | null }): Entitlement {
+    const limit = row.plan === 'premium' ? null : this.freeEstimateLimit;
+    return {
+      userId,
+      plan: row.plan,
+      estimatesUsed: row.estimates_used,
+      estimatesLimit: limit,
+      estimatesRemaining: limit === null ? null : Math.max(0, limit - row.estimates_used),
+      firstUsedAt: row.first_used_at,
+      lastUsedAt: row.last_used_at,
+      upgradedAt: row.upgraded_at,
+    };
+  }
+
+  public getEntitlement(userId: string): Entitlement {
+    return this.toEntitlement(userId, this.entitlementRow(userId));
+  }
+
+  /**
+   * Spend one estimate, or refuse.
+   *
+   * Reserved BEFORE the AI is called, not after: two requests arriving together
+   * would otherwise both read "1 used" and both proceed, and the customer would
+   * get a third estimate free. The UPDATE below only matches while the count is
+   * still under the limit, so the database decides, not the order of reads.
+   *
+   * A reservation that is not used is refunded by `refundEstimate`, so a failed
+   * or refused AI call never costs the customer one of their two.
+   */
+  public reserveEstimate(userId: string, product: string): Reservation {
+    const row = this.entitlementRow(userId);
+
+    if (row.plan === 'premium') {
+      const ledgerId = this.recordLedger(userId, product, row.plan);
+      this.db.prepare("UPDATE entitlements SET estimates_used = estimates_used + 1, "
+                      + "last_used_at = ?, first_used_at = COALESCE(first_used_at, ?) "
+                      + 'WHERE user_id = ?')
+        .run(new Date().toISOString(), new Date().toISOString(), userId);
+      return { allowed: true, entitlement: this.getEntitlement(userId), ledgerId };
+    }
+
+    const now = new Date().toISOString();
+    const result = this.db
+      .prepare('UPDATE entitlements SET estimates_used = estimates_used + 1, '
+               + 'last_used_at = ?, first_used_at = COALESCE(first_used_at, ?) '
+               + 'WHERE user_id = ? AND estimates_used < ?')
+      .run(now, now, userId, this.freeEstimateLimit);
+
+    if (!result.changes) {
+      return { allowed: false, entitlement: this.getEntitlement(userId) };
+    }
+    const ledgerId = this.recordLedger(userId, product, row.plan);
+    return { allowed: true, entitlement: this.getEntitlement(userId), ledgerId };
+  }
+
+  /** Give back an estimate that was reserved but never delivered. */
+  public refundEstimate(userId: string, ledgerId: string, reason: string): Entitlement {
+    const ledger = this.db
+      .prepare('SELECT user_id, refunded_at FROM estimate_ledger WHERE id = ?')
+      .get(ledgerId) as any;
+
+    // Only an unrefunded reservation belonging to this account, so a replayed
+    // refund cannot hand out free estimates.
+    if (ledger && ledger.user_id === userId && !ledger.refunded_at) {
+      const now = new Date().toISOString();
+      this.db.prepare('UPDATE estimate_ledger SET refunded_at = ?, refund_reason = ? '
+                      + 'WHERE id = ?')
+        .run(now, reason.slice(0, 200), ledgerId);
+      this.db.prepare('UPDATE entitlements SET estimates_used = MAX(0, estimates_used - 1) '
+                      + 'WHERE user_id = ?')
+        .run(userId);
+    }
+    return this.getEntitlement(userId);
+  }
+
+  private recordLedger(userId: string, product: string, plan: Plan): string {
+    const id = crypto.randomUUID();
+    this.db
+      .prepare('INSERT INTO estimate_ledger (id, user_id, product, plan_at_time, created_at) '
+               + 'VALUES (?, ?, ?, ?, ?)')
+      .run(id, userId, product.slice(0, 300), plan, new Date().toISOString());
+    return id;
+  }
+
+  /** Move an account onto premium. Called once payment is confirmed. */
+  public setPlan(userId: string, plan: Plan): Entitlement {
+    this.entitlementRow(userId);
+    this.db
+      .prepare('UPDATE entitlements SET plan = ?, upgraded_at = ? WHERE user_id = ?')
+      .run(plan, plan === 'premium' ? new Date().toISOString() : null, userId);
+    return this.getEntitlement(userId);
+  }
+
+  // ── Leads ─────────────────────────────────────────────────────────────────
+
+  public insertLead(lead: LeadRow): LeadRow {
+    this.db
+      .prepare('INSERT INTO leads (id, name, work_email, company_name, sector, phone, '
+               + 'primary_need, requested_action, referral_source, annual_scale, '
+               + 'inventory_stats, captured_at, ip_address) '
+               + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(lead.id, lead.name, lead.workEmail, lead.companyName, lead.sector ?? null,
+           lead.phone ?? null, lead.primaryNeed ?? null, lead.requestedAction ?? null,
+           lead.referralSource ?? null, lead.annualTurnoverOrProduction ?? null,
+           lead.inventoryStats ? JSON.stringify(lead.inventoryStats) : null,
+           lead.capturedAt, lead.ipAddress ?? null);
+    return lead;
+  }
+
+  public allLeads(): LeadRow[] {
+    const rows = this.db
+      .prepare('SELECT * FROM leads ORDER BY captured_at DESC')
+      .all() as any[];
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      workEmail: row.work_email,
+      companyName: row.company_name,
+      sector: row.sector,
+      phone: row.phone ?? undefined,
+      primaryNeed: row.primary_need,
+      requestedAction: row.requested_action ?? undefined,
+      referralSource: row.referral_source,
+      annualTurnoverOrProduction: row.annual_scale ?? undefined,
+      inventoryStats: row.inventory_stats ? JSON.parse(row.inventory_stats) : undefined,
+      capturedAt: row.captured_at,
+      ipAddress: row.ip_address ?? undefined,
+    }));
+  }
+
+  public recentEstimates(userId: string, limit = 20): Array<{ id: string; product: string;
+    createdAt: string; refundedAt: string | null }> {
+    const rows = this.db
+      .prepare('SELECT id, product, created_at, refunded_at FROM estimate_ledger '
+               + 'WHERE user_id = ? ORDER BY created_at DESC LIMIT ?')
+      .all(userId, Math.min(Math.max(limit, 1), 100)) as any[];
+    return rows.map((row) => ({
+      id: row.id,
+      product: row.product,
+      createdAt: row.created_at,
+      refundedAt: row.refunded_at,
+    }));
   }
 
   public getSession(token: string): { session: SessionRecord; user: SafeUser } | null {

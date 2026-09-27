@@ -134,6 +134,19 @@ def per_tonne(ncv_tj_per_gg: float, kg_per_tj: float) -> float:
     return ncv_tj_per_gg * kg_per_tj / 1000.0
 
 
+def per_gj(kg_per_tj: float) -> float:
+    """kg of gas per GJ of fuel, net calorific value.
+
+    This is the published factor itself, only rescaled: a terajoule is a
+    thousand gigajoules. It matters because a plant does not weigh blast
+    furnace gas, coke oven gas or producer gas - it meters them, and reports
+    them in GJ or in kWh. Without this basis those fuels could be mapped to a
+    factor the user had no way of entering a quantity against, which reads on
+    the screen as the same thing as having no factor at all.
+    """
+    return kg_per_tj / 1000.0
+
+
 def desnz_totals() -> dict[str, float]:
     """DESNZ kgCO2e per tonne, by category path, for the cross-check."""
     if not DESNZ.exists():
@@ -227,6 +240,38 @@ def rows(retrieved: str) -> list[dict]:
                 "gas_mass_kg_per_unit": f"{per_tonne(ncv, co2):.6g}",
                 "co2e_basis": basis + " - biogenic carbon, a memo item under the GHG "
                                       "Protocol and not part of Scope 1",
+            })
+
+        # The same fuel on an energy basis, which is how IPCC publishes it and
+        # how a metered gas is actually recorded. Same activity, second unit.
+        energy_basis = "the published kg/TJ factor, per GJ of fuel (net calorific value)"
+        energy = {**common, "unit": "GJ"}
+        energy_gases = [("CH4", per_gj(ch4)), ("N2O", per_gj(n2o))]
+        if not biogenic:
+            energy_gases.insert(0, ("CO2", per_gj(co2)))
+
+        for gas, value in energy_gases:
+            written.append({
+                **energy,
+                "factor_id": f"{activity}.{gas.lower()}_gj",
+                "name": f"{name} — {gas}",
+                "gas": gas,
+                "value_kgco2e_per_unit": f"{value:.6g}",
+                "gas_mass_kg_per_unit": f"{value:.6g}",
+                "co2e_basis": energy_basis,
+            })
+
+        if biogenic:
+            written.append({
+                **energy,
+                "factor_id": f"{activity}.biogenic_co2_gj",
+                "name": f"{name} — biogenic CO2 (memo, not in any scope)",
+                "gas": "CO2",
+                "scope": "memo",
+                "value_kgco2e_per_unit": f"{per_gj(co2):.6g}",
+                "gas_mass_kg_per_unit": f"{per_gj(co2):.6g}",
+                "co2e_basis": energy_basis + " - biogenic carbon, a memo item under the "
+                                             "GHG Protocol and not part of Scope 1",
             })
     return written
 

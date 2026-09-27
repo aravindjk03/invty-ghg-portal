@@ -198,7 +198,7 @@ def app_chain(monkeypatch, tmp_path):
 
 
 def _http():
-    return SimpleNamespace(client=SimpleNamespace(host="t"))
+    return SimpleNamespace(client=SimpleNamespace(host="t"), headers={})
 
 
 def test_admin_status_lists_both_providers_and_their_status(app_chain, monkeypatch):

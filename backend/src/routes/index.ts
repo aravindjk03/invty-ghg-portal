@@ -9,6 +9,7 @@ import suppliersRoutes from './suppliers.routes';
 import cemsRoutes from './cems.routes';
 import auditRoutes from './audit.routes';
 import authRoutes from './auth.routes';
+import entitlementsRoutes from './entitlements.routes';
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router.get('/health', (_req: Request, res: Response) => {
 
 // API versioning v1
 router.use('/v1/auth', authRoutes);
+router.use('/v1/entitlements', entitlementsRoutes);
 router.use('/v1/factors', factorsRoutes);
 router.use('/v1/emissions', emissionsRoutes);
 router.use('/v1/reports', reportsRoutes);

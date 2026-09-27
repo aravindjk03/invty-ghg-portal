@@ -129,6 +129,7 @@ _ALIASES = {
     # Spellings used by the published workbooks we ingest.
     "litres": "L", "liters": "L", "cubic metres": "m3", "cubic meters": "m3",
     "pkm": "passenger.km", "passenger-km": "passenger.km", "pass.km": "passenger.km",
+    "pax.km": "passenger.km", "pax-km": "passenger.km", "pax.mi": "passenger.mi",
     "passenger.mile": "passenger.mi", "passenger.miles": "passenger.mi",
     # DESNZ publishes electricity and gas on a stated calorific basis. The basis
     # belongs to the FACTOR, not the unit: the user picks the gross or net row,

@@ -13,6 +13,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Iterable, Optional, Protocol
 
+from .units import dimension_of
 from .errors import (AmbiguousBoundaryError, EfBasisMismatchError,
                      FactorNotFoundError, IncomparableFactorsError,
                      ProductRouteRequiredError)
@@ -162,7 +163,10 @@ class FactorProvider(Protocol):
     """Swap in a commercial provider later without touching the engine."""
     def resolve(self, activity_key: str, region: str, reporting_year: int,
                 gas: str, *, production_route: Optional[str] = None,
-                system_boundary: Optional[str] = None) -> FactorResolution: ...
+                system_boundary: Optional[str] = None,
+                measured_in: Optional[str] = None) -> "FactorResolution":
+        ...
+
 
 
 class InMemoryFactorRegistry:
@@ -199,11 +203,37 @@ class InMemoryFactorRegistry:
                     f"{key!r} in {region!r} matched rows across boundaries "
                     f"{sorted(boundaries)}. These are different measurements "
                     f"and cannot be chosen between here - pass system_boundary.")
-        return rows
+        return self._prefer_dimension(rows, self._measured_in)
+
+    #: Set for the duration of one resolve() call. The ladder calls
+    #: _candidates from several rungs, so the hint travels here rather than
+    #: through five signatures.
+    _measured_in: Optional[str] = None
+
+    @staticmethod
+    def _prefer_dimension(rows, measured_in):
+        """Candidates whose denominator matches how the activity was measured,
+        first. Rows of other bases keep their order behind them, so a hint that
+        matches nothing changes nothing."""
+        if not measured_in or len(rows) < 2:
+            return rows
+        try:
+            wanted = dimension_of(measured_in)
+        except Exception:                        # noqa: BLE001 - unknown unit
+            return rows
+
+        def same_dimension(factor) -> bool:
+            try:
+                return dimension_of(factor.denominator_unit) == wanted
+            except Exception:                    # noqa: BLE001
+                return False
+
+        return sorted(rows, key=lambda f: not same_dimension(f))
 
     def resolve(self, activity_key: str, region: str, reporting_year: int,
                 gas: str, *, production_route: Optional[str] = None,
-                system_boundary: Optional[str] = None) -> FactorResolution:
+                system_boundary: Optional[str] = None,
+                measured_in: Optional[str] = None) -> FactorResolution:
         """Fallback ladder. The final step RAISES - it never returns zero.
 
         Fuel and energy factors walk the original five steps. Product (pcf.*)
@@ -211,6 +241,13 @@ class InMemoryFactorRegistry:
         rungs below the regional proxy: a material-class average (Tier B) and
         a spend-based EEIO proxy (Tier C). Every rung sets its flag so the UI
         can never render a Tier C screening estimate as a Tier A measurement.
+
+        `measured_in` is the unit the activity was recorded in. Some publishers
+        give one activity on more than one basis - IPCC publishes a fuel per
+        tonne and per gigajoule - and without the hint the first row wins,
+        which for a works gas metered in GJ means being handed the per-tonne
+        factor and told the two cannot be converted. It only ORDERS candidates
+        that already matched; it never widens the search.
         """
         is_product = activity_key.startswith(PCF_PREFIX)
         if is_product and not production_route and not self._is_fallback_key(activity_key):
@@ -220,6 +257,15 @@ class InMemoryFactorRegistry:
                 f"footprints differ several-fold; resolving without one would "
                 f"return whichever row happened to be first.")
 
+        self._measured_in = measured_in
+        try:
+            return self._resolve(activity_key, region, reporting_year, gas,
+                                 production_route, system_boundary, is_product)
+        finally:
+            self._measured_in = None
+
+    def _resolve(self, activity_key, region, reporting_year, gas,
+                 production_route, system_boundary, is_product) -> FactorResolution:
         # 1 exact
         rows = self._candidates(activity_key, region, gas, production_route,
                                 system_boundary)

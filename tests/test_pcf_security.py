@@ -140,7 +140,7 @@ def app_module(monkeypatch, tmp_path):
 
 
 def _http(host="1.2.3.4"):
-    return SimpleNamespace(client=SimpleNamespace(host=host))
+    return SimpleNamespace(client=SimpleNamespace(host=host), headers={})
 
 
 class Counting:

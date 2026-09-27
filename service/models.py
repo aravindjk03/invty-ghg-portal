@@ -76,6 +76,13 @@ DEFAULT_MODELS: dict[str, str] = {
 DEFAULT_PROVIDER = "anthropic"
 DEFAULT_MODEL = DEFAULT_MODELS[DEFAULT_PROVIDER]
 
+#: What an upgrade buys. Opus reasons hardest about a lifecycle - which routes
+#: are plausible for a product, how wide the genuine spread of a factor is -
+#: and that is the difference a paying customer is paying for. Sonnet sits
+#: behind it so a capacity problem on one model degrades the answer rather
+#: than removing it, and the free chain is appended after both.
+DEFAULT_PREMIUM_PROVIDER = "anthropic:claude-opus-5,anthropic:claude-sonnet-5"
+
 
 def get_profile(model: str, provider: str | None = None) -> ModelProfile:
     if provider is not None and provider not in PROVIDERS:

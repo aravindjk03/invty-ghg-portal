@@ -42,6 +42,10 @@ class SelectableActivity:
     scope: str
     category_path: str
     unit: str
+    #: Every unit this activity is published in. A fuel given per tonne AND per
+    #: gigajoule is one activity with two bases, and a picker that offered only
+    #: the first would hide the one a plant actually meters.
+    units: tuple[str, ...]
     region: str
     source: str
     reference_year: int
@@ -60,6 +64,17 @@ def _desnz_activity_key(factor_id: str) -> str:
     body = factor_id.split("desnz.2025.", 1)[-1]
     parts = body.rsplit("_", 1)
     return f"desnz.2025.{parts[0]}" if len(parts) == 2 else factor_id
+
+
+def _ipcc_activity_key(factor_id: str, scope: str) -> str:
+    """The activity a factor belongs to, ignoring which basis it is published on.
+
+    The same fuel is published per tonne and per GJ. They are one activity with
+    two units, not two activities, so the `_gj` suffix that keeps the two rows
+    apart is removed before the key is taken.
+    """
+    base = factor_id[:-3] if factor_id.endswith("_gj") else factor_id
+    return base.rsplit(".", 1)[0] if scope != "memo" else base
 
 
 @functools.lru_cache(maxsize=1)
@@ -123,6 +138,7 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
                 "category_path": row["category_path"], "unit": row["unit"],
                 "region": row["geography"], "source": row["source"],
                 "year": int(row["publication_year"] or 0), "gases": set(),
+                "units": set(),
             })
             entry["gases"].add(gas)
 
@@ -190,7 +206,7 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
             value = _decimal(row["gas_mass_kg_per_unit"])
             if value is None:
                 continue
-            key = row["factor_id"].rsplit(".", 1)[0] if row["scope"] != "memo"                 else row["factor_id"]
+            key = _ipcc_activity_key(row["factor_id"], row["scope"])
             registry.add(EmissionFactor(
                 version_id=row["factor_id"], activity_key=key, region=row["geography"],
                 reference_year=int(row["publication_year"] or 0), gas=row["gas"],
@@ -206,8 +222,10 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
                 "category_path": row["category_path"], "unit": row["unit"],
                 "region": row["geography"], "source": row["source"],
                 "year": int(row["publication_year"] or 0), "gases": set(),
+                "units": set(),
             })
             entry["gases"].add(row["gas"])
+            entry["units"].add(row["unit"])
 
     epa = FACTOR_DIR / "epa_supply_chain.csv"
     if epa.exists():
@@ -242,6 +260,7 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
         (SelectableActivity(
             activity_key=key, name=value["name"], scope=value["scope"],
             category_path=value["category_path"], unit=value["unit"],
+            units=tuple(sorted(value.get("units") or {value["unit"]})),
             region=value["region"], source=value["source"],
             reference_year=value["year"], gases=tuple(sorted(value["gases"])),
         ) for key, value in activities.items()),

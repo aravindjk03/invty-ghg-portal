@@ -406,7 +406,7 @@ def test_user_message_carries_region_and_details():
 # --- the HTTP layer ----------------------------------------------------------
 
 def _http(host="10.0.0.1"):
-    return SimpleNamespace(client=SimpleNamespace(host=host))
+    return SimpleNamespace(client=SimpleNamespace(host=host), headers={})
 
 
 class _CountingEstimator:

@@ -322,7 +322,7 @@ def test_app_on_gemini_is_free_and_keeps_the_vendor_private(monkeypatch, tmp_pat
                 profile=GEMINI)
 
     monkeypatch.setattr(module, "_estimator", Fake())
-    r = module.estimate(request_in, SimpleNamespace(client=SimpleNamespace(host="t")))
+    r = module.estimate(request_in, SimpleNamespace(client=SimpleNamespace(host="t"), headers={}))
     assert r.method.assistant == "INSITY EDGE AI"
     assert "gemini" not in r.model_dump_json().lower()
     status = module.admin_status(x_admin_token="test-admin-token")

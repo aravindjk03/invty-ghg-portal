@@ -85,3 +85,33 @@ def fuels():
                                     source_ref="tbl-test", reference_year=2026,
                                     density_kg_per_m3="0.8", gas_reference="standard"),
     }
+
+
+@pytest.fixture(autouse=True)
+def _metered_estimates(monkeypatch):
+    """Every estimate is metered against an account. Stub it, for every test.
+
+    The endpoint spends one of the customer's estimates before calling the AI
+    and gives it back if the answer never arrives, which means talking to the
+    account service. A test suite that reached for it would either hit a real
+    backend or fail with a plan error in tests about something else entirely.
+
+    The stub grants a free plan and counts nothing. A test about metering
+    overrides these two names itself.
+    """
+    try:
+        from service import app as module
+        from service.entitlements import Reservation
+    except Exception:                            # noqa: BLE001 - fastapi absent
+        yield
+        return
+
+    monkeypatch.setattr(module, "reserve", lambda token, product: Reservation(
+        user_id="test-user", ledger_id="test-ledger", plan="free",
+        entitlement={"plan": "free", "estimatesUsed": 1, "estimatesLimit": 2,
+                     "estimatesRemaining": 1}))
+    monkeypatch.setattr(module, "refund", lambda reservation, reason: None)
+    monkeypatch.setattr(module, "entitlement_for", lambda token: {
+        "plan": "free", "estimatesUsed": 1, "estimatesLimit": 2,
+        "estimatesRemaining": 1})
+    yield

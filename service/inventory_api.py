@@ -105,6 +105,8 @@ class ActivityOut(_Strict):
     scope: str
     category_path: str
     unit: str
+    #: Every basis this activity is published on, so the picker can offer them.
+    units: list[str]
     region: str
     source: str
     reference_year: int
@@ -195,8 +197,9 @@ def list_activities(scope: Optional[str], region: Optional[str], search: Optiona
     return [
         ActivityOut(
             activity_key=a.activity_key, name=a.name, scope=a.scope,
-            category_path=a.category_path, unit=a.unit, region=a.region,
-            source=a.source, reference_year=a.reference_year, gases=list(a.gases),
+            category_path=a.category_path, unit=a.unit, units=list(a.units),
+            region=a.region, source=a.source, reference_year=a.reference_year,
+            gases=list(a.gases),
         )
         for a in matches[:limit]
     ]

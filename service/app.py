@@ -28,6 +28,8 @@ from .cache import DecompositionCache, cache_key
 from .chemical_safety import ChemicalSafetyUnavailable, look_up as look_up_chemical
 from .catalogue import Catalogue
 from .config import Settings, ai_credentials_present, gemini_api_key, load_env_file
+from .entitlements import (BackendUnavailable, EstimateLimitReached, NotSignedIn,
+                           Reservation, entitlement_for, refund, reserve)
 from .estimator import (AIEstimator, ClaudeEstimator, EstimatorError, EstimatorNotAProduct,
                         EstimatorNotConfigured, prompt_fingerprint)
 from .fallback import FallbackEstimator, ProviderStep
@@ -95,6 +97,7 @@ class _Spend:
 
 spend = _Spend()
 _estimator: AIEstimator | None = None
+_premium_estimator: AIEstimator | None = None
 _inflight: dict[str, threading.Event] = {}
 _inflight_lock = threading.Lock()
 
@@ -113,14 +116,31 @@ def _build(profile: ModelProfile) -> AIEstimator:
                            max_tokens=settings.max_tokens)
 
 
-def get_estimator() -> AIEstimator:
-    global _estimator
+def _chain(profiles) -> AIEstimator:
+    return FallbackEstimator([
+        ProviderStep(profile=p, configured=(lambda p=p: _configured(p)),
+                     build=(lambda p=p: _build(p)))
+        for p in profiles
+    ])
+
+
+def get_estimator(premium: bool = False) -> AIEstimator:
+    """The model chain this caller's plan buys.
+
+    Premium is not a bigger allowance of the same answer. It is a different
+    model: the free plan runs on whatever is cheapest that answers, a paying
+    customer gets the one that reasons hardest about which production routes
+    are plausible and how wide a factor's genuine spread is. The free chain is
+    appended behind it, so an outage on the better model degrades the answer
+    instead of removing it.
+    """
+    global _estimator, _premium_estimator
+    if premium:
+        if _premium_estimator is None:
+            _premium_estimator = _chain(settings.premium_profiles)
+        return _premium_estimator
     if _estimator is None:
-        _estimator = FallbackEstimator([
-            ProviderStep(profile=p, configured=(lambda p=p: _configured(p)),
-                         build=(lambda p=p: _build(p)))
-            for p in settings.profiles
-        ])
+        _estimator = _chain(settings.profiles)
     return _estimator
 
 
@@ -184,8 +204,12 @@ def public_error(exc: EstimatorError) -> HTTPException:
 
 app = FastAPI(title="IINVTY Product Carbon Service", version=ENGINE_VERSION,
               docs_url=None, redoc_url=None, openapi_url=None)
+# Authorization is on the list because the browser now sends the signed-in
+# visitor's token with an estimate: without it the preflight is refused and
+# every estimate fails cross-origin, which is how the site is always served.
 app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
-                   allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
+                   allow_methods=["GET", "POST"],
+                   allow_headers=["Content-Type", "Authorization"])
 
 
 @app.get("/health")
@@ -241,6 +265,19 @@ def _respond(request: EstimateRequest, decomposition: Decomposition, *,
     return build_response(request, decomposition, catalogue, registry,
                           year=settings.reporting_year, assistant=settings.assistant_name,
                           cache_hit=cache_hit)
+
+
+def _plan_is_premium(http: Request) -> bool:
+    """Whether this caller's plan buys the better model.
+
+    Asked before the cache is looked at, because the two plans have separate
+    cached answers. A failure here is treated as free: it costs the customer
+    nothing and the reservation below will report the real problem.
+    """
+    try:
+        return (entitlement_for(_bearer(http)) or {}).get("plan") == "premium"
+    except (NotSignedIn, BackendUnavailable):
+        return False
 
 
 def _from_cache(request: EstimateRequest, key: str) -> Optional[EstimateResponse]:
@@ -371,11 +408,48 @@ def chemical_safety(name: str) -> dict:
     }
 
 
+def _bearer(http: Request) -> str:
+    header = http.headers.get("authorization", "")
+    return header[7:].strip() if header.lower().startswith("bearer ") else ""
+
+
+def _quota_error(exc: Exception) -> HTTPException:
+    """The visitor-facing form of a metering failure."""
+    if isinstance(exc, EstimateLimitReached):
+        # 402 Payment Required, which is exactly what it is.
+        return HTTPException(status_code=402, detail={
+            "code": "estimate_limit_reached",
+            "message": str(exc),
+            "entitlement": exc.entitlement,
+        })
+    if isinstance(exc, NotSignedIn):
+        return HTTPException(status_code=401, detail={
+            "code": "not_signed_in", "message": str(exc)})
+    log.warning("entitlement check failed: %s", exc)
+    return HTTPException(status_code=503, detail={
+        "code": "accounts_unavailable",
+        "message": "Your plan could not be checked just now, so no estimate was run and "
+                   "nothing was counted against your allowance. Try again shortly.",
+    })
+
+
+@app.get("/v1/pcf/entitlement")
+def pcf_entitlement(http: Request) -> dict:
+    """What this account's plan allows, for the page to show before it asks."""
+    try:
+        return {"entitlement": entitlement_for(_bearer(http))}
+    except (NotSignedIn, BackendUnavailable) as exc:
+        raise _quota_error(exc) from None
+
+
 @app.post("/v1/pcf/estimate", response_model=EstimateResponse)
 def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
-    key = cache_key(settings.cache_identity, fingerprint, request)
+    premium = _plan_is_premium(http)
+    key = cache_key(settings.cache_identity_for(premium), fingerprint, request)
 
-    # A cached answer costs nothing, so it is served before any key or limit check.
+    # A cached answer costs nothing to serve, so it costs the customer nothing
+    # either: it is returned without spending one of their estimates. The key
+    # carries the plan, so a paying customer is never handed the cheap answer.
     cached = _from_cache(request, key)
     if cached is not None:
         return cached
@@ -393,8 +467,26 @@ def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
         if cached is not None:
             return cached
 
+    # One estimate is spent BEFORE the model is called, and given back if the
+    # answer never arrives. Reserving afterwards would let two requests arriving
+    # together both read the same count and both proceed.
     try:
-        return _estimate_uncached(request, http, key)
+        reservation = reserve(_bearer(http), request.product)
+    except (EstimateLimitReached, NotSignedIn, BackendUnavailable) as exc:
+        if leader:
+            with _inflight_lock:
+                _inflight.pop(key, None)
+            event.set()
+        raise _quota_error(exc) from None
+
+    try:
+        return _estimate_uncached(request, http, key, reservation)
+    except HTTPException:
+        refund_quietly(reservation, "the estimate was refused or could not be produced")
+        raise
+    except BaseException:
+        refund_quietly(reservation, "the estimate failed unexpectedly")
+        raise
     finally:
         if leader:
             with _inflight_lock:
@@ -402,7 +494,17 @@ def estimate(request: EstimateRequest, http: Request) -> EstimateResponse:
             event.set()
 
 
-def _estimate_uncached(request: EstimateRequest, http: Request, key: str) -> EstimateResponse:
+def refund_quietly(reservation: Reservation, reason: str) -> None:
+    """Give the credit back. A failed refund must not replace the real error."""
+    try:
+        refund(reservation, reason)
+    except Exception:  # noqa: BLE001 - the visitor already has an error in front of them
+        log.warning("could not refund estimate %s for %s",
+                    reservation.ledger_id, reservation.user_id)
+
+
+def _estimate_uncached(request: EstimateRequest, http: Request, key: str,
+                       reservation: Reservation) -> EstimateResponse:
     if not _credentials_ok():
         missing = ", ".join(f"{p.label} ({p.provider})" for p in settings.profiles)
         raise public_error(EstimatorNotConfigured(f"no provider has a key: {missing}"))
@@ -419,7 +521,8 @@ def _estimate_uncached(request: EstimateRequest, http: Request, key: str) -> Est
         })
 
     try:
-        result = get_estimator().decompose(request, prompt_catalogue)
+        result = get_estimator(premium=reservation.is_premium).decompose(
+            request, prompt_catalogue)
     except EstimatorError as exc:
         raise public_error(exc) from exc
     except Exception as exc:  # noqa: BLE001 - never leak a stack trace to the page
@@ -430,8 +533,9 @@ def _estimate_uncached(request: EstimateRequest, http: Request, key: str) -> Est
     cost = estimate_cost_usd(answered_by, result.usage)
     spend.record_call(answered_by.model, cost, fell_back=bool(result.fallback_from))
     cache.put(key, answered_by.model, result.decomposition)
-    log.info("estimate model=%s fallback_from=%s is_product=%s in=%d out=%d cache_read=%d "
-             "cost_usd=%s", answered_by.model, ",".join(result.fallback_from) or "-",
+    log.info("estimate plan=%s model=%s fallback_from=%s is_product=%s in=%d out=%d "
+             "cache_read=%d cost_usd=%s", reservation.plan, answered_by.model,
+             ",".join(result.fallback_from) or "-",
              result.decomposition.product.is_product, result.usage.input_tokens,
              result.usage.output_tokens, result.usage.cache_read_input_tokens, cost)
     return _respond(request, result.decomposition, cache_hit=False)

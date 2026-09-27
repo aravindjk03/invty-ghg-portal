@@ -212,7 +212,11 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
             res = registry.resolve(
                 rec.activity_key, rec.region, reporting_year, gas,
                 production_route=rec.production_route,
-                system_boundary=rec.system_boundary)
+                system_boundary=rec.system_boundary,
+                # How the activity was measured, so an activity published on
+                # more than one basis hands back the one this row can actually
+                # be converted into.
+                measured_in=rec.unit)
         except Exception as exc:                 # noqa: BLE001
             # A fuel legitimately emits only some gases, and some publishers give
             # only a CO2e composite for a source. What must never pass silently

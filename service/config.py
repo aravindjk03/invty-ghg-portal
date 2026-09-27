@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from .models import DEFAULT_MODELS, DEFAULT_PROVIDER, ModelProfile, get_profile
+from .models import (DEFAULT_MODELS, DEFAULT_PREMIUM_PROVIDER, DEFAULT_PROVIDER,
+                     ModelProfile, get_profile)
 
 SERVICE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SERVICE_DIR.parent
@@ -95,7 +96,8 @@ def _int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Settings:
-    profiles: tuple[ModelProfile, ...]   # in the order they are tried
+    profiles: tuple[ModelProfile, ...]        # free plan, in the order tried
+    premium_profiles: tuple[ModelProfile, ...]  # what an upgrade actually buys
     effort: str
     thinking_budget: int          # Haiku only; 0 = thinking off
     max_tokens: int
@@ -126,9 +128,32 @@ class Settings:
         model name, so existing cached answers stay valid."""
         return ">".join(p.model for p in self.profiles)
 
+    @property
+    def premium_cache_identity(self) -> str:
+        """Premium answers are cached apart from free ones.
+
+        They come from a different model and are the thing the customer paid
+        for. Sharing one key would serve a paying customer the cheap answer
+        whenever a free visitor had asked about the same product first.
+        """
+        return ">".join(p.model for p in self.premium_profiles)
+
+    def cache_identity_for(self, premium: bool) -> str:
+        return self.premium_cache_identity if premium else self.cache_identity
+
     @staticmethod
     def from_env() -> "Settings":
         profiles = parse_provider_chain(os.environ.get("PCF_AI_PROVIDER", DEFAULT_PROVIDER))
+
+        # What Premium buys. The free plan runs on whatever is cheapest that
+        # answers; a paying customer gets the model that reasons hardest about
+        # a lifecycle, with the free chain behind it so an Anthropic outage
+        # degrades the answer instead of removing it.
+        premium_raw = os.environ.get("PCF_AI_PROVIDER_PREMIUM", DEFAULT_PREMIUM_PROVIDER)
+        premium_profiles = parse_provider_chain(premium_raw)
+        for profile in profiles:
+            if profile not in premium_profiles:
+                premium_profiles.append(profile)
 
         effort = os.environ.get("PCF_AI_EFFORT", "high").strip().lower()
         if effort not in ALLOWED_EFFORTS:
@@ -144,6 +169,7 @@ class Settings:
         origins = os.environ.get("PCF_CORS_ORIGINS", "http://localhost:5173")
         return Settings(
             profiles=tuple(profiles),
+            premium_profiles=tuple(premium_profiles),
             effort=effort,
             thinking_budget=thinking_budget,
             max_tokens=max_tokens,

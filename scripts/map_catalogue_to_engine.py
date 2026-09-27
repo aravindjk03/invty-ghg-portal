@@ -168,6 +168,100 @@ DESNZ_BY_NAME: dict[str, str] = {
 
     # --- Scope 3, cat 1 -----------------------------------------------------
     "cat1.material.water_supply": "Water supply / Water supply / Water supply",
+
+    # --- Scope 1, mobile by distance ---------------------------------------
+    # The "Passenger vehicles" and "Delivery vehicles" tables are the ones for
+    # vehicles the company OWNS. "Business travel- land" is the same journey
+    # made in a vehicle it does not own (Scope 3 cat 6) and "Managed assets" is
+    # a leased one, so taking the numbers from those tables would file a
+    # company's own fleet under someone else's emissions.
+    #
+    # Each row is the published AVERAGE of its class, because the catalogue
+    # offers one line per vehicle type. A fleet that knows its own fuel use
+    # should record the fuel instead, which is why these rows are marked in the
+    # catalogue as a fallback of lower data quality.
+    "mobile.distance.car": "Passenger vehicles / Cars (by size) / Average car (Unknown)",
+    "mobile.distance.truck": "Delivery vehicles / HGV (all diesel) / All HGVs (Average laden)",
+    "mobile.distance.two_wheeler": "Passenger vehicles / Motorbike / Average",
+
+    # --- Scope 1, fugitive: the rest of the refrigerants -------------------
+    # As above, the total including non-Kyoto products: a leak releases the
+    # whole charge, and the Kyoto-only figure would under-report any blend
+    # holding an HCFC.
+    "fugitive.refrigerant.r1234yf": "Refrigerant & other / Other products / R1234yf* (Total emissions including non-Kyoto products)",
+    "fugitive.refrigerant.r1234ze": "Refrigerant & other / Other products / R1234ze* (Total emissions including non-Kyoto products)",
+    "fugitive.refrigerant.r290": "Refrigerant & other / Other products / R290 = propane (Total emissions including non-Kyoto products)",
+    # CO2 used as a refrigerant is CO2: one kilogram released is one kilogram.
+    "fugitive.refrigerant.r744": "Refrigerant & other / Kyoto protocol products / Carbon dioxide (Total emissions including non-Kyoto products)",
+
+    # --- Scope 1, fugitive: gases released as themselves --------------------
+    # These are not combustion. A cylinder of CO2 discharged by a fire system,
+    # used to shield a weld or to carbonate a drink puts that same mass of CO2
+    # into the air, and DESNZ publishes each gas per kilogram released.
+    "fugitive.fire_co2": "Refrigerant & other / Kyoto protocol products / Carbon dioxide (Total emissions including non-Kyoto products)",
+    "fugitive.co2_welding": "Refrigerant & other / Kyoto protocol products / Carbon dioxide (Total emissions including non-Kyoto products)",
+    "fugitive.co2_beverage": "Refrigerant & other / Kyoto protocol products / Carbon dioxide (Total emissions including non-Kyoto products)",
+    "fugitive.n2o_medical": "Refrigerant & other / Kyoto protocol products / Nitrous oxide (Total emissions including non-Kyoto products)",
+    "fugitive.fire_hfc227ea": "Refrigerant & other / Kyoto protocol products / HFC-227ea (Total emissions including non-Kyoto products)",
+    "fugitive.sf6_magnesium": "Refrigerant & other / Kyoto protocol products / Sulphur hexafluoride (SF6) (Total emissions including non-Kyoto products)",
+
+    # --- Scope 3, cat 1: materials DESNZ publishes a cradle-to-gate figure for
+    # "Primary material production" is material made from virgin feedstock,
+    # which is what a purchase is unless the supplier states recycled content.
+    # The catalogue offers one row per material, so each maps to the published
+    # average for that material rather than to one grade of it.
+    "cat1.material.plastic_pp": "Material use / Plastic / Plastics: PP (incl. forming) (Primary material production)",
+    "cat1.material.plastic_pvc": "Material use / Plastic / Plastics: PVC (incl. forming) (Primary material production)",
+    "cat1.material.plastic_pet": "Material use / Plastic / Plastics: PET (incl. forming) (Primary material production)",
+    "cat1.material.paper": "Material use / Paper / Paper and board: mixed (Primary material production)",
+    "cat1.material.glass": "Material use / Other / Glass (Primary material production)",
+    "cat1.material.textiles": "Material use / Other / Clothing (Primary material production)",
+    "cat1.material.food_generic": "Material use / Other / Food and drink (Primary material production)",
+    "cat1.material.timber": "Material use / Construction / Wood (Primary material production)",
+
+    # --- Scope 3, cat 5: the rest of the waste routes -----------------------
+    # Incineration WITHOUT energy recovery and landfilled construction waste
+    # are deliberately absent: DESNZ publishes neither. Sewage sludge is absent
+    # too - the water treatment factor is per cubic metre of water treated, and
+    # sludge is recorded by mass, so the two cannot be joined. It gives commercial and
+    # industrial waste only as landfill or incineration with energy recovery,
+    # and construction waste only as recycled or incinerated with recovery.
+    # Those rows keep their honest state rather than borrowing a number from a
+    # route that releases a different amount.
+
+    # --- Scope 3, cat 6: the rest of business travel ------------------------
+    "cat6.taxi": "Business travel- land / Taxis / Regular taxi",
+    "cat6.rail": "Business travel- land / Rail / National rail",
+    # A rental or a reimbursed personal car is a journey in a vehicle the
+    # company does not own, which is what this table is for.
+    "cat6.rental_car": "Business travel- land / Cars (by size) / Average car (Unknown)",
+    "cat6.personal_car_reimbursed": "Business travel- land / Cars (by size) / Average car (Unknown)",
+
+    # --- Scope 3, cat 7: commuting ------------------------------------------
+    # The same tables as business travel: an employee commuting is travelling
+    # in a vehicle the company does not own.
+    "cat7.car_petrol": "Business travel- land / Cars (by size) / Average car (Petrol)",
+    "cat7.car_diesel": "Business travel- land / Cars (by size) / Average car (Diesel)",
+    "cat7.car_ev": "Business travel- land / Cars (by size) / Average car (Battery Electric Vehicle)",
+    "cat7.two_wheeler": "Business travel- land / Motorbike / Average",
+    "cat7.bus": "Business travel- land / Bus / Average local bus",
+    "cat7.metro_rail": "Business travel- land / Rail / Light rail and tram",
+    "cat7.company_bus": "Business travel- land / Bus / Coach",
+    # Homeworking is published per full-time-equivalent working hour, covering
+    # the heating and the office equipment together.
+    "cat7.wfh": "Homeworking / Homeworking (office equipment + heating)",
+
+    # --- Scope 3, cat 4 ------------------------------------------------------
+    "cat4.cold_chain": "Freighting goods / HGV refrigerated (all diesel) / All HGVs (Average laden)",
+
+    # --- Scope 3, cat 12: what happens to a product at end of life ----------
+    # As above: only the routes DESNZ actually publishes.
+    "cat12.landfill": "Waste disposal / Refuse / Commercial and industrial waste (Landfill)",
+
+    # --- Memo: substances reported outside the scopes -----------------------
+    # A Montreal Protocol substance is not in the Kyoto basket, so it is
+    # reported separately. DESNZ still publishes its warming effect.
+    "memo.montreal_r22": "Refrigerant & other / Montreal protocol products / HCFC-22 / R22 = chlorodifluoromethane (Total emissions including non-Kyoto products)",
 }
 
 #: catalogue activity_key -> an engine activity key outside DESNZ, given in full.
@@ -253,21 +347,25 @@ def load_engine() -> tuple[dict, dict]:
                 if name == "desnz_2025":
                     key = re.sub(r"_\d+$", "", row["factor_id"])
                 elif name == "ipcc_energy":
-                    # One activity per fuel; the last segment names the gas.
-                    key = (row["factor_id"].rsplit(".", 1)[0]
-                           if row["scope"] != "memo" else row["factor_id"])
+                    # One activity per fuel; the last segment names the gas, and
+                    # a "_gj" suffix marks the energy basis of the same fuel.
+                    raw = row["factor_id"]
+                    raw = raw[:-3] if raw.endswith("_gj") else raw
+                    key = (raw.rsplit(".", 1)[0] if row["scope"] != "memo" else raw)
                 else:
                     key = row["factor_id"]
                 record = activities.setdefault(key, {
                     "name": row["name"].replace("�", "-"),
                     "path": row["category_path"].replace("�", "-"),
                     "unit": row["unit"],
+                    "units": set(),
                     "scope": row["scope"],
                     "region": row["geography"],
                     "source": row["source"],
                     "values": {},
                 })
                 record["values"][row["gas"]] = row["value_kgco2e_per_unit"]
+                record["units"].add(row["unit"])
                 if name == "desnz_2025":
                     record["desnz_name"] = desnz_name(row["name"])
                     by_name[record["desnz_name"]].append((key, record["unit"], record["scope"]))
@@ -284,18 +382,28 @@ def main() -> None:
     problems: list[str] = []
     rows: list[dict] = []
 
-    def add(catalogue_key: str, engine_key: str) -> None:
+    def add(catalogue_key: str, engine_key: str, only_unit: str | None = None) -> None:
+        """One row per unit this activity is published in.
+
+        A source published per tonne AND per GJ has to appear as both, or a
+        plant that meters its works gas in gigajoules is offered a factor it
+        has no way of entering a quantity against - which reads on the screen
+        as no factor at all.
+        """
         source = catalogue[catalogue_key]
         activity = activities[engine_key]
-        rows.append({
-            "catalogue_key": catalogue_key,
-            "catalogue_name": source["display_name"].replace("�", "-"),
-            "unit": activity["unit"],
-            "engine_activity_key": engine_key,
-            "engine_name": activity.get("desnz_name") or activity["path"],
-            "engine_region": activity["region"],
-            "engine_source": activity["source"],
-        })
+        for unit in sorted(activity["units"] or {activity["unit"]}):
+            if only_unit is not None and unit != only_unit:
+                continue
+            rows.append({
+                "catalogue_key": catalogue_key,
+                "catalogue_name": source["display_name"].replace("�", "-"),
+                "unit": unit,
+                "engine_activity_key": engine_key,
+                "engine_name": activity.get("desnz_name") or activity["path"],
+                "engine_region": activity["region"],
+                "engine_source": activity["source"],
+            })
 
     for catalogue_key, published_name in sorted(DESNZ_BY_NAME.items()):
         if catalogue_key not in catalogue:
@@ -323,8 +431,8 @@ def main() -> None:
             problems.append(
                 f"{catalogue_key}: {published_name!r} resolved to no usable unit")
             continue
-        for key in best.values():
-            add(catalogue_key, key)
+        for unit, key in best.items():
+            add(catalogue_key, key, only_unit=unit)
 
     for catalogue_key, engine_key in sorted(DIRECT.items()):
         if catalogue_key not in catalogue:

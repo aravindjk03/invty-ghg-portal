@@ -12,11 +12,13 @@ import {
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { ChemicalSafetyPanel } from '../components/pcf/ChemicalSafetyPanel';
+import { PlanStatus, UpgradeWall } from '../components/pcf/PlanBanner';
+import { LeadGateModal } from '../components/ui/LeadGateModal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { EstimateResult } from '../components/pcf/EstimateResult';
-import { estimateProduct, getPcfHealth, PcfError } from '../services/pcfService';
+import { estimateProduct, getEntitlement, getPcfHealth, PcfError } from '../services/pcfService';
 import { EstimateInput, Region } from '../types/pcf';
 import { env } from '../config/env';
 
@@ -206,6 +208,16 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
 
   const health = useQuery({ queryKey: ['pcf-health'], queryFn: getPcfHealth, retry: false, staleTime: 30_000 });
 
+  // What this account's plan allows. Read from the server, never remembered
+  // here: a count the page could edit would not be a limit.
+  const entitlement = useQuery({
+    queryKey: ['pcf-entitlement'],
+    queryFn: getEntitlement,
+    retry: false,
+    staleTime: 10_000,
+  });
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
   const estimate = useMutation({
     mutationFn: (input: EstimateInput) => {
       abortRef.current?.abort();
@@ -215,6 +227,9 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
     },
     onSettled: () => {
       health.refetch();
+      // One estimate has just been spent, or given back. Either way the
+      // number on the page must be the server's, not one counted here.
+      entitlement.refetch();
     },
   });
 
@@ -350,9 +365,23 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
           </form>
         </Card>
 
+        {/* What the plan allows, said before the button is pressed rather than
+            discovered by hitting it. */}
+        <PlanStatus entitlement={entitlement.data ?? null} onUpgrade={() => setUpgradeOpen(true)} />
+
         {/* Output */}
         {estimate.isPending && submitted && <Pending product={submitted.product} onCancel={cancel} />}
-        {estimate.isError && !estimate.isPending && <Failure error={estimate.error} onRetry={retry} />}
+        {estimate.isError && !estimate.isPending
+          && (estimate.error instanceof PcfError
+            && estimate.error.code === 'estimate_limit_reached' ? (
+              <UpgradeWall
+                message={estimate.error.message}
+                entitlement={estimate.error.entitlement}
+                onUpgrade={() => setUpgradeOpen(true)}
+              />
+            ) : (
+              <Failure error={estimate.error} onRetry={retry} />
+            ))}
         {estimate.isSuccess && <EstimateResult data={estimate.data} />}
         {estimate.isIdle && <HowItWorks />}
 
@@ -363,6 +392,20 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
         */}
         <ChemicalSafetyPanel initialQuery={submitted?.product ?? ''} />
       </div>
+
+      {/*
+        There is no card payment in the product yet, so this records the
+        request and says so. Telling someone they have upgraded when nothing
+        has been charged would be worse than asking them to wait for a call.
+      */}
+      <LeadGateModal
+        isOpen={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        onSuccess={() => setUpgradeOpen(false)}
+        actionType="premium"
+        title="Upgrade to Premium"
+        description="Unlimited product estimates, answered by the most capable model. Leave your details and we will set the account up and confirm pricing with you."
+      />
     </div>
   );
 };

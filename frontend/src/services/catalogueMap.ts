@@ -53,7 +53,14 @@ const UNIT_EQUIVALENTS: Record<string, string[]> = {
   km: ['km'],
   mi: ['km'],
   't.km': ['tonne.km'],
+  // A seat on a bus, a train, a ferry or a plane is published per
+  // passenger-kilometre, which the engine keeps as its own dimension so a
+  // vehicle's kilometres can never be multiplied by a per-passenger factor.
+  'pax.km': ['passenger.km'],
+  'pax.mi': ['passenger.mi', 'passenger.km'],
   'passenger.km': ['passenger.km'],
+  night: ['Room per night'],
+  'fte.hr': ['per FTE Working Hour'],
   ml: ['million litres'],
 };
 

@@ -1,7 +1,7 @@
 [
   {
     "activity_key": "fuel.coal.anthracite",
-    "display_name": "Coal \u2014 anthracite",
+    "display_name": "Coal — anthracite",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -14,7 +14,7 @@
   },
   {
     "activity_key": "fuel.coal.bituminous",
-    "display_name": "Coal \u2014 bituminous",
+    "display_name": "Coal — bituminous",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -27,7 +27,7 @@
   },
   {
     "activity_key": "fuel.coal.sub_bituminous",
-    "display_name": "Coal \u2014 sub-bituminous",
+    "display_name": "Coal — sub-bituminous",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -40,7 +40,7 @@
   },
   {
     "activity_key": "fuel.coal.lignite",
-    "display_name": "Coal \u2014 lignite / brown coal",
+    "display_name": "Coal — lignite / brown coal",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -53,7 +53,7 @@
   },
   {
     "activity_key": "fuel.coal.coking",
-    "display_name": "Coal \u2014 coking / metallurgical",
+    "display_name": "Coal — coking / metallurgical",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -66,7 +66,7 @@
   },
   {
     "activity_key": "fuel.coal.indian_domestic",
-    "display_name": "Coal \u2014 Indian domestic (grade-specified)",
+    "display_name": "Coal — Indian domestic (grade-specified)",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -75,11 +75,11 @@
     "allowed_units": "kg|t|lb",
     "gases": "CO2,CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "Ask for GCV band; Indian coal has high ash and low GCV \u2014 do not use imported-coal factors"
+    "notes": "Ask for GCV band; Indian coal has high ash and low GCV — do not use imported-coal factors"
   },
   {
     "activity_key": "fuel.coal.imported_steam",
-    "display_name": "Coal \u2014 imported steam coal",
+    "display_name": "Coal — imported steam coal",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -92,7 +92,7 @@
   },
   {
     "activity_key": "fuel.coke.metallurgical",
-    "display_name": "Coke \u2014 metallurgical",
+    "display_name": "Coke — metallurgical",
     "group": "Solid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -127,7 +127,7 @@
     "allowed_units": "kg|t|lb",
     "gases": "CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "CO2 is biogenic \u2014 memo item, outside scopes"
+    "notes": "CO2 is biogenic — memo item, outside scopes"
   },
   {
     "activity_key": "fuel.biomass.wood_chips",
@@ -261,7 +261,7 @@
   },
   {
     "activity_key": "fuel.biomass.agri_residue",
-    "display_name": "Agricultural residue \u2014 other",
+    "display_name": "Agricultural residue — other",
     "group": "Biomass",
     "scope": "1",
     "ghg_category": "1.1",
@@ -313,7 +313,7 @@
   },
   {
     "activity_key": "fuel.diesel.stationary",
-    "display_name": "Diesel / HSD \u2014 stationary (DG set, boiler)",
+    "display_name": "Diesel / HSD — stationary (DG set, boiler)",
     "group": "Liquid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -378,7 +378,7 @@
   },
   {
     "activity_key": "fuel.lpg.stationary",
-    "display_name": "LPG \u2014 stationary",
+    "display_name": "LPG — stationary",
     "group": "Liquid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -387,7 +387,7 @@
     "allowed_units": "kg|t|L|m3",
     "gases": "CO2,CH4,N2O",
     "factor_source": "DESNZ",
-    "notes": "Sold by mass in India, by volume in UK \u2014 unit trap"
+    "notes": "Sold by mass in India, by volume in UK — unit trap"
   },
   {
     "activity_key": "fuel.propane",
@@ -430,7 +430,7 @@
   },
   {
     "activity_key": "fuel.biodiesel.stationary",
-    "display_name": "Biodiesel (B100) \u2014 stationary",
+    "display_name": "Biodiesel (B100) — stationary",
     "group": "Liquid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -439,11 +439,11 @@
     "allowed_units": "L|kL|m3|gal",
     "gases": "CH4,N2O",
     "factor_source": "DESNZ",
-    "notes": "Biogenic CO2 \u2192 memo item"
+    "notes": "Biogenic CO2 → memo item"
   },
   {
     "activity_key": "fuel.ethanol.stationary",
-    "display_name": "Ethanol \u2014 stationary",
+    "display_name": "Ethanol — stationary",
     "group": "Liquid fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -452,7 +452,7 @@
     "allowed_units": "L|kL|m3|gal",
     "gases": "CH4,N2O",
     "factor_source": "DESNZ",
-    "notes": "Biogenic CO2 \u2192 memo item"
+    "notes": "Biogenic CO2 → memo item"
   },
   {
     "activity_key": "fuel.lubricants",
@@ -491,7 +491,7 @@
     "allowed_units": "m3|scm|Nm3|MMBtu|GJ|kWh",
     "gases": "CO2,CH4,N2O",
     "factor_source": "DESNZ",
-    "notes": "Ask net or gross CV \u2014 a ~10% error if mismatched"
+    "notes": "Ask net or gross CV — a ~10% error if mismatched"
   },
   {
     "activity_key": "fuel.png",
@@ -508,7 +508,7 @@
   },
   {
     "activity_key": "fuel.cng.stationary",
-    "display_name": "CNG \u2014 stationary",
+    "display_name": "CNG — stationary",
     "group": "Gaseous fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -530,7 +530,7 @@
     "allowed_units": "m3|scm|Nm3|MMBtu|GJ|kWh",
     "gases": "CH4,N2O",
     "factor_source": "DESNZ",
-    "notes": "Biogenic CO2 \u2192 memo item"
+    "notes": "Biogenic CO2 → memo item"
   },
   {
     "activity_key": "fuel.landfill_gas",
@@ -543,7 +543,7 @@
     "allowed_units": "m3|scm|Nm3|MMBtu|GJ|kWh",
     "gases": "CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "Biogenic CO2 \u2192 memo item"
+    "notes": "Biogenic CO2 → memo item"
   },
   {
     "activity_key": "fuel.producer_gas",
@@ -569,7 +569,7 @@
     "allowed_units": "m3|scm|Nm3|MMBtu|GJ|kWh",
     "gases": "CO2,CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "Steel plants \u2014 recovered process gas burned for energy"
+    "notes": "Steel plants — recovered process gas burned for energy"
   },
   {
     "activity_key": "fuel.coke_oven_gas",
@@ -599,7 +599,7 @@
   },
   {
     "activity_key": "fuel.hydrogen.grey",
-    "display_name": "Hydrogen \u2014 grey (SMR-derived), combusted",
+    "display_name": "Hydrogen — grey (SMR-derived), combusted",
     "group": "Gaseous fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -612,7 +612,7 @@
   },
   {
     "activity_key": "fuel.hydrogen.green",
-    "display_name": "Hydrogen \u2014 green, combusted",
+    "display_name": "Hydrogen — green, combusted",
     "group": "Gaseous fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -638,8 +638,8 @@
   },
   {
     "activity_key": "mobile.diesel",
-    "display_name": "Diesel \u2014 owned/leased vehicles",
-    "group": "Mobile \u2014 road",
+    "display_name": "Diesel — owned/leased vehicles",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -651,8 +651,8 @@
   },
   {
     "activity_key": "mobile.petrol",
-    "display_name": "Petrol / gasoline \u2014 owned/leased vehicles",
-    "group": "Mobile \u2014 road",
+    "display_name": "Petrol / gasoline — owned/leased vehicles",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -664,8 +664,8 @@
   },
   {
     "activity_key": "mobile.cng",
-    "display_name": "CNG \u2014 owned/leased vehicles",
-    "group": "Mobile \u2014 road",
+    "display_name": "CNG — owned/leased vehicles",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -678,7 +678,7 @@
   {
     "activity_key": "mobile.lpg_auto",
     "display_name": "Auto LPG",
-    "group": "Mobile \u2014 road",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -691,7 +691,7 @@
   {
     "activity_key": "mobile.biodiesel_blend",
     "display_name": "Biodiesel blend (B7/B20)",
-    "group": "Mobile \u2014 road",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -704,7 +704,7 @@
   {
     "activity_key": "mobile.ethanol_blend",
     "display_name": "Ethanol blend (E10/E20)",
-    "group": "Mobile \u2014 road",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -712,12 +712,12 @@
     "allowed_units": "L|kL|m3|gal",
     "gases": "CO2,CH4,N2O",
     "factor_source": "DESNZ",
-    "notes": "India is moving to E20 \u2014 blend ratio must be a user input"
+    "notes": "India is moving to E20 — blend ratio must be a user input"
   },
   {
     "activity_key": "mobile.distance.car",
-    "display_name": "Distance \u2014 company car",
-    "group": "Mobile \u2014 road",
+    "display_name": "Distance — company car",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -729,8 +729,8 @@
   },
   {
     "activity_key": "mobile.distance.truck",
-    "display_name": "Distance \u2014 owned truck by size class",
-    "group": "Mobile \u2014 road",
+    "display_name": "Distance — owned truck by size class",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -742,8 +742,8 @@
   },
   {
     "activity_key": "mobile.distance.two_wheeler",
-    "display_name": "Distance \u2014 owned two-wheeler",
-    "group": "Mobile \u2014 road",
+    "display_name": "Distance — owned two-wheeler",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -755,8 +755,8 @@
   },
   {
     "activity_key": "mobile.forklift_diesel",
-    "display_name": "Forklift / material handling \u2014 diesel",
-    "group": "Mobile \u2014 road",
+    "display_name": "Forklift / material handling — diesel",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -768,8 +768,8 @@
   },
   {
     "activity_key": "mobile.forklift_lpg",
-    "display_name": "Forklift \u2014 LPG",
-    "group": "Mobile \u2014 road",
+    "display_name": "Forklift — LPG",
+    "group": "Mobile — road",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -781,8 +781,8 @@
   },
   {
     "activity_key": "mobile.atf_own_aircraft",
-    "display_name": "Aviation turbine fuel \u2014 company-owned/leased aircraft",
-    "group": "Mobile \u2014 air/sea/rail",
+    "display_name": "Aviation turbine fuel — company-owned/leased aircraft",
+    "group": "Mobile — air/sea/rail",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -794,8 +794,8 @@
   },
   {
     "activity_key": "mobile.avgas",
-    "display_name": "Aviation gasoline \u2014 owned aircraft",
-    "group": "Mobile \u2014 air/sea/rail",
+    "display_name": "Aviation gasoline — owned aircraft",
+    "group": "Mobile — air/sea/rail",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -807,8 +807,8 @@
   },
   {
     "activity_key": "mobile.marine_gas_oil",
-    "display_name": "Marine gas oil \u2014 owned vessel",
-    "group": "Mobile \u2014 air/sea/rail",
+    "display_name": "Marine gas oil — owned vessel",
+    "group": "Mobile — air/sea/rail",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -820,8 +820,8 @@
   },
   {
     "activity_key": "mobile.marine_hfo",
-    "display_name": "Heavy fuel oil / bunker \u2014 owned vessel",
-    "group": "Mobile \u2014 air/sea/rail",
+    "display_name": "Heavy fuel oil / bunker — owned vessel",
+    "group": "Mobile — air/sea/rail",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -833,8 +833,8 @@
   },
   {
     "activity_key": "mobile.rail_diesel",
-    "display_name": "Diesel \u2014 owned locomotive / siding shunter",
-    "group": "Mobile \u2014 air/sea/rail",
+    "display_name": "Diesel — owned locomotive / siding shunter",
+    "group": "Mobile — air/sea/rail",
     "scope": "1",
     "ghg_category": "1.2",
     "category_name": "Mobile combustion",
@@ -846,7 +846,7 @@
   },
   {
     "activity_key": "process.cement_clinker",
-    "display_name": "Cement \u2014 clinker calcination",
+    "display_name": "Cement — clinker calcination",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -859,7 +859,7 @@
   },
   {
     "activity_key": "process.lime_calcination",
-    "display_name": "Lime \u2014 calcination of limestone",
+    "display_name": "Lime — calcination of limestone",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -911,7 +911,7 @@
   },
   {
     "activity_key": "process.iron_steel_bf",
-    "display_name": "Iron & steel \u2014 blast furnace reductant (carbon mass balance)",
+    "display_name": "Iron & steel — blast furnace reductant (carbon mass balance)",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -924,7 +924,7 @@
   },
   {
     "activity_key": "process.iron_steel_dri",
-    "display_name": "Iron & steel \u2014 direct reduced iron (DRI/sponge iron)",
+    "display_name": "Iron & steel — direct reduced iron (DRI/sponge iron)",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -937,7 +937,7 @@
   },
   {
     "activity_key": "process.iron_steel_eaf_electrode",
-    "display_name": "Iron & steel \u2014 EAF graphite electrode consumption",
+    "display_name": "Iron & steel — EAF graphite electrode consumption",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -972,7 +972,7 @@
     "allowed_units": "kg|t",
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "N2O \u2014 dominant gas, not CO2"
+    "notes": "N2O — dominant gas, not CO2"
   },
   {
     "activity_key": "process.adipic_acid",
@@ -985,7 +985,7 @@
     "allowed_units": "kg|t",
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "N2O \u2014 dominant gas"
+    "notes": "N2O — dominant gas"
   },
   {
     "activity_key": "process.urea_production",
@@ -1015,7 +1015,7 @@
   },
   {
     "activity_key": "process.hydrogen_smr",
-    "display_name": "Hydrogen production \u2014 SMR",
+    "display_name": "Hydrogen production — SMR",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1028,7 +1028,7 @@
   },
   {
     "activity_key": "process.aluminium_anode",
-    "display_name": "Aluminium \u2014 anode consumption",
+    "display_name": "Aluminium — anode consumption",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1041,7 +1041,7 @@
   },
   {
     "activity_key": "process.aluminium_pfc",
-    "display_name": "Aluminium \u2014 PFC from anode effects",
+    "display_name": "Aluminium — PFC from anode effects",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1050,11 +1050,11 @@
     "allowed_units": "kg|t",
     "gases": "PFC",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "CF4 and C2F6 \u2014 very high GWP"
+    "notes": "CF4 and C2F6 — very high GWP"
   },
   {
     "activity_key": "process.glass_carbonates",
-    "display_name": "Glass \u2014 carbonate decomposition",
+    "display_name": "Glass — carbonate decomposition",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1067,7 +1067,7 @@
   },
   {
     "activity_key": "process.ceramics",
-    "display_name": "Ceramics / brick firing \u2014 carbonates",
+    "display_name": "Ceramics / brick firing — carbonates",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1106,7 +1106,7 @@
   },
   {
     "activity_key": "process.ethylene_petchem",
-    "display_name": "Petrochemical \u2014 ethylene / olefins",
+    "display_name": "Petrochemical — ethylene / olefins",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1132,7 +1132,7 @@
   },
   {
     "activity_key": "process.pulp_paper_lime_kiln",
-    "display_name": "Pulp & paper \u2014 lime kiln",
+    "display_name": "Pulp & paper — lime kiln",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1154,7 +1154,7 @@
     "allowed_units": "kg|t",
     "gases": "HFC",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "GWP ~12,700 \u2014 tiny masses are material"
+    "notes": "GWP ~12,700 — tiny masses are material"
   },
   {
     "activity_key": "process.titanium_dioxide",
@@ -1236,7 +1236,7 @@
   },
   {
     "activity_key": "process.other_process_direct",
-    "display_name": "Other process \u2014 enter tCO2e directly",
+    "display_name": "Other process — enter tCO2e directly",
     "group": "Process",
     "scope": "1",
     "ghg_category": "1.3",
@@ -1250,7 +1250,7 @@
   {
     "activity_key": "fugitive.refrigerant.r134a",
     "display_name": "R-134a (HFC-134a)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1263,7 +1263,7 @@
   {
     "activity_key": "fugitive.refrigerant.r410a",
     "display_name": "R-410A (blend)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1271,12 +1271,12 @@
     "allowed_units": "kg|g|lb",
     "gases": "HFC",
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
-    "notes": "Blend \u2014 GWP must be mass-weighted from components; AR6 has no blend value"
+    "notes": "Blend — GWP must be mass-weighted from components; AR6 has no blend value"
   },
   {
     "activity_key": "fugitive.refrigerant.r404a",
     "display_name": "R-404A (blend)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1284,12 +1284,12 @@
     "allowed_units": "kg|g|lb",
     "gases": "HFC",
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
-    "notes": "Blend \u2014 derive GWP from composition"
+    "notes": "Blend — derive GWP from composition"
   },
   {
     "activity_key": "fugitive.refrigerant.r407c",
     "display_name": "R-407C (blend)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1297,12 +1297,12 @@
     "allowed_units": "kg|g|lb",
     "gases": "HFC",
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
-    "notes": "Blend \u2014 derive GWP from composition"
+    "notes": "Blend — derive GWP from composition"
   },
   {
     "activity_key": "fugitive.refrigerant.r32",
     "display_name": "R-32 (HFC-32)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1315,7 +1315,7 @@
   {
     "activity_key": "fugitive.refrigerant.r1234yf",
     "display_name": "R-1234yf (HFO)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1323,12 +1323,12 @@
     "allowed_units": "kg|g|lb",
     "gases": "HFC",
     "factor_source": "IPCC AR6 GWP / GHG Protocol GWP table",
-    "notes": "AR6 GWP100 is ~0.5 \u2014 footnote it or it reads as a bug"
+    "notes": "AR6 GWP100 is ~0.5 — footnote it or it reads as a bug"
   },
   {
     "activity_key": "fugitive.refrigerant.r1234ze",
     "display_name": "R-1234ze (HFO)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1341,7 +1341,7 @@
   {
     "activity_key": "fugitive.refrigerant.r507a",
     "display_name": "R-507A (blend)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1354,7 +1354,7 @@
   {
     "activity_key": "fugitive.refrigerant.r417a",
     "display_name": "R-417A (blend)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1367,7 +1367,7 @@
   {
     "activity_key": "fugitive.refrigerant.r23",
     "display_name": "R-23 (HFC-23)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1380,7 +1380,7 @@
   {
     "activity_key": "fugitive.refrigerant.r125",
     "display_name": "R-125 (HFC-125)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1393,7 +1393,7 @@
   {
     "activity_key": "fugitive.refrigerant.r143a",
     "display_name": "R-143a (HFC-143a)",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1406,7 +1406,7 @@
   {
     "activity_key": "fugitive.refrigerant.r290",
     "display_name": "R-290 (propane) refrigerant",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1419,7 +1419,7 @@
   {
     "activity_key": "fugitive.refrigerant.r717",
     "display_name": "R-717 (ammonia) refrigerant",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1432,7 +1432,7 @@
   {
     "activity_key": "fugitive.refrigerant.r744",
     "display_name": "R-744 (CO2) refrigerant",
-    "group": "Fugitive \u2014 refrigerant",
+    "group": "Fugitive — refrigerant",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1444,7 +1444,7 @@
   },
   {
     "activity_key": "combustion.acetylene",
-    "display_name": "Acetylene \u2014 cutting / welding torch",
+    "display_name": "Acetylene — cutting / welding torch",
     "group": "Gaseous fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -1457,8 +1457,8 @@
   },
   {
     "activity_key": "fugitive.sf6",
-    "display_name": "SF6 \u2014 electrical switchgear",
-    "group": "Fugitive \u2014 other",
+    "display_name": "SF6 — electrical switchgear",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1466,12 +1466,12 @@
     "allowed_units": "kg|g",
     "gases": "SF6",
     "factor_source": "IPCC AR6",
-    "notes": "GWP ~25,200 \u2014 a few kg is material"
+    "notes": "GWP ~25,200 — a few kg is material"
   },
   {
     "activity_key": "fugitive.nf3",
-    "display_name": "NF3 \u2014 electronics manufacturing",
-    "group": "Fugitive \u2014 other",
+    "display_name": "NF3 — electronics manufacturing",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1483,8 +1483,8 @@
   },
   {
     "activity_key": "fugitive.pfc_etch",
-    "display_name": "PFCs \u2014 semiconductor etch/clean",
-    "group": "Fugitive \u2014 other",
+    "display_name": "PFCs — semiconductor etch/clean",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1496,8 +1496,8 @@
   },
   {
     "activity_key": "fugitive.fire_co2",
-    "display_name": "Fire suppression \u2014 CO2",
-    "group": "Fugitive \u2014 other",
+    "display_name": "Fire suppression — CO2",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1509,8 +1509,8 @@
   },
   {
     "activity_key": "fugitive.fire_hfc227ea",
-    "display_name": "Fire suppression \u2014 HFC-227ea / FM-200",
-    "group": "Fugitive \u2014 other",
+    "display_name": "Fire suppression — HFC-227ea / FM-200",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1522,8 +1522,8 @@
   },
   {
     "activity_key": "fugitive.fire_novec",
-    "display_name": "Fire suppression \u2014 Novec 1230",
-    "group": "Fugitive \u2014 other",
+    "display_name": "Fire suppression — Novec 1230",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1535,8 +1535,8 @@
   },
   {
     "activity_key": "fugitive.ch4_wastewater",
-    "display_name": "Methane \u2014 on-site anaerobic wastewater treatment",
-    "group": "Fugitive \u2014 other",
+    "display_name": "Methane — on-site anaerobic wastewater treatment",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1548,8 +1548,8 @@
   },
   {
     "activity_key": "fugitive.ch4_ng_distribution",
-    "display_name": "Methane \u2014 on-site gas distribution leaks",
-    "group": "Fugitive \u2014 other",
+    "display_name": "Methane — on-site gas distribution leaks",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1561,8 +1561,8 @@
   },
   {
     "activity_key": "fugitive.ch4_coal_mine",
-    "display_name": "Methane \u2014 coal mining",
-    "group": "Fugitive \u2014 other",
+    "display_name": "Methane — coal mining",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1574,8 +1574,8 @@
   },
   {
     "activity_key": "fugitive.co2_welding",
-    "display_name": "CO2 \u2014 welding shielding gas",
-    "group": "Fugitive \u2014 other",
+    "display_name": "CO2 — welding shielding gas",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1587,8 +1587,8 @@
   },
   {
     "activity_key": "fugitive.n2o_medical",
-    "display_name": "N2O \u2014 medical / laboratory use",
-    "group": "Fugitive \u2014 other",
+    "display_name": "N2O — medical / laboratory use",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1600,8 +1600,8 @@
   },
   {
     "activity_key": "fugitive.co2_beverage",
-    "display_name": "CO2 \u2014 carbonation / beverage dispense",
-    "group": "Fugitive \u2014 other",
+    "display_name": "CO2 — carbonation / beverage dispense",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1613,8 +1613,8 @@
   },
   {
     "activity_key": "fugitive.n2o_wastewater",
-    "display_name": "N2O \u2014 on-site wastewater treatment",
-    "group": "Fugitive \u2014 other",
+    "display_name": "N2O — on-site wastewater treatment",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1622,12 +1622,12 @@
     "allowed_units": "m3|kL|kg",
     "gases": "N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "IPCC Vol.5 Ch.6 \u2014 nitrogen in effluent. Pairs with fugitive.ch4_wastewater."
+    "notes": "IPCC Vol.5 Ch.6 — nitrogen in effluent. Pairs with fugitive.ch4_wastewater."
   },
   {
     "activity_key": "fugitive.hfc_foam",
-    "display_name": "HFCs \u2014 foam blowing agents",
-    "group": "Fugitive \u2014 other",
+    "display_name": "HFCs — foam blowing agents",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1639,8 +1639,8 @@
   },
   {
     "activity_key": "fugitive.hfc_aerosol",
-    "display_name": "HFCs \u2014 aerosols and solvents",
-    "group": "Fugitive \u2014 other",
+    "display_name": "HFCs — aerosols and solvents",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1652,8 +1652,8 @@
   },
   {
     "activity_key": "fugitive.sf6_magnesium",
-    "display_name": "SF6 \u2014 magnesium casting cover gas",
-    "group": "Fugitive \u2014 other",
+    "display_name": "SF6 — magnesium casting cover gas",
+    "group": "Fugitive — other",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
@@ -1665,7 +1665,7 @@
   },
   {
     "activity_key": "flare.process_vent",
-    "display_name": "Process vent \u2014 flared",
+    "display_name": "Process vent — flared",
     "group": "Flaring and venting",
     "scope": "1",
     "ghg_category": "1.1",
@@ -1691,7 +1691,7 @@
   },
   {
     "activity_key": "vent.process_ch4",
-    "display_name": "Process vent \u2014 unflared methane",
+    "display_name": "Process vent — unflared methane",
     "group": "Flaring and venting",
     "scope": "1",
     "ghg_category": "1.4",
@@ -1717,7 +1717,7 @@
   },
   {
     "activity_key": "mobile.offroad.excavator",
-    "display_name": "Excavator \u2014 owned, diesel",
+    "display_name": "Excavator — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1730,7 +1730,7 @@
   },
   {
     "activity_key": "mobile.offroad.dozer",
-    "display_name": "Bulldozer \u2014 owned, diesel",
+    "display_name": "Bulldozer — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1743,7 +1743,7 @@
   },
   {
     "activity_key": "mobile.offroad.crane",
-    "display_name": "Crane \u2014 owned, diesel",
+    "display_name": "Crane — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1756,7 +1756,7 @@
   },
   {
     "activity_key": "mobile.offroad.haul_truck",
-    "display_name": "Mining haul truck \u2014 owned, diesel",
+    "display_name": "Mining haul truck — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1769,7 +1769,7 @@
   },
   {
     "activity_key": "mobile.offroad.loader",
-    "display_name": "Wheel loader \u2014 owned, diesel",
+    "display_name": "Wheel loader — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1782,7 +1782,7 @@
   },
   {
     "activity_key": "mobile.offroad.tractor",
-    "display_name": "Tractor / farm equipment \u2014 owned, diesel",
+    "display_name": "Tractor / farm equipment — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1795,7 +1795,7 @@
   },
   {
     "activity_key": "mobile.offroad.genset_mobile",
-    "display_name": "Mobile generator \u2014 owned, diesel",
+    "display_name": "Mobile generator — owned, diesel",
     "group": "Off-road mobile plant",
     "scope": "1",
     "ghg_category": "1.2",
@@ -1808,7 +1808,7 @@
   },
   {
     "activity_key": "agri.enteric_fermentation",
-    "display_name": "Enteric fermentation \u2014 livestock",
+    "display_name": "Enteric fermentation — livestock",
     "group": "Agriculture and land",
     "scope": "1",
     "ghg_category": "1.5",
@@ -1873,7 +1873,7 @@
   },
   {
     "activity_key": "agri.rice_cultivation",
-    "display_name": "Rice cultivation \u2014 CH4",
+    "display_name": "Rice cultivation — CH4",
     "group": "Agriculture and land",
     "scope": "1",
     "ghg_category": "1.5",
@@ -1899,7 +1899,7 @@
   },
   {
     "activity_key": "land.removals_biochar",
-    "display_name": "Durable removals \u2014 biochar / sequestration",
+    "display_name": "Durable removals — biochar / sequestration",
     "group": "Agriculture and land",
     "scope": "1",
     "ghg_category": "memo",
@@ -1912,7 +1912,7 @@
   },
   {
     "activity_key": "elec.grid.location",
-    "display_name": "Grid electricity \u2014 location-based",
+    "display_name": "Grid electricity — location-based",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -1925,7 +1925,7 @@
   },
   {
     "activity_key": "elec.grid.market_residual",
-    "display_name": "Grid electricity \u2014 market-based residual mix",
+    "display_name": "Grid electricity — market-based residual mix",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -1934,11 +1934,11 @@
     "allowed_units": "kWh|MWh",
     "gases": "CO2,CH4,N2O",
     "factor_source": "AIB (EU) / Green-e (US)",
-    "notes": "No residual mix published for India \u2014 substitute grid average and footnote it"
+    "notes": "No residual mix published for India — substitute grid average and footnote it"
   },
   {
     "activity_key": "elec.ppa_renewable",
-    "display_name": "Electricity \u2014 renewable PPA",
+    "display_name": "Electricity — renewable PPA",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -1951,7 +1951,7 @@
   },
   {
     "activity_key": "elec.green_tariff",
-    "display_name": "Electricity \u2014 green tariff",
+    "display_name": "Electricity — green tariff",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -1964,7 +1964,7 @@
   },
   {
     "activity_key": "elec.irec",
-    "display_name": "Electricity \u2014 I-REC / REC retired",
+    "display_name": "Electricity — I-REC / REC retired",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -1977,7 +1977,7 @@
   },
   {
     "activity_key": "elec.open_access",
-    "display_name": "Electricity \u2014 open access / third-party sale (India)",
+    "display_name": "Electricity — open access / third-party sale (India)",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -1990,7 +1990,7 @@
   },
   {
     "activity_key": "elec.dg_backup_purchased",
-    "display_name": "Electricity \u2014 purchased from a shared DG set",
+    "display_name": "Electricity — purchased from a shared DG set",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -2003,7 +2003,7 @@
   },
   {
     "activity_key": "elec.ev_charging_onsite",
-    "display_name": "Electricity \u2014 charging owned EVs at own facility",
+    "display_name": "Electricity — charging owned EVs at own facility",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -2016,7 +2016,7 @@
   },
   {
     "activity_key": "elec.supplier_specific",
-    "display_name": "Electricity \u2014 supplier/utility-specific emission rate",
+    "display_name": "Electricity — supplier/utility-specific emission rate",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -2029,7 +2029,7 @@
   },
   {
     "activity_key": "elec.submetered_tenant",
-    "display_name": "Electricity \u2014 sub-metered from landlord",
+    "display_name": "Electricity — sub-metered from landlord",
     "group": "Purchased electricity",
     "scope": "2",
     "ghg_category": "2.1",
@@ -2043,7 +2043,7 @@
   {
     "activity_key": "elec.selfgen_solar_onsite",
     "display_name": "Self-generated solar consumed on site",
-    "group": "Memo \u2014 energy balance",
+    "group": "Memo — energy balance",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Energy balance memo",
@@ -2056,7 +2056,7 @@
   {
     "activity_key": "elec.selfgen_wind_onsite",
     "display_name": "Self-generated wind consumed on site",
-    "group": "Memo \u2014 energy balance",
+    "group": "Memo — energy balance",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Energy balance memo",
@@ -2069,7 +2069,7 @@
   {
     "activity_key": "elec.exported",
     "display_name": "Electricity exported to grid",
-    "group": "Memo \u2014 energy balance",
+    "group": "Memo — energy balance",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Energy balance memo",
@@ -2134,7 +2134,7 @@
   {
     "activity_key": "cat1.material.steel",
     "display_name": "Steel (crude, rebar, HR/CR coil)",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2147,7 +2147,7 @@
   {
     "activity_key": "cat1.material.cement",
     "display_name": "Cement",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2160,7 +2160,7 @@
   {
     "activity_key": "cat1.material.aluminium",
     "display_name": "Aluminium (primary / secondary)",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2168,12 +2168,12 @@
     "allowed_units": "kg|t",
     "gases": "CO2e",
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
-    "notes": "Primary is ~10x secondary \u2014 must be distinguished"
+    "notes": "Primary is ~10x secondary — must be distinguished"
   },
   {
     "activity_key": "cat1.material.copper",
     "display_name": "Copper",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2185,8 +2185,8 @@
   },
   {
     "activity_key": "cat1.material.plastic_pp",
-    "display_name": "Plastic \u2014 polypropylene",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "display_name": "Plastic — polypropylene",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2198,8 +2198,8 @@
   },
   {
     "activity_key": "cat1.material.plastic_pe",
-    "display_name": "Plastic \u2014 polyethylene",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "display_name": "Plastic — polyethylene",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2211,8 +2211,8 @@
   },
   {
     "activity_key": "cat1.material.plastic_pvc",
-    "display_name": "Plastic \u2014 PVC",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "display_name": "Plastic — PVC",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2224,8 +2224,8 @@
   },
   {
     "activity_key": "cat1.material.plastic_pet",
-    "display_name": "Plastic \u2014 PET",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "display_name": "Plastic — PET",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2238,7 +2238,7 @@
   {
     "activity_key": "cat1.material.paper",
     "display_name": "Paper / cardboard",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2251,7 +2251,7 @@
   {
     "activity_key": "cat1.material.glass",
     "display_name": "Glass",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2264,7 +2264,7 @@
   {
     "activity_key": "cat1.material.timber",
     "display_name": "Timber / wood products",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2276,8 +2276,8 @@
   },
   {
     "activity_key": "cat1.material.chemicals_generic",
-    "display_name": "Chemicals \u2014 generic",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "display_name": "Chemicals — generic",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2290,7 +2290,7 @@
   {
     "activity_key": "cat1.material.textiles",
     "display_name": "Textiles",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2303,7 +2303,7 @@
   {
     "activity_key": "cat1.material.food_generic",
     "display_name": "Food & catering",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2316,7 +2316,7 @@
   {
     "activity_key": "cat1.material.packaging",
     "display_name": "Packaging materials",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2329,7 +2329,7 @@
   {
     "activity_key": "cat1.material.water_supply",
     "display_name": "Water supply",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2342,7 +2342,7 @@
   {
     "activity_key": "cat1.material.it_services",
     "display_name": "IT / cloud services",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2355,7 +2355,7 @@
   {
     "activity_key": "cat1.material.professional_services",
     "display_name": "Professional services",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2367,8 +2367,8 @@
   },
   {
     "activity_key": "cat1.spend_based",
-    "display_name": "Purchased goods \u2014 spend-based (by category)",
-    "group": "Cat 1 \u2014 Purchased goods",
+    "display_name": "Purchased goods — spend-based (by category)",
+    "group": "Cat 1 — Purchased goods",
     "scope": "3",
     "ghg_category": "3.1",
     "category_name": "Purchased goods and services",
@@ -2376,12 +2376,12 @@
     "allowed_units": "INR|USD|EUR",
     "gases": "CO2e",
     "factor_source": "EXIOBASE / USEEIO",
-    "notes": "Must deflate to the factor's base year and convert currency at a dated rate \u2014 skipping this is wrong by tens of percent"
+    "notes": "Must deflate to the factor's base year and convert currency at a dated rate — skipping this is wrong by tens of percent"
   },
   {
     "activity_key": "cat2.machinery",
     "display_name": "Machinery & equipment",
-    "group": "Cat 2 \u2014 Capital goods",
+    "group": "Cat 2 — Capital goods",
     "scope": "3",
     "ghg_category": "3.2",
     "category_name": "Capital goods",
@@ -2394,7 +2394,7 @@
   {
     "activity_key": "cat2.buildings",
     "display_name": "Buildings & construction",
-    "group": "Cat 2 \u2014 Capital goods",
+    "group": "Cat 2 — Capital goods",
     "scope": "3",
     "ghg_category": "3.2",
     "category_name": "Capital goods",
@@ -2407,7 +2407,7 @@
   {
     "activity_key": "cat2.vehicles",
     "display_name": "Vehicles purchased",
-    "group": "Cat 2 \u2014 Capital goods",
+    "group": "Cat 2 — Capital goods",
     "scope": "3",
     "ghg_category": "3.2",
     "category_name": "Capital goods",
@@ -2420,7 +2420,7 @@
   {
     "activity_key": "cat2.it_hardware",
     "display_name": "IT hardware",
-    "group": "Cat 2 \u2014 Capital goods",
+    "group": "Cat 2 — Capital goods",
     "scope": "3",
     "ghg_category": "3.2",
     "category_name": "Capital goods",
@@ -2432,8 +2432,8 @@
   },
   {
     "activity_key": "cat2.spend_based",
-    "display_name": "Capital goods \u2014 spend-based",
-    "group": "Cat 2 \u2014 Capital goods",
+    "display_name": "Capital goods — spend-based",
+    "group": "Cat 2 — Capital goods",
     "scope": "3",
     "ghg_category": "3.2",
     "category_name": "Capital goods",
@@ -2446,7 +2446,7 @@
   {
     "activity_key": "cat3.wtt_fuels",
     "display_name": "Well-to-tank of all Scope 1 fuels",
-    "group": "Cat 3 \u2014 Fuel & energy related",
+    "group": "Cat 3 — Fuel & energy related",
     "scope": "3",
     "ghg_category": "3.3",
     "category_name": "Fuel- and energy-related activities",
@@ -2454,12 +2454,12 @@
     "allowed_units": "auto",
     "gases": "CO2e",
     "factor_source": "DESNZ",
-    "notes": "AUTO-DERIVED from Scope 1 entries. Zero extra user input \u2014 compute it and show it appearing."
+    "notes": "AUTO-DERIVED from Scope 1 entries. Zero extra user input — compute it and show it appearing."
   },
   {
     "activity_key": "cat3.wtt_electricity",
     "display_name": "Well-to-tank of purchased electricity",
-    "group": "Cat 3 \u2014 Fuel & energy related",
+    "group": "Cat 3 — Fuel & energy related",
     "scope": "3",
     "ghg_category": "3.3",
     "category_name": "Fuel- and energy-related activities",
@@ -2472,7 +2472,7 @@
   {
     "activity_key": "cat3.td_losses",
     "display_name": "Transmission & distribution losses",
-    "group": "Cat 3 \u2014 Fuel & energy related",
+    "group": "Cat 3 — Fuel & energy related",
     "scope": "3",
     "ghg_category": "3.3",
     "category_name": "Fuel- and energy-related activities",
@@ -2480,12 +2480,12 @@
     "allowed_units": "auto",
     "gases": "CO2e",
     "factor_source": "CEA / DESNZ",
-    "notes": "AUTO-DERIVED. India T&D losses are high (~17-20%) \u2014 materially larger than EU/US"
+    "notes": "AUTO-DERIVED. India T&D losses are high (~17-20%) — materially larger than EU/US"
   },
   {
     "activity_key": "cat3.wtt_td_losses",
     "display_name": "Well-to-tank of T&D losses",
-    "group": "Cat 3 \u2014 Fuel & energy related",
+    "group": "Cat 3 — Fuel & energy related",
     "scope": "3",
     "ghg_category": "3.3",
     "category_name": "Fuel- and energy-related activities",
@@ -2498,7 +2498,7 @@
   {
     "activity_key": "cat3.generation_sold_to_end_users",
     "display_name": "Generation of purchased electricity sold on to end users",
-    "group": "Cat 3 \u2014 Fuel & energy related",
+    "group": "Cat 3 — Fuel & energy related",
     "scope": "3",
     "ghg_category": "3.3",
     "category_name": "Fuel- and energy-related activities",
@@ -2510,8 +2510,8 @@
   },
   {
     "activity_key": "cat4.road_hgv",
-    "display_name": "Road freight \u2014 HGV by size/load",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "display_name": "Road freight — HGV by size/load",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2523,8 +2523,8 @@
   },
   {
     "activity_key": "cat4.road_lcv",
-    "display_name": "Road freight \u2014 LCV / van",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "display_name": "Road freight — LCV / van",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2537,7 +2537,7 @@
   {
     "activity_key": "cat4.rail",
     "display_name": "Rail freight",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2549,8 +2549,8 @@
   },
   {
     "activity_key": "cat4.sea_container",
-    "display_name": "Sea freight \u2014 container",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "display_name": "Sea freight — container",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2562,8 +2562,8 @@
   },
   {
     "activity_key": "cat4.sea_bulk",
-    "display_name": "Sea freight \u2014 bulk carrier",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "display_name": "Sea freight — bulk carrier",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2576,7 +2576,7 @@
   {
     "activity_key": "cat4.air_freight",
     "display_name": "Air freight",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2584,12 +2584,12 @@
     "allowed_units": "t.km",
     "gases": "CO2e",
     "factor_source": "DESNZ",
-    "notes": "Roughly 50-100x sea per t.km \u2014 usually a hotspot"
+    "notes": "Roughly 50-100x sea per t.km — usually a hotspot"
   },
   {
     "activity_key": "cat4.courier",
     "display_name": "Courier / parcel",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2602,7 +2602,7 @@
   {
     "activity_key": "cat4.pipeline",
     "display_name": "Pipeline transport",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2615,7 +2615,7 @@
   {
     "activity_key": "cat4.cold_chain",
     "display_name": "Refrigerated transport",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2628,7 +2628,7 @@
   {
     "activity_key": "cat4.warehousing_3pl",
     "display_name": "Third-party warehousing",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2640,8 +2640,8 @@
   },
   {
     "activity_key": "cat4.spend_based",
-    "display_name": "Upstream transport \u2014 spend-based",
-    "group": "Cat 4 \u2014 Upstream transport",
+    "display_name": "Upstream transport — spend-based",
+    "group": "Cat 4 — Upstream transport",
     "scope": "3",
     "ghg_category": "3.4",
     "category_name": "Upstream transportation and distribution",
@@ -2653,8 +2653,8 @@
   },
   {
     "activity_key": "cat5.landfill_mixed",
-    "display_name": "Landfill \u2014 mixed municipal waste",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Landfill — mixed municipal waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2666,8 +2666,8 @@
   },
   {
     "activity_key": "cat5.landfill_organic",
-    "display_name": "Landfill \u2014 organic waste",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Landfill — organic waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2679,8 +2679,8 @@
   },
   {
     "activity_key": "cat5.incineration",
-    "display_name": "Incineration \u2014 no energy recovery",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Incineration — no energy recovery",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2693,7 +2693,7 @@
   {
     "activity_key": "cat5.incineration_energy",
     "display_name": "Incineration with energy recovery",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2706,7 +2706,7 @@
   {
     "activity_key": "cat5.composting",
     "display_name": "Composting",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2719,7 +2719,7 @@
   {
     "activity_key": "cat5.anaerobic_digestion",
     "display_name": "Anaerobic digestion",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2731,8 +2731,8 @@
   },
   {
     "activity_key": "cat5.recycling_metal",
-    "display_name": "Recycling \u2014 metal",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Recycling — metal",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2744,8 +2744,8 @@
   },
   {
     "activity_key": "cat5.recycling_plastic",
-    "display_name": "Recycling \u2014 plastic",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Recycling — plastic",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2757,8 +2757,8 @@
   },
   {
     "activity_key": "cat5.recycling_paper",
-    "display_name": "Recycling \u2014 paper",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Recycling — paper",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2770,8 +2770,8 @@
   },
   {
     "activity_key": "cat5.recycling_glass",
-    "display_name": "Recycling \u2014 glass",
-    "group": "Cat 5 \u2014 Waste",
+    "display_name": "Recycling — glass",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2784,7 +2784,7 @@
   {
     "activity_key": "cat5.hazardous",
     "display_name": "Hazardous waste treatment",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2797,7 +2797,7 @@
   {
     "activity_key": "cat5.ewaste",
     "display_name": "E-waste",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2810,7 +2810,7 @@
   {
     "activity_key": "cat5.construction_debris",
     "display_name": "Construction & demolition waste",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2823,7 +2823,7 @@
   {
     "activity_key": "cat5.sewage_sludge",
     "display_name": "Sewage sludge",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2836,7 +2836,7 @@
   {
     "activity_key": "cat5.wastewater_treated",
     "display_name": "Wastewater sent for off-site treatment",
-    "group": "Cat 5 \u2014 Waste",
+    "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
@@ -2848,78 +2848,78 @@
   },
   {
     "activity_key": "cat6.air_domestic_economy",
-    "display_name": "Air \u2014 domestic, economy",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air — domestic, economy",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi|pax.km",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "A commercial ticket. Company-owned aircraft is Scope 1.2."
   },
   {
     "activity_key": "cat6.air_short_haul_economy",
-    "display_name": "Air \u2014 short haul, economy",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air — short haul, economy",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
   },
   {
     "activity_key": "cat6.air_long_haul_economy",
-    "display_name": "Air \u2014 long haul, economy",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air — long haul, economy",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
   },
   {
     "activity_key": "cat6.air_long_haul_premium",
-    "display_name": "Air \u2014 long haul, premium economy",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air — long haul, premium economy",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
   },
   {
     "activity_key": "cat6.air_long_haul_business",
-    "display_name": "Air \u2014 long haul, business",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air — long haul, business",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
-    "notes": "Roughly 2-3x economy per km \u2014 cabin class matters"
+    "notes": "Roughly 2-3x economy per km — cabin class matters"
   },
   {
     "activity_key": "cat6.air_long_haul_first",
-    "display_name": "Air \u2014 long haul, first",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air — long haul, first",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
@@ -2927,12 +2927,12 @@
   {
     "activity_key": "cat6.rail",
     "display_name": "Rail travel",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
@@ -2940,7 +2940,7 @@
   {
     "activity_key": "cat6.taxi",
     "display_name": "Taxi / ride-hailing",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
@@ -2953,7 +2953,7 @@
   {
     "activity_key": "cat6.rental_car",
     "display_name": "Rental car",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
@@ -2966,7 +2966,7 @@
   {
     "activity_key": "cat6.personal_car_reimbursed",
     "display_name": "Personal car, reimbursed mileage",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
@@ -2974,17 +2974,17 @@
     "allowed_units": "km|mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
-    "notes": "Scope 3, not Scope 1 \u2014 the company does not own the vehicle"
+    "notes": "Scope 3, not Scope 1 — the company does not own the vehicle"
   },
   {
     "activity_key": "cat6.bus_coach",
     "display_name": "Bus / coach",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
@@ -2992,12 +2992,12 @@
   {
     "activity_key": "cat6.ferry",
     "display_name": "Ferry",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
@@ -3005,7 +3005,7 @@
   {
     "activity_key": "cat6.hotel_nights",
     "display_name": "Hotel stays",
-    "group": "Cat 6 \u2014 Business travel",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
@@ -3017,8 +3017,8 @@
   },
   {
     "activity_key": "cat6.spend_based",
-    "display_name": "Business travel \u2014 spend-based",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Business travel — spend-based",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
@@ -3030,8 +3030,8 @@
   },
   {
     "activity_key": "cat6.air_rf_uplift",
-    "display_name": "Air travel \u2014 radiative forcing uplift",
-    "group": "Cat 6 \u2014 Business travel",
+    "display_name": "Air travel — radiative forcing uplift",
+    "group": "Cat 6 — Business travel",
     "scope": "3",
     "ghg_category": "3.6",
     "category_name": "Business travel",
@@ -3043,8 +3043,8 @@
   },
   {
     "activity_key": "cat7.car_petrol",
-    "display_name": "Commute \u2014 car, petrol",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — car, petrol",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3056,8 +3056,8 @@
   },
   {
     "activity_key": "cat7.car_diesel",
-    "display_name": "Commute \u2014 car, diesel",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — car, diesel",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3069,8 +3069,8 @@
   },
   {
     "activity_key": "cat7.car_ev",
-    "display_name": "Commute \u2014 car, electric",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — car, electric",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3082,8 +3082,8 @@
   },
   {
     "activity_key": "cat7.two_wheeler",
-    "display_name": "Commute \u2014 two-wheeler",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — two-wheeler",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3095,34 +3095,34 @@
   },
   {
     "activity_key": "cat7.bus",
-    "display_name": "Commute \u2014 bus",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — bus",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days"
   },
   {
     "activity_key": "cat7.metro_rail",
-    "display_name": "Commute \u2014 metro / suburban rail",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — metro / suburban rail",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days"
   },
   {
     "activity_key": "cat7.auto_rickshaw",
-    "display_name": "Commute \u2014 auto rickshaw",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — auto rickshaw",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3134,21 +3134,21 @@
   },
   {
     "activity_key": "cat7.company_bus",
-    "display_name": "Commute \u2014 company-provided bus",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — company-provided bus",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
-    "default_unit": "km",
-    "allowed_units": "km|mi",
+    "default_unit": "pax.km",
+    "allowed_units": "pax.km|pax.mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Modelled: headcount x mode split x average distance x working days"
   },
   {
     "activity_key": "cat7.walk_cycle",
-    "display_name": "Commute \u2014 walk / cycle",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — walk / cycle",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3160,8 +3160,8 @@
   },
   {
     "activity_key": "cat7.carpool",
-    "display_name": "Commute \u2014 carpool",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "display_name": "Commute — carpool",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
@@ -3174,12 +3174,12 @@
   {
     "activity_key": "cat7.wfh",
     "display_name": "Remote / work-from-home energy",
-    "group": "Cat 7 \u2014 Employee commuting",
+    "group": "Cat 7 — Employee commuting",
     "scope": "3",
     "ghg_category": "3.7",
     "category_name": "Employee commuting",
-    "default_unit": "day",
-    "allowed_units": "day|FTE.yr",
+    "default_unit": "FTE.hr",
+    "allowed_units": "FTE.hr",
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Homeworking energy factor x days"
@@ -3187,7 +3187,7 @@
   {
     "activity_key": "cat8.leased_upstream",
     "display_name": "Upstream leased assets",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.8",
     "category_name": "Upstream leased assets",
@@ -3195,12 +3195,12 @@
     "allowed_units": "kWh|L|m2",
     "gases": "CO2e",
     "factor_source": "reuse S1/S2 engines",
-    "notes": "Only if NOT already inside your consolidation boundary \u2014 the most common double-count in the whole inventory"
+    "notes": "Only if NOT already inside your consolidation boundary — the most common double-count in the whole inventory"
   },
   {
     "activity_key": "cat9.downstream_transport",
     "display_name": "Downstream transportation & distribution",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.9",
     "category_name": "Downstream transportation",
@@ -3213,7 +3213,7 @@
   {
     "activity_key": "cat9.warehousing",
     "display_name": "Downstream warehousing / storage",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.9",
     "category_name": "Downstream transportation",
@@ -3226,7 +3226,7 @@
   {
     "activity_key": "cat9.retail",
     "display_name": "Retail outlet energy",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.9",
     "category_name": "Downstream transportation",
@@ -3239,7 +3239,7 @@
   {
     "activity_key": "cat10.processing_sold",
     "display_name": "Processing of sold intermediate products",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.10",
     "category_name": "Processing of sold products",
@@ -3247,12 +3247,12 @@
     "allowed_units": "kg|t",
     "gases": "CO2e",
     "factor_source": "site-specific",
-    "notes": "Applies to intermediate goods only \u2014 a steel maker whose coil is processed by a customer"
+    "notes": "Applies to intermediate goods only — a steel maker whose coil is processed by a customer"
   },
   {
     "activity_key": "cat11.use_energy_direct",
-    "display_name": "Use of sold products \u2014 direct energy use",
-    "group": "Cat 8-15 \u2014 Other",
+    "display_name": "Use of sold products — direct energy use",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.11",
     "category_name": "Use of sold products",
@@ -3264,8 +3264,8 @@
   },
   {
     "activity_key": "cat11.use_indirect",
-    "display_name": "Use of sold products \u2014 indirect",
-    "group": "Cat 8-15 \u2014 Other",
+    "display_name": "Use of sold products — indirect",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.11",
     "category_name": "Use of sold products",
@@ -3278,7 +3278,7 @@
   {
     "activity_key": "cat11.sold_fuels",
     "display_name": "Use of sold fuels / feedstocks",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.11",
     "category_name": "Use of sold products",
@@ -3290,8 +3290,8 @@
   },
   {
     "activity_key": "cat12.landfill",
-    "display_name": "EOL \u2014 landfill",
-    "group": "Cat 8-15 \u2014 Other",
+    "display_name": "EOL — landfill",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.12",
     "category_name": "End-of-life treatment of sold products",
@@ -3303,8 +3303,8 @@
   },
   {
     "activity_key": "cat12.incineration",
-    "display_name": "EOL \u2014 incineration",
-    "group": "Cat 8-15 \u2014 Other",
+    "display_name": "EOL — incineration",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.12",
     "category_name": "End-of-life treatment of sold products",
@@ -3316,8 +3316,8 @@
   },
   {
     "activity_key": "cat12.recycling",
-    "display_name": "EOL \u2014 recycling",
-    "group": "Cat 8-15 \u2014 Other",
+    "display_name": "EOL — recycling",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.12",
     "category_name": "End-of-life treatment of sold products",
@@ -3329,8 +3329,8 @@
   },
   {
     "activity_key": "cat12.reuse",
-    "display_name": "EOL \u2014 reuse",
-    "group": "Cat 8-15 \u2014 Other",
+    "display_name": "EOL — reuse",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.12",
     "category_name": "End-of-life treatment of sold products",
@@ -3343,7 +3343,7 @@
   {
     "activity_key": "cat13.leased_downstream",
     "display_name": "Downstream leased assets",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.13",
     "category_name": "Downstream leased assets",
@@ -3356,7 +3356,7 @@
   {
     "activity_key": "cat14.franchises",
     "display_name": "Franchises",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.14",
     "category_name": "Franchises",
@@ -3369,7 +3369,7 @@
   {
     "activity_key": "cat15.investments",
     "display_name": "Investments (PCAF-style attribution)",
-    "group": "Cat 8-15 \u2014 Other",
+    "group": "Cat 8-15 — Other",
     "scope": "3",
     "ghg_category": "3.15",
     "category_name": "Investments",
@@ -3382,7 +3382,7 @@
   {
     "activity_key": "memo.biogenic_co2",
     "display_name": "Biogenic CO2 from biomass / biofuel combustion",
-    "group": "Memo \u2014 outside scopes",
+    "group": "Memo — outside scopes",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Biogenic memo item",
@@ -3395,7 +3395,7 @@
   {
     "activity_key": "memo.biogenic_co2_scope3",
     "display_name": "Biogenic CO2 arising in Scope 3 activities",
-    "group": "Memo \u2014 outside scopes",
+    "group": "Memo — outside scopes",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Biogenic memo item",
@@ -3403,12 +3403,12 @@
     "allowed_units": "kg|t",
     "gases": "CO2",
     "factor_source": "DESNZ",
-    "notes": "GHG Protocol requires biogenic CO2 be reported separately FOR EACH SCOPE in which it arises \u2014 biofuel in Cat 4, composting/AD/incineration of biogenic waste in Cat 5, biofuel sold in Cat 11."
+    "notes": "GHG Protocol requires biogenic CO2 be reported separately FOR EACH SCOPE in which it arises — biofuel in Cat 4, composting/AD/incineration of biogenic waste in Cat 5, biofuel sold in Cat 11."
   },
   {
     "activity_key": "memo.montreal_r22",
     "display_name": "R-22 / HCFC-22 refrigerant",
-    "group": "Memo \u2014 outside scopes",
+    "group": "Memo — outside scopes",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Montreal Protocol gas",
@@ -3416,12 +3416,12 @@
     "allowed_units": "kg|g",
     "gases": "HCFC",
     "factor_source": "IPCC AR6",
-    "notes": "Montreal Protocol substance \u2014 reported separately, NEVER added to the Scope 1 total"
+    "notes": "Montreal Protocol substance — reported separately, NEVER added to the Scope 1 total"
   },
   {
     "activity_key": "memo.montreal_cfc",
     "display_name": "CFCs (R-11, R-12) and halons",
-    "group": "Memo \u2014 outside scopes",
+    "group": "Memo — outside scopes",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Montreal Protocol gas",
@@ -3434,7 +3434,7 @@
   {
     "activity_key": "memo.avoided_exported_renewable",
     "display_name": "Avoided emissions from exported renewable power",
-    "group": "Memo \u2014 outside scopes",
+    "group": "Memo — outside scopes",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Avoided emissions memo",
@@ -3447,7 +3447,7 @@
   {
     "activity_key": "memo.offsets_retired",
     "display_name": "Carbon credits retired",
-    "group": "Memo \u2014 outside scopes",
+    "group": "Memo — outside scopes",
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Offsets memo",
