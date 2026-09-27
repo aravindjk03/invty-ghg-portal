@@ -72,6 +72,11 @@ export interface ActivityEntry {
    * it the row cannot be calculated from published data.
    */
   engineActivityKey?: string;
+  /** True when the user picked that factor themselves rather than letting the
+   *  catalogue map attach it. A choice they made is never overwritten; one the
+   *  map made is re-checked, so a row saved before a mapping was corrected
+   *  does not keep calculating against the old factor for ever. */
+  factorChosenByUser?: boolean;
   /** Region the factor applies to, e.g. IN or UK. */
   engineRegion?: string;
   /** Who owns this data in the organisation; shown in the evidence register. */

@@ -3,6 +3,7 @@ import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessa
 import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
+import { CATALOGUE_SOURCES } from '../data/catalogueData';
 import { mappingFor } from '../services/catalogueMap';
 import { useCatalogueMap } from '../services/useCatalogueMap';
 import { useEngineInventory } from '../report/useEngineInventory';
@@ -68,12 +69,16 @@ interface GHGContextType {
 
 const STORAGE_KEY = 'INVTY_GHG_INVENTORY_DATA_V2';
 
-// Baseline Scope 1 Entries
+// The rows a new workspace starts with.
+//
+// None of them names a factor. Which published factor calculates a source is
+// the catalogue map's job, and pinning one here let the two drift: the
+// stationary boiler row was pinned to the road diesel blend while the map said
+// 100% mineral diesel, so a demo inventory quietly reported the wrong one.
+
 const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   {
     id: 's1-row-1',
-    engineActivityKey: 'desnz.2025.1_101_1011_8',
-    engineRegion: 'UK',
     facility: 'Plant 1 - Rolling Mill',
     scope: 'scope-1',
     category: 'stationary_combustion',
@@ -87,8 +92,6 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-2',
-    engineActivityKey: 'desnz.2025.1_100_1004_1',
-    engineRegion: 'UK',
     facility: 'Plant 1 - Re-heating Furnace',
     scope: 'scope-1',
     category: 'stationary_combustion',
@@ -101,8 +104,6 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-3',
-    engineActivityKey: 'desnz.2025.1_100_1003_15',
-    engineRegion: 'UK',
     facility: 'Billet Cutting Station',
     scope: 'scope-1',
     category: 'stationary_combustion',
@@ -115,8 +116,6 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-4',
-    engineActivityKey: 'desnz.2025.1_101_1011_8',
-    engineRegion: 'UK',
     facility: 'Logistics Fleet',
     scope: 'scope-1',
     category: 'mobile_combustion',
@@ -129,8 +128,6 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's1-row-5',
-    engineActivityKey: 'desnz.2025.1_101_1011_8',
-    engineRegion: 'UK',
     facility: 'Scrap Yard',
     scope: 'scope-1',
     category: 'mobile_combustion',
@@ -171,8 +168,6 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
 const INITIAL_SCOPE2_ENTRIES: ActivityEntry[] = [
   {
     id: 's2-row-1',
-    engineActivityKey: 'cea.grid.weighted_average_incl_res.incl_imports.2025_26',
-    engineRegion: 'IN',
     facility: 'Main Plant — Jamshedpur',
     scope: 'scope-2',
     category: 'purchased_electricity',
@@ -185,8 +180,6 @@ const INITIAL_SCOPE2_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's2-row-2',
-    engineActivityKey: 'cea.grid.weighted_average_incl_res.incl_imports.2025_26',
-    engineRegion: 'IN',
     facility: 'Main Plant — Captive Substation',
     scope: 'scope-2',
     category: 'market_instruments',
@@ -216,8 +209,6 @@ const INITIAL_SCOPE3_ENTRIES: ActivityEntry[] = [
   },
   {
     id: 's3-row-2',
-    engineActivityKey: 'desnz.2025.27_304_3110_14',
-    engineRegion: 'UK',
     facility: 'Inbound Raw Material Logistics',
     scope: 'scope-3',
     category: 'cat4_upstream_transport',
@@ -278,10 +269,34 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, []);
 
+/**
+ * Bring a saved row's unit back into the set the catalogue offers.
+ *
+ * A source's units can change when the factor behind it is understood better.
+ * Bus, rail, ferry and air travel moved from kilometres to passenger-
+ * kilometres, because that is what the published factor is per and what a
+ * traveller is actually entering. A row saved before that keeps "km", which is
+ * no longer on its dropdown, and the engine then refuses it - correctly, since
+ * a vehicle-kilometre and a passenger-kilometre are different quantities.
+ *
+ * The quantity does not change, only what it is called, so the row is moved to
+ * the source's current default and calculates again.
+ */
+function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
+  return entries.map((entry) => {
+    const source = CATALOGUE_SOURCES.find(
+      (item) => item.activity_key === entry.emissionFactor?.id);
+    if (!source || !entry.unit) return entry;
+    const allowed = source.allowed_units.split('|');
+    if (allowed.includes(entry.unit)) return entry;
+    return { ...entry, unit: source.default_unit };
+  });
+}
+
   const [scope1Entries, setScope1Entries] = useState<ActivityEntry[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_S1`);
-      return saved ? JSON.parse(saved) : INITIAL_SCOPE1_ENTRIES;
+      return saved ? reconcileUnits(JSON.parse(saved)) : INITIAL_SCOPE1_ENTRIES;
     } catch {
       return INITIAL_SCOPE1_ENTRIES;
     }
@@ -290,7 +305,7 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [scope2Entries, setScope2Entries] = useState<ActivityEntry[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_S2`);
-      return saved ? JSON.parse(saved) : INITIAL_SCOPE2_ENTRIES;
+      return saved ? reconcileUnits(JSON.parse(saved)) : INITIAL_SCOPE2_ENTRIES;
     } catch {
       return INITIAL_SCOPE2_ENTRIES;
     }
@@ -299,7 +314,7 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [scope3Entries, setScope3Entries] = useState<ActivityEntry[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_S3`);
-      return saved ? JSON.parse(saved) : INITIAL_SCOPE3_ENTRIES;
+      return saved ? reconcileUnits(JSON.parse(saved)) : INITIAL_SCOPE3_ENTRIES;
     } catch {
       return INITIAL_SCOPE3_ENTRIES;
     }
@@ -393,9 +408,20 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resolved = useCallback((entries: ActivityEntry[]): ActivityEntry[] => {
     if (catalogueMap.size === 0) return entries;
     return entries.map((entry) => {
-      if (entry.engineActivityKey) return entry;
+      // A factor the user picked themselves stands, whatever the map says.
+      if (entry.engineActivityKey && entry.factorChosenByUser) return entry;
+
       const mapping = mappingFor(catalogueMap, entry.emissionFactor?.id, entry.unit);
       if (!mapping) return entry;
+
+      // A row saved before a mapping was corrected keeps the old factor
+      // otherwise, and goes on quietly reporting the wrong number: the
+      // stationary boiler row was once attached to the road diesel blend.
+      const published = catalogueMap.get(entry.emissionFactor?.id ?? '') ?? [];
+      const stillPublished = published.some(
+        (row) => row.activity_key === entry.engineActivityKey);
+      if (entry.engineActivityKey && stillPublished) return entry;
+
       return {
         ...entry,
         engineActivityKey: mapping.activity_key,

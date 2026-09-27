@@ -57,7 +57,7 @@ export const EngineFactorPicker: React.FC<Props> = ({
           : <AlertCircle size={12} className="text-status-warning" />}
         {selectedKey
           ? `Published factor: ${selected?.name ?? selectedName ?? selectedKey}`
-          : 'No published factor chosen — this row will not be calculated'}
+          : 'Choose the published factor for this row'}
       </button>
 
       {open && (
@@ -85,7 +85,8 @@ export const EngineFactorPicker: React.FC<Props> = ({
                 >
                   <span className="text-brand-body">{activity.name}</span>
                   <span className="block text-[10.5px] text-brand-muted font-mono">
-                    per {activity.unit} · {activity.source.split(' ')[0]} {activity.reference_year}
+                    per {activity.units.length > 1 ? activity.units.join(' / ') : activity.unit}
+                    {' · '}{activity.source.split(' ')[0]} {activity.reference_year}
                     {' · '}{activity.gases.join(', ')} · {activity.region}
                   </span>
                 </button>
@@ -93,10 +94,16 @@ export const EngineFactorPicker: React.FC<Props> = ({
             ))}
             {!loading && !error && results.length === 0 && (
               <li className="px-2 py-1.5 text-[11px] text-brand-muted">
-                Nothing matches. Try a different word, or ingest the factor set that covers it.
+                Nothing matches. Try a different word, or — if no published set covers this —
+                use your own factor from the menu on this row and cite where it came from.
               </li>
             )}
           </ul>
+          <p className="mt-1.5 px-2 text-[10.5px] text-brand-muted leading-relaxed">
+            Every option here comes from an ingested set and carries its source, its year and
+            the region it was published for. A factor published for another region is used as a
+            proxy, and the report says so on the line.
+          </p>
         </div>
       )}
     </div>

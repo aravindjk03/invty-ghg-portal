@@ -26,6 +26,9 @@ export const ActivitySchema = z.object({
   scope: z.string(),
   category_path: z.string(),
   unit: z.string(),
+  /** Every basis the publisher gives: IPCC publishes a fuel per tonne and per
+   *  gigajoule, and a plant that meters its works gas needs the second. */
+  units: z.array(z.string()).default([]),
   region: z.string(),
   source: z.string(),
   reference_year: z.number(),

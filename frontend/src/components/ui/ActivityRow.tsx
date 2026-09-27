@@ -116,6 +116,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         // factor for coal.
         engineActivityKey: undefined,
         engineRegion: undefined,
+        factorChosenByUser: undefined,
         warning: undefined,
       });
       setOverrideFactorValue(source.verified ? String(selectedFactor.factorValue) : '');
@@ -218,6 +219,8 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
           onSelect={(activity) => onUpdate({
             engineActivityKey: activity.activity_key,
             engineRegion: activity.region,
+            // Their choice, so the catalogue map leaves it alone from here on.
+            factorChosenByUser: true,
             unit: activity.unit,
             fuelOrSource: entry.fuelOrSource || activity.name,
           })}
