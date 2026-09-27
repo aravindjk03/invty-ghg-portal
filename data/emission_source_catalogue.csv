@@ -163,10 +163,10 @@ steam.purchased,Purchased steam,Other purchased energy,2,2.2,"Purchased steam, h
 heat.purchased,Purchased heat / hot water,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|MMBtu|kWh,"CO2,CH4,N2O",Supplier factor / DESNZ default,
 cooling.chilled_water,Purchased chilled water / district cooling,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",GJ,GJ|kWh|TR-hr,"CO2,CH4,N2O",Supplier factor,
 compressed_air.purchased,Purchased compressed air,Other purchased energy,2,2.2,"Purchased steam, heat and cooling",m3,m3|kWh,"CO2,CH4,N2O",Supplier factor,Rare; usually metered as electricity instead
-cat1.material.steel,"Steel (crude, rebar, HR/CR coil)",Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
-cat1.material.cement,Cement,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
-cat1.material.aluminium,Aluminium (primary / secondary),Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Primary is ~10x secondary — must be distinguished
-cat1.material.copper,Copper,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.steel,"Steel (crude, rebar, HR/CR coil)",Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.cement,Cement,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.aluminium,Aluminium (primary / secondary),Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Primary is ~10x secondary — must be distinguished
+cat1.material.copper,Copper,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.plastic_pp,Plastic — polypropylene,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.plastic_pe,Plastic — polyethylene,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.plastic_pvc,Plastic — PVC,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
@@ -174,7 +174,7 @@ cat1.material.plastic_pet,Plastic — PET,Cat 1 — Purchased goods,3,3.1,Purcha
 cat1.material.paper,Paper / cardboard,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.glass,Glass,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.timber,Timber / wood products,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|m3,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
-cat1.material.chemicals_generic,Chemicals — generic,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
+cat1.material.chemicals_generic,Chemicals — generic,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t|USD,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.textiles,Textiles,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.food_generic,Food & catering,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
 cat1.material.packaging,Packaging materials,Cat 1 — Purchased goods,3,3.1,Purchased goods and services,t,kg|t,CO2e,ecoinvent / EXIOBASE / DESNZ,Average-data method; prefer supplier-specific where available
@@ -201,7 +201,7 @@ cat4.air_freight,Air freight,Cat 4 — Upstream transport,3,3.4,Upstream transpo
 cat4.courier,Courier / parcel,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km|parcel,CO2e,DESNZ,
 cat4.pipeline,Pipeline transport,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,
 cat4.cold_chain,Refrigerated transport,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,t.km,t.km,CO2e,DESNZ,Add refrigerant leakage separately
-cat4.warehousing_3pl,Third-party warehousing,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,m2.yr,m2.yr|INR,CO2e,DESNZ,
+cat4.warehousing_3pl,Third-party warehousing,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,m2.yr,m2.yr|INR|USD,CO2e,DESNZ,
 cat4.spend_based,Upstream transport — spend-based,Cat 4 — Upstream transport,3,3.4,Upstream transportation and distribution,INR,INR|USD,CO2e,DESNZ,
 cat5.landfill_mixed,Landfill — mixed municipal waste,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,
 cat5.landfill_organic,Landfill — organic waste,Cat 5 — Waste,3,3.5,Waste generated in operations,t,kg|t,CO2e,DESNZ,Highest CH4 of any waste route

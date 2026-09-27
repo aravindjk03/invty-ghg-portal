@@ -60,6 +60,10 @@ export interface ActivityEntry {
   notes?: string;
   evidenceFile?: string;
   customFactorOverride?: number;
+  /** The same row under the market-based method, in tonnes. Scope 2 only:
+   *  the Guidance reports one purchase of electricity twice, and a row that
+   *  showed only one of the two figures would hide half of what it did. */
+  marketTco2e?: number;
   /** Where that factor came from: a contract, a certificate, a supplier's EPD.
    *  The engine refuses a supplied factor without it, because an unsourced
    *  number is indistinguishable from an invented one. */

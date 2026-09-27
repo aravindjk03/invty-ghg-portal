@@ -230,6 +230,16 @@ def convert(value, from_unit: str, to_unit: str,
         return v * src.to_canonical / dst.to_canonical
 
     # --- crossing dimensions ---
+    # A currency on either side is not a physical conversion and no fuel
+    # property will ever bridge it. Saying so plainly matters: a spend-based
+    # factor met by a quantity in tonnes is a common, fixable mistake, and
+    # "this is physics" sends the reader looking for a density.
+    if CURRENCY in (src.dimension, dst.dimension):
+        raise IncompatibleUnitsError(
+            f"This factor is published per {dst.name} of spend, and the quantity "
+            f"is in {src.name}. Enter what was spent, in {dst.name}, or use a "
+            f"supplier's own factor per {src.name} and cite it.")
+
     if fuel is None:
         raise FuelPropertyRequiredError(
             f"Cannot convert {src.name} ({src.dimension}) to {dst.name} "

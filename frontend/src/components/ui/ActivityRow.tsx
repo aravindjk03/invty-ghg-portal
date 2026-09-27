@@ -467,6 +467,30 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         )}
       </div>
 
+      {/*
+        Scope 2 is reported twice. The row's headline number is the
+        location-based one, like every other row and like the grand total, so
+        the market-based figure is stated here rather than left for the reader
+        to find in a total. Without this a green tariff row showed the grid
+        number and nothing about the contract it was bought under.
+      */}
+      {entry.scope === 'scope-2' && entry.marketTco2e !== undefined && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-raised px-2.5 py-1.5 text-[11px]">
+          <span className="text-brand-muted">
+            <strong className="text-brand-body">Location-based</strong>{' '}
+            {entry.calculatedTco2e?.toFixed(2) ?? '0.00'} tCO₂e at the grid average
+          </span>
+          <span className="text-border">|</span>
+          <span className="text-brand-muted">
+            <strong className="text-brand-body">Market-based</strong>{' '}
+            {entry.marketTco2e.toFixed(2)} tCO₂e{' '}
+            {entry.customFactorOverride !== undefined && entry.customFactorSource
+              ? 'at your contracted rate'
+              : 'at the grid average — no contracted rate on this row, and India publishes no residual mix'}
+          </span>
+        </div>
+      )}
+
       {/* Lower Provenance & Quality Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border/40 text-[11px] text-brand-muted">
         <div className="flex items-center gap-2">

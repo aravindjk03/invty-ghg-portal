@@ -321,6 +321,52 @@ DIRECT: dict[str, str] = {
     # runs on mains power are all metered in kilowatt hours, and a kilowatt
     # hour is a kilowatt hour whoever draws it. The same Indian grid factor as
     # the company's own supply, which the report names on every line.
+
+    # --- Scope 3, spend-based: the EPA supply chain model --------------------
+    # EPA's USEEIO gives kgCO2e per US dollar of purchaser price for each US
+    # industry. It is a screening method and the weakest rung of the Scope 3
+    # Standard's hierarchy - a supplier's own figure beats it every time - but
+    # it is published, and it is what a company has before it has engaged a
+    # single supplier.
+    #
+    # Two things it is not. It is not per tonne: these rows resolve when the
+    # spend is entered in US dollars, and a mass entry still needs a supplier's
+    # EPD, which the row can take as the company's own factor. And it is not
+    # Indian: the model is US industry structure and US electricity, carried on
+    # every line as the region so the report says so rather than implying a
+    # figure for India.
+    "cat1.material.steel": "epa.useeio.v1_3.naics331110",
+    "cat1.material.cement": "epa.useeio.v1_3.naics327310",
+    "cat1.material.aluminium": "epa.useeio.v1_3.naics331313",
+    "cat1.material.copper": "epa.useeio.v1_3.naics331420",
+    "cat1.material.chemicals_generic": "epa.useeio.v1_3.naics325199",
+    "cat1.material.it_services": "epa.useeio.v1_3.naics518210",
+    "cat1.material.professional_services": "epa.useeio.v1_3.naics541611",
+    "cat2.machinery": "epa.useeio.v1_3.naics333999",
+    "cat2.buildings": "epa.useeio.v1_3.naics236220",
+    "cat2.vehicles": "epa.useeio.v1_3.naics336111",
+    "cat2.it_hardware": "epa.useeio.v1_3.naics334111",
+    "cat4.warehousing_3pl": "epa.useeio.v1_3.naics493110",
+
+    # --- Scope 2, the contractual instruments -------------------------------
+    # Every one of these is a kilowatt hour drawn from the Indian grid, and the
+    # GHG Protocol's Scope 2 Guidance says to report the same kilowatt hour
+    # twice: location-based at the grid average, market-based at whatever the
+    # contract says. The factor below is the LOCATION-BASED side, which is the
+    # grid like any other supply. The market-based side is the rate on the
+    # contract, which the customer enters on the row and no set publishes.
+    #
+    # Mapping these to the grid does NOT report a green tariff at grid
+    # intensity: the market column takes the contract rate, and when there is
+    # none the row says so instead of borrowing this number for it.
+    "elec.ppa_renewable": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "elec.green_tariff": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "elec.irec": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "elec.supplier_specific": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    # India publishes no residual mix. The catalogue already says so on this
+    # row, and the grid average is what the Guidance falls back to, disclosed.
+    "elec.grid.market_residual": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+
     "cat8.leased_upstream": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
     "cat9.warehousing": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
     "cat9.retail": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
@@ -348,6 +394,18 @@ def load_catalogue() -> list[dict]:
             if depth == 0:
                 return json.loads(text[start:index + 1])
     raise SystemExit("REFUSED: the catalogue array could not be read.")
+
+
+#: The sets that publish one row per gas name them "<activity> - <gas>". The
+#: activity is the same one either way, so the gas is not part of its name.
+GAS_SUFFIX = re.compile(
+    r"\s*[-–—�]\s*(CO2|CH4|N2O|CO2e|SF6|NF3|CF4|C2F6|"
+    r"biogenic CO2[^-]*)$", re.I)
+
+
+def activity_name(raw: str) -> str:
+    """An activity's name without the gas the row happens to carry."""
+    return GAS_SUFFIX.sub("", raw.replace("�", "-")).strip()
 
 
 def desnz_name(raw: str) -> str:
@@ -384,7 +442,7 @@ def load_engine() -> tuple[dict, dict]:
                 else:
                     key = row["factor_id"]
                 record = activities.setdefault(key, {
-                    "name": row["name"].replace("�", "-"),
+                    "name": activity_name(row["name"]),
                     "path": row["category_path"].replace("�", "-"),
                     "unit": row["unit"],
                     "units": set(),
@@ -429,7 +487,13 @@ def main() -> None:
                 "catalogue_name": source["display_name"].replace("�", "-"),
                 "unit": unit,
                 "engine_activity_key": engine_key,
-                "engine_name": activity.get("desnz_name") or activity["path"],
+                # DESNZ's workbook name reads as a path, and it is the name
+                # the published tables use. Every other set names the activity
+                # itself, and "Iron and Steel Mills and Ferroalloy
+                # Manufacturing" is what a user needs to see on the row rather
+                # than "NAICS 331110".
+                "engine_name": activity.get("desnz_name") or activity["name"]
+                               or activity["path"],
                 "engine_region": activity["region"],
                 "engine_source": activity["source"],
             })

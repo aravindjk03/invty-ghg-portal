@@ -6,7 +6,7 @@ import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
 import { mappingFor } from '../services/catalogueMap';
 import { useCatalogueMap } from '../services/useCatalogueMap';
-import { useEngineInventory } from '../report/useEngineInventory';
+import { marketRecordId, useEngineInventory } from '../report/useEngineInventory';
 import { useMethodResults } from '../report/useMethodResults';
 import { MethodEntry, MethodKey, MethodResult, emptyInput } from '../types/methods';
 import { GwpSetName } from '../types/inventory';
@@ -499,8 +499,15 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   const withEngineValues = useCallback(
     (entries: ActivityEntry[]): ActivityEntry[] => entries.map((entry) => {
       const line = engineByRecord.get(entry.id);
+      // A Scope 2 row is calculated twice, so it carries both figures.
+      const market = engineByRecord.get(marketRecordId(entry.id));
       if (!line) return entry;
-      return { ...entry, calculatedTco2e: line.tco2e, warning: line.warning };
+      return {
+        ...entry,
+        calculatedTco2e: line.tco2e,
+        marketTco2e: market?.tco2e,
+        warning: line.warning,
+      };
     }),
     [engineByRecord],
   );
