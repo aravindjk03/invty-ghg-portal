@@ -411,16 +411,25 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
       // A factor the user picked themselves stands, whatever the map says.
       if (entry.engineActivityKey && entry.factorChosenByUser) return entry;
 
-      const mapping = mappingFor(catalogueMap, entry.emissionFactor?.id, entry.unit);
-      if (!mapping) return entry;
-
       // A row saved before a mapping was corrected keeps the old factor
       // otherwise, and goes on quietly reporting the wrong number: the
-      // stationary boiler row was once attached to the road diesel blend.
+      // stationary boiler row was once attached to the road diesel blend, and
+      // a green tariff to the grid average — which in the market-based column
+      // is the error the Scope 2 Guidance exists to prevent.
       const published = catalogueMap.get(entry.emissionFactor?.id ?? '') ?? [];
       const stillPublished = published.some(
         (row) => row.activity_key === entry.engineActivityKey);
       if (entry.engineActivityKey && stillPublished) return entry;
+
+      const mapping = mappingFor(catalogueMap, entry.emissionFactor?.id, entry.unit);
+      if (!mapping) {
+        // Nothing published covers this source. Any factor still on the row
+        // came from somewhere that no longer stands behind it, so it goes, and
+        // the row asks for a published factor or the company's own.
+        return entry.engineActivityKey
+          ? { ...entry, engineActivityKey: undefined, engineRegion: undefined }
+          : entry;
+      }
 
       return {
         ...entry,
