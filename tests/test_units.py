@@ -108,3 +108,35 @@ def test_currency_is_not_a_unit_conversion():
 def test_gcv_kcal_conversion_is_exact():
     # 4000 kcal/kg  ->  4000 * 0.0041868 = 16.7472 MJ/kg
     assert gcv_kcal_per_kg_to_mj_per_kg(4000) == Decimal("16.7472000")
+
+
+def test_a_spend_based_factor_met_by_a_mass_says_what_to_do():
+    """EPA's supply chain factors are per US dollar. A row entered in tonnes
+    against one is a common, fixable mistake, and the old message sent the
+    reader looking for a density that could never exist."""
+    import pytest
+    from ghg_core.errors import IncompatibleUnitsError
+    from ghg_core.units import convert
+
+    with pytest.raises(IncompatibleUnitsError) as error:
+        convert(120, "t", "USD")
+    message = str(error.value)
+    assert "per USD of spend" in message
+    assert "supplier's own factor per t" in message
+    assert "physics" not in message
+
+
+def test_a_mass_against_an_energy_factor_names_both_ways_out():
+    """A steam bill in tonnes against a factor per kilowatt hour. The bridge is
+    the enthalpy of the steam, which the supplier has and this engine does
+    not — so say that, and say what to do instead."""
+    import pytest
+    from ghg_core.errors import FuelPropertyRequiredError
+    from ghg_core.units import convert
+
+    with pytest.raises(FuelPropertyRequiredError) as error:
+        convert(100, "t", "kWh")
+    message = str(error.value)
+    assert "enthalpy for steam" in message
+    assert "Enter the quantity in kWh" in message
+    assert "supplier's own factor per t" in message

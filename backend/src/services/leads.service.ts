@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { dbService } from '../db/database';
 
 export interface CustomerLeadRecord {
   id: string;
@@ -8,6 +9,8 @@ export interface CustomerLeadRecord {
   sector: string;
   phone?: string;
   primaryNeed: string;
+  /** What the visitor was doing when asked. 'premium' is an upgrade request. */
+  requestedAction?: string;
   referralSource: string;
   annualTurnoverOrProduction?: string;
   inventoryStats?: {
@@ -21,8 +24,10 @@ export interface CustomerLeadRecord {
   ipAddress?: string;
 }
 
-// In-memory lead store with pre-seeded demonstration records
-const leadsStore: CustomerLeadRecord[] = [
+// Demonstration records, kept so an empty install has something to show. Real
+// leads are written to the database by createLead below: a customer who asked
+// to be contacted must still be there after a restart.
+const sampleLeads: CustomerLeadRecord[] = [
   {
     id: 'lead-001-tata-corp',
     name: 'Rajesh Sharma',
@@ -72,15 +77,16 @@ export const leadsService = {
       ipAddress: ip || 'client-direct',
     };
 
-    leadsStore.unshift(lead);
+    dbService.insertLead(lead);
     return lead;
   },
 
   getAllLeads(): CustomerLeadRecord[] {
-    return [...leadsStore];
+    return [...(dbService.allLeads() as CustomerLeadRecord[]), ...sampleLeads];
   },
 
   getLeadStats() {
+    const leadsStore = this.getAllLeads();
     return {
       totalLeadsCaptured: leadsStore.length,
       topSectors: leadsStore.reduce((acc, curr) => {

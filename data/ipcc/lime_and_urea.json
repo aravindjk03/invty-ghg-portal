@@ -1,0 +1,37 @@
+{
+  "source_name": "IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 4 Chapter 11 (N2O from managed soils, CO2 from lime and urea)",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_11_Ch11_N2O&CO2.pdf",
+  "read_on": "2026-09-25",
+  "read_from": "Section 11.3.1 Equation 11.12 (printed page 11.27) and Section 11.4.1 Equation 11.13 (printed page 11.32), read from the published pages",
+  "tier": 1,
+  "conversion": {
+    "c_to_co2": "44/12",
+    "note": "The equations give CO2-C; the text of both sections says to multiply by 44/12 to express it as CO2."
+  },
+  "lime": {
+    "limestone": {
+      "value": 0.12,
+      "unit": "tonne of C per tonne of limestone (CaCO3)",
+      "uncertainty_percent": -50,
+      "note": "Equation 11.12, Step 2: apply an overall emission factor of 0.12 for limestone. The uncertainty cannot exceed the factor itself, because it is the absolute maximum that can be released."
+    },
+    "dolomite": {
+      "value": 0.13,
+      "unit": "tonne of C per tonne of dolomite (CaMg(CO3)2)",
+      "uncertainty_percent": -50,
+      "note": "Equation 11.12, Step 2: apply an overall emission factor of 0.13 for dolomite."
+    }
+  },
+  "urea": {
+    "urea": {
+      "value": 0.20,
+      "unit": "tonne of C per tonne of urea",
+      "uncertainty_percent": -50,
+      "note": "Equation 11.13, Step 2: an emission factor of 0.20, which is the carbon content of urea on an atomic weight basis (20% for CO(NH2)2). The CO2 removed during manufacture is counted in the IPPU sector, which is why the application is reported here."
+    }
+  },
+  "guidance": {
+    "urea_in_solution": "Where urea is applied in a fertiliser solution and the urea share is not known, Section 11.4.1 says it is good practice to treat the whole solution as urea rather than under-estimate.",
+    "urea_is_also_nitrogen": "Urea applied to soil is both a CO2 source (this file) and a nitrogen input to Equation 11.1 (managed_soils.json). Both have to be reported; they are different gases, not a double count."
+  }
+}

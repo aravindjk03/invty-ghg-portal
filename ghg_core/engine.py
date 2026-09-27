@@ -14,7 +14,7 @@ from dataclasses import dataclass, field, asdict
 from decimal import Decimal
 from typing import Optional, Sequence
 
-from .errors import DoubleCountError
+from .errors import DoubleCountError, FactorNotFoundError
 from .factors import (ENERGY_BASIS, Flag, FactorProvider, FactorResolution,
                       assert_basis_compatible)
 from .gwp import CH4_FOSSIL, CH4_NONFOSSIL, CO2, GwpSet
@@ -55,6 +55,9 @@ class ActivityRecord:
     scope2_view: Optional[str] = None             # "location" | "market"
     data_quality_tier: str = DQ_SECONDARY
     note: str = ""
+    # Required when activity_key is a pcf.* material - see factors.PCF_PREFIX.
+    production_route: Optional[str] = None
+    system_boundary: Optional[str] = None
 
     def __post_init__(self):
         if self.value is not None:
@@ -78,6 +81,10 @@ class LineResult:
     normalised_unit: Optional[str]
     factor_version_id: Optional[str]
     factor_value: Optional[Decimal]
+    #: What the factor is PER - its denominator. Without it a report prints a
+    #: bare number in a column headed "Factor" and the reader cannot tell
+    #: whether it is per litre, per tonne or per kilowatt hour.
+    factor_unit: Optional[str]
     factor_source: Optional[str]
     factor_reference_year: Optional[int]
     gas_breakdown: dict[str, Decimal]
@@ -184,7 +191,8 @@ def _blank_line(rec: ActivityRecord, status: str, message: str) -> LineResult:
         record_id=rec.record_id, activity_key=rec.activity_key, scope=rec.scope,
         ghg_category=rec.ghg_category, normalised_value=None,
         normalised_unit=None, factor_version_id=None, factor_value=None,
-        factor_source=None, factor_reference_year=None, gas_breakdown={},
+        factor_unit=None, factor_source=None, factor_reference_year=None,
+        gas_breakdown={},
         gwp_applied={}, emissions_kgco2e=ZERO, biogenic_co2_kg=ZERO,
         memo_bucket=rec.memo_bucket, scope2_view=rec.scope2_view,
         resolution_flags=[], data_quality_tier=rec.data_quality_tier,
@@ -202,13 +210,25 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
     first: Optional[FactorResolution] = None
     norm_val, norm_unit = to_canonical(rec.value, rec.unit)[:2]
 
+    first_error: Optional[Exception] = None
+
     for gas in gases:
         try:
-            res = registry.resolve(rec.activity_key, rec.region, reporting_year, gas)
-        except Exception:
-            if gas == gases[0]:
-                raise            # no factor at all for the primary gas -> fail loudly
-            continue             # a fuel may legitimately emit only some gases
+            res = registry.resolve(
+                rec.activity_key, rec.region, reporting_year, gas,
+                production_route=rec.production_route,
+                system_boundary=rec.system_boundary,
+                # How the activity was measured, so an activity published on
+                # more than one basis hands back the one this row can actually
+                # be converted into.
+                measured_in=rec.unit)
+        except Exception as exc:                 # noqa: BLE001
+            # A fuel legitimately emits only some gases, and some publishers give
+            # only a CO2e composite for a source. What must never pass silently
+            # is an activity with NO factor at all, so the error is kept and
+            # raised below if nothing resolves.
+            first_error = first_error or exc
+            continue
         first = first or res
         f = res.factor
 
@@ -243,6 +263,11 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
         gwp_applied[gas] = gwp
         total_co2e += mass_gas * gwp
 
+    if not gas_breakdown:
+        # Nothing resolved: a missing factor is not zero.
+        raise first_error if first_error else FactorNotFoundError(
+            f"No factor for activity_key={rec.activity_key!r} in any gas.")
+
     flags = [f.value for f in (first.flags if first else ())]
     dq = rec.data_quality_tier
     if first and first.is_proxy and dq in (DQ_PRIMARY, DQ_SECONDARY):
@@ -254,6 +279,7 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
         normalised_unit=norm_unit,
         factor_version_id=first.factor.version_id if first else None,
         factor_value=first.factor.value if first else None,
+        factor_unit=first.factor.denominator_unit if first else None,
         factor_source=f"{first.factor.source_name} · {first.factor.source_table_ref}"
         if first else None,
         factor_reference_year=first.factor.reference_year if first else None,

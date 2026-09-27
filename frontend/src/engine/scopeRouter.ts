@@ -19,7 +19,7 @@ export interface ScopeRoutingDecision {
 }
 
 /**
- * Enforces the 7 scope routing traps specified in the INVTY GHG Master Architecture.
+ * Enforces the 7 scope routing traps specified in the IINVTY GHG Master Architecture.
  */
 export function routeActivityScope(
   activityKey: string,

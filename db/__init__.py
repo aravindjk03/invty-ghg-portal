@@ -1,4 +1,4 @@
-"""INVTY GHG Accounting Portal - Database and Persistence Layer.
+"""IINVTY GHG Accounting Portal - Database and Persistence Layer.
 
 Exports Base, models, engine/session helpers, repository, and seed functions.
 """

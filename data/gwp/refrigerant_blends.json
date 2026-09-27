@@ -1,0 +1,28 @@
+{
+  "source_note": "Refrigerant blends are not in the IPCC tables: they are mixtures, so the GWP is the mass-weighted sum of the component GWPs under whichever set is in use. Compositions are the standard ASHRAE designations. A computed blend can differ by a percent or so from a value quoted elsewhere, depending on which component values that source used.",
+  "blends": {
+    "R-410A": {
+      "HFC-32": 0.5,
+      "HFC-125": 0.5
+    },
+    "R-404A": {
+      "HFC-125": 0.44,
+      "HFC-143a": 0.52,
+      "HFC-134a": 0.04
+    },
+    "R-407C": {
+      "HFC-32": 0.23,
+      "HFC-125": 0.25,
+      "HFC-134a": 0.52
+    },
+    "R-507A": {
+      "HFC-125": 0.5,
+      "HFC-143a": 0.5
+    },
+    "R-422D": {
+      "HFC-125": 0.65,
+      "HFC-134a": 0.315,
+      "HFC-600a": 0.035
+    }
+  }
+}

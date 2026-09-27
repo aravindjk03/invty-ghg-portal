@@ -1,7 +1,6 @@
 import { request } from './api';
 import { EmissionFactor, WhatIfScenario, ScenarioResult, ActivityEntry, ScopeSummary } from '../types/ghg';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
-import { calculateRowEmissions } from '../engine/calculator';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -28,14 +27,6 @@ export const ghgService = {
     } catch {
       return DEFAULT_FACTORS;
     }
-  },
-
-  calculateRowLocally(amount: number | string, factorValue: number, fuelOrSource: string, unit: string) {
-    const res = calculateRowEmissions(amount, factorValue, fuelOrSource, unit);
-    return {
-      calculatedTco2e: res.calculatedTco2e,
-      warning: res.warning,
-    };
   },
 
   async simulateScenario(
@@ -198,7 +189,7 @@ export const ghgService = {
   /**
    * Bug Guard #11: Pixel-accurate PDF generator with html2canvas and jsPDF
    */
-  async generatePdf(elementId: string, filename = 'INVTY_GHG_Verification_Report.pdf'): Promise<void> {
+  async generatePdf(elementId: string, filename = 'IINVTY_GHG_Verification_Report.pdf'): Promise<void> {
     const el = document.getElementById(elementId);
     if (!el) {
       window.print();

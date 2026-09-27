@@ -1,0 +1,191 @@
+material_key,display_name,family,production_route,route_label,declared_unit,system_boundary,allocation_method_expected,tier_target,primary_source,india_specific_source,status,notes
+pcf.chem.ammonia.smr,Ammonia — steam methane reforming,chemicals,smr,SMR (natural gas),kg,cradle_to_gate,subdivision,A,EPD International; IFA benchmarking,FAI (Fertiliser Association of India),TO_INGEST,Dominant global route. Never present as the generic ammonia value.
+pcf.chem.ammonia.coal_gasification,Ammonia — coal gasification,chemicals,coal_gasification,Coal gasification,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,FAI; India GHG Platform,TO_INGEST,Materially higher than SMR. Common in India and China.
+pcf.chem.ammonia.naphtha_reforming,Ammonia — naphtha reforming,chemicals,naphtha_reforming,Naphtha reforming,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,FAI,TO_INGEST,Legacy Indian capacity. Retain as separate route.
+pcf.chem.ammonia.smr_ccs,Ammonia — SMR with CCS,chemicals,smr_ccs,SMR + carbon capture,kg,cradle_to_gate,subdivision,A,EPD International; IEA,,TO_INGEST,Capture rate must be recorded with the value.
+pcf.chem.ammonia.electrolysis_re,Ammonia — electrolytic (renewable),chemicals,electrolysis_re,Electrolysis (renewable power),kg,cradle_to_gate,subdivision,A,IEA; peer-reviewed LCA,,TO_INGEST,Result is dominated by the power source; region is mandatory.
+pcf.chem.urea.from_smr_ammonia,Urea — from SMR ammonia,chemicals,from_smr_ammonia,From SMR ammonia,kg,cradle_to_gate,stoichiometric,A,IFA; EPD International,FAI,TO_INGEST,CO2 embodied in urea is released on application; state the accounting convention.
+pcf.chem.urea.from_coal_ammonia,Urea — from coal-route ammonia,chemicals,from_coal_ammonia,From coal-gasified ammonia,kg,cradle_to_gate,stoichiometric,A,Peer-reviewed LCA literature,FAI,TO_INGEST,Inherits the upstream ammonia route; do not average with SMR route.
+pcf.chem.methanol.natural_gas,Methanol — natural gas,chemicals,natural_gas,Natural gas reforming,kg,cradle_to_gate,subdivision,A,EPD International; Methanol Institute,,TO_INGEST,
+pcf.chem.methanol.coal,Methanol — coal,chemicals,coal,Coal gasification,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,Substantially higher than gas route.
+pcf.chem.methanol.biomass,Methanol — biomass,chemicals,biomass,Biomass gasification,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,Biogenic carbon must be reported separately on an energy basis.
+pcf.chem.methanol.co2_h2,Methanol — CO2 + hydrogen,chemicals,co2_h2,CO2 hydrogenation,kg,cradle_to_gate,subdivision,A,IEA; peer-reviewed LCA,,TO_INGEST,CO2 feedstock origin and hydrogen route both required.
+pcf.chem.hydrogen.smr,Hydrogen — SMR,chemicals,smr,Steam methane reforming,kg,cradle_to_gate,subdivision,A,IEA Global Hydrogen Review,,TO_INGEST,
+pcf.chem.hydrogen.smr_ccs,Hydrogen — SMR with CCS,chemicals,smr_ccs,SMR + carbon capture,kg,cradle_to_gate,subdivision,A,IEA Global Hydrogen Review,,TO_INGEST,Record capture rate and upstream methane leakage assumption.
+pcf.chem.hydrogen.coal_gasification,Hydrogen — coal gasification,chemicals,coal_gasification,Coal gasification,kg,cradle_to_gate,subdivision,A,IEA; peer-reviewed LCA,,TO_INGEST,
+pcf.chem.hydrogen.electrolysis_grid,Hydrogen — electrolysis (grid),chemicals,electrolysis_grid,Electrolysis (grid power),kg,cradle_to_gate,subdivision,A,IEA,CEA CO2 Baseline Database,TO_INGEST,Entirely determined by grid intensity; region mandatory.
+pcf.chem.hydrogen.electrolysis_re,Hydrogen — electrolysis (renewable),chemicals,electrolysis_re,Electrolysis (renewable power),kg,cradle_to_gate,subdivision,A,IEA,,TO_INGEST,
+pcf.chem.chlorine.membrane,Chlorine — membrane cell,chemicals,membrane,Membrane cell,kg,cradle_to_gate,mass,A,EPD International; Euro Chlor,Alkali Manufacturers Association of India,TO_INGEST,Co-product with caustic soda and hydrogen. Allocation method is decisive.
+pcf.chem.chlorine.diaphragm,Chlorine — diaphragm cell,chemicals,diaphragm,Diaphragm cell,kg,cradle_to_gate,mass,A,Euro Chlor,,TO_INGEST,Co-product allocation as above.
+pcf.chem.chlorine.mercury,Chlorine — mercury cell,chemicals,mercury,Mercury cell,kg,cradle_to_gate,mass,A,Euro Chlor,,TO_INGEST,Largely phased out; retain for legacy comparison.
+pcf.chem.caustic_soda.membrane,Caustic soda — membrane cell,chemicals,membrane,Membrane cell,kg,cradle_to_gate,mass,A,EPD International; Euro Chlor,Alkali Manufacturers Association of India,TO_INGEST,Co-product of chlor-alkali; allocation method must be stated.
+pcf.chem.caustic_soda.diaphragm,Caustic soda — diaphragm cell,chemicals,diaphragm,Diaphragm cell,kg,cradle_to_gate,mass,A,Euro Chlor,,TO_INGEST,
+pcf.chem.caustic_soda.mercury,Caustic soda — mercury cell,chemicals,mercury,Mercury cell,kg,cradle_to_gate,mass,A,Euro Chlor,,TO_INGEST,
+pcf.chem.soda_ash.solvay,Soda ash — Solvay process,chemicals,solvay,Solvay,kg,cradle_to_gate,subdivision,A,EPD International; peer-reviewed LCA,,TO_INGEST,Process CO2 from limestone must be included.
+pcf.chem.soda_ash.trona,Soda ash — natural (trona),chemicals,trona,Natural trona,kg,cradle_to_gate,subdivision,A,USEEIO; peer-reviewed LCA,,TO_INGEST,Materially lower than Solvay.
+pcf.chem.sulphuric_acid.sulphur_burning,Sulphuric acid — sulphur burning,chemicals,sulphur_burning,Contact process (sulphur burning),kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Net exporter of steam; credit treatment must be recorded.
+pcf.chem.sulphuric_acid.smelter_offgas,Sulphuric acid — smelter off-gas,chemicals,smelter_offgas,Smelter off-gas capture,kg,cradle_to_gate,economic,A,Peer-reviewed LCA literature,,TO_INGEST,By-product of metal smelting; allocation drives the result.
+pcf.chem.nitric_acid.no_abatement,Nitric acid — no N2O abatement,chemicals,no_abatement,Ostwald — no abatement,kg,cradle_to_gate,subdivision,A,IPCC 2006 Vol.3 Ch.3,India GHG Platform,TO_INGEST,LARGEST SWING IN THIS FAMILY. N2O GWP dominates the result.
+pcf.chem.nitric_acid.secondary_abatement,Nitric acid — secondary N2O abatement,chemicals,secondary_abatement,Ostwald — secondary catalyst,kg,cradle_to_gate,subdivision,A,IPCC 2006 Vol.3 Ch.3,India GHG Platform,TO_INGEST,Abatement state is part of the route and must never be assumed.
+pcf.chem.nitric_acid.tertiary_abatement,Nitric acid — tertiary N2O abatement,chemicals,tertiary_abatement,Ostwald — tertiary abatement,kg,cradle_to_gate,subdivision,A,IPCC 2006 Vol.3 Ch.3,,TO_INGEST,
+pcf.chem.phosphoric_acid.wet,Phosphoric acid — wet process,chemicals,wet,Wet process,kg,cradle_to_gate,subdivision,A,EPD International; IFA,FAI,TO_INGEST,
+pcf.chem.phosphoric_acid.thermal,Phosphoric acid — thermal process,chemicals,thermal,Thermal process,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.chem.ethylene.naphtha_cracking,Ethylene — naphtha steam cracking,chemicals,naphtha_cracking,Naphtha steam cracking,kg,cradle_to_gate,mass,A,EPD International; PlasticsEurope,,TO_INGEST,Multi-output cracker. Mass vs economic allocation differ materially.
+pcf.chem.ethylene.ethane_cracking,Ethylene — ethane steam cracking,chemicals,ethane_cracking,Ethane steam cracking,kg,cradle_to_gate,mass,A,PlasticsEurope; peer-reviewed LCA,,TO_INGEST,Lower than naphtha route; different co-product slate.
+pcf.chem.propylene.cracker_coproduct,Propylene — cracker co-product,chemicals,cracker_coproduct,Steam cracker co-product,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,Allocation from the cracker slate; method must be stated.
+pcf.chem.propylene.pdh,Propylene — propane dehydrogenation,chemicals,pdh,Propane dehydrogenation,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,Single-output route; not comparable to cracker co-product without care.
+pcf.chem.benzene.reformate,Benzene — catalytic reformate,chemicals,reformate,Catalytic reforming,kg,cradle_to_gate,mass,A,PlasticsEurope; peer-reviewed LCA,,TO_INGEST,
+pcf.chem.oxygen.asu,Oxygen — air separation,chemicals,asu,Cryogenic air separation,kg,cradle_to_gate,energy,A,EPD International,,TO_INGEST,Co-product with nitrogen and argon; energy allocation typical.
+pcf.chem.nitrogen.asu,Nitrogen — air separation,chemicals,asu,Cryogenic air separation,kg,cradle_to_gate,energy,A,EPD International,,TO_INGEST,
+pcf.chem.argon.asu,Argon — air separation,chemicals,asu,Cryogenic air separation,kg,cradle_to_gate,energy,A,EPD International,,TO_INGEST,
+pcf.chem.carbon_black.furnace,Carbon black — furnace process,chemicals,furnace,Furnace black,kg,cradle_to_gate,subdivision,A,EPD International; ICBA,,TO_INGEST,
+pcf.chem.tio2.chloride,Titanium dioxide — chloride route,chemicals,chloride,Chloride process,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.chem.tio2.sulphate,Titanium dioxide — sulphate route,chemicals,sulphate,Sulphate process,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.metal.steel.bf_bof,Steel — blast furnace / BOF,metals,bf_bof,BF-BOF (integrated),kg,cradle_to_gate,subdivision,A,worldsteel LCI; EPD International,JPC; India GHG Platform,TO_INGEST,Highest-emitting mainstream route. Never present as the generic steel value.
+pcf.metal.steel.eaf_scrap,Steel — EAF (scrap),metals,eaf_scrap,Electric arc furnace — scrap,kg,cradle_to_gate,subdivision,A,worldsteel LCI; EPD International,JPC,TO_INGEST,Several-fold lower than BF-BOF; grid region mandatory.
+pcf.metal.steel.dri_eaf_gas,Steel — gas-DRI + EAF,metals,dri_eaf_gas,Gas-based DRI + EAF,kg,cradle_to_gate,subdivision,A,worldsteel LCI,JPC,TO_INGEST,
+pcf.metal.steel.dri_eaf_coal,Steel — coal-DRI + EAF,metals,dri_eaf_coal,Coal-based DRI + EAF,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,JPC; India GHG Platform,TO_INGEST,Significant Indian capacity. Distinct from gas-DRI.
+pcf.metal.steel.induction_furnace,Steel — induction furnace,metals,induction_furnace,Induction furnace,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,JPC; BEE PAT,TO_INGEST,Large Indian secondary sector; poorly covered by global datasets.
+pcf.metal.steel.h2_dri_eaf,Steel — hydrogen DRI + EAF,metals,h2_dri_eaf,Hydrogen DRI + EAF,kg,cradle_to_gate,subdivision,A,IEA; peer-reviewed LCA,,TO_INGEST,Hydrogen route must be specified; inherits its upstream.
+pcf.metal.aluminium.primary_prebake,Aluminium — primary (prebake),metals,primary_prebake,Primary — prebake anode,kg,cradle_to_gate,subdivision,A,International Aluminium Institute,CEA CO2 Baseline Database,TO_INGEST,Electricity-dominated; region mandatory. Include PFC process emissions.
+pcf.metal.aluminium.primary_soderberg,Aluminium — primary (Soderberg),metals,primary_soderberg,Primary — Soderberg anode,kg,cradle_to_gate,subdivision,A,International Aluminium Institute,,TO_INGEST,
+pcf.metal.aluminium.secondary,Aluminium — secondary (recycled),metals,secondary,Secondary — remelted scrap,kg,cradle_to_gate,subdivision,A,International Aluminium Institute,,TO_INGEST,Order-of-magnitude lower than primary.
+pcf.metal.copper.primary_pyro,Copper — primary pyrometallurgical,metals,primary_pyro,Primary — pyrometallurgical,kg,cradle_to_gate,economic,A,International Copper Association,,TO_INGEST,Ore grade materially affects the result; record it.
+pcf.metal.copper.primary_hydro,Copper — primary hydrometallurgical,metals,primary_hydro,Primary — SX-EW,kg,cradle_to_gate,economic,A,International Copper Association,,TO_INGEST,
+pcf.metal.copper.secondary,Copper — secondary (recycled),metals,secondary,Secondary — recycled,kg,cradle_to_gate,subdivision,A,International Copper Association,,TO_INGEST,
+pcf.metal.zinc.primary_hydro,Zinc — primary hydrometallurgical,metals,primary_hydro,Primary — electrolytic,kg,cradle_to_gate,economic,A,International Zinc Association,,TO_INGEST,
+pcf.metal.zinc.primary_pyro,Zinc — primary pyrometallurgical,metals,primary_pyro,Primary — ISF,kg,cradle_to_gate,economic,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.metal.zinc.secondary,Zinc — secondary (recycled),metals,secondary,Secondary — recycled,kg,cradle_to_gate,subdivision,A,International Zinc Association,,TO_INGEST,
+pcf.metal.lead.primary,Lead — primary,metals,primary,Primary smelting,kg,cradle_to_gate,economic,A,International Lead Association,,TO_INGEST,
+pcf.metal.lead.secondary,Lead — secondary (recycled),metals,secondary,Secondary — recycled,kg,cradle_to_gate,subdivision,A,International Lead Association,,TO_INGEST,Dominant route globally; battery recycling.
+pcf.metal.nickel.primary_sulphide,Nickel — primary (sulphide ore),metals,primary_sulphide,Primary — sulphide ore,kg,cradle_to_gate,economic,A,Nickel Institute,,TO_INGEST,
+pcf.metal.nickel.primary_laterite,Nickel — primary (laterite ore),metals,primary_laterite,Primary — laterite ore,kg,cradle_to_gate,economic,A,Nickel Institute,,TO_INGEST,Substantially higher than sulphide route.
+pcf.metal.ferrochrome.submerged_arc,Ferrochrome — submerged arc furnace,metals,submerged_arc,Submerged arc furnace,kg,cradle_to_gate,subdivision,A,International Chromium Development Association,BEE PAT,TO_INGEST,Material Indian export sector.
+pcf.metal.ferrosilicon.submerged_arc,Ferrosilicon — submerged arc furnace,metals,submerged_arc,Submerged arc furnace,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,BEE PAT,TO_INGEST,
+pcf.metal.ferromanganese.blast_furnace,Ferromanganese — blast furnace,metals,blast_furnace,Blast furnace,kg,cradle_to_gate,subdivision,A,International Manganese Institute,,TO_INGEST,
+pcf.metal.silicomanganese.submerged_arc,Silicomanganese — submerged arc furnace,metals,submerged_arc,Submerged arc furnace,kg,cradle_to_gate,subdivision,A,International Manganese Institute,BEE PAT,TO_INGEST,
+pcf.metal.magnesium.pidgeon,Magnesium — Pidgeon process,metals,pidgeon,Pidgeon process,kg,cradle_to_gate,subdivision,A,International Magnesium Association,,TO_INGEST,
+pcf.metal.titanium.kroll,Titanium — Kroll process,metals,kroll,Kroll process,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.metal.tin.primary,Tin — primary,metals,primary,Primary smelting,kg,cradle_to_gate,economic,A,International Tin Association,,TO_INGEST,
+pcf.polymer.hdpe.virgin_fossil,HDPE — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope; EPD International,,TO_INGEST,Inherits ethylene cracker allocation.
+pcf.polymer.hdpe.mechanical_recycled,HDPE — mechanically recycled,polymers,mechanical_recycled,Mechanical recycling,kg,cradle_to_gate,subdivision,A,EPD International; peer-reviewed LCA,,TO_INGEST,Cut-off vs avoided-burden modelling changes the result; record which.
+pcf.polymer.ldpe.virgin_fossil,LDPE — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,
+pcf.polymer.lldpe.virgin_fossil,LLDPE — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,
+pcf.polymer.pe.bio_based,Polyethylene — bio-based,polymers,bio_based,Bio-based (sugarcane ethanol),kg,cradle_to_gate,mass,A,Peer-reviewed LCA literature,,TO_INGEST,Biogenic carbon reported separately on an energy basis.
+pcf.polymer.pp.virgin_fossil,Polypropylene — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope; EPD International,,TO_INGEST,
+pcf.polymer.pp.mechanical_recycled,Polypropylene — mechanically recycled,polymers,mechanical_recycled,Mechanical recycling,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.polymer.pvc.virgin_fossil,PVC — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope; VinylPlus,,TO_INGEST,Inherits chlor-alkali allocation; sensitive to that choice.
+pcf.polymer.pet.virgin_fossil,PET — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope; EPD International,,TO_INGEST,
+pcf.polymer.pet.mechanical_recycled,rPET — mechanically recycled,polymers,mechanical_recycled,Mechanical recycling,kg,cradle_to_gate,subdivision,A,EPD International; peer-reviewed LCA,,TO_INGEST,Commonly misapplied — virgin value used for rPET stock.
+pcf.polymer.ps.virgin_fossil,Polystyrene — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,
+pcf.polymer.eps.virgin_fossil,EPS — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,Blowing agent must be specified.
+pcf.polymer.abs.virgin_fossil,ABS — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,
+pcf.polymer.nylon6.virgin_fossil,Nylon 6 — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,N2O from adipic/caprolactam chain is decisive; abatement state required.
+pcf.polymer.nylon66.virgin_fossil,Nylon 6.6 — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,Adipic acid N2O abatement state required.
+pcf.polymer.pu_flexible.virgin_fossil,Polyurethane (flexible) — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope; ISOPA,,TO_INGEST,
+pcf.polymer.pu_rigid.virgin_fossil,Polyurethane (rigid) — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope; ISOPA,,TO_INGEST,Blowing agent GWP must be included separately.
+pcf.polymer.polycarbonate.virgin_fossil,Polycarbonate — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,PlasticsEurope,,TO_INGEST,
+pcf.polymer.pmma.virgin_fossil,PMMA — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.polymer.ptfe.virgin_fossil,PTFE — virgin fossil,polymers,virgin_fossil,Virgin — fossil feedstock,kg,cradle_to_gate,mass,A,Peer-reviewed LCA literature,,TO_INGEST,Fluorinated process emissions must be included.
+pcf.polymer.pla.bio_based,PLA — bio-based,polymers,bio_based,Bio-based (lactic acid),kg,cradle_to_gate,mass,A,EPD International; peer-reviewed LCA,,TO_INGEST,Biogenic carbon reported separately; do not net against fossil.
+pcf.constr.clinker.dry_preheater,Cement clinker — dry preheater/precalciner,construction,dry_preheater,Dry process — preheater/precalciner,kg,cradle_to_gate,subdivision,A,GCCA; IPCC 2006 Vol.3 Ch.2,NCB India; BEE PAT,TO_INGEST,Calcination CO2 dominates and is process not fuel. CKD correction is multiplicative.
+pcf.constr.clinker.wet,Cement clinker — wet process,construction,wet,Wet process,kg,cradle_to_gate,subdivision,A,IPCC 2006 Vol.3 Ch.2,NCB India,TO_INGEST,Legacy route; retain for comparison.
+pcf.constr.cement.opc43,Cement — OPC 43 grade,construction,opc43,Ordinary Portland Cement 43,kg,cradle_to_gate,subdivision,A,GCCA; EPD International,NCB India; BIS IS 269,TO_INGEST,Clinker factor must be recorded with the value.
+pcf.constr.cement.opc53,Cement — OPC 53 grade,construction,opc53,Ordinary Portland Cement 53,kg,cradle_to_gate,subdivision,A,GCCA; EPD International,NCB India; BIS IS 269,TO_INGEST,
+pcf.constr.cement.ppc_flyash,Cement — PPC (fly ash blended),construction,ppc_flyash,Portland Pozzolana — fly ash,kg,cradle_to_gate,subdivision,A,GCCA; EPD International,NCB India; BIS IS 1489,TO_INGEST,Dominant Indian product and the main Indian lever. Blend ratio required.
+pcf.constr.cement.psc_slag,Cement — PSC (slag blended),construction,psc_slag,Portland Slag Cement,kg,cradle_to_gate,economic,A,GCCA; EPD International,NCB India; BIS IS 455,TO_INGEST,Slag allocation from steelmaking is contested; record method.
+pcf.constr.cement.psc_high_slag,Cement — high-slag blend,construction,psc_high_slag,High-slag blend,kg,cradle_to_gate,economic,A,GCCA,NCB India,TO_INGEST,
+pcf.constr.cement.lc3,Cement — LC3 (limestone calcined clay),construction,lc3,LC3,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,NCB India,TO_INGEST,Emerging low-clinker route.
+pcf.constr.concrete.m20,Concrete — M20 grade,construction,m20,Ready-mix M20,m3,cradle_to_gate,subdivision,A,EPD International,BIS IS 456,TO_INGEST,Declared unit is volume not mass. Cement type must be specified.
+pcf.constr.concrete.m25,Concrete — M25 grade,construction,m25,Ready-mix M25,m3,cradle_to_gate,subdivision,A,EPD International,BIS IS 456,TO_INGEST,
+pcf.constr.concrete.m30,Concrete — M30 grade,construction,m30,Ready-mix M30,m3,cradle_to_gate,subdivision,A,EPD International,BIS IS 456,TO_INGEST,
+pcf.constr.concrete.m40,Concrete — M40 grade,construction,m40,Ready-mix M40,m3,cradle_to_gate,subdivision,A,EPD International,BIS IS 456,TO_INGEST,
+pcf.constr.brick.fired_clay,Brick — fired clay,construction,fired_clay,Fired clay brick,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,India GHG Platform; TERI,TO_INGEST,Kiln type (FCBTK/zigzag/VSBK) materially changes the result.
+pcf.constr.brick.fly_ash,Brick — fly ash,construction,fly_ash,Fly ash brick,kg,cradle_to_gate,economic,A,Peer-reviewed LCA literature,TERI,TO_INGEST,Fly ash allocation from power generation must be stated.
+pcf.constr.brick.aac,Block — autoclaved aerated concrete,construction,aac,AAC block,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.constr.glass.float,Glass — float,construction,float,Float glass,kg,cradle_to_gate,subdivision,A,EPD International; Glass for Europe,,TO_INGEST,Cullet fraction materially affects the result; record it.
+pcf.constr.glass.container,Glass — container,construction,container,Container glass,kg,cradle_to_gate,subdivision,A,EPD International; FEVE,,TO_INGEST,Cullet fraction required.
+pcf.constr.lime.rotary_kiln,Lime — rotary kiln,construction,rotary_kiln,Rotary kiln,kg,cradle_to_gate,subdivision,A,IPCC 2006 Vol.3 Ch.2; EuLA,,TO_INGEST,Calcination CO2 is process not fuel.
+pcf.constr.lime.vertical_kiln,Lime — vertical shaft kiln,construction,vertical_kiln,Vertical shaft kiln,kg,cradle_to_gate,subdivision,A,IPCC 2006 Vol.3 Ch.2,,TO_INGEST,
+pcf.constr.gypsum_board,Gypsum plasterboard,construction,standard,Standard plasterboard,m2,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Declared unit is area; thickness must be stated.
+pcf.constr.insulation.eps,Insulation — EPS board,construction,eps,EPS board,m2,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Declare thickness and R-value; area alone is not comparable.
+pcf.constr.insulation.xps,Insulation — XPS board,construction,xps,XPS board,m2,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Blowing agent GWP is decisive.
+pcf.constr.insulation.mineral_wool,Insulation — mineral wool,construction,mineral_wool,Mineral wool,m2,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.constr.aggregate.crushed_stone,Aggregate — crushed stone,construction,crushed_stone,Crushed stone,kg,cradle_to_gate,subdivision,A,EXIOBASE; EPD International,,TO_INGEST,
+pcf.constr.sand.natural,Sand — natural,construction,natural,Natural river/pit sand,kg,cradle_to_gate,subdivision,A,EXIOBASE,,TO_INGEST,
+pcf.constr.sand.manufactured,Sand — manufactured (M-sand),construction,manufactured,Manufactured sand,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,Common Indian substitute.
+pcf.constr.tile.ceramic,Tile — ceramic,construction,ceramic,Ceramic tile,m2,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.constr.tile.vitrified,Tile — vitrified,construction,vitrified,Vitrified tile,m2,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.constr.bitumen,Bitumen,construction,refinery,Refinery product,kg,cradle_to_gate,mass,A,Eurobitume; peer-reviewed LCA,,TO_INGEST,Refinery allocation method is decisive.
+pcf.constr.asphalt_mix.hot,Asphalt mix — hot mix,construction,hot_mix,Hot mix asphalt,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.constr.asphalt_mix.warm,Asphalt mix — warm mix,construction,warm_mix,Warm mix asphalt,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.constr.plywood,Plywood,construction,standard,Standard plywood,m3,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Biogenic carbon storage reported separately; never netted.
+pcf.constr.structural_steel.section,Structural steel section,construction,hot_rolled,Hot rolled section,kg,cradle_to_gate,subdivision,A,worldsteel LCI; EPD International,JPC,TO_INGEST,Inherits the steelmaking route; route must be carried through.
+pcf.constr.rebar.eaf_scrap,Reinforcement bar — EAF scrap route,construction,eaf_scrap,TMT rebar — EAF scrap,kg,cradle_to_gate,subdivision,A,worldsteel LCI; EPD International,JPC,TO_INGEST,Do not apply BF-BOF value to scrap-route rebar.
+pcf.auto.battery_cell.nmc,Li-ion cell — NMC,automobile,nmc,NMC cell,kWh,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature; IEA,,TO_INGEST,Declared unit is kWh capacity. Cell production grid region is decisive.
+pcf.auto.battery_cell.lfp,Li-ion cell — LFP,automobile,lfp,LFP cell,kWh,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature; IEA,,TO_INGEST,Lower than NMC; distinct cathode supply chain.
+pcf.auto.battery_pack.nmc811,Battery pack — NMC 811,automobile,nmc811,NMC 811 pack,kWh,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,Pack includes housing/BMS; not comparable to bare cell.
+pcf.auto.battery_pack.nmc622,Battery pack — NMC 622,automobile,nmc622,NMC 622 pack,kWh,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.auto.battery_pack.lfp,Battery pack — LFP,automobile,lfp,LFP pack,kWh,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.auto.tyre.passenger,Tyre — passenger car,automobile,passenger,Passenger car tyre,unit,cradle_to_gate,subdivision,A,EPD International; ETRMA,,TO_INGEST,
+pcf.auto.tyre.truck,Tyre — truck/bus,automobile,truck,Truck/bus tyre,unit,cradle_to_gate,subdivision,A,EPD International; ETRMA,,TO_INGEST,
+pcf.auto.body_steel.stamped,Auto body steel — stamped,automobile,stamped,Stamped sheet,kg,cradle_to_gate,subdivision,A,worldsteel LCI,,TO_INGEST,Inherits steelmaking route.
+pcf.auto.body_aluminium.cast,Auto aluminium — cast component,automobile,cast,Cast component,kg,cradle_to_gate,subdivision,A,International Aluminium Institute,,TO_INGEST,Primary vs secondary aluminium must be carried through.
+pcf.auto.glass.laminated,Auto glass — laminated,automobile,laminated,Laminated safety glass,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.auto.interior_textile,Auto interior textile,automobile,standard,Interior textile,kg,cradle_to_gate,subdivision,A,EXIOBASE,,TO_INGEST,
+pcf.auto.catalytic_converter,Catalytic converter,automobile,standard,Three-way catalyst,unit,cradle_to_gate,economic,A,Peer-reviewed LCA literature,,TO_INGEST,PGM content dominates; allocation from mining is contested.
+pcf.auto.electric_motor.pmsm,Electric traction motor — PMSM,automobile,pmsm,Permanent magnet synchronous motor,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,Rare earth supply chain dominates.
+pcf.auto.wiring_harness.copper,Wiring harness — copper,automobile,copper,Copper harness,kg,cradle_to_gate,subdivision,A,International Copper Association,,TO_INGEST,
+pcf.auto.vehicle.ice_petrol_hatchback.ctg,Car — ICE petrol hatchback (cradle-to-gate),automobile,ice_petrol_hatchback,ICE petrol hatchback,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,EXCLUDES use phase. Never rank against a cradle-to-grave row.
+pcf.auto.vehicle.ice_petrol_hatchback.ctgr,Car — ICE petrol hatchback (cradle-to-grave),automobile,ice_petrol_hatchback,ICE petrol hatchback,unit,cradle_to_grave,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,Requires duty cycle and lifetime mileage assumption; record both.
+pcf.auto.vehicle.ice_diesel_suv.ctg,Car — ICE diesel SUV (cradle-to-gate),automobile,ice_diesel_suv,ICE diesel SUV,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,
+pcf.auto.vehicle.ice_diesel_suv.ctgr,Car — ICE diesel SUV (cradle-to-grave),automobile,ice_diesel_suv,ICE diesel SUV,unit,cradle_to_grave,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,
+pcf.auto.vehicle.hev.ctg,Car — hybrid (cradle-to-gate),automobile,hev,Hybrid electric,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.auto.vehicle.phev.ctg,Car — plug-in hybrid (cradle-to-gate),automobile,phev,Plug-in hybrid,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.auto.vehicle.bev_compact.ctg,Car — BEV compact (cradle-to-gate),automobile,bev_compact,Battery electric compact,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature; IEA,,TO_INGEST,Higher than ICE at gate due to battery. Misleading without the grave row.
+pcf.auto.vehicle.bev_compact.ctgr,Car — BEV compact (cradle-to-grave),automobile,bev_compact,Battery electric compact,unit,cradle_to_grave,subdivision,A,Peer-reviewed LCA literature; IEA,CEA CO2 Baseline Database,TO_INGEST,Charging grid region is decisive; record it with the value.
+pcf.auto.vehicle.two_wheeler_ice.ctg,Two-wheeler — ICE (cradle-to-gate),automobile,two_wheeler_ice,ICE two-wheeler,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,High-volume Indian segment.
+pcf.auto.vehicle.two_wheeler_ev.ctg,Two-wheeler — electric (cradle-to-gate),automobile,two_wheeler_ev,Electric two-wheeler,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,
+pcf.auto.vehicle.three_wheeler_ev.ctg,Three-wheeler — electric (cradle-to-gate),automobile,three_wheeler_ev,Electric three-wheeler,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,SIAM,TO_INGEST,
+pcf.auto.vehicle.bus_diesel.ctg,Bus — diesel (cradle-to-gate),automobile,bus_diesel,Diesel bus,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.auto.vehicle.bus_electric.ctg,Bus — electric (cradle-to-gate),automobile,bus_electric,Electric bus,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.daily.packaging.pet_bottle.virgin,PET bottle — virgin,daily_products,virgin,Virgin PET bottle,unit,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Bottle weight must be recorded; unit alone is not comparable.
+pcf.daily.packaging.pet_bottle.rpet,PET bottle — rPET,daily_products,rpet,Recycled PET bottle,unit,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Recycled content fraction required.
+pcf.daily.packaging.aluminium_can,Aluminium beverage can,daily_products,standard,Aluminium can,unit,cradle_to_gate,subdivision,A,International Aluminium Institute; EPD International,,TO_INGEST,Recycled content fraction is decisive.
+pcf.daily.packaging.glass_bottle.virgin,Glass bottle — virgin,daily_products,virgin,Virgin glass bottle,unit,cradle_to_gate,subdivision,A,EPD International; FEVE,,TO_INGEST,
+pcf.daily.packaging.glass_bottle.recycled,Glass bottle — high cullet,daily_products,recycled,High-cullet glass bottle,unit,cradle_to_gate,subdivision,A,EPD International; FEVE,,TO_INGEST,
+pcf.daily.packaging.carton_liquid,Liquid packaging carton,daily_products,standard,Aseptic carton,unit,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.daily.packaging.corrugated_box,Corrugated box,daily_products,standard,Corrugated board box,kg,cradle_to_gate,subdivision,A,EPD International; FEFCO,,TO_INGEST,
+pcf.daily.paper.office_virgin,Paper — office (virgin fibre),daily_products,virgin_fibre,Virgin fibre,kg,cradle_to_gate,subdivision,A,EPD International; CEPI,,TO_INGEST,Biogenic carbon reported separately.
+pcf.daily.paper.office_recycled,Paper — office (recycled fibre),daily_products,recycled_fibre,Recycled fibre,kg,cradle_to_gate,subdivision,A,EPD International; CEPI,,TO_INGEST,
+pcf.daily.paper.tissue,Tissue paper,daily_products,standard,Tissue,kg,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,
+pcf.daily.textile.cotton_conventional,Textile — conventional cotton,daily_products,cotton_conventional,Conventional cotton,kg,cradle_to_gate,economic,A,Peer-reviewed LCA literature; Textile Exchange,,TO_INGEST,Irrigation and region materially change the result.
+pcf.daily.textile.cotton_organic,Textile — organic cotton,daily_products,cotton_organic,Organic cotton,kg,cradle_to_gate,economic,A,Textile Exchange,,TO_INGEST,
+pcf.daily.textile.polyester_virgin,Textile — virgin polyester,daily_products,polyester_virgin,Virgin polyester,kg,cradle_to_gate,mass,A,Textile Exchange; PlasticsEurope,,TO_INGEST,Inherits PET route.
+pcf.daily.textile.polyester_recycled,Textile — recycled polyester,daily_products,polyester_recycled,Recycled polyester,kg,cradle_to_gate,subdivision,A,Textile Exchange,,TO_INGEST,
+pcf.daily.textile.viscose,Textile — viscose,daily_products,viscose,Viscose staple fibre,kg,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.daily.detergent.powder,Detergent — powder,daily_products,powder,Powder detergent,kg,cradle_to_gate,subdivision,A,EXIOBASE; AISE,,TO_INGEST,
+pcf.daily.detergent.liquid,Detergent — liquid,daily_products,liquid,Liquid detergent,kg,cradle_to_gate,subdivision,A,EXIOBASE; AISE,,TO_INGEST,
+pcf.daily.surfactant.las,Surfactant — LAS,daily_products,las,Linear alkylbenzene sulphonate,kg,cradle_to_gate,mass,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.daily.soap.bar,Soap — bar,daily_products,bar,Bar soap,kg,cradle_to_gate,subdivision,A,EXIOBASE,,TO_INGEST,
+pcf.daily.food.rice,Food — rice,daily_products,paddy,Paddy rice,kg,cradle_to_gate,economic,A,IPCC 2006 Vol.4 Ch.5; FAO,India GHG Platform,TO_INGEST,CH4 from flooded paddy dominates. Water management regime required.
+pcf.daily.food.wheat,Food — wheat,daily_products,standard,Wheat grain,kg,cradle_to_gate,economic,A,IPCC 2006 Vol.4; FAO,India GHG Platform,TO_INGEST,N2O from fertiliser application dominates.
+pcf.daily.food.sugar,Food — sugar,daily_products,cane,Cane sugar,kg,cradle_to_gate,economic,A,FAO; peer-reviewed LCA,,TO_INGEST,Bagasse co-product allocation required.
+pcf.daily.food.milk,Food — milk,daily_products,dairy,Raw milk,kg,cradle_to_gate,economic,A,IPCC 2006 Vol.4 Ch.10; FAO,India GHG Platform,TO_INGEST,Enteric CH4 dominates. Indian herd profile differs markedly from OECD.
+pcf.daily.food.chicken,Food — chicken,daily_products,broiler,Broiler chicken,kg,cradle_to_gate,economic,A,FAO; peer-reviewed LCA,,TO_INGEST,
+pcf.daily.food.mutton,Food — mutton/goat,daily_products,small_ruminant,Small ruminant meat,kg,cradle_to_gate,economic,A,IPCC 2006 Vol.4 Ch.10; FAO,,TO_INGEST,Enteric CH4 dominates.
+pcf.daily.food.egg,Food — eggs,daily_products,layer,Layer eggs,kg,cradle_to_gate,economic,A,FAO; peer-reviewed LCA,,TO_INGEST,
+pcf.daily.food.edible_oil_palm,Food — palm oil,daily_products,palm,Crude palm oil,kg,cradle_to_gate,economic,A,FAO; peer-reviewed LCA,,TO_INGEST,Land use change is decisive and must be stated as included or excluded.
+pcf.daily.electronics.smartphone,Electronics — smartphone,daily_products,standard,Smartphone,unit,cradle_to_gate,subdivision,A,Manufacturer product carbon reports,,TO_INGEST,Semiconductor fabrication dominates.
+pcf.daily.electronics.laptop,Electronics — laptop,daily_products,standard,Laptop computer,unit,cradle_to_gate,subdivision,A,Manufacturer product carbon reports,,TO_INGEST,
+pcf.daily.electronics.led_bulb,Electronics — LED bulb,daily_products,standard,LED lamp,unit,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Use phase dominates lifetime; cradle-to-gate alone is misleading.
+pcf.daily.footwear.leather,Footwear — leather,daily_products,leather,Leather footwear,unit,cradle_to_gate,economic,A,Peer-reviewed LCA literature,,TO_INGEST,Hide allocation from cattle is contested; record method.
+pcf.daily.footwear.synthetic,Footwear — synthetic,daily_products,synthetic,Synthetic footwear,unit,cradle_to_gate,subdivision,A,Peer-reviewed LCA literature,,TO_INGEST,
+pcf.daily.furniture.wooden_chair,Furniture — wooden chair,daily_products,wood,Wooden chair,unit,cradle_to_gate,subdivision,A,EPD International,,TO_INGEST,Biogenic carbon storage reported separately; never netted.
+pcf.class.chemicals_average,Chemicals — class average,chemicals,class_average,Class average — route unknown,kg,cradle_to_gate,unstated,B,EXIOBASE,,TO_INGEST,TIER B fallback only. Must display as route-unknown.
+pcf.class.metals_average,Metals — class average,metals,class_average,Class average — route unknown,kg,cradle_to_gate,unstated,B,EXIOBASE,,TO_INGEST,TIER B fallback only.
+pcf.class.polymers_average,Polymers — class average,polymers,class_average,Class average — route unknown,kg,cradle_to_gate,unstated,B,EXIOBASE,,TO_INGEST,TIER B fallback only.
+pcf.class.construction_average,Construction materials — class average,construction,class_average,Class average — route unknown,kg,cradle_to_gate,unstated,B,EXIOBASE,,TO_INGEST,TIER B fallback only.
+pcf.class.automobile_average,Automotive components — class average,automobile,class_average,Class average — route unknown,kg,cradle_to_gate,unstated,B,EXIOBASE,,TO_INGEST,TIER B fallback only.
+pcf.class.daily_products_average,Consumer products — class average,daily_products,class_average,Class average — route unknown,kg,cradle_to_gate,unstated,B,EXIOBASE,,TO_INGEST,TIER B fallback only.
+pcf.proxy.eeio_spend,Spend-based EEIO proxy,cross_family,eeio_spend,EEIO by spend category,INR,cradle_to_gate,economic,C,EXIOBASE; USEEIO,,TO_INGEST,TIER C screening only. Requires currency conversion and deflation in the audit trail.

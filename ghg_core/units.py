@@ -27,10 +27,14 @@ from .quantities import D
 MASS, VOLUME, ENERGY, DISTANCE, FREIGHT = "mass", "volume", "energy", "distance", "freight"
 CURRENCY, COUNT, AREA_TIME = "currency", "count", "area_time"
 AREA = "area"
+# Passenger distance is its own dimension: a passenger-kilometre must never be
+# convertible into a tonne-kilometre.
+PASSENGER = "passenger"
 
 CANONICAL = {
     MASS: "kg", VOLUME: "m3", ENERGY: "MJ", DISTANCE: "km",
     FREIGHT: "t.km", CURRENCY: None, COUNT: "unit", AREA_TIME: "m2.yr", AREA: "m2",
+    PASSENGER: "passenger.km",
 }
 
 
@@ -60,6 +64,7 @@ _UNITS = {u.name: u for u in [
     _u("m3", VOLUME, "1"),
     _u("L", VOLUME, "0.001"),
     _u("kL", VOLUME, "1", note="kilolitre == 1 m3. The classic 1000x trap."),
+    _u("Ml", VOLUME, "1000", note="megalitre == 1,000 m3, used by water factors"),
     _u("gal", VOLUME, "0.003785411784", note="US liquid gallon, exact"),
     _u("scm", VOLUME, "1", gas_ref="standard",
        note="standard cubic metre - density must be quoted at the same state"),
@@ -90,6 +95,10 @@ _UNITS = {u.name: u for u in [
     _u("t.km", FREIGHT, "1"),
     _u("kg.km", FREIGHT, "0.001"),
 
+    # ---- passenger transport ----
+    _u("passenger.km", PASSENGER, "1"),
+    _u("passenger.mi", PASSENGER, "1.609344", note="exact by definition"),
+
     # ---- pass-through ----
     _u("unit", COUNT, "1"),
     _u("night", COUNT, "1"),
@@ -100,6 +109,8 @@ _UNITS = {u.name: u for u in [
     _u("m2", AREA, "1"),
     _u("sqft", AREA, "0.09290304", note="exact by definition"),
     _u("FTE.yr", COUNT, "1", note="full-time-equivalent employee year"),
+    _u("FTE.hr", COUNT, "1", note="full-time-equivalent working hour, used by homeworking factors"),
+    _u("room.night", COUNT, "1", note="one room occupied for one night"),
 ]}
 
 # Things Indian users actually type.
@@ -114,10 +125,22 @@ _ALIASES = {
     "sm3": "scm", "nm^3": "Nm3", "normal m3": "Nm3",
     "kilometre": "km", "kilometer": "km", "kms": "km",
     "mile": "mi", "miles": "mi",
-    "tkm": "t.km", "t-km": "t.km", "tonne-km": "t.km",
+    "tkm": "t.km", "t-km": "t.km", "tonne-km": "t.km", "tonne.km": "t.km",
+    # Spellings used by the published workbooks we ingest.
+    "litres": "L", "liters": "L", "cubic metres": "m3", "cubic meters": "m3",
+    "pkm": "passenger.km", "passenger-km": "passenger.km", "pass.km": "passenger.km",
+    "pax.km": "passenger.km", "pax-km": "passenger.km", "pax.mi": "passenger.mi",
+    "passenger.mile": "passenger.mi", "passenger.miles": "passenger.mi",
+    # DESNZ publishes electricity and gas on a stated calorific basis. The basis
+    # belongs to the FACTOR, not the unit: the user picks the gross or net row,
+    # and both are measured in kWh.
+    "kwh (net cv)": "kWh", "kwh (gross cv)": "kWh",
     "trhr": "TR-hr", "tr-hr": "TR-hr", "tr.hr": "TR-hr",
     "sq ft": "sqft", "sq.ft": "sqft", "ft2": "sqft", "m^2": "m2",
     "fte.yr": "FTE.yr", "fte-yr": "FTE.yr",
+    "per fte working hour": "FTE.hr", "fte.hr": "FTE.hr",
+    "room per night": "room.night", "room-night": "room.night",
+    "million litres": "Ml", "megalitre": "Ml", "ml (million litres)": "Ml",
     "mmbtu": "MMBtu", "kcal": "kcal",
 }
 
@@ -207,11 +230,28 @@ def convert(value, from_unit: str, to_unit: str,
         return v * src.to_canonical / dst.to_canonical
 
     # --- crossing dimensions ---
+    # A currency on either side is not a physical conversion and no fuel
+    # property will ever bridge it. Saying so plainly matters: a spend-based
+    # factor met by a quantity in tonnes is a common, fixable mistake, and
+    # "this is physics" sends the reader looking for a density.
+    if CURRENCY in (src.dimension, dst.dimension):
+        raise IncompatibleUnitsError(
+            f"This factor is published per {dst.name} of spend, and the quantity "
+            f"is in {src.name}. Enter what was spent, in {dst.name}, or use a "
+            f"supplier's own factor per {src.name} and cite it.")
+
     if fuel is None:
+        # Name both ways out. "This is physics" was true and useless: the
+        # reader is a person with a steam bill in tonnes and a factor per
+        # kilowatt hour, and what they need to know is that the bridge is a
+        # property of the material, which either they or their supplier has.
         raise FuelPropertyRequiredError(
-            f"Cannot convert {src.name} ({src.dimension}) to {dst.name} "
-            f"({dst.dimension}) without a dated, sourced fuel property. "
-            f"This is physics, not unit arithmetic.")
+            f"This factor is published per {dst.name} and the quantity is in "
+            f"{src.name}. Crossing {src.dimension} to {dst.dimension} needs a "
+            f"dated, sourced property of the material - a calorific value for a "
+            f"fuel, a density for a liquid, the enthalpy for steam - and none is "
+            f"on file. Enter the quantity in {dst.name}, or use a supplier's own "
+            f"factor per {src.name} and cite it.")
 
     _check_gas_reference(src, fuel)
     _check_gas_reference(dst, fuel)

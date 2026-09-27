@@ -33,7 +33,7 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
       blockIndex: 0,
       timestamp: '2026-04-01T00:00:00.000Z',
       action: 'GENESIS',
-      entityId: 'ORG-INVTY-001',
+      entityId: 'ORG-IINVTY-001',
       actor: 'System Initializer',
       payloadSummary: 'Organization Boundary Established (Operational Control Approach)',
       previousBlockHash: '0000000000000000000000000000000000000000000000000000000000000000',

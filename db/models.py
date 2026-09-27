@@ -1,4 +1,4 @@
-"""SQLAlchemy 2.0 ORM Models for the INVTY GHG Accounting Portal.
+"""SQLAlchemy 2.0 ORM Models for the IINVTY GHG Accounting Portal.
 
 All monetary, emission, and factor columns strictly enforce NUMERIC(20, 6).
 All inventory reporting periods strictly use DATE, never timestamptz.

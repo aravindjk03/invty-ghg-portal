@@ -11,6 +11,10 @@ const createLeadSchema = z.object({
   sector: z.string().min(2, 'Industry sector is required'),
   phone: z.string().optional(),
   primaryNeed: z.string().default('general'),
+  // What the visitor was doing when the form appeared. 'premium' means they
+  // hit the estimate limit and asked to upgrade, which is a different queue
+  // from someone downloading a report.
+  requestedAction: z.string().max(40).optional(),
   referralSource: z.string().default('portfolio'),
   annualTurnoverOrProduction: z.string().optional(),
   inventoryStats: z

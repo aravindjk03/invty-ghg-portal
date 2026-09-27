@@ -60,6 +60,37 @@ export interface ActivityEntry {
   notes?: string;
   evidenceFile?: string;
   customFactorOverride?: number;
+  /** The same row under the market-based method, in tonnes. Scope 2 only:
+   *  the Guidance reports one purchase of electricity twice, and a row that
+   *  showed only one of the two figures would hide half of what it did. */
+  marketTco2e?: number;
+  /** Where that factor came from: a contract, a certificate, a supplier's EPD.
+   *  The engine refuses a supplied factor without it, because an unsourced
+   *  number is indistinguishable from an invented one. */
+  customFactorSource?: string;
+  /** YYYY-MM. Enables monthly analysis and the missing-month QA/QC check. */
+  periodMonth?: string;
+  /**
+   * The activity key in the published factor library (DESNZ, CEA). When set,
+   * ghg_core calculates this row gas by gas under the chosen GWP set; without
+   * it the row cannot be calculated from published data.
+   */
+  engineActivityKey?: string;
+  /** The factor the engine actually used, and where it came from. The
+   *  catalogue ships a value of its own for the picker; printing THAT in a
+   *  report puts a number beside a total it did not produce. */
+  engineFactorValue?: number;
+  engineFactorSource?: string;
+  engineFactorUnit?: string;
+  /** True when the user picked that factor themselves rather than letting the
+   *  catalogue map attach it. A choice they made is never overwritten; one the
+   *  map made is re-checked, so a row saved before a mapping was corrected
+   *  does not keep calculating against the old factor for ever. */
+  factorChosenByUser?: boolean;
+  /** Region the factor applies to, e.g. IN or UK. */
+  engineRegion?: string;
+  /** Who owns this data in the organisation; shown in the evidence register. */
+  dataOwner?: string;
   updatedAt: string;
 }
 
