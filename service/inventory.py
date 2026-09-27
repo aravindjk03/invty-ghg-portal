@@ -286,15 +286,64 @@ def activities_for(scope: Optional[str] = None, region: Optional[str] = None) ->
         and (region is None or activity.region == region))
 
 
+#: The activity key a supplier-provided factor is filed under. One per record,
+#: so two rows carrying different contract rates never collide.
+SUPPLIED_PREFIX = "supplied."
+
+
+def supplied_factor(record: ActivityRecord, value: Decimal, unit: str,
+                    citation: str, reporting_year: int) -> EmissionFactor:
+    """A factor the reporting company provided, as a factor like any other.
+
+    Some numbers are not published and never will be. A renewable power
+    purchase agreement, a green tariff and a retired I-REC are priced by
+    contract, and the GHG Protocol's Scope 2 Guidance REQUIRES the contractual
+    rate rather than a grid default - reporting a PPA at grid intensity is
+    wrong, not conservative. A supplier's own EPD for steel or cement is the
+    same situation, one rung better than any average.
+
+    So the engine takes the customer's number, on three conditions: it is
+    filed under its own activity key so it cannot leak into another row, it
+    carries the citation the customer gave for it, and it is marked
+    self-reported so the report and the quality strip can say where it came
+    from. What it must never do is arrive unlabelled and be read as published.
+    """
+    return EmissionFactor(
+        version_id=f"{SUPPLIED_PREFIX}{record.record_id}",
+        activity_key=f"{SUPPLIED_PREFIX}{record.record_id}",
+        region=record.region,
+        reference_year=reporting_year,
+        gas="CO2e",
+        value=value,
+        numerator_unit="kgCO2e",
+        denominator_unit=unit,
+        ef_basis=PHYSICAL_BASIS,
+        source_name="Supplied by the reporting company",
+        source_table_ref=citation,
+        source_url="",
+        factor_set_id="supplied",
+    )
+
+
 def run_inventory(
     records: Iterable[ActivityRecord],
     *,
     gwp_set_name: str,
     reporting_year: int,
     scope2_view: str = "location",
+    supplied: Iterable[EmissionFactor] = (),
 ) -> CalculationRun:
-    """Calculate an inventory under the chosen GWP set."""
+    """Calculate an inventory under the chosen GWP set.
+
+    `supplied` holds factors the customer provided for this run only. They are
+    added to a COPY of the registry, never to the shared one: a contract rate
+    belongs to the company that signed it and must not survive into the next
+    request.
+    """
     registry, _ = load_registry()
+    supplied = tuple(supplied)
+    if supplied:
+        registry = InMemoryFactorRegistry(list(registry) + list(supplied))
     return calculate(
         list(records),
         registry,

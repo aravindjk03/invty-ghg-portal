@@ -31,8 +31,11 @@ export const METHOD_FOR_SOURCE: Record<string, MethodKey> = {
   'process.soda_ash_use': 'mineral_industry',
   'process.glass_carbonates': 'mineral_industry',
   'process.ceramics': 'mineral_industry',
+  // A pulp mill's lime kiln is limestone calcination like any other.
+  'process.pulp_paper_lime_kiln': 'mineral_industry',
   'process.ammonia_production': 'chemical_industry',
   'process.nitric_acid': 'chemical_industry',
+  'process.urea_production': 'chemical_industry',
   'process.adipic_acid': 'chemical_industry',
   'process.calcium_carbide': 'chemical_industry',
   'process.silicon_carbide': 'chemical_industry',
@@ -44,8 +47,12 @@ export const METHOD_FOR_SOURCE: Record<string, MethodKey> = {
   'process.aluminium_pfc': 'metal_industry',
   'process.lead_production': 'metal_industry',
   'process.zinc_production': 'metal_industry',
-  'fugitive.sf6_magnesium': 'metal_industry',
+  'process.iron_steel_eaf_electrode': 'metal_industry',
 };
+
+// SF6 released from magnesium casting is deliberately absent: DESNZ publishes
+// the gas per kilogram released, so that row has a factor and showing a method
+// beside it would put two different answers on one line.
 
 export const METHOD_NAME: Record<MethodKey, string> = {
   managed_soils: 'N₂O from managed soils',

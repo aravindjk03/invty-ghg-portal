@@ -9,7 +9,10 @@ cat1.material.textiles,Textiles,tonnes,desnz.2025.19_501_5060_15,Material use / 
 cat1.material.timber,Timber / wood products,tonnes,desnz.2025.19_500_5048_15,Material use / Construction / Wood (Primary material production),UK,DESNZ UK Government GHG conversion factors
 cat1.material.water_supply,Water supply,cubic metres,desnz.2025.17_404_4005_1,Water supply / Water supply / Water supply,UK,DESNZ UK Government GHG conversion factors
 cat1.material.water_supply,Water supply,million litres,desnz.2025.17_404_4005_10,Water supply / Water supply / Water supply,UK,DESNZ UK Government GHG conversion factors
+cat11.use_energy_direct,Use of sold products — direct energy use,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 cat12.landfill,EOL — landfill,tonnes,desnz.2025.20_507_5313_15,Waste disposal / Refuse / Commercial and industrial waste (Landfill),UK,DESNZ UK Government GHG conversion factors
+cat13.leased_downstream,Downstream leased assets,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+cat14.franchises,Franchises,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 cat4.air_freight,Air freight,tonne.km,desnz.2025.27_317_3158_14,"Freighting goods / Freight flights / International, to / from non-UK (With RF)",UK,DESNZ UK Government GHG conversion factors
 cat4.cold_chain,Refrigerated transport,km,desnz.2025.27_306_3140_4,Freighting goods / HGV refrigerated (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
 cat4.cold_chain,Refrigerated transport,miles,desnz.2025.27_306_3140_9,Freighting goods / HGV refrigerated (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
@@ -28,9 +31,14 @@ cat4.sea_bulk,Sea freight — bulk carrier,tonne.km,desnz.2025.27_320_3221_14,Fr
 cat4.sea_container,Sea freight — container,tonne.km,desnz.2025.27_320_3235_14,Freighting goods / Cargo ship / Container ship / Average,UK,DESNZ UK Government GHG conversion factors
 cat5.anaerobic_digestion,Anaerobic digestion,tonnes,desnz.2025.20_507_5307_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Anaerobic digestion),UK,DESNZ UK Government GHG conversion factors
 cat5.composting,Composting,tonnes,desnz.2025.20_507_5305_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Composting),UK,DESNZ UK Government GHG conversion factors
+cat5.ewaste,E-waste,tonnes,desnz.2025.20_503_5330_15,Waste disposal / Electrical items / WEEE - mixed (Open-loop),UK,DESNZ UK Government GHG conversion factors
 cat5.incineration_energy,Incineration with energy recovery,tonnes,desnz.2025.20_507_5311_15,Waste disposal / Refuse / Commercial and industrial waste (Incineration with Energy Recovery),UK,DESNZ UK Government GHG conversion factors
 cat5.landfill_mixed,Landfill — mixed municipal waste,tonnes,desnz.2025.20_507_5313_15,Waste disposal / Refuse / Commercial and industrial waste (Landfill),UK,DESNZ UK Government GHG conversion factors
 cat5.landfill_organic,Landfill — organic waste,tonnes,desnz.2025.20_507_5306_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Landfill),UK,DESNZ UK Government GHG conversion factors
+cat5.recycling_glass,Recycling — glass,tonnes,desnz.2025.20_501_5267_15,Waste disposal / Other / Glass (Open-loop),UK,DESNZ UK Government GHG conversion factors
+cat5.recycling_metal,Recycling — metal,tonnes,desnz.2025.20_504_5365_15,Waste disposal / Metal / Metal: scrap metal (Open-loop),UK,DESNZ UK Government GHG conversion factors
+cat5.recycling_paper,Recycling — paper,tonnes,desnz.2025.20_506_5450_15,Waste disposal / Paper / Paper and board: mixed (Closed-loop),UK,DESNZ UK Government GHG conversion factors
+cat5.recycling_plastic,Recycling — plastic,tonnes,desnz.2025.20_505_5379_15,Waste disposal / Plastic / Plastics: average plastics (Open-loop),UK,DESNZ UK Government GHG conversion factors
 cat5.wastewater_treated,Wastewater sent for off-site treatment,cubic metres,desnz.2025.18_405_4006_1,Water treatment / Water treatment / Water treatment,UK,DESNZ UK Government GHG conversion factors
 cat5.wastewater_treated,Wastewater sent for off-site treatment,million litres,desnz.2025.18_405_4006_10,Water treatment / Water treatment / Water treatment,UK,DESNZ UK Government GHG conversion factors
 cat6.air_domestic_economy,"Air — domestic, economy",passenger.km,desnz.2025.21_316_3160_11,"Business travel- air / Flights / Domestic, to / from UK / Average passenger (With RF)",UK,DESNZ UK Government GHG conversion factors
@@ -61,9 +69,12 @@ cat7.metro_rail,Commute — metro / suburban rail,passenger.km,desnz.2025.25_315
 cat7.two_wheeler,Commute — two-wheeler,km,desnz.2025.25_302_3080_4,Business travel- land / Motorbike / Average,UK,DESNZ UK Government GHG conversion factors
 cat7.two_wheeler,Commute — two-wheeler,miles,desnz.2025.25_302_3080_9,Business travel- land / Motorbike / Average,UK,DESNZ UK Government GHG conversion factors
 cat7.wfh,Remote / work-from-home energy,per FTE Working Hour,desnz.2025.32_603_9999_12,Homeworking / Homeworking (office equipment + heating),UK,DESNZ UK Government GHG conversion factors
+cat8.leased_upstream,Upstream leased assets,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 cat9.downstream_transport,Downstream transportation & distribution,km,desnz.2025.27_304_3140_4,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
 cat9.downstream_transport,Downstream transportation & distribution,miles,desnz.2025.27_304_3140_9,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
 cat9.downstream_transport,Downstream transportation & distribution,tonne.km,desnz.2025.27_304_3140_14,Freighting goods / HGV (all diesel) / All HGVs (Average laden),UK,DESNZ UK Government GHG conversion factors
+cat9.retail,Retail outlet energy,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+cat9.warehousing,Downstream warehousing / storage,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.ev_charging_onsite,Electricity — charging owned EVs at own facility,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.grid.location,Grid electricity — location-based,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.open_access,Electricity — open access / third-party sale (India),kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
@@ -214,6 +225,7 @@ fugitive.refrigerant.r744,R-744 (CO2) refrigerant,kg,desnz.2025.3_200_2002_3,Ref
 fugitive.sf6,SF6 — electrical switchgear,kg,desnz.2025.3_200_2077_3,Refrigerant & other / Kyoto protocol products / Sulphur hexafluoride (SF6) (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 fugitive.sf6_magnesium,SF6 — magnesium casting cover gas,kg,desnz.2025.3_200_2077_3,Refrigerant & other / Kyoto protocol products / Sulphur hexafluoride (SF6) (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 heat.purchased,Purchased heat / hot water,kWh,desnz.2025.10_401_4003_5,Heat and steam / Heat and steam / District heat and steam / kWh,UK,DESNZ UK Government GHG conversion factors
+memo.avoided_exported_renewable,Avoided emissions from exported renewable power,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,Purchased electricity / India grid,IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 memo.montreal_r22,R-22 / HCFC-22 refrigerant,kg,desnz.2025.3_202_2389_3,Refrigerant & other / Montreal protocol products / HCFC-22 / R22 = chlorodifluoromethane (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,kWh (Gross CV),desnz.2025.1_101_1009_6,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
 mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,kWh (Net CV),desnz.2025.1_101_1009_7,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors

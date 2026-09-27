@@ -45,9 +45,17 @@ class _Strict(BaseModel):
 
 #: What each method is, what it needs, and the chapter it comes from. Served so
 #: the browser can build its forms without hard-coding any of this.
+#:
+#: `computes` lists the catalogue sources the method answers. Those sources have
+#: no emission factor and never will - the CO2 in clinker comes out of the
+#: limestone, and the N2O from a nitric acid plant depends on its abatement -
+#: so a scope page showing them as "no published factor" told a user they were
+#: stuck when the method was a click away. The list is kept here, beside the
+#: method, so there is one place that knows what each one covers.
 METHOD_CATALOGUE: tuple[dict, ...] = (
     {
         "key": "managed_soils",
+        "computes": ["agri.fertiliser_n2o"],
         "name": "N2O from managed soils",
         "scope": "1",
         "gases": ["N2O"],
@@ -59,6 +67,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "lime_and_urea",
+        "computes": ["agri.lime_application", "agri.urea_application"],
         "name": "CO2 from liming and urea application",
         "scope": "1",
         "gases": ["CO2"],
@@ -69,6 +78,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "enteric_fermentation",
+        "computes": ["agri.enteric_fermentation"],
         "name": "CH4 from enteric fermentation",
         "scope": "1",
         "gases": ["CH4"],
@@ -79,6 +89,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "manure_management",
+        "computes": ["agri.manure_management"],
         "name": "CH4 and N2O from manure management",
         "scope": "1",
         "gases": ["CH4", "N2O"],
@@ -90,6 +101,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "wastewater",
+        "computes": ["fugitive.ch4_wastewater", "fugitive.n2o_wastewater"],
         "name": "CH4 and N2O from wastewater",
         "scope": "1",
         "gases": ["CH4", "N2O"],
@@ -102,6 +114,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "solid_waste",
+        "computes": [],
         "name": "CH4 from solid waste disposal",
         "scope": "1",
         "gases": ["CH4"],
@@ -113,6 +126,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "mineral_industry",
+        "computes": ["process.cement_clinker", "process.lime_calcination", "process.dolomite_calcination", "process.limestone_flux", "process.soda_ash_use", "process.glass_carbonates", "process.ceramics", "process.pulp_paper_lime_kiln"],
         "name": "CO2 from cement, lime, glass and carbonates",
         "scope": "1",
         "gases": ["CO2"],
@@ -125,6 +139,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "chemical_industry",
+        "computes": ["process.ammonia_production", "process.nitric_acid", "process.adipic_acid", "process.urea_production", "process.calcium_carbide", "process.silicon_carbide", "process.titanium_dioxide"],
         "name": "CO2 and N2O from ammonia, nitric acid, adipic acid and carbides",
         "scope": "1",
         "gases": ["CO2", "N2O", "CH4"],
@@ -136,6 +151,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "metal_industry",
+        "computes": ["process.iron_steel_bf", "process.iron_steel_dri", "process.iron_steel_eaf_electrode", "process.ferroalloys", "process.aluminium_anode", "process.aluminium_pfc", "process.lead_production", "process.zinc_production"],
         "name": "CO2, CH4, PFCs and SF6 from iron, steel, ferroalloys, aluminium and more",
         "scope": "1",
         "gases": ["CO2", "CH4", "CF4", "C2F6", "SF6"],

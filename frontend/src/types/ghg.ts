@@ -60,6 +60,10 @@ export interface ActivityEntry {
   notes?: string;
   evidenceFile?: string;
   customFactorOverride?: number;
+  /** Where that factor came from: a contract, a certificate, a supplier's EPD.
+   *  The engine refuses a supplied factor without it, because an unsourced
+   *  number is indistinguishable from an invented one. */
+  customFactorSource?: string;
   /** YYYY-MM. Enables monthly analysis and the missing-month QA/QC check. */
   periodMonth?: string;
   /**

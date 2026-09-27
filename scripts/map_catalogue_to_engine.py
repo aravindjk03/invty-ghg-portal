@@ -258,6 +258,19 @@ DESNZ_BY_NAME: dict[str, str] = {
     # As above: only the routes DESNZ actually publishes.
     "cat12.landfill": "Waste disposal / Refuse / Commercial and industrial waste (Landfill)",
 
+    # --- Scope 3, cat 5: recycling and the waste streams with their own tables
+    # Open-loop is the route DESNZ publishes for material sent to be recycled
+    # into something else, which is what a company's waste contractor does.
+    # Each catalogue row offers one material, so each takes that material's
+    # published average.
+    "cat5.recycling_metal": "Waste disposal / Metal / Metal: scrap metal (Open-loop)",
+    "cat5.recycling_plastic": "Waste disposal / Plastic / Plastics: average plastics (Open-loop)",
+    # Paper goes back into paper, which is the closed loop DESNZ publishes;
+    # it gives no open-loop route for it.
+    "cat5.recycling_paper": "Waste disposal / Paper / Paper and board: mixed (Closed-loop)",
+    "cat5.recycling_glass": "Waste disposal / Other / Glass (Open-loop)",
+    "cat5.ewaste": "Waste disposal / Electrical items / WEEE - mixed (Open-loop)",
+
     # --- Memo: substances reported outside the scopes -----------------------
     # A Montreal Protocol substance is not in the Kyoto basket, so it is
     # reported separately. DESNZ still publishes its warming effect.
@@ -303,6 +316,22 @@ DIRECT: dict[str, str] = {
     "elec.ev_charging_onsite": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
     "elec.submetered_tenant": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
     "elec.open_access": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+
+    # A leased warehouse, a retail unit, a franchise and a sold product that
+    # runs on mains power are all metered in kilowatt hours, and a kilowatt
+    # hour is a kilowatt hour whoever draws it. The same Indian grid factor as
+    # the company's own supply, which the report names on every line.
+    "cat8.leased_upstream": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "cat9.warehousing": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "cat9.retail": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "cat11.use_energy_direct": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "cat13.leased_downstream": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    "cat14.franchises": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    # Self-generated power consumed on site is NOT Scope 2 (Scope 2 Guidance
+    # 5.4), and the catalogue files it as a memo for the energy balance. It
+    # still has to show the kilowatt hours, so it resolves against the grid
+    # factor the avoided import would have carried.
+    "memo.avoided_exported_renewable": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
 }
 
 

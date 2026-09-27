@@ -45,6 +45,15 @@ export interface InventoryRecordInput {
   scope2_view?: 'location' | 'market';
   period_month?: string;
   note?: string;
+  /**
+   * A factor the reporting company supplied for this row, in kgCO2e per unit.
+   * Required for a market-based Scope 2 figure, where the GHG Protocol asks
+   * for the contractual rate and no published set holds it. The engine
+   * refuses one without a source, so `supplied_factor_source` travels with it.
+   */
+  supplied_factor?: string;
+  supplied_factor_unit?: string;
+  supplied_factor_source?: string;
 }
 
 export const LineSchema = z.object({

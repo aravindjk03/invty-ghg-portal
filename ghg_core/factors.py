@@ -19,6 +19,11 @@ from .errors import (AmbiguousBoundaryError, EfBasisMismatchError,
                      ProductRouteRequiredError)
 from .quantities import D
 
+#: Factors the reporting company provided for its own inventory, rather than
+#: read from a published set. Marked so the report can never present one as
+#: published, and so the quality tier can reflect that it is self-reported.
+SUPPLIED_SET = "supplied"
+
 ENERGY_BASIS = "energy"      # factor is per unit of ENERGY -> needs an NCV
 PHYSICAL_BASIS = "physical"  # factor already embeds the NCV -> must NOT re-apply
 
@@ -133,11 +138,24 @@ class EmissionFactor:
                 f"ef_basis must be {ENERGY_BASIS!r} or {PHYSICAL_BASIS!r}, "
                 f"got {self.ef_basis!r}. Without it the engine cannot know "
                 f"whether to apply a calorific value.")
-        if not self.source_url or not self.source_table_ref:
+        if not self.source_table_ref:
             raise ValueError(
                 f"Factor {self.activity_key}/{self.region} has no source "
                 f"reference. An unsourced factor is indistinguishable from an "
                 f"invented one and must not enter the registry.")
+        # A published set is cited by the page it came from. A factor the
+        # reporting company supplied - a power purchase agreement, a green
+        # tariff, a supplier's EPD - has a document reference instead, and the
+        # GHG Protocol requires that contractual rate rather than a published
+        # average. It still has to say where it came from, which the reference
+        # above enforces, and it still has to be marked as self-reported, which
+        # is what SUPPLIED_SET means.
+        if not self.source_url and self.factor_set_id != SUPPLIED_SET:
+            raise ValueError(
+                f"Factor {self.activity_key}/{self.region} from "
+                f"{self.factor_set_id!r} has no source URL. A published factor "
+                f"must name the page it came from; only a factor the reporting "
+                f"company supplied (factor_set_id={SUPPLIED_SET!r}) may omit it.")
 
 
 @dataclass(frozen=True)
@@ -184,6 +202,11 @@ class InMemoryFactorRegistry:
 
     def __len__(self) -> int:
         return len(self._rows)
+
+    def __iter__(self):
+        """Every factor held, so a caller can build a registry on top of this
+        one without reaching into it."""
+        return iter(self._rows)
 
     def _candidates(self, key, region, gas, production_route=None,
                     system_boundary=None):

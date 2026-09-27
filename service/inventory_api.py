@@ -14,8 +14,10 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from ghg_core.engine import ActivityRecord, CalculationRun
+from ghg_core.factors import EmissionFactor
 
-from .inventory import GWP_SETS, activities_for, load_catalogue_map, run_inventory
+from .inventory import (GWP_SETS, SUPPLIED_PREFIX, activities_for, load_catalogue_map,
+                        run_inventory, supplied_factor)
 
 
 class _Strict(BaseModel):
@@ -36,6 +38,16 @@ class InventoryRecord(_Strict):
     scope2_view: Optional[Literal["location", "market"]] = None
     period_month: Optional[str] = Field(default=None, max_length=7)
     note: str = Field(default="", max_length=400)
+
+    # A factor the reporting company provides for this row: a power purchase
+    # agreement, a green tariff, a retired certificate, a supplier's EPD. The
+    # GHG Protocol's Scope 2 Guidance requires the contractual rate for a
+    # market-based figure, so this is the correct answer there rather than a
+    # workaround. It is accepted only WITH a citation - an unsourced number is
+    # indistinguishable from an invented one.
+    supplied_factor: Optional[Decimal] = Field(default=None, ge=0)
+    supplied_factor_unit: Optional[str] = Field(default=None, max_length=32)
+    supplied_factor_source: str = Field(default="", max_length=300)
 
 
 class InventoryRequest(_Strict):
@@ -117,7 +129,10 @@ def to_records(request: InventoryRequest) -> list[ActivityRecord]:
     return [
         ActivityRecord(
             record_id=item.record_id,
-            activity_key=item.activity_key,
+            # A row carrying its own factor is filed under a key of its own, so
+            # one company's contract rate can never be resolved for another row.
+            activity_key=(f"{SUPPLIED_PREFIX}{item.record_id}"
+                          if item.supplied_factor is not None else item.activity_key),
             scope=item.scope,
             ghg_category=item.ghg_category,
             region=item.region,
@@ -177,12 +192,39 @@ def to_response(run: CalculationRun, request: InventoryRequest, gwp_source: str)
     )
 
 
+def supplied_factors(request: InventoryRequest,
+                     records: list[ActivityRecord]) -> list[EmissionFactor]:
+    """The factors the customer provided, one per row that carries one.
+
+    A supplied factor without a citation is refused rather than quietly
+    dropped: silently ignoring it would report the row as zero while the
+    customer believed their own number had been used.
+    """
+    by_id = {record.record_id: record for record in records}
+    built = []
+    for item in request.records:
+        if item.supplied_factor is None:
+            continue
+        if not item.supplied_factor_source.strip():
+            raise ValueError(
+                f"Row {item.record_id} supplies its own emission factor but does not say "
+                f"where it came from. Cite the contract, certificate or supplier document, "
+                f"so the report can show a verifier what the number is.")
+        built.append(supplied_factor(
+            by_id[item.record_id], item.supplied_factor,
+            item.supplied_factor_unit or item.unit or "kWh",
+            item.supplied_factor_source.strip(), request.reporting_year))
+    return built
+
+
 def calculate_inventory(request: InventoryRequest, gwp_source: str) -> InventoryResponse:
+    records = to_records(request)
     run = run_inventory(
-        to_records(request),
+        records,
         gwp_set_name=request.gwp_set,
         reporting_year=request.reporting_year,
         scope2_view=request.scope2_view,
+        supplied=supplied_factors(request, records),
     )
     return to_response(run, request, gwp_source)
 

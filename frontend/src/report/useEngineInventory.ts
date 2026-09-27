@@ -50,13 +50,23 @@ export function useEngineInventory(
     const mappedRecords: InventoryRecordInput[] = [];
     const missing: ActivityEntry[] = [];
     entries.forEach((entry) => {
-      if (!entry.engineActivityKey) {
+      // A row carrying a factor the company supplied - a power purchase
+      // agreement, a green tariff, a supplier's EPD - reaches the engine even
+      // with no published factor behind it. That is the whole point of it:
+      // for a market-based Scope 2 figure the GHG Protocol requires the
+      // contractual rate, and no published set has it.
+      const supplied = entry.customFactorOverride;
+      if (!entry.engineActivityKey && supplied === undefined) {
         missing.push(entry);
         return;
       }
       mappedRecords.push({
         record_id: entry.id,
-        activity_key: entry.engineActivityKey,
+        activity_key: entry.engineActivityKey || `supplied.${entry.id}`,
+        supplied_factor: supplied !== undefined ? String(supplied) : undefined,
+        supplied_factor_unit: supplied !== undefined ? (entry.unit || undefined) : undefined,
+        supplied_factor_source: supplied !== undefined
+          ? (entry.customFactorSource || '') : undefined,
         scope: scopeOf(entry),
         ghg_category: categoryOf(entry),
         region: entry.engineRegion || 'IN',

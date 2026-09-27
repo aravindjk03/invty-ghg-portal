@@ -336,7 +336,13 @@ def inventory_calculate(request: InventoryRequest) -> InventoryResponse:
     gwp = load_gwp(request.gwp_set)
     log.info("inventory run records=%d gwp=%s year=%d view=%s",
              len(request.records), request.gwp_set, request.reporting_year, request.scope2_view)
-    return calculate_inventory(request, f"{gwp.source_name} ({gwp.source_url})")
+    try:
+        return calculate_inventory(request, f"{gwp.source_name} ({gwp.source_url})")
+    except ValueError as exc:
+        # A row supplying its own factor without saying where it came from. The
+        # message is written for the person who has to fix it.
+        raise HTTPException(status_code=422, detail={
+            "code": "unsourced_factor", "message": str(exc)}) from None
 
 
 # --- the IPCC methods that are not factors per unit ----------------------------------------

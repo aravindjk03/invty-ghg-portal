@@ -39,6 +39,9 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [displayResult, setDisplayResult] = useState(entry.calculatedTco2e);
   const [isOverridingFactor, setIsOverridingFactor] = useState(false);
+  const [overrideFactorSource, setOverrideFactorSource] = useState(
+    entry.customFactorSource ?? '');
+  const [overrideError, setOverrideError] = useState<string | null>(null);
   const [overrideFactorValue, setOverrideFactorValue] = useState<string>(
     String(entry.emissionFactor.factorValue)
   );
@@ -106,6 +109,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         emissionFactor: selectedFactor,
         unit: selectedFactor.unit,
         customFactorOverride: undefined,
+        customFactorSource: undefined,
         // The row is now about a different source, so whatever published factor
         // it pointed at no longer applies. Clearing it lets the catalogue map
         // attach the right one; keeping it would calculate diesel against the
@@ -115,6 +119,8 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         warning: undefined,
       });
       setOverrideFactorValue(source.verified ? String(selectedFactor.factorValue) : '');
+      setOverrideFactorSource('');
+      setOverrideError(null);
     }
   };
 
@@ -138,17 +144,30 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
 
   const handleSaveFactorOverride = () => {
     const parsed = parseFloat(overrideFactorValue);
-    if (!isNaN(parsed) && parsed >= 0) {
-      onUpdate({
-        emissionFactor: {
-          ...entry.emissionFactor,
-          factorValue: parsed,
-          qualityTier: 'Estimated',
-        },
-        customFactorOverride: parsed,
-      });
-      setIsOverridingFactor(false);
+    const source = overrideFactorSource.trim();
+    // The engine refuses a supplied factor with no source, so the row asks for
+    // one here rather than letting the whole inventory come back with an error.
+    if (isNaN(parsed) || parsed < 0) {
+      setOverrideError('Enter the factor as a number, in kgCO₂e per unit.');
+      return;
     }
+    if (!source) {
+      setOverrideError('Say where this factor came from — the contract, certificate '
+        + 'or supplier document. A verifier will ask, and the engine will not use '
+        + 'an unsourced number.');
+      return;
+    }
+    setOverrideError(null);
+    onUpdate({
+      emissionFactor: {
+        ...entry.emissionFactor,
+        factorValue: parsed,
+        qualityTier: 'Estimated',
+      },
+      customFactorOverride: parsed,
+      customFactorSource: source,
+    });
+    setIsOverridingFactor(false);
   };
 
   const tierColor = {
@@ -207,9 +226,12 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
 
       {factorUnverified && !entry.engineActivityKey && !method && !methodNotImplemented && (
         <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
-          <strong>No published factor ingested for this source.</strong> It contributes 0 until you enter a
-          factor value and cite its source, so the inventory never reports a made-up number. Use
-          “Override emission factor” below, and record where the value came from.
+          <strong>No published set covers this source.</strong> Some never will: a power purchase
+          agreement, a green tariff or a retired certificate is priced by contract, and the GHG
+          Protocol asks for that rate rather than a grid average. Choose{' '}
+          <em>Use my own emission factor</em> from the menu on this row, enter the rate and say
+          where it came from — the engine will then calculate it and the report will show it as
+          supplied by you. Until then the row contributes 0, so nothing made up reaches a total.
         </div>
       )}
 
@@ -335,7 +357,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
                     className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-blue-50 text-left"
                   >
                     <Settings size={14} className="text-brand-muted" />
-                    <span>Override emission factor</span>
+                    <span>Use my own emission factor</span>
                   </button>
                   <div className="my-1 border-t border-border" />
                   <button
@@ -358,9 +380,9 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
 
       {/* Factor Override Inline Drawer */}
       {isOverridingFactor && (
-        <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200 rounded-md flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-brand-heading">Custom Factor (kgCO₂e/{entry.unit}):</span>
+        <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200 rounded-md flex flex-col gap-2.5 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-brand-heading">Your own factor (kgCO₂e/{entry.unit}):</span>
             <input
               type="number"
               step="any"
@@ -369,13 +391,31 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
               className="w-28 h-8 px-2 bg-white border border-border rounded font-mono text-xs"
             />
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-brand-heading">Where it came from:</span>
+            <input
+              type="text"
+              value={overrideFactorSource}
+              onChange={(e) => setOverrideFactorSource(e.target.value)}
+              placeholder="e.g. Tata Power PPA 2025-26, clause 4 · supplier EPD ref 2031"
+              className="flex-1 min-w-[16rem] h-8 px-2 bg-white border border-border rounded text-xs"
+            />
+          </div>
+          <p className="text-[11px] text-brand-muted leading-relaxed">
+            For a market-based Scope 2 figure — a PPA, a green tariff, a retired I-REC —
+            this contractual rate is what the GHG Protocol asks for, not a grid average.
+            The report shows it as supplied by you, with this reference beside it.
+          </p>
+          {overrideError && (
+            <p className="text-[11px] font-medium text-status-danger">{overrideError}</p>
+          )}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleSaveFactorOverride}
               className="px-2.5 py-1 bg-brand-primary text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1"
             >
-              <Check size={13} /> Apply Override
+              <Check size={13} /> Use this factor
             </button>
             <button
               type="button"
