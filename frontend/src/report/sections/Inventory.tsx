@@ -16,8 +16,10 @@ const EntryTable: React.FC<{ entries: ActivityEntry[] }> = ({ entries }) => (
       // The factor the ENGINE used. The catalogue ships a value of its own for
       // the picker, and printing that here would put a number beside a total
       // it did not produce.
+      // Per the unit on this row, and across every gas: it multiplies out to
+      // the tCO2e beside it.
       entry.engineFactorValue !== undefined
-        ? `${num(entry.engineFactorValue, 4)}${entry.engineFactorUnit ? ` /${entry.engineFactorUnit}` : ''}`
+        ? `${num(entry.engineFactorValue, 4)} /${entry.unit}`
         : '—',
       entry.engineFactorSource ?? 'Not calculated',
       num(entry.calculatedTco2e, 3),

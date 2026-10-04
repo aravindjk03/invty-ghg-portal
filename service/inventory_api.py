@@ -88,6 +88,9 @@ class LineOut(_Strict):
     factor_value: Optional[str]
     #: What the factor is per, so a report can say "per litre" beside it.
     factor_unit: Optional[str]
+    #: Emissions per unit of activity across every gas: the number that
+    #: multiplies out to the figure in the tCO2e column.
+    effective_factor: Optional[str]
     factor_source: Optional[str]
     factor_reference_year: Optional[int]
     factor_version_id: Optional[str]
@@ -208,6 +211,8 @@ def to_response(run: CalculationRun, request: InventoryRequest, gwp_source: str)
                 gwp_applied={gas: as_text(value) for gas, value in line.gwp_applied.items()},
                 factor_value=None if line.factor_value is None else as_text(line.factor_value),
                 factor_unit=line.factor_unit,
+                effective_factor=(None if line.effective_factor is None
+                                  else as_text(line.effective_factor)),
                 factor_source=line.factor_source,
                 factor_reference_year=line.factor_reference_year,
                 factor_version_id=line.factor_version_id,

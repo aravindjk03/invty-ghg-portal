@@ -72,6 +72,9 @@ export const LineSchema = z.object({
   factor_value: z.string().nullable(),
   /** What the factor is per, so a report can say "per litre" beside it. */
   factor_unit: z.string().nullable().default(null),
+  /** Emissions per unit of activity across every gas: the number that
+   *  multiplies out to the figure in the tCO2e column. */
+  effective_factor: z.string().nullable().default(null),
   factor_source: z.string().nullable(),
   factor_reference_year: z.number().nullable(),
   factor_version_id: z.string().nullable(),

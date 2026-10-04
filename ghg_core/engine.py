@@ -85,6 +85,13 @@ class LineResult:
     #: bare number in a column headed "Factor" and the reader cannot tell
     #: whether it is per litre, per tonne or per kilowatt hour.
     factor_unit: Optional[str]
+    #: Emissions per unit of activity AS ENTERED, across every gas and after
+    #: GWP. This is the number that multiplies out to the figure in the tCO2e
+    #: column, which `factor_value` does not: that is the factor for whichever
+    #: gas resolved first, in the unit the publisher chose, and a fuel emits
+    #: three gases. A column headed "Factor" beside a total it cannot reproduce
+    #: is how a verifier loses confidence in a report.
+    effective_factor: Optional[Decimal]
     factor_source: Optional[str]
     factor_reference_year: Optional[int]
     gas_breakdown: dict[str, Decimal]
@@ -191,8 +198,8 @@ def _blank_line(rec: ActivityRecord, status: str, message: str) -> LineResult:
         record_id=rec.record_id, activity_key=rec.activity_key, scope=rec.scope,
         ghg_category=rec.ghg_category, normalised_value=None,
         normalised_unit=None, factor_version_id=None, factor_value=None,
-        factor_unit=None, factor_source=None, factor_reference_year=None,
-        gas_breakdown={},
+        factor_unit=None, effective_factor=None, factor_source=None,
+        factor_reference_year=None, gas_breakdown={},
         gwp_applied={}, emissions_kgco2e=ZERO, biogenic_co2_kg=ZERO,
         memo_bucket=rec.memo_bucket, scope2_view=rec.scope2_view,
         resolution_flags=[], data_quality_tier=rec.data_quality_tier,
@@ -280,6 +287,10 @@ def _calc_line(rec, registry, gwp_set, reporting_year, fuel_properties, gases):
         factor_version_id=first.factor.version_id if first else None,
         factor_value=first.factor.value if first else None,
         factor_unit=first.factor.denominator_unit if first else None,
+        # Per the quantity AS ENTERED, not per the canonical unit: a row
+        # recorded as 45,000 litres wants a factor it can multiply 45,000 by.
+        effective_factor=(total_co2e / rec.value
+                          if rec.value not in (None, ZERO) else None),
         factor_source=f"{first.factor.source_name} · {first.factor.source_table_ref}"
         if first else None,
         factor_reference_year=first.factor.reference_year if first else None,

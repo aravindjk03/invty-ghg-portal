@@ -138,3 +138,23 @@ def test_an_activity_with_no_factor_at_all_still_fails():
               "ghg_category": "1.1", "region": "UK", "value": "1", "unit": "litres"}
     response = calculate_inventory(request_for([record]), "f")
     assert response.lines[0].status == "unavailable"
+
+
+def test_the_reported_factor_multiplies_out_to_the_reported_total():
+    """A report prints a Factor column beside a tCO2e column. If the factor
+    shown is the one for whichever gas resolved first — and a fuel emits three
+    — the two columns disagree, and a verifier stops trusting the page."""
+    from decimal import Decimal
+    from service.inventory_api import InventoryRecord, InventoryRequest, calculate_inventory
+
+    response = calculate_inventory(InventoryRequest(
+        records=[InventoryRecord(
+            record_id="d", activity_key="desnz.2025.1_101_1012_8", scope="1",
+            ghg_category="1.1", region="UK", value=Decimal(45000), unit="L")],
+        gwp_set="AR5", reporting_year=2025), gwp_source="fixture")
+
+    line = response.lines[0]
+    shown = Decimal(line.effective_factor)
+    assert shown * Decimal(45000) == Decimal(line.emissions_kgco2e)
+    # and it is NOT merely the CO2 factor, which would understate it
+    assert shown > Decimal(line.factor_value)

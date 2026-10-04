@@ -584,9 +584,12 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
       map.set(line.record_id, {
         tco2e: Number(line.emissions_kgco2e) / 1000,
         warning: line.status === 'calculated' ? undefined : line.message,
-        // What the engine actually multiplied by, so the report never prints
-        // one number beside a total produced by another.
-        factorValue: line.factor_value != null ? Number(line.factor_value) : undefined,
+        // The factor that MULTIPLIES OUT to this line's emissions, across every
+        // gas. factor_value is the factor for whichever gas resolved first, and
+        // a fuel emits three - a column headed "Factor" beside a total it
+        // cannot reproduce is how a verifier loses confidence in a report.
+        factorValue: line.effective_factor != null ? Number(line.effective_factor)
+          : line.factor_value != null ? Number(line.factor_value) : undefined,
         factorSource: line.factor_source ?? undefined,
         factorUnit: line.factor_unit ?? undefined,
       });

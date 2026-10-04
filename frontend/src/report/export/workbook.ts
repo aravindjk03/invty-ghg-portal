@@ -26,7 +26,7 @@ const entryRows = (entries: ActivityEntry[]): Row[] =>
     'Factor ID': entry.emissionFactor?.id ?? '',
     // What the engine multiplied by, not what the catalogue ships for the picker.
     'Factor value': entry.engineFactorValue ?? '',
-    'Factor unit': entry.engineFactorUnit ?? '',
+    'Factor unit': entry.unit,
     'Factor source': entry.engineFactorSource ?? '',
     'Factor year': entry.emissionFactor?.publicationYear ?? '',
     'Quality tier': entry.emissionFactor?.qualityTier ?? '',

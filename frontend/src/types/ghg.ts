@@ -79,6 +79,9 @@ export interface ActivityEntry {
   /** The factor the engine actually used, and where it came from. The
    *  catalogue ships a value of its own for the picker; printing THAT in a
    *  report puts a number beside a total it did not produce. */
+  /** Emissions per unit of activity, across every gas and after GWP: the
+   *  number that multiplies out to this row's tCO2e. A fuel emits three
+   *  gases, so the factor for any one of them does not. */
   engineFactorValue?: number;
   engineFactorSource?: string;
   engineFactorUnit?: string;
