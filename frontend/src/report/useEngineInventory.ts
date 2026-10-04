@@ -138,6 +138,7 @@ export function recordsFor(entries: ActivityEntry[]): {
 export function useEngineInventory(
   entries: ActivityEntry[], gwpSet: GwpSetName, reportingYear: number,
   tdLoss?: { rate?: number; source?: string },
+  electricityWtt?: { factor?: number; source?: string },
 ): EngineInventory {
   const [result, setResult] = useState<InventoryResult | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -146,7 +147,7 @@ export function useEngineInventory(
 
   const { records, unmapped } = useMemo(() => recordsFor(entries), [entries]);
 
-  const fingerprint = JSON.stringify([records, gwpSet, reportingYear, tdLoss]);
+  const fingerprint = JSON.stringify([records, gwpSet, reportingYear, tdLoss, electricityWtt]);
 
   useEffect(() => {
     if (records.length === 0) {
@@ -162,6 +163,8 @@ export function useEngineInventory(
     calculateInventory(records, {
       gwpSet, reportingYear,
       tdLossRate: tdLoss?.rate, tdLossRateSource: tdLoss?.source,
+      electricityWttFactor: electricityWtt?.factor,
+      electricityWttSource: electricityWtt?.source,
     }, controller.signal)
       .then((calculated) => { setResult(calculated); setError(undefined); })
       .catch((caught: Error) => {

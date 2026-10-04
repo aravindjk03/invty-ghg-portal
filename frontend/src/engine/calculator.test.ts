@@ -20,6 +20,9 @@ const entry = (over: Partial<ActivityEntry> & { id: string }): ActivityEntry => 
   facility: 'Plant', scope: 'scope-1', category: 'stationary_combustion',
   fuelOrSource: 'Fixture source', amount: 100, unit: 'L',
   emissionFactor: factor(2.68, 'Primary'), calculatedTco2e: 0.268,
+  // What the ENGINE used. A row the engine never calculated carries none.
+  engineFactorValue: 2.68,
+  engineFactorSource: 'DESNZ fixture · table 1',
   updatedAt: '2026-01-01T00:00:00.000Z', ...over,
 });
 
@@ -48,12 +51,36 @@ describe('calculateDataQualityGrade', () => {
     // It contributes nothing to the total but everything to how good the
     // inventory is, so it must not be skipped.
     const measured = entry({ id: 'a' });
-    const unvalued = entry({ id: 'b', emissionFactor: factor(0, 'Primary'), calculatedTco2e: 0 });
+    const unvalued = entry({
+      id: 'b', emissionFactor: factor(0, 'Primary'), calculatedTco2e: 0,
+      engineFactorValue: undefined, engineFactorSource: undefined,
+    });
     expect(calculateDataQualityGrade([measured])).toBe('A');
     expect(calculateDataQualityGrade([measured, unvalued])).not.toBe('A');
   });
 
   it('returns a middling grade for an empty inventory rather than a flattering one', () => {
     expect(calculateDataQualityGrade([])).toBe('C');
+  });
+
+  it('does not credit a row for the value the catalogue ships for its picker', () => {
+    // The catalogue carries a factor so the dropdown can show one. If the
+    // engine never reached a factor, that number must not flatter the grade.
+    const unreached = entry({
+      id: 'a', emissionFactor: factor(0.17, 'Primary'),
+      engineFactorValue: undefined, engineFactorSource: undefined,
+    });
+    expect(calculateDataQualityGrade([unreached])).toBe('D');
+  });
+
+  it("counts the company's own documented figure as primary data", () => {
+    // A contract rate or a supplier's EPD for their own purchase, cited. The
+    // Protocol ranks that above a published average, not below it.
+    const supplied = entry({
+      id: 'a', emissionFactor: factor(0, 'Estimated'),
+      engineFactorValue: 0.012,
+      engineFactorSource: 'Supplied by the reporting company · PPA clause 4',
+    });
+    expect(calculateDataQualityGrade([supplied])).toBe('A');
   });
 });

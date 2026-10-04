@@ -156,3 +156,47 @@ def test_a_refrigerant_leak_is_not_asked_for_a_well_to_tank_factor():
         activity_key="desnz.2025.14_204_2060_3", ghg_category="1.4"))
     assert not [item for item in response.not_derived if item.kind == "wtt_fuel"]
     assert not [item for item in response.derived if item.kind == "wtt_fuel"]
+
+
+# --- the upstream of electricity, which nobody publishes for India ------------
+
+def test_a_supplied_upstream_factor_for_electricity_is_used_and_cited():
+    response = run(electricity(), electricity_wtt_factor=Decimal("0.09"),
+                   electricity_wtt_source="DISCOM disclosure 2025")
+    # 576000 kWh x 0.09 = 51840 kgCO2e, by hand.
+    assert category(response) == Decimal("51840.00")
+    line = next(item for item in response.lines
+                if item.record_id.endswith("::wtt-elec"))
+    assert "Supplied by the reporting company" in line.factor_source
+    assert "DISCOM disclosure 2025" in line.factor_source
+
+
+def test_without_a_source_the_upstream_of_electricity_is_left_out_and_said_to_be():
+    response = run(electricity(), electricity_wtt_factor=Decimal("0.09"))
+    assert not [item for item in response.derived if item.kind == "wtt_electricity"]
+    reasons = [item for item in response.not_derived if item.kind == "wtt_electricity"]
+    assert reasons and "with its source" in reasons[0].reason
+
+
+def test_a_market_row_does_not_get_its_own_upstream_line():
+    """Location and market are two views of the same kilowatt hours."""
+    response = run(electricity(scope2_view="market"),
+                   electricity_wtt_factor=Decimal("0.09"),
+                   electricity_wtt_source="DISCOM disclosure 2025")
+    assert not [item for item in response.derived if item.kind == "wtt_electricity"]
+
+
+def test_an_inventory_with_no_electricity_says_nothing_about_its_upstream():
+    response = run(diesel())
+    assert not [item for item in response.not_derived if item.kind == "wtt_electricity"]
+
+
+def test_a_derived_line_never_takes_an_id_another_line_is_using():
+    """A line's id is how the browser puts a figure back on a row. Two lines
+    with one id means a row quietly showing somebody else's number, and record
+    ids come from the browser — they could be anything, including something
+    that looks exactly like a derived one."""
+    response = run(diesel(record_id="a"), diesel(record_id="a::wtt"))
+    ids = [line.record_id for line in response.lines]
+    assert len(ids) == len(set(ids)), ids
+    assert "a::wtt-2" in ids

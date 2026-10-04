@@ -63,6 +63,8 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
     category3,
     tdLoss,
     setTdLoss,
+    electricityWtt,
+    setElectricityWtt,
   } = useGHG();
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
@@ -191,8 +193,16 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
                     Derived
                   </span>
                 </h3>
+                {/* The engine's own Category 3 total. It ALREADY includes any
+                    row recorded against this category by hand, so adding those
+                    on top would count them twice. */}
                 <span className="text-sm font-mono font-bold text-brand-heading">
-                  {formatIndianNumber(category3.tco2e + cat3Recorded)} tCO₂e
+                  {formatIndianNumber(category3.tco2e)} tCO₂e
+                  {cat3Recorded > 0 && (
+                    <span className="ml-2 text-[11px] font-normal text-brand-muted">
+                      including {formatIndianNumber(cat3Recorded)} recorded by hand
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -280,6 +290,54 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
               <p className="text-[11px] text-brand-muted mt-1.5">
                 Both are needed. A rate with nowhere to trace it to is indistinguishable from an
                 invented one, so without the source the line is left out and said to be left out.
+              </p>
+
+              {/*
+                The upstream of purchased electricity. No published set gives one
+                for the Indian grid, so a company that holds a figure supplies it
+                here — on the same terms as every other number in this product.
+              */}
+              <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-semibold text-brand-body">
+                    Upstream of purchased electricity
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      value={electricityWtt.factor ?? ''}
+                      onChange={(event) => {
+                        const value = parseFloat(event.target.value);
+                        setElectricityWtt({
+                          ...electricityWtt,
+                          factor: Number.isFinite(value) && value >= 0 ? value : undefined,
+                        });
+                      }}
+                      placeholder="e.g. 0.090"
+                      className="w-24 h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                    />
+                    <span className="text-[11px] text-brand-muted">kgCO₂e per kWh</span>
+                  </span>
+                </label>
+                <label className="flex flex-col gap-1 flex-1 min-w-[16rem]">
+                  <span className="text-[11px] font-semibold text-brand-body">Where it came from</span>
+                  <input
+                    type="text"
+                    value={electricityWtt.source}
+                    onChange={(event) => setElectricityWtt({
+                      ...electricityWtt, source: event.target.value,
+                    })}
+                    placeholder="e.g. supplier disclosure, or a published Indian grid upstream study"
+                    className="h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                  />
+                </label>
+              </div>
+              <p className="text-[11px] text-brand-muted mt-1.5">
+                The fuel burned to generate the electricity, before it reaches the grid. Nobody
+                publishes this for India, so it is left out until you give a figure — never
+                guessed, and never borrowed from another country&rsquo;s grid.
               </p>
             </div>
           </div>

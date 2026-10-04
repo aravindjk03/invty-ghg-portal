@@ -59,6 +59,9 @@ export async function calculateInventory(
      *  Without both, Category 3 reports the line as not derived rather than
      *  inventing a rate. */
     tdLossRate?: number; tdLossRateSource?: string;
+    /** The upstream emissions of purchased electricity, in kgCO2e per kWh, and
+     *  where the figure came from. No set publishes one for India. */
+    electricityWttFactor?: number; electricityWttSource?: string;
   },
   signal?: AbortSignal,
 ): Promise<InventoryResult> {
@@ -75,6 +78,8 @@ export async function calculateInventory(
         scope2_view: options.scope2View ?? 'location',
         td_loss_rate: options.tdLossRate,
         td_loss_rate_source: options.tdLossRateSource,
+        electricity_wtt_factor: options.electricityWttFactor,
+        electricity_wtt_source: options.electricityWttSource,
       }),
     });
   } catch (error) {

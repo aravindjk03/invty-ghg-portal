@@ -65,6 +65,13 @@ class InventoryRequest(_Strict):
     td_loss_rate: Optional[Decimal] = Field(default=None, ge=0, lt=1)
     td_loss_rate_source: str = Field(default="", max_length=300)
 
+    # The upstream emissions of purchased electricity: the fuel burned to
+    # generate it, before it reaches the grid. No set publishes this for India,
+    # so a company that holds a figure gives it here, with its source, and the
+    # line is worked out for them. In kgCO2e per kWh.
+    electricity_wtt_factor: Optional[Decimal] = Field(default=None, ge=0)
+    electricity_wtt_source: str = Field(default="", max_length=300)
+
 
 # --- response ---------------------------------------------------------------
 
@@ -268,9 +275,37 @@ def _is_fuel(published_name: str, ghg_category: str) -> bool:
 #: record the customer sent and the browser can tell what produced it.
 WTT_SUFFIX = "::wtt"
 TD_SUFFIX = "::td"
+WTT_ELEC_SUFFIX = "::wtt-elec"
+
+#: A record whose id already ends in one of these is itself a derived line, or
+#: is pretending to be. Deriving from it again would produce two lines with the
+#: same id, and the browser keeps one per id - so a row would quietly show
+#: somebody else's number.
+DERIVED_SUFFIXES = (WTT_SUFFIX, TD_SUFFIX, WTT_ELEC_SUFFIX)
 
 
-def derive_category_3(request: InventoryRequest, records: list[ActivityRecord]):
+def _already_derived(record_id: str) -> bool:
+    return record_id.endswith(DERIVED_SUFFIXES)
+
+
+def _free_id(wanted: str, taken: set[str]) -> str:
+    """`wanted`, or the next spelling of it nobody is using.
+
+    A line's id is how the browser puts a figure back on a row, so two lines
+    with one id means a row quietly showing somebody else's number. Record ids
+    come from the browser and could be anything, including something that
+    looks exactly like a derived one.
+    """
+    candidate, suffix = wanted, 2
+    while candidate in taken:
+        candidate = f"{wanted}-{suffix}"
+        suffix += 1
+    taken.add(candidate)
+    return candidate
+
+
+def derive_category_3(request: InventoryRequest, records: list[ActivityRecord],
+                      reporting_year: int = 2025):
     """The Category 3 lines that follow from what has already been recorded.
 
     Scope 3 Category 3 is fuel- and energy-related activity that is not in
@@ -293,6 +328,8 @@ def derive_category_3(request: InventoryRequest, records: list[ActivityRecord]):
     of its sources is worse than one that says which.
     """
     counterparts = wtt_counterparts()
+    supplied: list[EmissionFactor] = []
+    taken = {record.record_id for record in records}
     # The published name of each activity, so a derived line can say which fuel
     # it came from. Five lines all reading "the well-to-tank factor for this
     # fuel" tell the reader nothing about which five.
@@ -305,6 +342,8 @@ def derive_category_3(request: InventoryRequest, records: list[ActivityRecord]):
     loss_cited = bool(request.td_loss_rate_source.strip())
 
     for record in records:
+        if _already_derived(record.record_id):
+            continue
         if record.scope == "1":
             upstream = counterparts.get(record.activity_key)
             if upstream is None:
@@ -323,13 +362,14 @@ def derive_category_3(request: InventoryRequest, records: list[ActivityRecord]):
                     reason=f"{fuel}: no published well-to-tank factor covers this fuel, "
                            f"so the upstream emissions of buying it are not included."))
                 continue
+            line_id = _free_id(f"{record.record_id}{WTT_SUFFIX}", taken)
             derived_records.append(replace(
-                record, record_id=f"{record.record_id}{WTT_SUFFIX}",
+                record, record_id=line_id,
                 activity_key=upstream, scope="3", ghg_category="3.3",
                 scope2_view=None))
             fuel = names.get(record.activity_key, "this fuel")
             derived.append(DerivedOut(
-                record_id=f"{record.record_id}{WTT_SUFFIX}",
+                record_id=line_id,
                 from_record_id=record.record_id, kind="wtt_fuel",
                 basis=f"{fuel}: the published well-to-tank factor, on the "
                       f"{record.value} {record.unit or ''} already recorded in Scope 1."))
@@ -344,40 +384,70 @@ def derive_category_3(request: InventoryRequest, records: list[ActivityRecord]):
                 continue
             # C x L / (1 - L): the generation needed to deliver what was used.
             lost = (record.value or D(0)) * loss_rate / (D(1) - loss_rate)
+            line_id = _free_id(f"{record.record_id}{TD_SUFFIX}", taken)
             derived_records.append(replace(
-                record, record_id=f"{record.record_id}{TD_SUFFIX}",
+                record, record_id=line_id,
                 value=lost, scope="3", ghg_category="3.3", scope2_view=None))
             # The line is calculated from the exact figure; only this sentence
             # is rounded, because nobody reads 117975.9036144578313253012048.
             shown = lost.quantize(D(1))
             percent = (loss_rate * 100).normalize()
             derived.append(DerivedOut(
-                record_id=f"{record.record_id}{TD_SUFFIX}",
+                record_id=line_id,
                 from_record_id=record.record_id, kind="td_losses",
                 basis=f"{shown:,} {record.unit or ''} lost in transmission and "
                       f"distribution at a rate of {percent}% of generation, at the same "
                       f"published grid factor. Source: "
                       f"{request.td_loss_rate_source.strip()}"))
 
-    if any(record.scope == "2" for record in records):
+    # The upstream of purchased electricity, if the company holds a figure for
+    # it. Nobody publishes one for the Indian grid, so this is the only honest
+    # way to include it - and with the source, the same rule as everywhere else.
+    wtt_factor = request.electricity_wtt_factor
+    wtt_cited = bool(request.electricity_wtt_source.strip())
+    electricity = [record for record in records
+                   if record.scope == "2" and record.scope2_view != "market"
+                   and record.unit and record.value
+                   and not _already_derived(record.record_id)]
+
+    if electricity and (wtt_factor is None or not wtt_cited):
         not_derived.append(NotDerivedOut(
             from_record_id="", kind="wtt_electricity",
             reason="No published set gives the upstream emissions of Indian grid "
                    "electricity - the fuel burned to generate it, before it reaches "
-                   "the grid. Record it as your own figure if you hold one."))
+                   "the grid. Enter the figure your company holds, with its source, "
+                   "and this line is worked out for you."))
+    elif electricity:
+        for record in electricity:
+            line_id = _free_id(f"{record.record_id}{WTT_ELEC_SUFFIX}", taken)
+            supplied.append(supplied_factor(
+                replace(record, record_id=line_id),
+                wtt_factor, record.unit or "kWh",
+                request.electricity_wtt_source.strip(), reporting_year))
+            derived_records.append(replace(
+                record, record_id=line_id,
+                activity_key=f"{SUPPLIED_PREFIX}{line_id}",
+                scope="3", ghg_category="3.3", scope2_view=None))
+            derived.append(DerivedOut(
+                record_id=line_id,
+                from_record_id=record.record_id, kind="wtt_electricity",
+                basis=f"The upstream of {record.value} {record.unit} of purchased "
+                      f"electricity at {wtt_factor} kgCO2e per {record.unit}. "
+                      f"Source: {request.electricity_wtt_source.strip()}"))
 
-    return derived_records, derived, not_derived
+    return derived_records, derived, not_derived, supplied
 
 
 def calculate_inventory(request: InventoryRequest, gwp_source: str) -> InventoryResponse:
     records = to_records(request)
-    derived_records, derived, not_derived = derive_category_3(request, records)
+    derived_records, derived, not_derived, derived_supplied = derive_category_3(
+        request, records, request.reporting_year)
     run = run_inventory(
         records + derived_records,
         gwp_set_name=request.gwp_set,
         reporting_year=request.reporting_year,
         scope2_view=request.scope2_view,
-        supplied=supplied_factors(request, records),
+        supplied=supplied_factors(request, records) + derived_supplied,
     )
     response = to_response(run, request, gwp_source)
     response.derived = derived

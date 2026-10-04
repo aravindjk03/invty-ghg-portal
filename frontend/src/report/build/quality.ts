@@ -243,11 +243,11 @@ export function runQaQc(
       ? `Period recorded as ${meta.periodStart} to ${meta.periodEnd}.`
       : 'Start and end dates of the reporting period have not been recorded.');
 
-  // A factor with no ingested value contributes nothing and must not be reported
-  // as though it were quantified.
-  const unvalued = entries.filter((entry) =>
-    entry.customFactorOverride === undefined
-    && !((entry.emissionFactor?.factorValue ?? 0) > 0));
+  // A row the engine could not put a factor behind contributes nothing and must
+  // not be reported as though it were quantified. Judged on the factor the
+  // ENGINE used: the catalogue carries a value of its own so its picker can
+  // show one, and a row that never reached a factor would otherwise pass.
+  const unvalued = entries.filter((entry) => entry.engineFactorValue === undefined);
   add('QC-15', 'Every factor used has an ingested published value',
     entries.length === 0 ? 'not_possible' : unvalued.length === 0 ? 'pass' : 'fail',
     entries.length === 0 ? 'No records held.'

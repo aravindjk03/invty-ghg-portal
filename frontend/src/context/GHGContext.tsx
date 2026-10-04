@@ -32,6 +32,14 @@ interface GHGContextType {
   tdLoss: { rate?: number; source: string };
   setTdLoss: (loss: { rate?: number; source: string }) => void;
   /**
+   * The upstream emissions of purchased electricity — the fuel burned to
+   * generate it, before it reaches the grid — in kgCO2e per kWh, with its
+   * source. No published set gives one for India, so a company that holds a
+   * figure supplies it and Category 3 includes the line.
+   */
+  electricityWtt: { factor?: number; source: string };
+  setElectricityWtt: (wtt: { factor?: number; source: string }) => void;
+  /**
    * Scope 3 Category 3, worked out from the Scope 1 and Scope 2 rows rather
    * than entered: what was derived, what could not be and why, and the total.
    */
@@ -308,6 +316,24 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // A browser refusing storage must not stop the page working.
     }
   }, [tdLoss]);
+
+  const [electricityWtt, setElectricityWtt] = useState<{ factor?: number; source: string }>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_ELEC_WTT`);
+      const parsed = saved ? JSON.parse(saved) : null;
+      return parsed && typeof parsed.source === 'string' ? parsed : { source: '' };
+    } catch {
+      return { source: '' };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_ELEC_WTT`, JSON.stringify(electricityWtt));
+    } catch {
+      // As above.
+    }
+  }, [electricityWtt]);
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
 
@@ -513,7 +539,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
 
   const reportingYear = useMemo(() => reportingYearOf(period), [period]);
 
-  const engine = useEngineInventory(allEntries, gwpSet, reportingYear, tdLoss);
+  const engine = useEngineInventory(allEntries, gwpSet, reportingYear, tdLoss, electricityWtt);
   const methods = useMethodResults(methodEntries, gwpSet);
 
   const addMethodEntry = useCallback((method: MethodKey, label?: string): string => {
@@ -826,6 +852,8 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         setPeriod,
         tdLoss,
         setTdLoss,
+        electricityWtt,
+        setElectricityWtt,
         category3,
         boundaryApproach,
         steelMethod,

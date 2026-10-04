@@ -8,7 +8,7 @@
  */
 import Decimal from 'decimal.js';
 import { parseIndianNumber } from './unitConverter';
-import { ActivityEntry, QualityGrade } from '../types/ghg';
+import { ActivityEntry, EmissionFactor, QualityGrade } from '../types/ghg';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_EVEN });
 
@@ -50,11 +50,26 @@ export function calculateDataQualityGrade(entries: ActivityEntry[]): QualityGrad
   let count = 0;
 
   for (const entry of entries) {
-    // Rows that compute to zero still count. A source whose factor has not been
-    // ingested contributes nothing to the total but everything to the question
+    // Rows that compute to zero still count. A source the engine could not
+    // calculate contributes nothing to the total but everything to the question
     // of how good this inventory is, so it is scored as Estimated.
-    const hasFactor = (entry.customFactorOverride ?? entry.emissionFactor?.factorValue ?? 0) > 0;
-    const tier = hasFactor ? (entry.emissionFactor?.qualityTier || 'Secondary') : 'Estimated';
+    //
+    // Graded on what the ENGINE used, not on the value the catalogue ships for
+    // its picker: a row carrying a catalogue number the engine never reached
+    // would otherwise be scored as though it had a published factor behind it,
+    // and flatter the grade.
+    const engineFactor = entry.engineFactorValue;
+    const supplied = (entry.engineFactorSource || '').startsWith('Supplied by');
+    let tier: EmissionFactor['qualityTier'];
+    if (engineFactor === undefined) {
+      tier = 'Estimated';
+    } else if (supplied) {
+      // The company's own documented figure for its own purchase — a contract
+      // rate or a supplier's EPD — which the Protocol ranks above an average.
+      tier = 'Primary';
+    } else {
+      tier = entry.emissionFactor?.qualityTier || 'Secondary';
+    }
     totalScore = totalScore.plus(new Decimal(scoreMap[tier] || 3));
     count++;
   }
