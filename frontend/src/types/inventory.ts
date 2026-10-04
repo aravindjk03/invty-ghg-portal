@@ -80,6 +80,21 @@ export const LineSchema = z.object({
 });
 export type InventoryLine = z.infer<typeof LineSchema>;
 
+/** A Category 3 line the engine worked out rather than being told. */
+export const DerivedSchema = z.object({
+  record_id: z.string(),
+  from_record_id: z.string(),
+  kind: z.string(),
+  basis: z.string(),
+});
+
+/** A Category 3 line that could NOT be worked out, and why. */
+export const NotDerivedSchema = z.object({
+  from_record_id: z.string(),
+  kind: z.string(),
+  reason: z.string(),
+});
+
 export const InventoryResponseSchema = z.object({
   run_id: z.string(),
   engine_version: z.string(),
@@ -100,6 +115,8 @@ export const InventoryResponseSchema = z.object({
     memo: z.record(z.string()),
   }),
   excluded: z.array(z.record(z.unknown())),
+  derived: z.array(DerivedSchema).default([]),
+  not_derived: z.array(NotDerivedSchema).default([]),
 });
 export type InventoryResult = z.infer<typeof InventoryResponseSchema>;
 

@@ -23,6 +23,23 @@ interface GHGContextType {
   /** The period the WHOLE inventory covers: one setting, every scope. */
   period: ReportingPeriod;
   setPeriod: (period: ReportingPeriod) => void;
+  /**
+   * The transmission and distribution loss rate published for this grid or
+   * utility, as a fraction, and where it came from. Scope 3 Category 3 needs
+   * it to work out the electricity paid for and never received; India's rates
+   * vary several-fold by state, so it is the customer's figure, not ours.
+   */
+  tdLoss: { rate?: number; source: string };
+  setTdLoss: (loss: { rate?: number; source: string }) => void;
+  /**
+   * Scope 3 Category 3, worked out from the Scope 1 and Scope 2 rows rather
+   * than entered: what was derived, what could not be and why, and the total.
+   */
+  category3: {
+    tco2e: number;
+    derived: Array<{ record_id: string; from_record_id: string; kind: string; basis: string }>;
+    notDerived: Array<{ from_record_id: string; kind: string; reason: string }>;
+  };
   boundaryApproach: ConsolidationBoundary;
   steelMethod: IntegratedSteelMethod;
   setCompanyName: (name: string) => void;
@@ -273,6 +290,24 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [period]);
 
   const reportingPeriod = useMemo(() => periodLabel(period), [period]);
+
+  const [tdLoss, setTdLoss] = useState<{ rate?: number; source: string }>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_TD_LOSS`);
+      const parsed = saved ? JSON.parse(saved) : null;
+      return parsed && typeof parsed.source === 'string' ? parsed : { source: '' };
+    } catch {
+      return { source: '' };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_TD_LOSS`, JSON.stringify(tdLoss));
+    } catch {
+      // A browser refusing storage must not stop the page working.
+    }
+  }, [tdLoss]);
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
 
@@ -478,7 +513,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
 
   const reportingYear = useMemo(() => reportingYearOf(period), [period]);
 
-  const engine = useEngineInventory(allEntries, gwpSet, reportingYear);
+  const engine = useEngineInventory(allEntries, gwpSet, reportingYear, tdLoss);
   const methods = useMethodResults(methodEntries, gwpSet);
 
   const addMethodEntry = useCallback((method: MethodKey, label?: string): string => {
@@ -506,6 +541,14 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   }, []);
 
   /** Engine result per record, in tonnes, with the reason when there is none. */
+  // Category 3 is derived by the engine from what is already recorded, so the
+  // page reports it rather than asking for it twice.
+  const category3 = useMemo(() => ({
+    tco2e: Number(engine.result?.totals.scope3_by_category?.['3.3'] ?? 0) / 1000,
+    derived: engine.result?.derived ?? [],
+    notDerived: engine.result?.not_derived ?? [],
+  }), [engine.result]);
+
   const engineByRecord = useMemo(() => {
     const map = new Map<string, {
       tco2e: number; warning?: string;
@@ -781,6 +824,9 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         reportingPeriod,
         period,
         setPeriod,
+        tdLoss,
+        setTdLoss,
+        category3,
         boundaryApproach,
         steelMethod,
         setCompanyName,

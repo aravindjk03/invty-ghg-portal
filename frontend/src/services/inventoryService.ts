@@ -53,7 +53,13 @@ export async function searchActivities(
 
 export async function calculateInventory(
   records: InventoryRecordInput[],
-  options: { gwpSet: GwpSetName; reportingYear: number; scope2View?: 'location' | 'market' },
+  options: {
+    gwpSet: GwpSetName; reportingYear: number; scope2View?: 'location' | 'market';
+    /** The published loss rate for the grid or utility, and where it came from.
+     *  Without both, Category 3 reports the line as not derived rather than
+     *  inventing a rate. */
+    tdLossRate?: number; tdLossRateSource?: string;
+  },
   signal?: AbortSignal,
 ): Promise<InventoryResult> {
   let response: Response;
@@ -67,6 +73,8 @@ export async function calculateInventory(
         gwp_set: options.gwpSet,
         reporting_year: options.reportingYear,
         scope2_view: options.scope2View ?? 'location',
+        td_loss_rate: options.tdLossRate,
+        td_loss_rate_source: options.tdLossRateSource,
       }),
     });
   } catch (error) {

@@ -137,6 +137,7 @@ export function recordsFor(entries: ActivityEntry[]): {
 
 export function useEngineInventory(
   entries: ActivityEntry[], gwpSet: GwpSetName, reportingYear: number,
+  tdLoss?: { rate?: number; source?: string },
 ): EngineInventory {
   const [result, setResult] = useState<InventoryResult | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -145,7 +146,7 @@ export function useEngineInventory(
 
   const { records, unmapped } = useMemo(() => recordsFor(entries), [entries]);
 
-  const fingerprint = JSON.stringify([records, gwpSet, reportingYear]);
+  const fingerprint = JSON.stringify([records, gwpSet, reportingYear, tdLoss]);
 
   useEffect(() => {
     if (records.length === 0) {
@@ -158,7 +159,10 @@ export function useEngineInventory(
     abort.current = controller;
     setLoading(true);
 
-    calculateInventory(records, { gwpSet, reportingYear }, controller.signal)
+    calculateInventory(records, {
+      gwpSet, reportingYear,
+      tdLossRate: tdLoss?.rate, tdLossRateSource: tdLoss?.source,
+    }, controller.signal)
       .then((calculated) => { setResult(calculated); setError(undefined); })
       .catch((caught: Error) => {
         if (caught.name === 'AbortError') return;

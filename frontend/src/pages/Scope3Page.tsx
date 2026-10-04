@@ -15,8 +15,7 @@ import {
   ArrowRight, 
   Plus, 
   Filter, 
-  Calculator 
-} from 'lucide-react';
+  Calculator, Check } from 'lucide-react';
 import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 
 interface Scope3PageProps {
@@ -61,6 +60,9 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
     duplicateRow,
     saveToStorage,
     period,
+    category3,
+    tdLoss,
+    setTdLoss,
   } = useGHG();
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
@@ -185,35 +187,100 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border">
                 <h3 className="text-sm font-bold text-brand-heading flex items-center gap-2">
                   Category 3: Fuel- and Energy-Related Activities
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                    Record as rows
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                    Derived
                   </span>
                 </h3>
                 <span className="text-sm font-mono font-bold text-brand-heading">
-                  {formatIndianNumber(cat3Recorded)} tCO₂e recorded
+                  {formatIndianNumber(category3.tco2e + cat3Recorded)} tCO₂e
                 </span>
               </div>
+
               <p className="text-xs text-brand-muted mt-2 leading-relaxed">
-                This category used to be derived automatically as 18% of Scope 1 plus 12% and 19% of
-                Scope 2. Those percentages had no published source, and they made this page disagree
-                with the report, so they have been removed. Well-to-tank and transmission losses are
-                now recorded as their own rows, each against a published factor — the DESNZ
-                &ldquo;WTT-&rdquo; factors and the CEA transmission loss rate are both in the library.
+                Worked out from the rows already recorded in Scope 1 and Scope 2, by the same
+                engine and against the same published factors. Nothing here is a percentage of
+                another total: the upstream emissions of a fuel are DESNZ&rsquo;s published
+                well-to-tank factor applied to the quantity already entered, and the losses are
+                the generation needed to deliver what the meter received.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of fuels burned</span>
-                  <span className="text-[11px] text-brand-body">Search &ldquo;WTT- fuels&rdquo; when adding a row.</span>
+
+              {category3.derived.length > 0 && (
+                <ul className="mt-3 flex flex-col gap-1.5">
+                  {category3.derived.map((item) => (
+                    <li key={item.record_id} className="flex gap-2 items-start text-[11.5px]">
+                      <Check size={13} className="text-status-success shrink-0 mt-0.5" />
+                      <span className="text-brand-body">{item.basis}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {category3.notDerived.length > 0 && (
+                <div className="mt-3 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2">
+                  <p className="text-[11.5px] font-semibold text-[#8A5A00]">
+                    Not included, and why — a category that covers only some of its sources has
+                    to say which:
+                  </p>
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {/* One line per reason, not per row: ten rows of the same
+                        unmapped fuel is one thing to tell the reader. */}
+                    {Array.from(new Set(category3.notDerived.map((item) => item.reason)))
+                      .map((reason) => (
+                        <li key={reason} className="text-[11.5px] text-[#8A5A00]">
+                          {reason}
+                        </li>
+                      ))}
+                  </ul>
                 </div>
-                <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of purchased electricity</span>
-                  <span className="text-[11px] text-brand-body">Search &ldquo;WTT- electricity&rdquo;.</span>
-                </div>
-                <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">Transmission and distribution</span>
-                  <span className="text-[11px] text-brand-body">Search &ldquo;T&amp;D&rdquo;, or use the CEA loss rate for India.</span>
-                </div>
+              )}
+
+              {/*
+                The loss rate unlocks the second half of this category. It is
+                published for each grid and each utility and varies several-fold
+                across India, so it is the customer's figure with the customer's
+                source — never a default this product picked.
+              */}
+              <div className="mt-4 pt-3 border-t border-border flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-semibold text-brand-body">
+                    Transmission &amp; distribution loss rate
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="99"
+                      value={tdLoss.rate === undefined ? '' : (tdLoss.rate * 100).toFixed(1)}
+                      onChange={(event) => {
+                        const percent = parseFloat(event.target.value);
+                        setTdLoss({
+                          ...tdLoss,
+                          rate: Number.isFinite(percent) && percent >= 0 && percent < 100
+                            ? percent / 100 : undefined,
+                        });
+                      }}
+                      placeholder="e.g. 17.0"
+                      className="w-24 h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                    />
+                    <span className="text-[11px] text-brand-muted">% of generation</span>
+                  </span>
+                </label>
+                <label className="flex flex-col gap-1 flex-1 min-w-[16rem]">
+                  <span className="text-[11px] font-semibold text-brand-body">Where it came from</span>
+                  <input
+                    type="text"
+                    value={tdLoss.source}
+                    onChange={(event) => setTdLoss({ ...tdLoss, source: event.target.value })}
+                    placeholder="e.g. CEA, Growth of Electricity Sector in India 2025, Table 4.3"
+                    className="h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                  />
+                </label>
               </div>
+              <p className="text-[11px] text-brand-muted mt-1.5">
+                Both are needed. A rate with nowhere to trace it to is indistinguishable from an
+                invented one, so without the source the line is left out and said to be left out.
+              </p>
             </div>
           </div>
         </Card>

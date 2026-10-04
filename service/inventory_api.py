@@ -8,6 +8,7 @@ and the totals leave it out.
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 from typing import Literal, Optional
 
@@ -15,9 +16,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ghg_core.engine import ActivityRecord, CalculationRun
 from ghg_core.factors import EmissionFactor
+from ghg_core.quantities import D
 
 from .inventory import (GWP_SETS, SUPPLIED_PREFIX, activities_for, load_catalogue_map,
-                        run_inventory, supplied_factor)
+                        run_inventory, supplied_factor, wtt_counterparts)
 
 
 class _Strict(BaseModel):
@@ -56,6 +58,13 @@ class InventoryRequest(_Strict):
     reporting_year: int = Field(ge=1990, le=2100)
     scope2_view: Literal["location", "market"] = "location"
 
+    # Category 3 includes the electricity lost between the power station and
+    # the meter. The rate is a published figure for the grid or the utility -
+    # it varies several-fold across India - so it is the customer's to give,
+    # with the source, rather than a number this service invents.
+    td_loss_rate: Optional[Decimal] = Field(default=None, ge=0, lt=1)
+    td_loss_rate_source: str = Field(default="", max_length=300)
+
 
 # --- response ---------------------------------------------------------------
 
@@ -91,6 +100,21 @@ class TotalsOut(_Strict):
     memo: dict[str, str]
 
 
+class DerivedOut(_Strict):
+    """One Category 3 line this service worked out rather than being told."""
+    record_id: str
+    from_record_id: str
+    kind: str
+    basis: str
+
+
+class NotDerivedOut(_Strict):
+    """A Category 3 line that could NOT be worked out, and why."""
+    from_record_id: str
+    kind: str
+    reason: str
+
+
 class InventoryResponse(_Strict):
     run_id: str
     engine_version: str
@@ -101,6 +125,11 @@ class InventoryResponse(_Strict):
     lines: list[LineOut]
     totals: TotalsOut
     excluded: list[dict]
+    #: Category 3 lines derived from the Scope 1 and Scope 2 rows, and the ones
+    #: that could not be. Both are reported: a category that silently covers
+    #: some of its sources is worse than one that says which.
+    derived: list[DerivedOut] = Field(default_factory=list)
+    not_derived: list[NotDerivedOut] = Field(default_factory=list)
 
 
 class CatalogueMappingOut(_Strict):
@@ -220,16 +249,141 @@ def supplied_factors(request: InventoryRequest,
     return built
 
 
+#: Which Scope 1 rows are a fuel purchase, and so have a well-to-tank at all.
+#: Categories 1.1 and 1.2 are stationary and mobile combustion; 1.3 and 1.4 are
+#: process and fugitive, whose upstream sits in Category 1 as a purchased good.
+FUEL_CATEGORIES = ("1.1", "1.2")
+
+
+def _is_fuel(published_name: str, ghg_category: str) -> bool:
+    name = published_name.replace("�", "/").replace("—", "/").replace("–", "/")
+    if name.startswith(("Fuels /", "Fuels ", "Bioenergy /", "Bioenergy ")):
+        return True
+    if name.startswith(("Stationary combustion", "Coal", "Other primary solid biomass")):
+        return True
+    return ghg_category in FUEL_CATEGORIES
+
+
+#: How a derived Category 3 record is named, so it can never collide with a
+#: record the customer sent and the browser can tell what produced it.
+WTT_SUFFIX = "::wtt"
+TD_SUFFIX = "::td"
+
+
+def derive_category_3(request: InventoryRequest, records: list[ActivityRecord]):
+    """The Category 3 lines that follow from what has already been recorded.
+
+    Scope 3 Category 3 is fuel- and energy-related activity that is not in
+    Scope 1 or Scope 2:
+
+      the upstream emissions of every fuel burned on site - extracting,
+      refining and delivering it - which DESNZ publishes for each of its
+      fuels, so a plant that has recorded its diesel has already said
+      everything needed to work this out;
+
+      the electricity lost between the power station and the meter, which the
+      site paid for and never received. The naive consumption x loss rate
+      understates it: to deliver C with a loss rate L the grid must generate
+      C / (1 - L), so the loss is C x L / (1 - L). India's rate is high, so
+      the difference is not academic.
+
+    What CANNOT be derived is reported as well. Nobody publishes an upstream
+    factor for Indian grid electricity, and the loss rate belongs to the grid
+    or the utility, not to this service. A category that silently covers some
+    of its sources is worse than one that says which.
+    """
+    counterparts = wtt_counterparts()
+    # The published name of each activity, so a derived line can say which fuel
+    # it came from. Five lines all reading "the well-to-tank factor for this
+    # fuel" tell the reader nothing about which five.
+    names = {activity.activity_key: activity.name for activity in activities_for()}
+    derived_records: list[ActivityRecord] = []
+    derived: list[DerivedOut] = []
+    not_derived: list[NotDerivedOut] = []
+
+    loss_rate = request.td_loss_rate
+    loss_cited = bool(request.td_loss_rate_source.strip())
+
+    for record in records:
+        if record.scope == "1":
+            upstream = counterparts.get(record.activity_key)
+            if upstream is None:
+                # Only a FUEL has a well-to-tank. A refrigerant leak or a
+                # calcination reaction has upstream emissions too, but they
+                # belong to Category 1 as a purchased good - saying "no
+                # well-to-tank factor covers this fuel" about a cylinder of
+                # HFC-134a would be noise about something that was never
+                # missing.
+                if not _is_fuel(names.get(record.activity_key, ""),
+                                record.ghg_category):
+                    continue
+                fuel = names.get(record.activity_key, record.activity_key)
+                not_derived.append(NotDerivedOut(
+                    from_record_id=record.record_id, kind="wtt_fuel",
+                    reason=f"{fuel}: no published well-to-tank factor covers this fuel, "
+                           f"so the upstream emissions of buying it are not included."))
+                continue
+            derived_records.append(replace(
+                record, record_id=f"{record.record_id}{WTT_SUFFIX}",
+                activity_key=upstream, scope="3", ghg_category="3.3",
+                scope2_view=None))
+            fuel = names.get(record.activity_key, "this fuel")
+            derived.append(DerivedOut(
+                record_id=f"{record.record_id}{WTT_SUFFIX}",
+                from_record_id=record.record_id, kind="wtt_fuel",
+                basis=f"{fuel}: the published well-to-tank factor, on the "
+                      f"{record.value} {record.unit or ''} already recorded in Scope 1."))
+
+        elif record.scope == "2" and record.scope2_view != "market":
+            if loss_rate is None or not loss_cited:
+                not_derived.append(NotDerivedOut(
+                    from_record_id=record.record_id, kind="td_losses",
+                    reason="Transmission and distribution losses need the loss rate "
+                           "published for your grid or utility, and where it came "
+                           "from. Enter both and this line is worked out for you."))
+                continue
+            # C x L / (1 - L): the generation needed to deliver what was used.
+            lost = (record.value or D(0)) * loss_rate / (D(1) - loss_rate)
+            derived_records.append(replace(
+                record, record_id=f"{record.record_id}{TD_SUFFIX}",
+                value=lost, scope="3", ghg_category="3.3", scope2_view=None))
+            # The line is calculated from the exact figure; only this sentence
+            # is rounded, because nobody reads 117975.9036144578313253012048.
+            shown = lost.quantize(D(1))
+            percent = (loss_rate * 100).normalize()
+            derived.append(DerivedOut(
+                record_id=f"{record.record_id}{TD_SUFFIX}",
+                from_record_id=record.record_id, kind="td_losses",
+                basis=f"{shown:,} {record.unit or ''} lost in transmission and "
+                      f"distribution at a rate of {percent}% of generation, at the same "
+                      f"published grid factor. Source: "
+                      f"{request.td_loss_rate_source.strip()}"))
+
+    if any(record.scope == "2" for record in records):
+        not_derived.append(NotDerivedOut(
+            from_record_id="", kind="wtt_electricity",
+            reason="No published set gives the upstream emissions of Indian grid "
+                   "electricity - the fuel burned to generate it, before it reaches "
+                   "the grid. Record it as your own figure if you hold one."))
+
+    return derived_records, derived, not_derived
+
+
 def calculate_inventory(request: InventoryRequest, gwp_source: str) -> InventoryResponse:
     records = to_records(request)
+    derived_records, derived, not_derived = derive_category_3(request, records)
     run = run_inventory(
-        records,
+        records + derived_records,
         gwp_set_name=request.gwp_set,
         reporting_year=request.reporting_year,
         scope2_view=request.scope2_view,
         supplied=supplied_factors(request, records),
     )
-    return to_response(run, request, gwp_source)
+    response = to_response(run, request, gwp_source)
+    response.derived = derived
+    response.not_derived = not_derived
+    return response
+
 
 
 def list_activities(scope: Optional[str], region: Optional[str], search: Optional[str],

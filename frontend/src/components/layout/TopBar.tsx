@@ -505,7 +505,12 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             </h4>
             <ul className="list-disc pl-5 space-y-1.5">
               <li><strong>Scope 2 Dual Reporting:</strong> Location-based and market-based figures are tracked side-by-side and never summed into the grand total.</li>
-              <li><strong>Auto-Derived Category 3:</strong> Well-to-tank (WTT) fuels and transmission loss emissions are automatically derived from Scope 1 and Scope 2 activity lines.</li>
+              <li><strong>Derived Category 3:</strong> The upstream emissions of every Scope 1 fuel are
+                derived from the quantity already recorded, against the published well-to-tank factor
+                for that fuel. Transmission and distribution losses are derived once the loss rate
+                published for your grid or utility is entered with its source. What cannot be derived
+                — no published set gives the upstream emissions of Indian grid electricity — is listed
+                on the Scope 3 page rather than quietly left out.</li>
               <li><strong>Out-of-Scope Memos:</strong> Biogenic CO₂ and Montreal Protocol ODS gases (R-22) are reported separately as memo items and never added to Scope 1 gross.</li>
               <li><strong>Precision Arithmetic:</strong> Decimal math is enforced to prevent IEEE 754 floating-point drift across large industrial inventories.</li>
             </ul>

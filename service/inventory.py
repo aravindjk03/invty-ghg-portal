@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import csv
 import functools
+import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -355,6 +356,67 @@ def run_inventory(
         gases=("CO2", "CH4", "N2O", "CO2e"),
         scope2_headline_view=scope2_view,
     )
+
+
+# --- Category 3: the emissions of getting the fuel to the gate --------------
+
+def _normalise_name(raw: str) -> str:
+    """A published name with its level separators written the same way."""
+    text = raw.replace("�", "/").replace("—", "/").replace("–", "/")
+    return re.sub(r"\s*/\s*", " / ", text).strip()
+
+
+def _wtt_names(fuel_name: str) -> Iterable[str]:
+    """What DESNZ might call the well-to-tank counterpart of this fuel.
+
+    The workbook puts the upstream tables under a "WTT- " prefix, lower-casing
+    the word it prefixes. For the Fuels tables only the first level is
+    prefixed; under Bioenergy the second is prefixed as well. Both forms are
+    tried and the one that exists wins, so the convention is read from the
+    data rather than assumed.
+    """
+    parts = fuel_name.split(" / ")
+    if not parts:
+        return
+    head = "WTT- " + parts[0][:1].lower() + parts[0][1:]
+    yield " / ".join([head] + parts[1:])
+    if len(parts) > 1:
+        middle = "WTT- " + parts[1][:1].lower() + parts[1][1:]
+        yield " / ".join([head, middle] + parts[2:])
+
+
+@functools.lru_cache(maxsize=1)
+def wtt_counterparts() -> dict[str, str]:
+    """Fuel activity key -> the activity key of its published upstream factor.
+
+    Scope 3 Category 3 includes the emissions of extracting, refining and
+    delivering every fuel burned in Scope 1. DESNZ publishes that figure for
+    each of its fuels, so it does not have to be asked for: a plant that has
+    recorded its diesel has already said everything needed to derive it.
+
+    Matched on the published NAME, the same discipline the catalogue map uses,
+    because a name can be checked against the workbook and an internal id
+    cannot. A fuel with no published counterpart is simply absent, and the
+    response says which ones those were rather than quietly reporting less.
+    """
+    _, activities = load_registry()
+    # Keyed on name AND unit. DESNZ publishes one activity per unit, and they
+    # all share a name: matching on the name alone would hand a row recorded in
+    # litres the upstream factor published per tonne, which the engine would
+    # then refuse for want of a density - or, worse, would not.
+    by_name_unit = {(_normalise_name(activity.name), activity.unit): activity.activity_key
+                    for activity in activities}
+    pairs: dict[str, str] = {}
+    for activity in activities:
+        name = _normalise_name(activity.name)
+        if not name.startswith(("Fuels / ", "Bioenergy / ")):
+            continue
+        for candidate in _wtt_names(name):
+            upstream = by_name_unit.get((candidate, activity.unit))
+            if upstream is not None:
+                pairs[activity.activity_key] = upstream
+                break
+    return pairs
 
 
 @dataclass(frozen=True)
