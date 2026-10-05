@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Select } from './Select';
+import { env } from '../../config/env';
 import { CustomerLead, LeadSubmissionPayload } from '../../types/leads.types';
 import { ShieldCheck, Lock, Download, CheckCircle2 } from 'lucide-react';
 
@@ -91,7 +92,7 @@ export const LeadGateModal: React.FC<LeadGateModalProps> = ({
     setIsSubmitting(true);
     try {
       // POST to backend lead capture API
-      await fetch('http://localhost:5000/api/v1/leads', {
+      await fetch(`${env.API_BASE_URL}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
