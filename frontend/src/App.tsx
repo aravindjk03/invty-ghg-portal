@@ -16,6 +16,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ de
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage').then((m) => ({ default: m.ShowcasePage })));
 const ProductCarbonPage = lazy(() => import('./pages/ProductCarbonPage').then((m) => ({ default: m.ProductCarbonPage })));
 const MethodsPage = lazy(() => import('./pages/MethodsPage').then((m) => ({ default: m.MethodsPage })));
+const FactorLibraryPage = lazy(() => import('./pages/FactorLibraryPage').then((m) => ({ default: m.FactorLibraryPage })));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then((m) => ({ default: m.AuditTrailPage })));
 
 // CBAMPage, BRSRPage, CEMSMonitorPage and SupplierPortalPage are intentionally
@@ -153,6 +154,8 @@ function MainApp() {
         return <DashboardPage onNavigate={navigate} />;
       case 'report':
         return <ReportPreviewPage onNavigate={navigate} />;
+      case 'factor-library':
+        return <FactorLibraryPage onNavigate={navigate} />;
       case 'audit-trail':
         return <AuditTrailPage onNavigate={navigate} />;
       case 'settings':

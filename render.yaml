@@ -45,6 +45,10 @@ services:
       # The server refuses to start in production on the development default.
       - key: JWT_SECRET
         generateValue: true
+      # The Google OAuth Web client ID (see SETUP-GOOGLE.md). Google sign-ins are
+      # only accepted when the token was issued to this client.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
       # How many AI product estimates a free account gets before it is asked to
       # upgrade. Changed here, never in the browser.
       - key: FREE_ESTIMATE_LIMIT

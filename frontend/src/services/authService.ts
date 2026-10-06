@@ -95,6 +95,17 @@ const SEED_ACCOUNTS: OfflineAccount[] = [
 
 const pendingOtps = new Map<string, string>();
 
+function decodeJwtPayload(token: string): { email?: string; name?: string; picture?: string } | null {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return null;
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decodeURIComponent(escape(json)));
+  } catch {
+    return null;
+  }
+}
+
 function normalizePhone(phone: string): string {
   return phone.replace(/[\s-]/g, '');
 }
@@ -218,6 +229,7 @@ export const authService = {
   // 3. Official Google Sign-In
   async googleAuth(payload: {
     credential?: string;
+    accessToken?: string;
     email?: string;
     name?: string;
     picture?: string;
@@ -229,6 +241,14 @@ export const authService = {
       ({ res, data } = await postJson('/auth/google', payload));
     } catch (err) {
       if (!(err instanceof NetworkUnavailableError)) throw err;
+      // No server to verify with: read the profile out of the ID token so the
+      // browser-only demo still works. This is never trusted by the API.
+      if (!payload.email && payload.credential) {
+        const claims = decodeJwtPayload(payload.credential);
+        if (claims) {
+          payload = { ...payload, email: claims.email, name: payload.name || claims.name, picture: payload.picture || claims.picture };
+        }
+      }
       if (!payload.email) throw new Error('Google sign-in failed.');
       const accounts = loadOfflineAccounts();
       let account = accounts.find((a) => a.user.email.toLowerCase() === payload.email!.toLowerCase());

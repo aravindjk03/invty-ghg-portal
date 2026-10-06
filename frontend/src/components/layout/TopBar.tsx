@@ -106,6 +106,14 @@ const NAV_ITEMS: NavItem[] = [
     activeIconStyle: { color: '#0284c7' },
   },
   {
+    icon: BookOpen,
+    label: 'Factors',
+    page: 'factor-library',
+    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(14,116,144,0.18))',
+    activeTextClass: 'text-cyan-700',
+    activeIconStyle: { color: '#0e7490' },
+  },
+  {
     icon: History,
     label: 'Audit Trail',
     page: 'audit-trail',

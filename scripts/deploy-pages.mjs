@@ -6,6 +6,8 @@
 // build time. Set them once they are hosted (see render.yaml):
 //   IINVTY_BACKEND_URL   e.g. https://iinvty-backend.onrender.com/api/v1
 //   IINVTY_AI_URL        e.g. https://iinvty-insity-edge-ai.onrender.com
+//   IINVTY_GOOGLE_CLIENT_ID  the OAuth Web client ID (see SETUP-GOOGLE.md);
+//                            without it the Google button explains it is not set up
 // Without them the published site points at localhost, so login and
 // INSITY EDGE AI only work on a computer running the servers locally.
 //
@@ -28,6 +30,7 @@ const repo = remote.replace(/\.git$/, '').split('/').pop();
 const env = { ...process.env, VITE_BASE_PATH: `/${repo}/` };
 if (process.env.IINVTY_BACKEND_URL) env.VITE_API_BASE_URL = process.env.IINVTY_BACKEND_URL;
 if (process.env.IINVTY_AI_URL) env.VITE_PCF_API_BASE_URL = process.env.IINVTY_AI_URL;
+if (process.env.IINVTY_GOOGLE_CLIENT_ID) env.VITE_GOOGLE_CLIENT_ID = process.env.IINVTY_GOOGLE_CLIENT_ID;
 if (!process.env.IINVTY_BACKEND_URL || !process.env.IINVTY_AI_URL) {
   console.warn('\n[deploy:pages] IINVTY_BACKEND_URL or IINVTY_AI_URL is not set: the published site\n' +
     'will call localhost for login and INSITY EDGE AI.\n');

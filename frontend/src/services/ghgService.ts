@@ -155,7 +155,7 @@ export const ghgService = {
 
     // Sheet 3: Emission Factors Reference
     const factorSheet = XLSX.utils.json_to_sheet(
-      DEFAULT_FACTORS.slice(0, 50).map((f) => ({
+      DEFAULT_FACTORS.map((f) => ({
         ID: f.id,
         Activity: f.fuelOrActivity,
         Scope: f.scope,
