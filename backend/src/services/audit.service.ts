@@ -33,7 +33,7 @@ function initializeLedger() {
     0,
     genesisTimestamp,
     'GENESIS',
-    'ORG-INVTY-001',
+    'ORG-IINVTY-001',
     'System Initializer',
     'Organization Boundary Established (Operational Control Approach)',
     '0000000000000000000000000000000000000000000000000000000000000000'
@@ -43,7 +43,7 @@ function initializeLedger() {
     blockIndex: 0,
     timestamp: genesisTimestamp,
     action: 'GENESIS',
-    entityId: 'ORG-INVTY-001',
+    entityId: 'ORG-IINVTY-001',
     actor: 'System Initializer',
     payloadSummary: 'Organization Boundary Established (Operational Control Approach)',
     previousBlockHash: '0000000000000000000000000000000000000000000000000000000000000000',

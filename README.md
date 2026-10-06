@@ -1,4 +1,4 @@
-# INVTY GHG Accounting Portal
+# IINVTY GHG Accounting Portal
 
 Enterprise-grade Greenhouse Gas (GHG) Accounting & Inventory Portal built with a soft-neumorphic design system adhering to GHG Protocol Corporate Standard, ISO 14064-1, and BRSR Core guidelines.
 

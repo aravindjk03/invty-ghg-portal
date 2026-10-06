@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useId, useMemo, useRef } from 'react';
 import { clsx } from 'clsx';
 import { ActivityEntry } from '../../types/ghg';
 import { 
@@ -13,14 +13,29 @@ import {
   Paperclip,
   Check
 } from 'lucide-react';
-import { DEFAULT_FACTORS } from '../../services/ghgService';
+import { CATALOGUE_SOURCES } from '../../data/catalogueData';
+import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../../data/factorCatalogue';
+import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
+import { useCatalogueMap } from '../../services/useCatalogueMap';
+import {
+  ReportingPeriod, isInPeriod, periodEnd, periodLabel,
+} from '../../report/reportingPeriod';
+import { METHOD_NAME, METHOD_NOT_IMPLEMENTED, methodFor } from '../../data/methodSources';
 
 export interface ActivityRowProps {
   entry: ActivityEntry;
   onUpdate: (updates: Partial<ActivityEntry>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  /** Lets a row send the user to the page that can actually calculate it. */
+  onNavigate?: (page: string) => void;
+  /**
+   * The period the whole inventory covers. Passed in rather than read from the
+   * context: a row importing the context makes a module cycle, which is why
+   * the catalogue map is a standalone hook as well.
+   */
+  period: ReportingPeriod;
 }
 
 export const ActivityRow: React.FC<ActivityRowProps> = ({
@@ -28,10 +43,16 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   onUpdate,
   onDelete,
   onDuplicate,
+  onNavigate,
+  period,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [displayResult, setDisplayResult] = useState(entry.calculatedTco2e);
   const [isOverridingFactor, setIsOverridingFactor] = useState(false);
+  const [showMonth, setShowMonth] = useState(false);
+  const [overrideFactorSource, setOverrideFactorSource] = useState(
+    entry.customFactorSource ?? '');
+  const [overrideError, setOverrideError] = useState<string | null>(null);
   const [overrideFactorValue, setOverrideFactorValue] = useState<string>(
     String(entry.emissionFactor.factorValue)
   );
@@ -62,20 +83,56 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     requestAnimationFrame(animate);
   }, [entry.calculatedTco2e]);
 
-  // Available fuel options for current category or scope
-  const categoryFactors = DEFAULT_FACTORS.filter(
-    (f) => f.category === entry.category || f.scope === entry.scope
+  // Only the sources that belong to THIS scope and category. A stationary
+  // combustion row offers fuels burned in fixed equipment, not refrigerants,
+  // grid electricity or air travel.
+  const groupedSources = useMemo(
+    () => groupedSourcesFor(entry.scope, entry.category),
+    [entry.scope, entry.category],
   );
+  const units = useMemo(() => unitsFor(entry.emissionFactor.id), [entry.emissionFactor.id]);
+  const catalogueMap = useCatalogueMap();
+  const monthFieldId = useId();
+  const factorUnverified = !isVerified(entry.emissionFactor.id)
+    && entry.customFactorOverride === undefined;
+  // The engine calculates a row only when it names a published factor.
+  const engineFactorAttached = Boolean(entry.engineActivityKey);
+  // Some sources cannot be a factor per unit at all. They are calculated as
+  // IPCC methods, on their own page, and counted in Scope 1 from there.
+  const method = methodFor(entry.emissionFactor?.id);
+  const methodNotImplemented = METHOD_NOT_IMPLEMENTED[entry.emissionFactor?.id ?? ''];
+  // What that factor is called. A row should never show a raw activity key.
+  const engineFactorName = useMemo(() => {
+    if (!entry.engineActivityKey) return undefined;
+    for (const rows of catalogueMap.values()) {
+      const match = rows.find((row) => row.activity_key === entry.engineActivityKey);
+      if (match) return `${match.engine_name} (per ${match.unit})`;
+    }
+    return undefined;
+  }, [catalogueMap, entry.engineActivityKey]);
 
   const handleFuelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedFactor = DEFAULT_FACTORS.find((f) => f.id === e.target.value);
-    if (selectedFactor) {
+    const source = CATALOGUE_SOURCES.find((item) => item.activity_key === e.target.value);
+    if (source) {
+      const selectedFactor = toEmissionFactor(source);
       onUpdate({
         fuelOrSource: selectedFactor.fuelOrActivity,
         emissionFactor: selectedFactor,
         unit: selectedFactor.unit,
+        customFactorOverride: undefined,
+        customFactorSource: undefined,
+        // The row is now about a different source, so whatever published factor
+        // it pointed at no longer applies. Clearing it lets the catalogue map
+        // attach the right one; keeping it would calculate diesel against the
+        // factor for coal.
+        engineActivityKey: undefined,
+        engineRegion: undefined,
+        factorChosenByUser: undefined,
+        warning: undefined,
       });
-      setOverrideFactorValue(String(selectedFactor.factorValue));
+      setOverrideFactorValue(source.verified ? String(selectedFactor.factorValue) : '');
+      setOverrideFactorSource('');
+      setOverrideError(null);
     }
   };
 
@@ -99,17 +156,30 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
 
   const handleSaveFactorOverride = () => {
     const parsed = parseFloat(overrideFactorValue);
-    if (!isNaN(parsed) && parsed >= 0) {
-      onUpdate({
-        emissionFactor: {
-          ...entry.emissionFactor,
-          factorValue: parsed,
-          qualityTier: 'Estimated',
-        },
-        customFactorOverride: parsed,
-      });
-      setIsOverridingFactor(false);
+    const source = overrideFactorSource.trim();
+    // The engine refuses a supplied factor with no source, so the row asks for
+    // one here rather than letting the whole inventory come back with an error.
+    if (isNaN(parsed) || parsed < 0) {
+      setOverrideError('Enter the factor as a number, in kgCO₂e per unit.');
+      return;
     }
+    if (!source) {
+      setOverrideError('Say where this factor came from — the contract, certificate '
+        + 'or supplier document. A verifier will ask, and the engine will not use '
+        + 'an unsourced number.');
+      return;
+    }
+    setOverrideError(null);
+    onUpdate({
+      emissionFactor: {
+        ...entry.emissionFactor,
+        factorValue: parsed,
+        qualityTier: 'Estimated',
+      },
+      customFactorOverride: parsed,
+      customFactorSource: source,
+    });
+    setIsOverridingFactor(false);
   };
 
   const tierColor = {
@@ -127,6 +197,57 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         onChange={handleEvidenceFileChange}
         className="hidden"
       />
+
+      {method && (
+        <div className="mb-2 rounded-md border border-blue-200 bg-blue-50/70 px-3 py-2 text-[11.5px] text-brand-body">
+          <strong>{METHOD_NAME[method]}</strong> cannot be a factor per unit of activity — it
+          depends on the region, the climate, or what happened in earlier years. It is
+          calculated on the IPCC methods page, and its total is already counted in Scope 1.
+          {onNavigate && (
+            <button
+              type="button"
+              onClick={() => onNavigate('methods')}
+              className="ml-1 font-semibold text-brand-link hover:underline"
+            >
+              Record it there →
+            </button>
+          )}
+        </div>
+      )}
+
+      {methodNotImplemented && (
+        <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
+          {methodNotImplemented}
+        </div>
+      )}
+
+      {!method && (['scope-1', 'scope-2', 'scope-3'] as const).includes(entry.scope as 'scope-1') && (
+        <EngineFactorPicker
+          scope={entry.scope.replace('scope-', '') as '1' | '2' | '3'}
+          hint={entry.fuelOrSource}
+          selectedKey={entry.engineActivityKey}
+          selectedName={engineFactorName}
+          onSelect={(activity) => onUpdate({
+            engineActivityKey: activity.activity_key,
+            engineRegion: activity.region,
+            // Their choice, so the catalogue map leaves it alone from here on.
+            factorChosenByUser: true,
+            unit: activity.unit,
+            fuelOrSource: entry.fuelOrSource || activity.name,
+          })}
+        />
+      )}
+
+      {factorUnverified && !entry.engineActivityKey && !method && !methodNotImplemented && (
+        <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
+          <strong>No published set covers this source.</strong> Some never will: a power purchase
+          agreement, a green tariff or a retired certificate is priced by contract, and the GHG
+          Protocol asks for that rate rather than a grid average. Choose{' '}
+          <em>Use my own emission factor</em> from the menu on this row, enter the rate and say
+          where it came from — the engine will then calculate it and the report will show it as
+          supplied by you. Until then the row contributes 0, so nothing made up reaches a total.
+        </div>
+      )}
 
       {/* Upper Control Grid (Strictly Aligned) */}
       <div className="grid grid-cols-12 gap-3 items-center w-full">
@@ -150,10 +271,14 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
             aria-label="Emission Source"
             className="w-full h-10 bg-surface-raised border border-border rounded-md px-3 text-xs md:text-sm text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600 cursor-pointer truncate"
           >
-            {categoryFactors.map((factor) => (
-              <option key={factor.id} value={factor.id}>
-                {factor.fuelOrActivity}
-              </option>
+            {groupedSources.map(([group, sources]) => (
+              <optgroup key={group} label={group}>
+                {sources.map((source) => (
+                  <option key={source.activity_key} value={source.activity_key}>
+                    {source.display_name}{source.verified ? '' : '  — factor not ingested'}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
@@ -170,11 +295,22 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
           />
         </div>
 
-        {/* Unit Badge (1 col) */}
+        {/* Unit (1 col) - only the units this source may be recorded in */}
         <div className="col-span-5 sm:col-span-2 lg:col-span-1">
+          {units.length > 1 ? (
+            <select
+              value={entry.unit}
+              onChange={(event) => onUpdate({ unit: event.target.value })}
+              aria-label="Unit"
+              className="w-full h-10 bg-surface-raised border border-border rounded-md px-2 text-xs font-mono text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600 cursor-pointer"
+            >
+              {units.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+            </select>
+          ) : (
           <span className="inline-flex items-center justify-center w-full h-10 bg-surface-sunken border border-border rounded-md text-xs font-mono text-brand-muted select-none font-semibold truncate px-1">
             {entry.unit}
           </span>
+          )}
         </div>
 
         {/* Live Result + Action Menu (3 cols) */}
@@ -235,7 +371,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
                     className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-blue-50 text-left"
                   >
                     <Settings size={14} className="text-brand-muted" />
-                    <span>Override emission factor</span>
+                    <span>Use my own emission factor</span>
                   </button>
                   <div className="my-1 border-t border-border" />
                   <button
@@ -258,9 +394,9 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
 
       {/* Factor Override Inline Drawer */}
       {isOverridingFactor && (
-        <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200 rounded-md flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-brand-heading">Custom Factor (kgCO₂e/{entry.unit}):</span>
+        <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200 rounded-md flex flex-col gap-2.5 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-brand-heading">Your own factor (kgCO₂e/{entry.unit}):</span>
             <input
               type="number"
               step="any"
@@ -269,13 +405,31 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
               className="w-28 h-8 px-2 bg-white border border-border rounded font-mono text-xs"
             />
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-brand-heading">Where it came from:</span>
+            <input
+              type="text"
+              value={overrideFactorSource}
+              onChange={(e) => setOverrideFactorSource(e.target.value)}
+              placeholder="e.g. Tata Power PPA 2025-26, clause 4 · supplier EPD ref 2031"
+              className="flex-1 min-w-[16rem] h-8 px-2 bg-white border border-border rounded text-xs"
+            />
+          </div>
+          <p className="text-[11px] text-brand-muted leading-relaxed">
+            For a market-based Scope 2 figure — a PPA, a green tariff, a retired I-REC —
+            this contractual rate is what the GHG Protocol asks for, not a grid average.
+            The report shows it as supplied by you, with this reference beside it.
+          </p>
+          {overrideError && (
+            <p className="text-[11px] font-medium text-status-danger">{overrideError}</p>
+          )}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleSaveFactorOverride}
               className="px-2.5 py-1 bg-brand-primary text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1"
             >
-              <Check size={13} /> Apply Override
+              <Check size={13} /> Use this factor
             </button>
             <button
               type="button"
@@ -288,23 +442,110 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         </div>
       )}
 
+      {/*
+        An OPTIONAL month within the reporting period.
+
+        The period itself is set once, at the top of the page, and covers every
+        scope. This is only for splitting a row across the months of it, which
+        the report's monthly analysis and its missing-month check use. It stays
+        out of the way until someone asks for it: a date field on every row
+        made it look as though the period had to be set row by row.
+      */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {entry.periodMonth || showMonth ? (
+          <>
+            <label htmlFor={monthFieldId} className="text-[11px] font-medium text-brand-muted">
+              Month
+            </label>
+            <input
+              id={monthFieldId}
+              type="month"
+              value={entry.periodMonth || ''}
+              min={period.start}
+              max={periodEnd(period)}
+              onChange={(e) => onUpdate({ periodMonth: e.target.value || undefined })}
+              aria-label="Month this activity falls in"
+              className="h-8 bg-surface-raised border border-border rounded-md px-2 text-[12px] text-brand-body shadow-nm-inset-input focus-visible:outline-2 focus-visible:outline-blue-600"
+            />
+            <button
+              type="button"
+              onClick={() => { onUpdate({ periodMonth: undefined }); setShowMonth(false); }}
+              className="text-[11px] text-brand-muted hover:text-brand-body underline"
+            >
+              clear
+            </button>
+            {!isInPeriod(period, entry.periodMonth) && (
+              <span className="text-[11px] font-medium text-status-warning">
+                Outside {periodLabel(period)} — this row would be reported in a period
+                the inventory does not cover.
+              </span>
+            )}
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowMonth(true)}
+            className="text-[11px] text-brand-link hover:underline"
+          >
+            + Split this row by month
+          </button>
+        )}
+      </div>
+
+      {/*
+        Scope 2 is reported twice. The row's headline number is the
+        location-based one, like every other row and like the grand total, so
+        the market-based figure is stated here rather than left for the reader
+        to find in a total. Without this a green tariff row showed the grid
+        number and nothing about the contract it was bought under.
+      */}
+      {entry.scope === 'scope-2' && entry.marketTco2e !== undefined && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-raised px-2.5 py-1.5 text-[11px]">
+          <span className="text-brand-muted">
+            <strong className="text-brand-body">Location-based</strong>{' '}
+            {entry.calculatedTco2e?.toFixed(2) ?? '0.00'} tCO₂e at the published factor
+          </span>
+          <span className="text-border">|</span>
+          <span className="text-brand-muted">
+            <strong className="text-brand-body">Market-based</strong>{' '}
+            {entry.marketTco2e.toFixed(2)} tCO₂e{' '}
+            {entry.customFactorOverride !== undefined && entry.customFactorSource
+              ? 'at your contracted rate'
+              : 'at the same published factor — no contracted rate on this row, and India publishes no residual mix'}
+          </span>
+        </div>
+      )}
+
       {/* Lower Provenance & Quality Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border/40 text-[11px] text-brand-muted">
         <div className="flex items-center gap-2">
-          {/* Data Quality Tier Pip */}
-          <span
-            className={clsx('w-2 h-2 rounded-full flex-shrink-0', tierColor)}
-            title={`Quality Tier: ${entry.emissionFactor.qualityTier}`}
-          />
-          <span className="font-medium text-brand-body">
-            {entry.emissionFactor.qualityTier} Quality
-          </span>
-          <span>·</span>
-          {/* Factor value and source citation */}
-          <span className="font-mono">
-            {entry.emissionFactor.factorValue} kgCO₂e/{entry.unit}
-          </span>
-          <span>({entry.emissionFactor.source})</span>
+          {/*
+            Only a row the engine will actually calculate may show a factor and
+            a quality tier. Printing "2.6865 kgCO2e/L · Primary Quality" beside
+            "this row is not calculated" told the reader two different things
+            about the same row, and the number shown was not the one that would
+            have been used.
+          */}
+          {engineFactorAttached ? (
+            <>
+              <span
+                className={clsx('w-2 h-2 rounded-full flex-shrink-0', tierColor)}
+                title={`Quality Tier: ${entry.emissionFactor.qualityTier}`}
+              />
+              <span className="font-medium text-brand-body">
+                {entry.customFactorOverride !== undefined ? 'Estimated' : 'Published'} factor
+              </span>
+              <span>·</span>
+              <span className="font-mono">calculated by the engine, gas by gas</span>
+            </>
+          ) : (
+            <>
+              <span className="w-2 h-2 rounded-full flex-shrink-0 bg-status-warning" />
+              <span className="font-medium text-status-warning">
+                No published factor — not calculated
+              </span>
+            </>
+          )}
 
           {entry.evidenceFile && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">

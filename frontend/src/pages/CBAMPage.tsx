@@ -93,7 +93,7 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
 <!-- European Commission CBAM Transitional Registry XML - Regulation (EU) 2023/1773 -->
 <CBAMQuarterlyReport xmlns="urn:eu:cbam:report:v1.0">
   <Header>
-    <MessageId>CBAM-INVTY-${Date.now()}</MessageId>
+    <MessageId>CBAM-IINVTY-${Date.now()}</MessageId>
     <CreationDateTime>${ts}</CreationDateTime>
     <ReportingPeriod>
       <Quarter>${quarter}</Quarter>

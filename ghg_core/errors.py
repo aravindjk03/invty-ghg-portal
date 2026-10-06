@@ -47,3 +47,34 @@ class GwpNotFoundError(GhgCoreError):
 class DoubleCountError(GhgCoreError):
     """A configuration that would double count (e.g. both Scope 2 figures in
     the grand total, or steel carbon-balance plus its component fuels)."""
+
+
+class ProductRouteRequiredError(GhgCoreError):
+    """A product carbon factor was requested without a production route.
+
+    Ammonia by steam reforming and by coal gasification are different products
+    with the same name, and their footprints differ several-fold. So do BF-BOF
+    and scrap-EAF steel, primary and secondary aluminium, virgin PET and rPET.
+    Resolving a material without its route would silently hand back whichever
+    row happened to be first. Refusing is the point.
+    """
+
+
+class AmbiguousBoundaryError(GhgCoreError):
+    """A product lookup matched rows spanning more than one system boundary.
+
+    cradle-to-gate and cradle-to-grave are not the same measurement. Picking
+    one for the caller would be a guess, so the caller must say which.
+    """
+
+
+class IncomparableFactorsError(GhgCoreError):
+    """Factors were compared across incompatible system boundaries or
+    allocation methods.
+
+    A cradle-to-gate BEV ranked against a cradle-to-grave ICE car misleads
+    every reader, because the use phase is where an ICE vehicle spends its
+    carbon. Two EPDs using different co-product allocation are likewise not
+    comparable. Ranking them is a presentation error with numerical
+    consequences, so it raises rather than warns.
+    """

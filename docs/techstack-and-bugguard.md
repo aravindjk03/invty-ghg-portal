@@ -1,4 +1,4 @@
-# INVTY GHG Portal — Pinned Tech Stack & Bug Guard
+# IINVTY GHG Portal — Pinned Tech Stack & Bug Guard
 
 **Purpose:** the exact dependency list (with a justification for every line and an explicit do-not-install list), plus the 15 bug classes AI code generators reliably produce in *this specific application*, with the correct implementation for each.
 

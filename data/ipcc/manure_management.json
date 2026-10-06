@@ -1,0 +1,1467 @@
+{
+  "source_name": "IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 4 Chapter 10 (Emissions from Livestock and Manure Management)",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_10_Ch10_Livestock.pdf",
+  "read_on": "2026-09-25",
+  "read_from": "Tables 10.14 (printed pages 10.38-10.39), 10.15 (10.40), 10.16 (10.41), 10.19 (10.59), 10.21 (10.62-10.64) and 10.22 (10.65), read from the published pages",
+  "tier": 1,
+  "methane": {
+    "unit": "kg CH4 per head per year",
+    "uncertainty_percent": 30,
+    "temperatures_c": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28
+    ],
+    "temperature_note": "The first column is the table's '<= 10' and the last its '>= 28'; the rest are single degrees. The figure to use is the average ANNUAL temperature where the manure is managed, not a summer one.",
+    "climate_bands": {
+      "cool": "below 15 C",
+      "temperate": "15 to 25 C",
+      "warm": "above 25 C"
+    },
+    "cattle_swine_buffalo": {
+      "north_america": {
+        "characteristics": "Liquid-based systems are commonly used for dairy cows and swine manure. Other cattle manure is usually managed as a solid and deposited on pastures or ranges.",
+        "species": {
+          "dairy_cows": [
+            48,
+            50,
+            53,
+            55,
+            58,
+            63,
+            65,
+            68,
+            71,
+            74,
+            78,
+            81,
+            85,
+            89,
+            93,
+            98,
+            105,
+            110,
+            112
+          ],
+          "other_cattle": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "market_swine": [
+            10,
+            11,
+            11,
+            12,
+            12,
+            13,
+            13,
+            14,
+            15,
+            15,
+            16,
+            17,
+            18,
+            18,
+            19,
+            20,
+            22,
+            23,
+            23
+          ],
+          "breeding_swine": [
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            31,
+            32,
+            34,
+            35,
+            37,
+            39,
+            41,
+            44,
+            45
+          ]
+        }
+      },
+      "western_europe": {
+        "characteristics": "Liquid/slurry and pit storage systems are commonly used for cattle and swine manure. Limited cropland is available for spreading manure.",
+        "species": {
+          "dairy_cows": [
+            21,
+            23,
+            25,
+            27,
+            29,
+            34,
+            37,
+            40,
+            43,
+            47,
+            51,
+            55,
+            59,
+            64,
+            70,
+            75,
+            83,
+            90,
+            92
+          ],
+          "other_cattle": [
+            6,
+            7,
+            7,
+            8,
+            8,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            20,
+            21,
+            24,
+            25,
+            26
+          ],
+          "market_swine": [
+            6,
+            6,
+            7,
+            7,
+            8,
+            9,
+            9,
+            10,
+            11,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            18,
+            19,
+            21,
+            21
+          ],
+          "breeding_swine": [
+            9,
+            10,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            19,
+            20,
+            22,
+            23,
+            25,
+            27,
+            29,
+            32,
+            33
+          ],
+          "buffalo": [
+            4,
+            4,
+            5,
+            5,
+            5,
+            6,
+            7,
+            7,
+            8,
+            9,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        }
+      },
+      "eastern_europe": {
+        "characteristics": "Solid based systems are used for the majority of manure. About one-third of livestock manure is managed in liquid-based systems.",
+        "species": {
+          "dairy_cows": [
+            11,
+            12,
+            13,
+            14,
+            15,
+            20,
+            21,
+            22,
+            23,
+            25,
+            27,
+            28,
+            30,
+            33,
+            35,
+            37,
+            42,
+            45,
+            46
+          ],
+          "other_cattle": [
+            6,
+            6,
+            7,
+            7,
+            8,
+            9,
+            10,
+            11,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            18,
+            19,
+            21,
+            23,
+            23
+          ],
+          "market_swine": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6,
+            7,
+            10,
+            10,
+            10
+          ],
+          "breeding_swine": [
+            4,
+            5,
+            5,
+            5,
+            5,
+            6,
+            7,
+            7,
+            7,
+            8,
+            8,
+            9,
+            9,
+            10,
+            11,
+            12,
+            16,
+            17,
+            17
+          ],
+          "buffalo": [
+            5,
+            5,
+            5,
+            6,
+            6,
+            7,
+            8,
+            8,
+            9,
+            10,
+            11,
+            11,
+            12,
+            13,
+            15,
+            16,
+            17,
+            19,
+            19
+          ]
+        }
+      },
+      "oceania": {
+        "characteristics": "Most cattle manure is managed as a solid on pastures and ranges, except dairy cows where there is some usage of lagoons. About half of the swine manure is managed in anaerobic lagoons.",
+        "species": {
+          "dairy_cows": [
+            23,
+            24,
+            25,
+            26,
+            26,
+            27,
+            28,
+            28,
+            28,
+            29,
+            29,
+            29,
+            29,
+            29,
+            30,
+            30,
+            31,
+            31,
+            31
+          ],
+          "other_cattle": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "market_swine": [
+            11,
+            11,
+            12,
+            12,
+            12,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
+          "breeding_swine": [
+            20,
+            20,
+            21,
+            21,
+            22,
+            22,
+            23,
+            23,
+            23,
+            23,
+            23,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24
+          ]
+        }
+      },
+      "latin_america": {
+        "characteristics": "Almost all livestock manure is managed as a solid on pastures and ranges. Buffalo manure is deposited on pastures and ranges.",
+        "species": {
+          "dairy_cows": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2
+          ],
+          "other_cattle": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "swine": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2
+          ],
+          "buffalo": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "africa": {
+        "characteristics": "Most livestock manure is managed as a solid on pastures and ranges. A smaller, but significant fraction is burned as fuel.",
+        "species": {
+          "dairy_cows": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "other_cattle": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "swine": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "middle_east": {
+        "characteristics": "Over two-thirds of cattle manure is deposited on pastures and ranges. About one-third of swine manure is managed in liquid-based systems. Buffalo manure is burned for fuel or managed as a solid.",
+        "species": {
+          "dairy_cows": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3
+          ],
+          "other_cattle": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "swine": [
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            6
+          ],
+          "buffalo": [
+            4,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
+        }
+      },
+      "asia": {
+        "characteristics": "About half of cattle manure is used for fuel with the remainder managed in dry systems. Almost 40% of swine manure is managed as a liquid. Buffalo manure is managed in drylots and deposited in pastures and ranges.",
+        "species": {
+          "dairy_cows": [
+            9,
+            10,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            20,
+            21,
+            23,
+            24,
+            26,
+            28,
+            31,
+            31
+          ],
+          "other_cattle": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "swine": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            6,
+            6,
+            7,
+            7
+          ],
+          "buffalo": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "indian_subcontinent": {
+        "characteristics": "About half of cattle and buffalo manure is used for fuel with the remainder managed in dry systems. About one-third of swine manure is managed as a liquid.",
+        "species": {
+          "dairy_cows": [
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6
+          ],
+          "other_cattle": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "swine": [
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6
+          ],
+          "buffalo": [
+            4,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
+        }
+      }
+    },
+    "other_livestock": {
+      "sheep": {
+        "developed": {
+          "cool": 0.19,
+          "temperate": 0.28,
+          "warm": 0.37
+        },
+        "developing": {
+          "cool": 0.1,
+          "temperate": 0.15,
+          "warm": 0.2
+        }
+      },
+      "goats": {
+        "developed": {
+          "cool": 0.13,
+          "temperate": 0.2,
+          "warm": 0.26
+        },
+        "developing": {
+          "cool": 0.11,
+          "temperate": 0.17,
+          "warm": 0.22
+        }
+      },
+      "camels": {
+        "developed": {
+          "cool": 1.58,
+          "temperate": 2.37,
+          "warm": 3.17
+        },
+        "developing": {
+          "cool": 1.28,
+          "temperate": 1.92,
+          "warm": 2.56
+        }
+      },
+      "horses": {
+        "developed": {
+          "cool": 1.56,
+          "temperate": 2.34,
+          "warm": 3.13
+        },
+        "developing": {
+          "cool": 1.09,
+          "temperate": 1.64,
+          "warm": 2.19
+        }
+      },
+      "mules_and_asses": {
+        "developed": {
+          "cool": 0.76,
+          "temperate": 1.1,
+          "warm": 1.52
+        },
+        "developing": {
+          "cool": 0.6,
+          "temperate": 0.9,
+          "warm": 1.2
+        }
+      },
+      "poultry": {
+        "developing": {
+          "cool": 0.01,
+          "temperate": 0.02,
+          "warm": 0.02
+        }
+      }
+    },
+    "poultry_developed": {
+      "layers_dry": {
+        "cool": 0.03,
+        "temperate": 0.03,
+        "warm": 0.03,
+        "note": "Layer operations that manage dry manure."
+      },
+      "layers_wet": {
+        "cool": 1.2,
+        "temperate": 1.4,
+        "warm": 1.4,
+        "note": "Layer operations that manage manure as a liquid, such as stored in an anaerobic lagoon."
+      },
+      "broilers": {
+        "cool": 0.02,
+        "temperate": 0.02,
+        "warm": 0.02
+      },
+      "turkeys": {
+        "cool": 0.09,
+        "temperate": 0.09,
+        "warm": 0.09
+      },
+      "ducks": {
+        "cool": 0.02,
+        "temperate": 0.03,
+        "warm": 0.03
+      }
+    },
+    "fixed_factors": {
+      "deer": {
+        "value": 0.22,
+        "source": "Sneath et al. (1997)"
+      },
+      "reindeer": {
+        "value": 0.36,
+        "source": "Agricultural University of Norway"
+      },
+      "rabbits": {
+        "value": 0.08,
+        "source": "Judgement of the IPCC Expert Group"
+      },
+      "fur_bearing": {
+        "value": 0.68,
+        "source": "Agricultural University of Norway",
+        "applies_to": "fox, mink and similar"
+      }
+    },
+    "region_note": "Table 10.14 prints no buffalo row for North America, Oceania or Africa - the chapter notes significant buffalo populations do not exist there. Africa and the Middle East have no significant cool areas, and Eastern and Western Europe no significant warm ones."
+  },
+  "nitrous_oxide": {
+    "excretion_rate": {
+      "unit": "kg N per 1000 kg animal mass per day",
+      "uncertainty_percent": 50,
+      "regions": [
+        "north_america",
+        "western_europe",
+        "eastern_europe",
+        "oceania",
+        "latin_america",
+        "africa",
+        "middle_east",
+        "asia"
+      ],
+      "note": "Table 10.19 has no Indian Subcontinent column, though Table 10.14 does. The nearest published region is Asia; a report has to say which was used rather than invent one.",
+      "values": {
+        "dairy_cattle": {
+          "north_america": 0.44,
+          "western_europe": 0.48,
+          "eastern_europe": 0.35,
+          "oceania": 0.44,
+          "latin_america": 0.48,
+          "africa": 0.6,
+          "middle_east": 0.7,
+          "asia": 0.47
+        },
+        "other_cattle": {
+          "north_america": 0.31,
+          "western_europe": 0.33,
+          "eastern_europe": 0.35,
+          "oceania": 0.5,
+          "latin_america": 0.36,
+          "africa": 0.63,
+          "middle_east": 0.79,
+          "asia": 0.34
+        },
+        "swine": {
+          "north_america": 0.4,
+          "western_europe": 0.5,
+          "eastern_europe": 0.54,
+          "oceania": 0.52,
+          "latin_america": 1.47,
+          "africa": 1.47,
+          "middle_east": 1.47,
+          "asia": 0.4
+        },
+        "swine_market": {
+          "north_america": 0.42,
+          "western_europe": 0.51,
+          "eastern_europe": 0.55,
+          "oceania": 0.53,
+          "latin_america": 1.57,
+          "africa": 1.57,
+          "middle_east": 1.57,
+          "asia": 0.42
+        },
+        "swine_breeding": {
+          "north_america": 0.24,
+          "western_europe": 0.42,
+          "eastern_europe": 0.46,
+          "oceania": 0.46,
+          "latin_america": 0.55,
+          "africa": 0.55,
+          "middle_east": 0.55,
+          "asia": 0.24
+        },
+        "poultry": {
+          "north_america": 0.83,
+          "western_europe": 0.83,
+          "eastern_europe": 0.82,
+          "oceania": 0.82,
+          "latin_america": 0.82,
+          "africa": 0.82,
+          "middle_east": 0.82,
+          "asia": 0.82
+        },
+        "poultry_hens": {
+          "north_america": 0.83,
+          "western_europe": 0.96,
+          "eastern_europe": 0.82,
+          "oceania": 0.82,
+          "latin_america": 0.82,
+          "africa": 0.82,
+          "middle_east": 0.82,
+          "asia": 0.82
+        },
+        "poultry_pullets": {
+          "north_america": 0.62,
+          "western_europe": 0.55,
+          "eastern_europe": 0.6,
+          "oceania": 0.6,
+          "latin_america": 0.6,
+          "africa": 0.6,
+          "middle_east": 0.6,
+          "asia": 0.6
+        },
+        "poultry_other_chickens": {
+          "north_america": 0.83,
+          "western_europe": 0.83,
+          "eastern_europe": 0.82,
+          "oceania": 0.82,
+          "latin_america": 0.82,
+          "africa": 0.82,
+          "middle_east": 0.82,
+          "asia": 0.82
+        },
+        "poultry_broilers": {
+          "north_america": 1.1,
+          "western_europe": 1.1,
+          "eastern_europe": 1.1,
+          "oceania": 1.1,
+          "latin_america": 1.1,
+          "africa": 1.1,
+          "middle_east": 1.1,
+          "asia": 1.1
+        },
+        "poultry_turkeys": {
+          "north_america": 0.74,
+          "western_europe": 0.74,
+          "eastern_europe": 0.74,
+          "oceania": 0.74,
+          "latin_america": 0.74,
+          "africa": 0.74,
+          "middle_east": 0.74,
+          "asia": 0.74
+        },
+        "poultry_ducks": {
+          "north_america": 0.83,
+          "western_europe": 0.83,
+          "eastern_europe": 0.83,
+          "oceania": 0.83,
+          "latin_america": 0.83,
+          "africa": 0.83,
+          "middle_east": 0.83,
+          "asia": 0.83
+        },
+        "sheep": {
+          "north_america": 0.42,
+          "western_europe": 0.85,
+          "eastern_europe": 0.9,
+          "oceania": 1.13,
+          "latin_america": 1.17,
+          "africa": 1.17,
+          "middle_east": 1.17,
+          "asia": 1.17
+        },
+        "goats": {
+          "north_america": 0.45,
+          "western_europe": 1.28,
+          "eastern_europe": 1.28,
+          "oceania": 1.42,
+          "latin_america": 1.37,
+          "africa": 1.37,
+          "middle_east": 1.37,
+          "asia": 1.37
+        },
+        "horses": {
+          "north_america": 0.3,
+          "western_europe": 0.26,
+          "eastern_europe": 0.3,
+          "oceania": 0.3,
+          "latin_america": 0.46,
+          "africa": 0.46,
+          "middle_east": 0.46,
+          "asia": 0.46
+        },
+        "camels": {
+          "north_america": 0.38,
+          "western_europe": 0.38,
+          "eastern_europe": 0.38,
+          "oceania": 0.38,
+          "latin_america": 0.46,
+          "africa": 0.46,
+          "middle_east": 0.46,
+          "asia": 0.46
+        },
+        "buffalo": {
+          "north_america": 0.32,
+          "western_europe": 0.32,
+          "eastern_europe": 0.32,
+          "oceania": 0.32,
+          "latin_america": 0.32,
+          "africa": 0.32,
+          "middle_east": 0.32,
+          "asia": 0.32
+        }
+      },
+      "swine_note": "Nitrogen excretion for swine is based on an estimated country population of 90% market swine and 10% breeding swine.",
+      "horses_note": "The horses row covers mules and asses as well."
+    },
+    "excretion_per_head": {
+      "unit": "kg N per head per year",
+      "note": "Table 10.19 publishes these three per head, not per 1000 kg of animal mass, so they do not go through Equation 10.30.",
+      "values": {
+        "mink_and_polecat": 4.59,
+        "rabbits": 8.1,
+        "fox_and_racoon": 12.09
+      }
+    },
+    "ef3": {
+      "unit": "kg N2O-N per kg N excreted",
+      "uncertainty": "factor of 2 wherever a value is published",
+      "values": {
+        "daily_spread": 0,
+        "solid_storage": 0.005,
+        "dry_lot": 0.02,
+        "liquid_slurry_with_crust": 0.005,
+        "liquid_slurry_without_crust": 0,
+        "uncovered_anaerobic_lagoon": 0,
+        "pit_storage_below_animal_confinements": 0.002,
+        "anaerobic_digester": 0,
+        "deep_bedding_no_mixing": 0.01,
+        "deep_bedding_active_mixing": 0.07,
+        "composting_in_vessel": 0.006,
+        "composting_static_pile": 0.006,
+        "composting_intensive_windrow": 0.1,
+        "composting_passive_windrow": 0.01,
+        "poultry_manure_with_litter": 0.001,
+        "poultry_manure_without_litter": 0.001,
+        "aerobic_treatment_natural_aeration": 0.01,
+        "aerobic_treatment_forced_aeration": 0.005
+      },
+      "reported_elsewhere": {
+        "pasture_range_paddock": "Manure left where it falls is not manure management: it is reported under N2O from managed soils (Chapter 11, Section 11.2), which this library implements in managed_soils.py.",
+        "burned_for_fuel": "Dung burned as fuel is reported under Fuel Combustion, or under Waste Incineration if it is burned without energy recovery. The urine deposited on pasture goes to managed soils."
+      },
+      "solid_vs_liquid_note": "Table 10.21 footnote b: the borderline between a dry and a liquid system can be drawn at 20% dry matter content."
+    },
+    "frac_gas_ms": {
+      "unit": "percent of managed manure N volatilised as NH3 and NOx",
+      "values": {
+        "swine": {
+          "anaerobic_lagoon": 40,
+          "pit_storage": 25,
+          "deep_bedding": 40,
+          "liquid_slurry": 48,
+          "solid_storage": 45
+        },
+        "dairy_cow": {
+          "anaerobic_lagoon": 35,
+          "liquid_slurry": 40,
+          "pit_storage": 28,
+          "dry_lot": 20,
+          "solid_storage": 30,
+          "daily_spread": 7
+        },
+        "poultry": {
+          "poultry_without_litter": 55,
+          "anaerobic_lagoon": 40,
+          "poultry_with_litter": 40
+        },
+        "other_cattle": {
+          "dry_lot": 30,
+          "solid_storage": 45,
+          "deep_bedding": 30
+        },
+        "other": {
+          "deep_bedding": 25,
+          "solid_storage": 12
+        }
+      },
+      "ranges": {
+        "swine": {
+          "anaerobic_lagoon": [
+            25,
+            75
+          ],
+          "pit_storage": [
+            15,
+            30
+          ],
+          "deep_bedding": [
+            10,
+            60
+          ],
+          "liquid_slurry": [
+            15,
+            60
+          ],
+          "solid_storage": [
+            10,
+            65
+          ]
+        },
+        "dairy_cow": {
+          "anaerobic_lagoon": [
+            20,
+            80
+          ],
+          "liquid_slurry": [
+            15,
+            45
+          ],
+          "pit_storage": [
+            10,
+            40
+          ],
+          "dry_lot": [
+            10,
+            35
+          ],
+          "solid_storage": [
+            10,
+            40
+          ],
+          "daily_spread": [
+            5,
+            60
+          ]
+        },
+        "poultry": {
+          "poultry_without_litter": [
+            40,
+            70
+          ],
+          "anaerobic_lagoon": [
+            25,
+            75
+          ],
+          "poultry_with_litter": [
+            10,
+            60
+          ]
+        },
+        "other_cattle": {
+          "dry_lot": [
+            20,
+            50
+          ],
+          "solid_storage": [
+            10,
+            65
+          ],
+          "deep_bedding": [
+            20,
+            40
+          ]
+        },
+        "other": {
+          "deep_bedding": [
+            10,
+            30
+          ],
+          "solid_storage": [
+            5,
+            20
+          ]
+        }
+      },
+      "other_note": "The table's 'Other' row covers sheep, horses and fur-bearing animals."
+    },
+    "frac_loss_ms": {
+      "unit": "percent of managed manure N lost before the manure reaches land",
+      "note": "Table 10.23. This is the TOTAL loss - NH3, NOx, N2O and N2, plus leaching and runoff from solid storage and dry lots - and it is what Equation 10.34 subtracts to find the nitrogen still available for soils. It is larger than the volatilisation fraction in Table 10.22, which covers only NH3 and NOx.",
+      "values": {
+        "swine": {
+          "anaerobic_lagoon": 78,
+          "pit_storage": 25,
+          "deep_bedding": 50,
+          "liquid_slurry": 48,
+          "solid_storage": 50
+        },
+        "dairy_cow": {
+          "anaerobic_lagoon": 77,
+          "liquid_slurry": 40,
+          "pit_storage": 28,
+          "dry_lot": 30,
+          "solid_storage": 40,
+          "daily_spread": 22
+        },
+        "poultry": {
+          "poultry_without_litter": 55,
+          "anaerobic_lagoon": 77,
+          "poultry_with_litter": 50
+        },
+        "other_cattle": {
+          "dry_lot": 40,
+          "solid_storage": 50,
+          "deep_bedding": 40
+        },
+        "other": {
+          "deep_bedding": 35,
+          "solid_storage": 15
+        }
+      },
+      "ranges": {
+        "swine": {
+          "anaerobic_lagoon": [
+            55,
+            99
+          ],
+          "pit_storage": [
+            15,
+            30
+          ],
+          "deep_bedding": [
+            10,
+            60
+          ],
+          "liquid_slurry": [
+            15,
+            60
+          ],
+          "solid_storage": [
+            20,
+            70
+          ]
+        },
+        "dairy_cow": {
+          "anaerobic_lagoon": [
+            55,
+            99
+          ],
+          "liquid_slurry": [
+            15,
+            45
+          ],
+          "pit_storage": [
+            10,
+            40
+          ],
+          "dry_lot": [
+            10,
+            35
+          ],
+          "solid_storage": [
+            10,
+            65
+          ],
+          "daily_spread": [
+            15,
+            60
+          ]
+        },
+        "poultry": {
+          "poultry_without_litter": [
+            40,
+            70
+          ],
+          "anaerobic_lagoon": [
+            50,
+            99
+          ],
+          "poultry_with_litter": [
+            20,
+            80
+          ]
+        },
+        "other_cattle": {
+          "dry_lot": [
+            20,
+            50
+          ],
+          "solid_storage": [
+            20,
+            70
+          ],
+          "deep_bedding": [
+            10,
+            50
+          ]
+        },
+        "other": {
+          "deep_bedding": [
+            15,
+            40
+          ],
+          "solid_storage": [
+            5,
+            20
+          ]
+        }
+      },
+      "caveat": "The rates are averages for typical housing and storage with no significant nitrogen control measures. Where controls are in place, the chapter says to develop rates that reflect them."
+    },
+    "ef4": {
+      "value": 0.01,
+      "unit": "kg N2O-N per kg NH3-N + NOx-N volatilised",
+      "source": "Chapter 11, Table 11.3, cited under Equation 10.27"
+    },
+    "ef5": {
+      "value": 0.0075,
+      "unit": "kg N2O-N per kg N leached or run off",
+      "source": "Chapter 11, Table 11.3, cited under Equation 10.29"
+    },
+    "leaching_note": "IPCC publishes no default FracleachMS. Section 10.5.1 says Equation 10.28 should only be used where country-specific information on leaching and runoff from manure management is available, so this library asks for the fraction and reports zero leaching when none is given."
+  }
+}

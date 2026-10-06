@@ -22,43 +22,25 @@ export const scenarioSchema = z.object({
 });
 
 export class EmissionsController {
-  public static calculateRow(req: Request, res: Response, next: NextFunction): void {
-    try {
-      const { fuelOrSource, factorId, amount, unit, facility } = req.body;
-      const factor = FactorsService.getFactorById(factorId);
-
-      if (!factor) {
-        res.status(404).json({
-          success: false,
-          error: {
-            code: 'FACTOR_NOT_FOUND',
-            message: `Emission factor '${factorId}' does not exist.`,
-          },
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      const calculatedTco2e = CalculationService.calculateRowEmissions(amount, factor.factorValue);
-      const warning = CalculationService.checkValidationWarnings(fuelOrSource, amount, unit);
-
-      res.status(200).json({
-        success: true,
-        data: {
-          facility,
-          fuelOrSource,
-          amount,
-          unit,
-          emissionFactor: factor,
-          calculatedTco2e,
-          warning,
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      next(error);
-    }
+  /**
+   * Retired. Emissions are calculated by ghg_core, which resolves the factor per
+   * gas, converts the quantity into the unit the factor is published per, and
+   * applies the reporting GWP set. This endpoint did none of that, so keeping it
+   * alive would mean two answers for one row.
+   */
+  public static calculateRow(_req: Request, res: Response): void {
+    res.status(410).json({
+      success: false,
+      error: {
+        code: 'ENDPOINT_RETIRED',
+        message:
+          'Row emissions are calculated by the engine. POST the record to '
+          + '/v1/inventory/calculate on the calculation service instead.',
+      },
+      timestamp: new Date().toISOString(),
+    });
   }
+
 
   public static simulateScenario(req: Request, res: Response, next: NextFunction): void {
     try {

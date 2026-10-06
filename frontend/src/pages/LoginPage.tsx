@@ -29,6 +29,15 @@ export interface LoginPageProps {
 
 type AuthMethod = 'email' | 'mobile';
 
+/**
+ * Seeded demo credentials are a development convenience. Printing them on a
+ * public sign-in page would hand every visitor an administrator account, so
+ * they appear only in development, or when VITE_SHOW_DEMO_LOGINS is set.
+ */
+const SHOW_DEMO_LOGINS =
+  import.meta.env.VITE_SHOW_DEMO_LOGINS === 'true'
+  || (import.meta.env.DEV && import.meta.env.VITE_SHOW_DEMO_LOGINS !== 'false');
+
 export default function LoginPage({ onNavigate }: LoginPageProps) {
   const { setCurrentUser, setCompanyName, addToast } = useGHG();
 
@@ -371,6 +380,24 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     handleLaunchRealGoogleAuth(cleanId);
   };
 
+  // Demo accounts come from the API, which serves them only outside
+  // production, so no credential is compiled into the published bundle.
+  const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
+
+  useEffect(() => {
+    if (!SHOW_DEMO_LOGINS) return;
+    authService.getDemoAccounts().then(setDemoAccounts).catch(() => setDemoAccounts([]));
+  }, []);
+
+  const fillFromDemoAccount = (demoEmail: string) => {
+    const account = demoAccounts.find((item) => item.email === demoEmail);
+    if (!account?.password) {
+      setError('Demo accounts are not available on this deployment.');
+      return;
+    }
+    fillEmailDemo(account.email!, account.password);
+  };
+
   // Demo accounts quick-filler
   const fillEmailDemo = (demoEmail: string, demoPass: string) => {
     setAuthMethod('email');
@@ -412,7 +439,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           <img
             className="h-full w-full object-cover"
             src="https://cdn.21st.dev/assets/mirror/f4/f48e20bd4dcdcf2ca40eafe923e1134d17f43dce1c5bff8f1b96b7301e126ec3.png"
-            alt="INVTY GHG Portal Hero"
+            alt="IINVTY GHG Portal Hero"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}
@@ -421,12 +448,12 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             {/* Logo Badge */}
             <div className="flex items-center gap-3">
               <img
-                src="/invty-logo.png"
-                alt="INVTY Logo"
+                src={`${import.meta.env.BASE_URL}invty-logo.png`}
+                alt="IINVTY Logo"
                 className="w-10 h-10 object-contain drop-shadow-md brightness-110"
               />
               <div className="flex flex-col">
-                <span className="font-mono font-bold text-white tracking-wider text-base">INVTY</span>
+                <span className="font-mono font-bold text-white tracking-wider text-base">IINVTY</span>
                 <span className="text-[10px] uppercase tracking-widest text-slate-300 font-semibold">
                   GHG Accounting Portal
                 </span>
@@ -455,7 +482,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
             
             {/* Header */}
             <h2 className="text-2xl sm:text-3xl text-gray-900 font-bold tracking-tight text-center">
-              Welcome to INVTY
+              Welcome to IINVTY
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-1.5 text-center">
               Select your preferred authentication method
@@ -847,7 +874,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               </div>
             </div>
 
-            {/* ── TEST ACCOUNTS PRE-POPULATE ────────────────────────── */}
+            {/* ── TEST ACCOUNTS PRE-POPULATE ──────────────────────────
+                Development only. On a public deployment these credentials would
+                hand every visitor an administrator account, so the block is
+                compiled out unless VITE_SHOW_DEMO_LOGINS is set. */}
+            {SHOW_DEMO_LOGINS && (
             <div className="w-full mt-2 p-3 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                 <div className="flex items-center gap-1.5">
@@ -861,7 +892,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 {/* Admin Email */}
                 <button
                   type="button"
-                  onClick={() => fillEmailDemo('admin@invty.com', 'Invty@2026')}
+                  onClick={() => fillFromDemoAccount('admin@invty.com')}
                   className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs transition-colors group"
                 >
                   <div>
@@ -869,7 +900,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                     <span className="text-slate-600">admin@invty.com</span>
                   </div>
                   <span className="font-mono text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-blue-100">
-                    Invty@2026
+                    {demoAccounts.find((a) => a.email === 'admin@invty.com')?.password ?? '••••••'}
                   </span>
                 </button>
 
@@ -890,6 +921,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 </button>
               </div>
             </div>
+            )}
 
           </div>
         </div>

@@ -225,6 +225,7 @@ export const ShowcasePage: React.FC = () => {
         </h2>
         <Card noPadding className="p-4 bg-surface/30">
           <ActivityRow
+                period={{ start: '2025-04', months: 12 }}
             entry={sampleRow}
             onUpdate={(up) => setSampleRow({ ...sampleRow, ...up })}
             onDelete={() => console.info('Showcase: Delete row')}

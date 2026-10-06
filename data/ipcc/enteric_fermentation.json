@@ -1,0 +1,36 @@
+{
+  "source_name": "IPCC 2006 Guidelines, Volume 4 Chapter 10 (Emissions from Livestock and Manure Management)",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_10_Ch10_Livestock.pdf",
+  "read_on": "2026-09-25",
+  "read_from": "Table 10.11 (page 10.29) for cattle by region, Table 10.10 (page 10.28) for other livestock",
+  "tier": 1,
+  "unit": "kg CH4 per head per year",
+  "uncertainty_note": "Table 10.10 states all its estimates carry an uncertainty of +/-30-50%.",
+  "equation": "Equation 10.19: emissions = EF x head count",
+  "cattle_by_region": {
+    "north_america": {"dairy": 128, "other": 53, "milk_kg_per_head_yr": 8400},
+    "western_europe": {"dairy": 117, "other": 57, "milk_kg_per_head_yr": 6000},
+    "eastern_europe": {"dairy": 99, "other": 58, "milk_kg_per_head_yr": 2550},
+    "oceania": {"dairy": 100, "other": 60, "milk_kg_per_head_yr": 2200},
+    "latin_america": {"dairy": 72, "other": 56, "milk_kg_per_head_yr": 800},
+    "asia": {"dairy": 68, "other": 47, "milk_kg_per_head_yr": 1650},
+    "africa_middle_east": {"dairy": 46, "other": 31, "milk_kg_per_head_yr": 475},
+    "indian_subcontinent": {"dairy": 58, "other": 27, "milk_kg_per_head_yr": 900}
+  },
+  "other_livestock": {
+    "buffalo": {"developed": 55, "developing": 55, "liveweight_kg": 300},
+    "sheep": {"developed": 8, "developing": 5, "liveweight_kg": null,
+              "liveweight_note": "65 kg developed, 45 kg developing"},
+    "goats": {"developed": 5, "developing": 5, "liveweight_kg": 40},
+    "camels": {"developed": 46, "developing": 46, "liveweight_kg": 570},
+    "horses": {"developed": 18, "developing": 18, "liveweight_kg": 550},
+    "mules_and_asses": {"developed": 10, "developing": 10, "liveweight_kg": 245},
+    "deer": {"developed": 20, "developing": 20, "liveweight_kg": 120},
+    "alpacas": {"developed": 8, "developing": 8, "liveweight_kg": 65},
+    "swine": {"developed": 1.5, "developing": 1.0, "liveweight_kg": null}
+  },
+  "not_published": {
+    "poultry": "Table 10.10 records insufficient data for a Tier 1 enteric factor. Poultry enteric fermentation is not estimated here.",
+    "other_species": "Llamas and similar are 'to be determined' in Table 10.10."
+  }
+}

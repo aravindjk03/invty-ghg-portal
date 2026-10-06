@@ -23,6 +23,7 @@ import {
   X,
   LucideIcon,
   Package,
+  Sprout,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -48,12 +49,28 @@ const NAV_ITEMS: NavItem[] = [
     activeIconStyle: { color: '#1d4ed8' },
   },
   {
+    icon: Package,
+    label: 'Product Carbon',
+    page: 'product-carbon',
+    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
+    activeTextClass: 'text-teal-700',
+    activeIconStyle: { color: '#0f766e' },
+  },
+  {
     icon: Flame,
     label: 'Scope 1',
     page: 'scope-1',
     gradient: 'linear-gradient(135deg,rgba(239,68,68,0.18),rgba(234,88,12,0.18))',
     activeTextClass: 'text-red-600',
     activeIconStyle: { color: '#dc2626' },
+  },
+  {
+    icon: Sprout,
+    label: 'Methods',
+    page: 'methods',
+    gradient: 'linear-gradient(135deg,rgba(132,204,22,0.18),rgba(22,163,74,0.18))',
+    activeTextClass: 'text-lime-700',
+    activeIconStyle: { color: '#4d7c0f' },
   },
   {
     icon: Zap,
@@ -70,14 +87,6 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(22,163,74,0.18),rgba(16,185,129,0.18))',
     activeTextClass: 'text-emerald-600',
     activeIconStyle: { color: '#16a34a' },
-  },
-  {
-    icon: Package,
-    label: 'Product Carbon',
-    page: 'product-carbon',
-    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
-    activeTextClass: 'text-teal-700',
-    activeIconStyle: { color: '#0f766e' },
   },
   {
     icon: BarChart3,
@@ -331,13 +340,13 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             className="flex-shrink-0 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600 py-1 pr-2 group"
           >
             <img
-              src="/invty-logo.png"
-              alt="INVTY Logo"
+              src={`${import.meta.env.BASE_URL}invty-logo.png`}
+              alt="IINVTY Logo"
               className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
             />
             <div className="flex flex-col text-left">
               <span className="font-mono font-bold text-[14px] tracking-wider text-[#0F172A] leading-tight">
-                INVTY
+                IINVTY
               </span>
               <span className="text-[9px] uppercase tracking-widest text-[#94A3B8] font-semibold leading-tight">
                 GHG Portal
@@ -479,7 +488,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
       <Modal
         isOpen={helpOpen}
         onClose={() => setHelpOpen(false)}
-        title="INVTY GHG Accounting Standards & Guidance"
+        title="IINVTY GHG Accounting Standards & Guidance"
       >
         <div className="space-y-4 text-xs text-[#64748B] leading-relaxed">
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
@@ -496,7 +505,12 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             </h4>
             <ul className="list-disc pl-5 space-y-1.5">
               <li><strong>Scope 2 Dual Reporting:</strong> Location-based and market-based figures are tracked side-by-side and never summed into the grand total.</li>
-              <li><strong>Auto-Derived Category 3:</strong> Well-to-tank (WTT) fuels and transmission loss emissions are automatically derived from Scope 1 and Scope 2 activity lines.</li>
+              <li><strong>Derived Category 3:</strong> The upstream emissions of every Scope 1 fuel are
+                derived from the quantity already recorded, against the published well-to-tank factor
+                for that fuel. Transmission and distribution losses are derived once the loss rate
+                published for your grid or utility is entered with its source. What cannot be derived
+                — no published set gives the upstream emissions of Indian grid electricity — is listed
+                on the Scope 3 page rather than quietly left out.</li>
               <li><strong>Out-of-Scope Memos:</strong> Biogenic CO₂ and Montreal Protocol ODS gases (R-22) are reported separately as memo items and never added to Scope 1 gross.</li>
               <li><strong>Precision Arithmetic:</strong> Decimal math is enforced to prevent IEEE 754 floating-point drift across large industrial inventories.</li>
             </ul>

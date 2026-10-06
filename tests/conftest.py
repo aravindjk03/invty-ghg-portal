@@ -1,3 +1,13 @@
+import os
+
+# Keep the test suite independent of a developer's local service/.env and
+# of any AI provider variables in the shell. Must run before service imports.
+os.environ["PCF_ENV_FILE"] = ""
+for _var in ("PCF_AI_PROVIDER", "PCF_AI_MODEL", "GEMINI_API_KEY", "GOOGLE_API_KEY",
+             "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_PROFILE",
+             "PCF_GEMINI_MODEL", "PCF_ANTHROPIC_MODEL"):
+    os.environ.pop(_var, None)
+
 import pytest
 from decimal import Decimal
 from ghg_core import EmissionFactor, InMemoryFactorRegistry, GwpSet, FuelProperty
@@ -75,3 +85,33 @@ def fuels():
                                     source_ref="tbl-test", reference_year=2026,
                                     density_kg_per_m3="0.8", gas_reference="standard"),
     }
+
+
+@pytest.fixture(autouse=True)
+def _metered_estimates(monkeypatch):
+    """Every estimate is metered against an account. Stub it, for every test.
+
+    The endpoint spends one of the customer's estimates before calling the AI
+    and gives it back if the answer never arrives, which means talking to the
+    account service. A test suite that reached for it would either hit a real
+    backend or fail with a plan error in tests about something else entirely.
+
+    The stub grants a free plan and counts nothing. A test about metering
+    overrides these two names itself.
+    """
+    try:
+        from service import app as module
+        from service.entitlements import Reservation
+    except Exception:                            # noqa: BLE001 - fastapi absent
+        yield
+        return
+
+    monkeypatch.setattr(module, "reserve", lambda token, product: Reservation(
+        user_id="test-user", ledger_id="test-ledger", plan="free",
+        entitlement={"plan": "free", "estimatesUsed": 1, "estimatesLimit": 2,
+                     "estimatesRemaining": 1}))
+    monkeypatch.setattr(module, "refund", lambda reservation, reason: None)
+    monkeypatch.setattr(module, "entitlement_for", lambda token: {
+        "plan": "free", "estimatesUsed": 1, "estimatesLimit": 2,
+        "estimatesRemaining": 1})
+    yield

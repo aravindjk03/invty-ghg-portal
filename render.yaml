@@ -1,0 +1,98 @@
+# Render Blueprint for the two server parts of the portal. The website itself
+# is static and is published to GitHub Pages (npm run deploy:pages).
+#
+# Set up: render.com -> New -> Blueprint -> pick this repository and branch.
+# Render asks for every value marked `sync: false`; paste the keys there, never
+# in this file.
+#
+# Two things to know before a customer sees this:
+#
+#  1. A FREE service sleeps after fifteen minutes idle and takes about a minute
+#     to wake. While the engine sleeps, every figure on the page reads "the
+#     calculation engine is not reachable" - correct behaviour, but a poor first
+#     impression. Moving iinvty-insity-edge-ai to `starter` is the single change
+#     that most improves how the product feels. It is a paid plan, so it is left
+#     as `free` here for you to decide.
+#
+#  2. The backend keeps its accounts and saved inventories in a SQLite file
+#     under backend/data. On Render that disk is EPHEMERAL: every deploy wipes
+#     it, and a customer's saved inventory goes with it. The `disk` block below
+#     mounts persistent storage at that path so it survives. A disk is available
+#     on paid instance types only; on free, expect the data to reset and say so
+#     to anyone using it.
+services:
+  # Login, inventory and reports API (Express + node:sqlite).
+  - type: web
+    name: iinvty-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    # Where the SQLite file lives (backend/data/invty_portal.db). Without this
+    # the accounts and every saved inventory are gone on the next deploy.
+    disk:
+      name: iinvty-data
+      mountPath: /opt/render/project/src/backend/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"              # node:sqlite needs Node 22.5 or later
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        value: https://aravindjk03.github.io
+      - key: API_SECRET_KEY
+        generateValue: true
+      # How many AI product estimates a free account gets before it is asked to
+      # upgrade. Changed here, never in the browser.
+      - key: FREE_ESTIMATE_LIMIT
+        value: "2"
+      # Lets the estimate service spend a customer's credit. Generated once
+      # here; the AI service reads the same value through fromService below, so
+      # there is no secret to copy by hand and none in this file.
+      - key: ESTIMATE_SERVICE_SECRET
+        generateValue: true
+
+  # INSITY EDGE AI: the Product Carbon estimator (FastAPI).
+  - type: web
+    name: iinvty-insity-edge-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -e ".[service]"
+    # Behind Render's proxy, trust X-Forwarded-For so the per-visitor rate limit
+    # sees each visitor's address instead of the proxy's.
+    startCommand: uvicorn service.app:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      - key: PCF_AI_PROVIDER
+        value: gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,gemini:gemini-3.1-flash-lite,anthropic
+      - key: PCF_CORS_ORIGINS
+        value: https://aravindjk03.github.io
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PCF_ADMIN_TOKEN
+        generateValue: true
+      # The premium chain. A paying customer's estimate is answered by the model
+      # that reasons hardest; the free chain is appended automatically behind
+      # it, so an outage degrades the answer instead of removing it.
+      - key: PCF_AI_PROVIDER_PREMIUM
+        value: anthropic:claude-opus-5,anthropic:claude-sonnet-5
+      # The same secret the backend generated above. Nothing to paste.
+      - key: ESTIMATE_SERVICE_SECRET
+        fromService:
+          type: web
+          name: iinvty-backend
+          envVarKey: ESTIMATE_SERVICE_SECRET
+      # The account service, including its /api/v1 prefix - for example
+      # https://iinvty-backend.onrender.com/api/v1. Render asks for it on the
+      # first deploy: copy the backend service's URL from its own page. Without
+      # it no estimate can be metered, and the page says so rather than running
+      # one for free.
+      - key: BACKEND_BASE_URL
+        sync: false

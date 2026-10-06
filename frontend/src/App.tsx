@@ -11,6 +11,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductCarbonPage } from './pages/ProductCarbonPage';
+import { MethodsPage } from './pages/MethodsPage';
 import { authService } from './services/authService';
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -84,8 +85,8 @@ function MainApp() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#EDF1F7] gap-4">
         <img
-          src="/invty-logo.png"
-          alt="INVTY Logo"
+          src={`${import.meta.env.BASE_URL}invty-logo.png`}
+          alt="IINVTY Logo"
           className="w-14 h-14 object-contain drop-shadow-md animate-pulse"
         />
         <p className="text-sm text-gray-500 font-medium tracking-wide">Verifying session…</p>
@@ -107,6 +108,8 @@ function MainApp() {
         return <Scope2Page onNavigate={setCurrentPage} />;
       case 'scope-3':
         return <Scope3Page onNavigate={setCurrentPage} />;
+      case 'methods':
+        return <MethodsPage onNavigate={setCurrentPage} />;
       case 'product-carbon':
         return <ProductCarbonPage onNavigate={setCurrentPage} />;
       case 'dashboard':

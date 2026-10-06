@@ -1,20 +1,20 @@
-# INVTY GHG Accounting Portal
+# IINVTY GHG Accounting Portal
 ## Complete Architecture & Product Specification
 
-**Version** 1.0 · **Date** 6 September 2026 · **Prepared for** INVTY
+**Version** 1.0 · **Date** 6 September 2026 · **Prepared for** IINVTY
 **Scope of document:** product definition, application workflow, calculation architecture, data model, system architecture, report pipeline, UI system, and phased build plan.
 
 ---
 
 ## 0. Read this first — three decisions that shape everything
 
-You described a public tool on the INVTY website where any visitor enters data and gets a watermarked, downloadable GHG report. That is a coherent product, but it forces three consequences that the rest of this document is built around. Disagree with any of them and the architecture changes.
+You described a public tool on the IINVTY website where any visitor enters data and gets a watermarked, downloadable GHG report. That is a coherent product, but it forces three consequences that the rest of this document is built around. Disagree with any of them and the architecture changes.
 
 **0.1 — This is a screening tool, not an assurance platform.**
 A visitor who lands on your site will not have invoice-level fuel records or supplier-specific emission factors. They have rough numbers. So "accurate" cannot mean *audit-grade*. It must mean *methodologically defensible and fully traceable*: every number the report prints must be reproducible from the inputs, the named factor, the factor's publication year, and the GWP set used. That is achievable and it is what industry professionals will actually judge you on. Claiming "accurate CO₂ emissions" without qualification on a public tool is a liability. The report must carry a clear methodology and limitations page. Section 12 covers this.
 
 **0.2 — The tool is a lead-generation funnel. Design it as one.**
-Anonymous visitors will not complete a 200-field questionnaire. The winning pattern is: *calculate freely, gate the deliverable*. The visitor can use any calculator and see live results without signing up. The watermarked PDF requires an email. That email, plus the sector and revenue band they entered, is a qualified lead for INVTY's consulting services. This shapes the funnel design in Section 3 and is the single highest-ROI decision in this document.
+Anonymous visitors will not complete a 200-field questionnaire. The winning pattern is: *calculate freely, gate the deliverable*. The visitor can use any calculator and see live results without signing up. The watermarked PDF requires an email. That email, plus the sector and revenue band they entered, is a qualified lead for IINVTY's consulting services. This shapes the funnel design in Section 3 and is the single highest-ROI decision in this document.
 
 **0.3 — You selected all four frameworks and all three factor sources. Do not build all of them in v1.**
 GHG Protocol is the calculation engine — CSRD/ESRS, BRSR, ISO 14064-1 and CDP are *presentation layers over the same underlying inventory*. The right move is to build one canonical inventory data model (GHG Protocol shaped) and one report engine that renders that inventory into different disclosure templates. v1 ships GHG Protocol + BRSR (your Indian industrial audience). ESRS/CDP become new templates in Phase 3 without touching the engine. Section 10.4 specifies this mapping layer. Same for factors: DEFRA/EPA/IPCC/CEA in v1, commercial API behind an adapter interface added later without a rewrite (Section 6.5).
@@ -24,7 +24,7 @@ GHG Protocol is the calculation engine — CSRD/ESRS, BRSR, ISO 14064-1 and CDP 
 ## 1. Product definition
 
 ### 1.1 What it is
-A public, browser-based greenhouse gas inventory calculator hosted at `ghg.invty.com` (or `invty.com/ghg-tool`), linked from the INVTY main site. A visitor selects one or more scopes, enters or uploads activity data, and receives a live emissions dashboard plus a downloadable, INVTY-watermarked PDF report.
+A public, browser-based greenhouse gas inventory calculator hosted at `ghg.invty.com` (or `invty.com/ghg-tool`), linked from the IINVTY main site. A visitor selects one or more scopes, enters or uploads activity data, and receives a live emissions dashboard plus a downloadable, IINVTY-watermarked PDF report.
 
 ### 1.2 What v1 explicitly is *not*
 - Not a continuous monitoring / IoT platform
@@ -41,7 +41,7 @@ Each of these is a legitimate Phase 3+ expansion. Shipping them in v1 guarantees
 | **The Sustainability Lead** | ESG/EHS manager at a mid-size manufacturer | A defensible first inventory for a BRSR filing or a customer questionnaire | Needs full 3-scope coverage, methodology transparency, export |
 | **The Plant / Ops Engineer** | Energy or production manager | To know which fuel or process dominates his footprint | Needs Scope 1 depth, unit flexibility, per-facility breakdown |
 | **The Procurement / Supply Chain Manager** | Responding to a customer's Scope 3 request | Category 1 and 4 numbers, fast | Needs spend-based fallback, bulk CSV upload |
-| **The Curious Executive** | CXO evaluating whether to engage INVTY | A credible-looking number in under 10 minutes | Needs Quick Estimate mode, strong visual report |
+| **The Curious Executive** | CXO evaluating whether to engage IINVTY | A credible-looking number in under 10 minutes | Needs Quick Estimate mode, strong visual report |
 
 The Curious Executive is your conversion persona. The Sustainability Lead is your credibility persona. The tool must serve both — hence the **two-track entry** in Section 3.2.
 
@@ -50,7 +50,7 @@ The Curious Executive is your conversion persona. The Sustainability Lead is you
 - **Conversion:** % of activated users who submit email for the PDF (target > 55%)
 - **Depth:** median number of scopes completed per session (target ≥ 2)
 - **Quality:** % of sessions using activity-based rather than spend-based Scope 3 methods (proxy for data seriousness → lead quality)
-- **Lead value:** % of downloads from companies matching INVTY's ICP
+- **Lead value:** % of downloads from companies matching IINVTY's ICP
 
 ---
 
@@ -157,7 +157,7 @@ These four fields appear on the report cover. Without them the report is not a G
 ┌─────────────────────────────────────────────────────────────────┐
 │ 8. REPORT GENERATION  (async job, 5–20 s)                       │
 │    Snapshot inventory → render HTML → headless Chromium → PDF   │
-│    INVTY watermark composited behind content on every page.     │
+│    IINVTY watermark composited behind content on every page.     │
 │    Stored in object storage, signed URL, 30-day expiry.         │
 └────────────────────────────┬────────────────────────────────────┘
                              ▼
@@ -165,7 +165,7 @@ These four fields appear on the report cover. Without them the report is not a G
 │ 9. DELIVERY & FOLLOW-UP                                         │
 │    In-browser download + emailed copy + shareable link.         │
 │    Optional: "Save my session" (magic link) to return later.    │
-│    Lead pushed to INVTY CRM with full inventory summary.        │
+│    Lead pushed to IINVTY CRM with full inventory summary.        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -297,7 +297,7 @@ Where a residual mix factor is unpublished for the region (true for most of Asia
 Grid factors change annually and materially. They must be versioned rows in the factor registry keyed by `(region, year)`, never constants in code.
 
 ### 5.5 The "what-if" hook
-Scope 2 is where the most compelling interaction lives: a slider for *"what if X% of your electricity came from a renewable PPA?"* recalculating the market-based number live. This is the single feature most likely to make a visitor share the tool — and it is a natural bridge into an INVTY consulting conversation.
+Scope 2 is where the most compelling interaction lives: a slider for *"what if X% of your electricity came from a renewable PPA?"* recalculating the market-based number live. This is the single feature most likely to make a visitor share the tool — and it is a natural bridge into an IINVTY consulting conversation.
 
 ---
 
@@ -342,7 +342,7 @@ This turns "15 daunting categories" into "you have 4 that matter — let's do th
 
 **Category 3 is auto-derived** — once the user has entered Scope 1 fuel and Scope 2 electricity, the tool can compute well-to-tank and T&D losses with zero additional input. Doing this automatically and showing it appear is a small piece of magic that makes the tool feel intelligent. Prioritise it.
 
-**Category 11** deserves special attention if INVTY's audience makes energy-using products: it usually dwarfs everything else, and getting it visibly right is the strongest credibility signal in the whole report.
+**Category 11** deserves special attention if IINVTY's audience makes energy-using products: it usually dwarfs everything else, and getting it visibly right is the strongest credibility signal in the whole report.
 
 ### 6.3 Method hierarchy and honesty
 For each category the engine supports a ranked set:
@@ -508,7 +508,7 @@ Per line item, score against the GHG Protocol Scope 3 quality dimensions — tec
 | Excluded categories / missing facilities | Completeness |
 | Source authority (government > commercial > estimate) | Reliability |
 
-Roll up emissions-weighted to a headline **Data Quality Score** with a letter grade. Print it on page 2 of the report, next to the total. This is both honest and a powerful sales hook: a low score is a reason to talk to INVTY.
+Roll up emissions-weighted to a headline **Data Quality Score** with a letter grade. Print it on page 2 of the report, next to the total. This is both honest and a powerful sales hook: a low score is a reason to talk to IINVTY.
 
 ---
 
@@ -622,7 +622,7 @@ Runs are append-only. `is_current` points at the latest. A report always referen
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend | **Next.js 15 (React, TypeScript, App Router)** | SSR for SEO on the marketing shell, fast client interactivity for the calculator, easy embed into INVTY's site |
+| Frontend | **Next.js 15 (React, TypeScript, App Router)** | SSR for SEO on the marketing shell, fast client interactivity for the calculator, easy embed into IINVTY's site |
 | Styling | **Tailwind CSS + shadcn/ui + Framer Motion** | Fast to build a distinctive, modern UI; motion is where "futuristic" actually comes from |
 | Charts | **Recharts** (dashboard) + **D3** (Sankey) | |
 | API | **FastAPI (Python 3.12)** | The calculation and factor domain is data/scientific — Python's ecosystem (pandas, pint for units, pydantic for validation) is a real advantage here |
@@ -720,7 +720,7 @@ Worker:
    1. Freeze inventory → immutable snapshot (JSON) bound to a calculation_run
    2. Assemble report model (totals, breakdowns, quality, exclusions, methodology)
    3. Render charts server-side to SVG (deterministic, no client dependency)
-   4. Render Jinja2 → HTML with the INVTY report stylesheet
+   4. Render Jinja2 → HTML with the IINVTY report stylesheet
    5. Playwright → Chromium → print-to-PDF (A4, print CSS, headers/footers)
    6. Post-process: PDF metadata, document properties, optional page-level protection
    7. Upload to S3, generate 30-day signed URL
@@ -731,7 +731,7 @@ Client polls / SSE → download button becomes active
 
 **Server-side chart rendering matters.** If charts render in the browser, your PDF depends on the user's fonts and screen. Render SVG on the server so every report is identical.
 
-### 10.2 The INVTY watermark
+### 10.2 The IINVTY watermark
 
 The watermark sits **behind** the content on every page, as you specified. Implementation in the print stylesheet:
 
@@ -745,7 +745,7 @@ body::before {
   content: "";
   position: fixed;      /* fixed → repeats on every printed page */
   inset: 0;
-  background-image: url("data:image/svg+xml;base64,<INVTY logo>");
+  background-image: url("data:image/svg+xml;base64,<IINVTY logo>");
   background-repeat: no-repeat;
   background-position: center center;
   background-size: 55% auto;
@@ -762,16 +762,16 @@ Notes that matter in practice:
 - **Embed the logo as a base64 data URI**, not a remote URL — the headless browser must not depend on network fetches at render time
 - Use a **vector (SVG) logo** so it stays crisp at any zoom and print DPI
 - Opacity 0.05–0.08 for a grayscale mark; go lower if the logo is dark
-- Add a repeating footer: `INVTY · <company> GHG Inventory <period> · Page X of Y · Generated <date>`
+- Add a repeating footer: `IINVTY · <company> GHG Inventory <period> · Page X of Y · Generated <date>`
 - Add a small header mark on every page except the cover
 - For the Express track, add a diagonal **"SCREENING ESTIMATE"** band as a second, more visible watermark — protects you and creates an upgrade motive
-- Store the watermark configuration (opacity, size, angle, asset version) in config, not hardcoded, so INVTY branding can change without a code deploy
+- Store the watermark configuration (opacity, size, angle, asset version) in config, not hardcoded, so IINVTY branding can change without a code deploy
 
 ### 10.3 Report structure
 
 | Page | Content |
 |---|---|
-| Cover | INVTY branding, company name, reporting period, boundary, report type label, generation date, unique report ID |
+| Cover | IINVTY branding, company name, reporting period, boundary, report type label, generation date, unique report ID |
 | 1 | Executive summary — total tCO₂e, scope split donut, top 5 sources, data quality grade |
 | 2 | Organisational & operational boundary declaration; consolidation approach; facilities in scope |
 | 3 | Scope 1 detail — by sub-category, by facility, by gas |
@@ -783,7 +783,7 @@ Notes that matter in practice:
 | 11 | Methodology — standards applied, GWP set, factor sources with versions and URLs, unit conversion basis |
 | 12 | Limitations & disclaimer |
 | Annexe A | Full calculation log — every line item with its factor and source (optional, toggled) |
-| Back | INVTY contact / next-step CTA |
+| Back | IINVTY contact / next-step CTA |
 
 Page 11 is the page a professional turns to first. Make it complete and specific — exact publication names, versions, and years.
 
@@ -846,7 +846,7 @@ Surface overlay   #1B242E
 Border subtle     #22303C
 Text primary      #E8EEF4
 Text secondary    #8FA3B5
-Accent primary    #00D4A0   (signal green — INVTY brand hook)
+Accent primary    #00D4A0   (signal green — IINVTY brand hook)
 Accent secondary  #3B9EFF   (data blue)
 
 Scope 1           #FF7A45   (amber-orange — direct/combustion)
@@ -896,7 +896,7 @@ Scope colours must be **absolutely consistent** across every chart, table, badge
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│  INVTY                              Acme Steel Ltd · FY 2025–26  ⚙ │
+│  IINVTY                              Acme Steel Ltd · FY 2025–26  ⚙ │
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                    │
 │   Your carbon inventory                    ┌──────────────────┐   │
@@ -979,7 +979,7 @@ Executives will open this on a phone. Full data entry on mobile is not worth bui
 Every category displays a qualitative uncertainty band derived from its method tier (e.g. supplier-specific ±5%, spend-based ±40–60%). The report totals show a range, not a false-precision point value. **Round outputs sensibly** — reporting 1,616.4372 tCO₂e from spend-based data is a self-inflicted credibility wound. Round to 3 significant figures and say so.
 
 ### 12.3 Disclaimer (must appear in the report and in the tool's terms)
-The report must state plainly that it is a self-declared inventory prepared from user-supplied data, that it has not been independently verified or assured, that emission factors are secondary data from the cited public sources, and that it is not a substitute for third-party assurance under ISO 14064-3 or an accredited verification. INVTY should have this wording reviewed by counsel before launch. Note also: I am not a lawyer, and this is a design recommendation rather than legal advice.
+The report must state plainly that it is a self-declared inventory prepared from user-supplied data, that it has not been independently verified or assured, that emission factors are secondary data from the cited public sources, and that it is not a substitute for third-party assurance under ISO 14064-3 or an accredited verification. IINVTY should have this wording reviewed by counsel before launch. Note also: I am not a lawyer, and this is a design recommendation rather than legal advice.
 
 ### 12.4 Compliance and privacy
 - **Consent** at the email gate, with explicit purpose statement and an unsubscribe path
@@ -990,11 +990,11 @@ The report must state plainly that it is a self-declared inventory prepared from
 
 ---
 
-## 13. INVTY website integration
+## 13. IINVTY website integration
 
-**Recommended:** a subdomain, `ghg.invty.com`, deployed independently, sharing the INVTY design tokens (logo, colour accent, typography) so it feels native. Header carries INVTY branding and a link back to the main site.
+**Recommended:** a subdomain, `ghg.invty.com`, deployed independently, sharing the IINVTY design tokens (logo, colour accent, typography) so it feels native. Header carries IINVTY branding and a link back to the main site.
 
-**Not recommended:** an iframe embed inside an existing INVTY page. It breaks deep-linking, complicates cookies and file downloads, and constrains the layout for a data-dense app.
+**Not recommended:** an iframe embed inside an existing IINVTY page. It breaks deep-linking, complicates cookies and file downloads, and constrains the layout for a data-dense app.
 
 Entry points on the main site:
 - Primary nav item: "GHG Calculator" or "Free Carbon Assessment"
@@ -1031,13 +1031,13 @@ Roughly 16–20 weeks to a complete v1 with a small team (2 engineers, 1 designe
 
 | # | Question / risk | Why it matters | Suggested resolution |
 |---|---|---|---|
-| 1 | Is INVTY's audience primarily Indian industry, or global? | Determines whether CEA/BRSR is core or peripheral, and data residency | Confirm before Phase 0; it changes factor priorities |
+| 1 | Is IINVTY's audience primarily Indian industry, or global? | Determines whether CEA/BRSR is core or peripheral, and data residency | Confirm before Phase 0; it changes factor priorities |
 | 2 | Who owns annual factor updates? | Factors go stale in 12 months and stale factors destroy credibility | Name a person and a calendar date; budget 3–5 days/year |
-| 3 | Will INVTY publish the tool's methodology document? | Professionals will ask. Refusing to publish reads as hiding something | Publish it. It is also excellent SEO and marketing |
+| 3 | Will IINVTY publish the tool's methodology document? | Professionals will ask. Refusing to publish reads as hiding something | Publish it. It is also excellent SEO and marketing |
 | 4 | Competitive exposure | Persefoni, Watershed, Sweep, Normative and several Indian players occupy this space | You are not competing with them — you are running a lead magnet. Do not scope-creep toward feature parity |
 | 5a | CEA database version and factor selection | The current release is User Guide **v21.0 (Dec 2025)**; the OM/BM/CM factors are CDM baselines, not corporate Scope 2 factors | Pin v21.0; use the weighted average emission rate; document the choice |
 | 5 | Spend-based Scope 3 for Indian companies | EEIO factor sets for the Indian economy are thinner than for the US/EU | Investigate available Indian I-O derived factor sets early; may justify EXIOBASE or a commercial source sooner than planned |
-| 6 | Report abuse | Someone generates a watermarked "INVTY report" with junk data and circulates it | Report ID + verification page on invty.com that resolves the ID; clear "self-declared, unverified" labelling |
+| 6 | Report abuse | Someone generates a watermarked "IINVTY report" with junk data and circulates it | Report ID + verification page on invty.com that resolves the ID; clear "self-declared, unverified" labelling |
 | 7 | "Accurate" in marketing copy | Overclaiming is both a legal and reputational risk | Market it as "methodologically rigorous and fully traceable", not "accurate" |
 
 ---

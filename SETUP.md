@@ -214,6 +214,6 @@ tests are not. Resist it.
 
 An engine that produces correct, traceable numbers with an ugly UI is a product
 you can sell. A beautiful UI over an engine that quietly returns zero for a
-missing factor is a liability with the INVTY name on it.
+missing factor is a liability with the IINVTY name on it.
 
 Build steps 1 to 3. Make the tests pass. Then make it beautiful.

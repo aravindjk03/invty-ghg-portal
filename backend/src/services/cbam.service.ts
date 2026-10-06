@@ -115,7 +115,7 @@ export const cbamService = {
   </Header>
 
   <Installation>
-    <Name>${input.installationName || 'INVTY Industrial Manufacturing Complex'}</Name>
+    <Name>${input.installationName || 'IINVTY Industrial Manufacturing Complex'}</Name>
     <CountryCode>${input.countryCode || 'IN'}</CountryCode>
     <UNLOCODE>${input.unLocode || 'INJAI'}</UNLOCODE>
     <Sector>${input.sector.toUpperCase()}</Sector>

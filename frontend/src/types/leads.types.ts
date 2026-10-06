@@ -26,6 +26,8 @@ export interface LeadSubmissionPayload {
   sector: string;
   phone?: string;
   primaryNeed: string;
+  /** What the visitor was doing when the form appeared. */
+  requestedAction?: string;
   referralSource?: string;
   annualTurnoverOrProduction?: string;
   inventoryStats?: {

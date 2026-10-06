@@ -9,15 +9,14 @@ import { ActivityRow } from '../components/ui/ActivityRow';
 import { Tooltip } from '../components/ui/Tooltip';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatIndianNumber } from '../engine/unitConverter';
-import { deriveCategory3Emissions } from '../engine/calculator';
 import Decimal from 'decimal.js';
 import { 
   ArrowLeft, 
   ArrowRight, 
   Plus, 
   Filter, 
-  Calculator 
-} from 'lucide-react';
+  Calculator, Check } from 'lucide-react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 
 interface Scope3PageProps {
   onNavigate: (page: string) => void;
@@ -60,13 +59,21 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
     deleteRow,
     duplicateRow,
     saveToStorage,
+    period,
+    category3,
+    tdLoss,
+    setTdLoss,
+    electricityWtt,
+    setElectricityWtt,
   } = useGHG();
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
 
-  // Auto-derived Category 3 breakdown calculation
-  const s2LocDecimal = new Decimal(summary.scope2Location || 0);
-  const derivedCat3Total = deriveCategory3Emissions(scope1Entries, s2LocDecimal);
+  // Category 3 is whatever has been recorded against it. It is not derived from
+  // a percentage of Scopes 1 and 2: that had no published basis.
+  const cat3Recorded = scope3Entries
+    .filter((entry) => entry.category === 'cat3_fuel_energy')
+    .reduce((total, entry) => total + (entry.calculatedTco2e || 0), 0);
 
   // Helper to get entries for a specific category ID
   const getCategoryEntries = (catId: string) => {
@@ -79,6 +86,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28">
+      <EngineStatusBar />
       {/* Top Breadcrumb & Badge */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -180,38 +188,157 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border">
                 <h3 className="text-sm font-bold text-brand-heading flex items-center gap-2">
-                  Category 3: Fuel- and Energy-Related Activities (Auto-Derived Engine)
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                    Automated Synthesis
+                  Category 3: Fuel- and Energy-Related Activities
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                    Derived
                   </span>
                 </h3>
+                {/* The engine's own Category 3 total. It ALREADY includes any
+                    row recorded against this category by hand, so adding those
+                    on top would count them twice. */}
                 <span className="text-sm font-mono font-bold text-brand-heading">
-                  + {formatIndianNumber(derivedCat3Total.toNumber())} tCO₂e
+                  {formatIndianNumber(category3.tco2e)} tCO₂e
+                  {cat3Recorded > 0 && (
+                    <span className="ml-2 text-[11px] font-normal text-brand-muted">
+                      including {formatIndianNumber(cat3Recorded)} recorded by hand
+                    </span>
+                  )}
                 </span>
               </div>
+
               <p className="text-xs text-brand-muted mt-2 leading-relaxed">
-                In accordance with Bug Guard Rule #10, Category 3 is calculated as an automated secondary pass directly from verified Scope 1 & Scope 2 lines. This structurally eliminates circular recalculation loops and guarantees 100% audit trail synchronization:
+                Worked out from the rows already recorded in Scope 1 and Scope 2, by the same
+                engine and against the same published factors. Nothing here is a percentage of
+                another total: the upstream emissions of a fuel are DESNZ&rsquo;s published
+                well-to-tank factor applied to the quantity already entered, and the losses are
+                the generation needed to deliver what the meter received.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of Scope 1 Fuels (18%)</span>
-                  <span className="font-mono font-bold text-brand-heading text-sm">
-                    {formatIndianNumber(new Decimal(summary.scope1).times(0.18).toNumber())} tCO₂e
-                  </span>
+
+              {category3.derived.length > 0 && (
+                <ul className="mt-3 flex flex-col gap-1.5">
+                  {category3.derived.map((item) => (
+                    <li key={item.record_id} className="flex gap-2 items-start text-[11.5px]">
+                      <Check size={13} className="text-status-success shrink-0 mt-0.5" />
+                      <span className="text-brand-body">{item.basis}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {category3.notDerived.length > 0 && (
+                <div className="mt-3 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2">
+                  <p className="text-[11.5px] font-semibold text-[#8A5A00]">
+                    Not included, and why — a category that covers only some of its sources has
+                    to say which:
+                  </p>
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {/* One line per reason, not per row: ten rows of the same
+                        unmapped fuel is one thing to tell the reader. */}
+                    {Array.from(new Set(category3.notDerived.map((item) => item.reason)))
+                      .map((reason) => (
+                        <li key={reason} className="text-[11.5px] text-[#8A5A00]">
+                          {reason}
+                        </li>
+                      ))}
+                  </ul>
                 </div>
-                <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">WTT of Purchased Elec (12%)</span>
-                  <span className="font-mono font-bold text-brand-heading text-sm">
-                    {formatIndianNumber(s2LocDecimal.times(0.12).toNumber())} tCO₂e
+              )}
+
+              {/*
+                The loss rate unlocks the second half of this category. It is
+                published for each grid and each utility and varies several-fold
+                across India, so it is the customer's figure with the customer's
+                source — never a default this product picked.
+              */}
+              <div className="mt-4 pt-3 border-t border-border flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-semibold text-brand-body">
+                    Transmission &amp; distribution loss rate
                   </span>
-                </div>
-                <div className="p-2.5 rounded bg-surface border border-border text-xs">
-                  <span className="text-[11px] text-brand-muted font-semibold block">India Grid T&D Losses (19%)</span>
-                  <span className="font-mono font-bold text-brand-heading text-sm">
-                    {formatIndianNumber(s2LocDecimal.times(0.19).toNumber())} tCO₂e
+                  <span className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="99"
+                      value={tdLoss.rate === undefined ? '' : (tdLoss.rate * 100).toFixed(1)}
+                      onChange={(event) => {
+                        const percent = parseFloat(event.target.value);
+                        setTdLoss({
+                          ...tdLoss,
+                          rate: Number.isFinite(percent) && percent >= 0 && percent < 100
+                            ? percent / 100 : undefined,
+                        });
+                      }}
+                      placeholder="e.g. 17.0"
+                      className="w-24 h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                    />
+                    <span className="text-[11px] text-brand-muted">% of generation</span>
                   </span>
-                </div>
+                </label>
+                <label className="flex flex-col gap-1 flex-1 min-w-[16rem]">
+                  <span className="text-[11px] font-semibold text-brand-body">Where it came from</span>
+                  <input
+                    type="text"
+                    value={tdLoss.source}
+                    onChange={(event) => setTdLoss({ ...tdLoss, source: event.target.value })}
+                    placeholder="e.g. CEA, Growth of Electricity Sector in India 2025, Table 4.3"
+                    className="h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                  />
+                </label>
               </div>
+              <p className="text-[11px] text-brand-muted mt-1.5">
+                Both are needed. A rate with nowhere to trace it to is indistinguishable from an
+                invented one, so without the source the line is left out and said to be left out.
+              </p>
+
+              {/*
+                The upstream of purchased electricity. No published set gives one
+                for the Indian grid, so a company that holds a figure supplies it
+                here — on the same terms as every other number in this product.
+              */}
+              <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-semibold text-brand-body">
+                    Upstream of purchased electricity
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      value={electricityWtt.factor ?? ''}
+                      onChange={(event) => {
+                        const value = parseFloat(event.target.value);
+                        setElectricityWtt({
+                          ...electricityWtt,
+                          factor: Number.isFinite(value) && value >= 0 ? value : undefined,
+                        });
+                      }}
+                      placeholder="e.g. 0.090"
+                      className="w-24 h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                    />
+                    <span className="text-[11px] text-brand-muted">kgCO₂e per kWh</span>
+                  </span>
+                </label>
+                <label className="flex flex-col gap-1 flex-1 min-w-[16rem]">
+                  <span className="text-[11px] font-semibold text-brand-body">Where it came from</span>
+                  <input
+                    type="text"
+                    value={electricityWtt.source}
+                    onChange={(event) => setElectricityWtt({
+                      ...electricityWtt, source: event.target.value,
+                    })}
+                    placeholder="e.g. supplier disclosure, or a published Indian grid upstream study"
+                    className="h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+                  />
+                </label>
+              </div>
+              <p className="text-[11px] text-brand-muted mt-1.5">
+                The fuel burned to generate the electricity, before it reaches the grid. Nobody
+                publishes this for India, so it is left out until you give a figure — never
+                guessed, and never borrowed from another country&rsquo;s grid.
+              </p>
             </div>
           </div>
         </Card>
@@ -260,6 +387,8 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
                       {entries.map((row) => (
                         <ActivityRow
+                period={period}
+                  onNavigate={onNavigate}
                           key={row.id}
                           entry={row}
                           onUpdate={(updates) => updateRow('scope-3', row.id, updates)}
@@ -299,9 +428,9 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
             </div>
             <div className="h-7 w-px bg-border hidden sm:block" />
             <div>
-              <span className="text-brand-muted block">Auto-Derived Cat 3:</span>
-              <span className="text-sm font-mono font-bold text-purple-700">
-                {formatIndianNumber(derivedCat3Total.toNumber())} tCO₂e
+              <span className="text-brand-muted block">Cat 3 recorded:</span>
+              <span className="text-sm font-mono font-bold text-brand-heading">
+                {formatIndianNumber(cat3Recorded)} tCO₂e
               </span>
             </div>
             <div className="h-7 w-px bg-border hidden sm:block" />

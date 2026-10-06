@@ -1,7 +1,7 @@
 {
   "name": "invty-ghg-backend",
   "version": "1.0.0",
-  "description": "INVTY GHG Portal - Calculation Engine & Factor Service API",
+  "description": "IINVTY GHG Portal - Calculation Engine & Factor Service API",
   "private": true,
   "main": "dist/index.js",
   "scripts": {

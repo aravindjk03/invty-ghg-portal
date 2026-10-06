@@ -1,12 +1,12 @@
 ---
 activation: Always On
 ---
-# INVTY GHG Accounting Portal — project map
+# IINVTY GHG Accounting Portal — project map
 
-A public web tool on the INVTY website. Any visitor enters energy, fuel and
+A public web tool on the IINVTY website. Any visitor enters energy, fuel and
 value-chain data and receives a calculated GHG inventory (Scope 1, 2, 3) plus a
-downloadable, INVTY-watermarked PDF report. Audience: Indian industrial and
-corporate professionals. It is also a lead-generation funnel for INVTY.
+downloadable, IINVTY-watermarked PDF report. Audience: Indian industrial and
+corporate professionals. It is also a lead-generation funnel for IINVTY.
 
 ## The specifications live in the repo. Read them, do not guess.
 
@@ -41,6 +41,11 @@ Never invent, estimate or recall an emission factor, calorific value, density or
 GWP value. These are ingested from named publications only. If a coefficient is
 missing, raise an error and tell me which one — never substitute a plausible
 number, and never default to zero.
+
+One scoped exception, approved by the product owner on 2026-09-16: the Product
+Carbon page may show AI-proposed screening factors, clearly labelled, under the
+conditions in @.agents/rules/50-product-carbon.md section 6. It does not extend
+to the corporate inventory, the factor registry, or any report.
 
 ## Dependencies
 

@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Select } from './Select';
+import { env } from '../../config/env';
 import { CustomerLead, LeadSubmissionPayload } from '../../types/leads.types';
 import { ShieldCheck, Lock, Download, CheckCircle2 } from 'lucide-react';
 
@@ -12,7 +13,7 @@ export interface LeadGateModalProps {
   onSuccess: (lead: LeadSubmissionPayload) => void;
   title?: string;
   description?: string;
-  actionType?: 'pdf' | 'cbam' | 'brsr' | 'cloud_save';
+  actionType?: 'pdf' | 'cbam' | 'brsr' | 'cloud_save' | 'premium';
   inventorySummary?: {
     totalTco2e: number;
     scope1: number;
@@ -86,25 +87,36 @@ export const LeadGateModal: React.FC<LeadGateModalProps> = ({
       annualTurnoverOrProduction: annualScale.trim() || undefined,
       referralSource: window.location.search.includes('ref=portfolio') ? 'portfolio' : 'direct',
       inventoryStats: inventorySummary,
+      // Which queue this belongs in. Someone who hit the estimate limit and
+      // asked to upgrade is not the same as someone downloading a report.
+      requestedAction: actionType,
     };
 
     setIsSubmitting(true);
     try {
-      // POST to backend lead capture API
-      await fetch('http://localhost:5000/api/v1/leads', {
+      const response = await fetch(`${env.API_BASE_URL}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      if (!response.ok) throw new Error(String(response.status));
 
-      // Store in localStorage to avoid repeated prompts in same session
+      // Remembered so the same details are not asked for twice in a session.
       localStorage.setItem('INVTY_LEAD_PROFILE', JSON.stringify(payload));
       setIsSubmitting(false);
       onSuccess(payload);
     } catch {
-      // Fallback: save locally and permit download even if backend offline
       localStorage.setItem('INVTY_LEAD_PROFILE', JSON.stringify(payload));
       setIsSubmitting(false);
+
+      // An upgrade request that never arrived must not be answered with
+      // "we will be in touch". Nobody would be. A report download is
+      // different: the file is produced here, so it is still allowed.
+      if (actionType === 'premium') {
+        setErrorMsg('Your request could not be sent just now, so nobody has received it. '
+          + 'Please try again in a moment.');
+        return;
+      }
       onSuccess(payload);
     }
   };

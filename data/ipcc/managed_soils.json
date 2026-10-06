@@ -1,0 +1,36 @@
+{
+  "source_name": "IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 4 Chapter 11 (N2O from managed soils, CO2 from lime and urea)",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_11_Ch11_N2O&CO2.pdf",
+  "read_on": "2026-09-25",
+  "read_from": "Table 11.1 (page 11.11) and Table 11.3 (page 11.24), read from the published pages",
+  "tier": 1,
+  "conversion": {
+    "n2o_n_to_n2o": "44/28",
+    "note": "N2O = N2O-N x 44/28, as stated under Equation 11.1"
+  },
+  "direct": {
+    "EF1": {"value": 0.01, "uncertainty": [0.003, 0.03],
+            "unit": "kg N2O-N per kg N applied",
+            "applies_to": "synthetic fertiliser, organic amendments, crop residues, mineralised N"},
+    "EF1FR": {"value": 0.003, "uncertainty": [0.0, 0.006],
+              "unit": "kg N2O-N per kg N applied", "applies_to": "flooded rice fields"},
+    "EF3PRP_CPP": {"value": 0.02, "uncertainty": [0.007, 0.06],
+                   "unit": "kg N2O-N per kg N deposited",
+                   "applies_to": "cattle (dairy, non-dairy, buffalo), poultry and pigs on pasture"},
+    "EF3PRP_SO": {"value": 0.01, "uncertainty": [0.003, 0.03],
+                  "unit": "kg N2O-N per kg N deposited", "applies_to": "sheep and other animals"}
+  },
+  "indirect": {
+    "EF4": {"value": 0.010, "uncertainty": [0.002, 0.05],
+            "unit": "kg N2O-N per kg NH3-N + NOx-N volatilised"},
+    "EF5": {"value": 0.0075, "uncertainty": [0.0005, 0.025],
+            "unit": "kg N2O-N per kg N leached or run off"},
+    "FracGASF": {"value": 0.10, "uncertainty": [0.03, 0.3],
+                 "unit": "kg N volatilised per kg synthetic N applied"},
+    "FracGASM": {"value": 0.20, "uncertainty": [0.05, 0.5],
+                 "unit": "kg N volatilised per kg organic N applied or deposited"},
+    "FracLEACH_H": {"value": 0.30, "uncertainty": [0.1, 0.8],
+                    "unit": "kg N lost per kg N added",
+                    "applies_to": "regions where rainfall exceeds soil water holding capacity, or where irrigation other than drip is used. Elsewhere the default is zero."}
+  }
+}

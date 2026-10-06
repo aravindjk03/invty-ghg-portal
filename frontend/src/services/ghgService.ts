@@ -1,7 +1,6 @@
 import { request } from './api';
 import { EmissionFactor, WhatIfScenario, ScenarioResult, ActivityEntry, ScopeSummary } from '../types/ghg';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
-import { calculateRowEmissions } from '../engine/calculator';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -28,14 +27,6 @@ export const ghgService = {
     } catch {
       return DEFAULT_FACTORS;
     }
-  },
-
-  calculateRowLocally(amount: number | string, factorValue: number, fuelOrSource: string, unit: string) {
-    const res = calculateRowEmissions(amount, factorValue, fuelOrSource, unit);
-    return {
-      calculatedTco2e: res.calculatedTco2e,
-      warning: res.warning,
-    };
   },
 
   async simulateScenario(
@@ -95,8 +86,9 @@ export const ghgService = {
       Source: e.fuelOrSource,
       Amount: e.amount,
       Unit: e.unit,
-      'Emission Factor (kgCO2e/unit)': e.emissionFactor.factorValue,
-      'Factor Source': e.emissionFactor.source,
+      // What the engine used, not the value the catalogue ships for its picker.
+      'Emission Factor (kgCO2e/unit)': e.engineFactorValue ?? '',
+      'Factor Source': e.engineFactorSource ?? 'Not calculated',
       'Quality Tier': e.emissionFactor.qualityTier,
       'Emissions (tCO2e)': e.calculatedTco2e,
       'Last Updated': e.updatedAt,
@@ -150,7 +142,7 @@ export const ghgService = {
       Source: e.fuelOrSource,
       Quantity: e.amount,
       Unit: e.unit,
-      'Factor Value (kgCO2e)': e.emissionFactor.factorValue,
+      'Factor Value (kgCO2e)': e.engineFactorValue ?? '',
       'Factor Source': e.emissionFactor.source,
       'Quality Tier': e.emissionFactor.qualityTier,
       'Emissions (tCO2e)': e.calculatedTco2e,
@@ -198,7 +190,7 @@ export const ghgService = {
   /**
    * Bug Guard #11: Pixel-accurate PDF generator with html2canvas and jsPDF
    */
-  async generatePdf(elementId: string, filename = 'INVTY_GHG_Verification_Report.pdf'): Promise<void> {
+  async generatePdf(elementId: string, filename = 'IINVTY_GHG_Verification_Report.pdf'): Promise<void> {
     const el = document.getElementById(elementId);
     if (!el) {
       window.print();

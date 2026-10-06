@@ -3,6 +3,7 @@ import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { PeriodPicker } from '../components/ui/PeriodPicker';
 import { Select } from '../components/ui/Select';
 import { Toggle } from '../components/ui/Toggle';
 import { Badge } from '../components/ui/Badge';
@@ -33,7 +34,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
     boundaryApproach,
     steelMethod,
     setCompanyName,
-    setReportingPeriod,
+    period,
+    setPeriod,
     setBoundaryApproach,
     setSteelMethod,
     scope1Entries,
@@ -142,14 +144,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
               <label className="block text-xs font-semibold text-brand-body mb-1">
                 Reporting Financial Period
               </label>
-              <Input
-                value={reportingPeriod}
-                onChange={(e) => setReportingPeriod(e.target.value)}
-                placeholder="e.g. FY 2025–26"
-              />
-              <span className="text-[11px] text-brand-muted mt-1 block">
-                Indian Standard Financial Year (1 April – 31 March)
-              </span>
+              <PeriodPicker period={period} onChange={setPeriod} variant="panel" />
             </div>
           </div>
         </Card>
