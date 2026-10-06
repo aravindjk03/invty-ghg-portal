@@ -24,8 +24,9 @@ export const AccessKeyPanel: React.FC<AccessKeyPanelProps> = ({ assistant, hasKe
   const save = (event: React.FormEvent) => {
     event.preventDefault();
     const key = value.trim();
-    if (!/^sk-ant-[A-Za-z0-9_-]{20,}$/.test(key)) {
-      setError('That does not look like a valid access key. It starts with "sk-ant-".');
+    // A Claude key (sk-ant-…) or a Google Gemini key (AIza… or AQ.…).
+    if (!/^(sk-ant-[A-Za-z0-9_-]{20,}|AIza[A-Za-z0-9_-]{30,}|AQ\.[A-Za-z0-9_.-]{20,})$/.test(key)) {
+      setError('That does not look like a valid access key. Paste the whole key, with nothing before or after it.');
       return;
     }
     setAccessKey(key);
@@ -80,7 +81,7 @@ export const AccessKeyPanel: React.FC<AccessKeyPanelProps> = ({ assistant, hasKe
               spellCheck={false}
               value={value}
               onChange={(e) => { setValue(e.target.value); setError(null); }}
-              placeholder="sk-ant-…"
+              placeholder="Paste access key"
               className="w-full h-10 rounded-md border border-border bg-surface-raised px-3 text-sm font-mono text-brand-body focus-visible:outline-2 focus-visible:outline-blue-600"
             />
           </label>

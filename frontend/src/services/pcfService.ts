@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { env } from '../config/env';
 import { authService } from './authService';
 import {
-  BrowserAiError, estimateInBrowser, estimateWithGemini, hasAccessKey, hasBuiltInAi,
+  aiReady, BrowserAiError, estimateInBrowser, estimateWithGemini, usesClaude,
 } from './browserAi';
 import {
   EstimateInput,
@@ -76,7 +76,7 @@ function browserHealth(): PcfHealth {
   return {
     status: 'ok',
     assistant: env.ASSISTANT_NAME,
-    ai_ready: hasBuiltInAi() || hasAccessKey(),
+    ai_ready: aiReady(),
     engine_version: 'browser',
     catalogue_rows: 0,
     verified_factors: 0,
@@ -140,9 +140,9 @@ async function estimateHere(input: EstimateInput, signal?: AbortSignal): Promise
   if (kept.success) return kept.data;
   let body: unknown;
   try {
-    // A visitor's own Claude key, when they gave one, is used; otherwise the
-    // free Gemini models built into the site.
-    body = hasAccessKey() || !hasBuiltInAi()
+    // A pasted Claude key uses Claude; anything else (a pasted Gemini key, or
+    // one built into the site) uses the free Gemini models.
+    body = usesClaude()
       ? await estimateInBrowser(input, signal)
       : await estimateWithGemini(input, signal);
   } catch (err) {
