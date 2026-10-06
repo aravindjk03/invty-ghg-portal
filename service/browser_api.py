@@ -11,7 +11,9 @@ The AI product estimate is split in two around the one call that needs a key.
 the model, and `/v1/pcf/browser-assemble` validates the model's answer and
 computes every figure from it with ghg_core, as the server does. The page makes
 the model call in between with a key the visitor entered, which is held only
-in that browser and never shipped with the site.
+in that browser and never shipped with the site. `/v1/pcf/gemini-request` and
+`/v1/pcf/gemini-assemble` do the same for the free Gemini models, whose key is
+built into the site and restricted by Google to the site's own address.
 """
 from __future__ import annotations
 
@@ -29,6 +31,10 @@ from .catalogue import Catalogue
 from .config import Settings
 from .estimator import (EstimatorError, EstimatorNotAProduct, build_request, build_system,
                         build_user_message, parse_message, public_message)
+from .gemini import ENDPOINT as GEMINI_ENDPOINT
+from .gemini import build_body as gemini_body
+from .gemini import error_for_status as gemini_error
+from .gemini import parse_response as gemini_parse
 from .inventory import GWP_SETS, load_gwp
 from .inventory_api import (InventoryRequest, calculate_inventory, catalogue_mappings,
                             list_activities, unit_choices)
@@ -37,6 +43,13 @@ from .pipeline import build_response
 from .schemas import EstimateRequest
 
 _METHOD_REQUEST = TypeAdapter(MethodRequest)
+
+#: Free Gemini models the browser tries in turn. Each has its own free-tier
+#: quota (a few requests a minute), and any one may be briefly "at capacity",
+#: so the page moves down the list rather than failing on the first refusal.
+#: The full Flash models come first: the Lite ones answer faster but vary more.
+BROWSER_GEMINI_MODELS = ("gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash",
+                         "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
 
 #: The model the browser asks, by default the current Opus. Same request
 #: builder as the server, so only fields this model accepts are sent.
@@ -82,6 +95,37 @@ def _browser_assemble(body: Any) -> tuple[int, Any]:
     request = EstimateRequest.model_validate((body or {}).get("request"))
     try:
         decomposition = parse_message(_as_attrs((body or {}).get("message") or {}))
+        if not decomposition.product.is_product:
+            raise EstimatorNotAProduct("not a physical product or material")
+    except EstimatorError as exc:
+        return _ai_error(exc, settings.assistant_name)
+    return 200, build_response(request, decomposition, catalogue, registry,
+                               year=settings.reporting_year,
+                               assistant=settings.assistant_name, cache_hit=False)
+
+
+def _gemini_request(body: Any) -> tuple[int, Any]:
+    settings, _, _, prompt_catalogue, _ = _pcf()
+    request = EstimateRequest.model_validate(body)
+    return 200, {
+        "models": list(BROWSER_GEMINI_MODELS),
+        "endpoint": GEMINI_ENDPOINT,
+        "body": gemini_body(build_system(prompt_catalogue), build_user_message(request),
+                            settings.max_tokens),
+        "assistant": settings.assistant_name,
+    }
+
+
+def _gemini_assemble(body: Any) -> tuple[int, Any]:
+    settings, catalogue, registry, _, _ = _pcf()
+    body = body or {}
+    request = EstimateRequest.model_validate(body.get("request"))
+    status = int(body.get("status") or 0)
+    data = body.get("data") or {}
+    try:
+        if status != 200:
+            raise gemini_error(status, data, str(body.get("model") or "gemini"))
+        decomposition = gemini_parse(data)
         if not decomposition.product.is_product:
             raise EstimatorNotAProduct("not a physical product or material")
     except EstimatorError as exc:
@@ -162,6 +206,12 @@ def _route(method: str, path: str, query: dict, body: Any) -> tuple[int, Any]:
 
     if method == "POST" and path == "/v1/pcf/browser-assemble":
         return _browser_assemble(body)
+
+    if method == "POST" and path == "/v1/pcf/gemini-request":
+        return _gemini_request(body)
+
+    if method == "POST" and path == "/v1/pcf/gemini-assemble":
+        return _gemini_assemble(body)
 
     return 404, {"detail": "Not Found"}
 

@@ -6,4 +6,7 @@ export const env = {
   ASSISTANT_NAME: import.meta.env.VITE_ASSISTANT_NAME || 'INSITY EDGE AI',
   APP_TITLE: import.meta.env.VITE_APP_TITLE || 'IINVTY GHG Portal',
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+  // Free-tier Gemini key for INSITY EDGE AI on the static site. Supplied at
+  // build time (never committed) and restricted by Google to the site's address.
+  GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
 };

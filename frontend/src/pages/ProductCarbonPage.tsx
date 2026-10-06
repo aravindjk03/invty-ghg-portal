@@ -19,6 +19,7 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { EstimateResult } from '../components/pcf/EstimateResult';
 import { AccessKeyPanel } from '../components/pcf/AccessKeyPanel';
+import { hasBuiltInAi } from '../services/browserAi';
 import { estimateProduct, getEntitlement, getPcfHealth, PcfError } from '../services/pcfService';
 import { EstimateInput, Region } from '../types/pcf';
 import { env } from '../config/env';
@@ -152,7 +153,7 @@ function Pending({ product, onCancel }: { product: string; onCancel: () => void 
         <div className="flex-1" role="status" aria-live="polite">
           <p className="text-base font-semibold text-brand-heading">Analysing “{product}”</p>
           <p className="text-sm text-brand-muted mt-1">
-            {name} is working through materials, manufacturing, use and disposal. This usually takes under a minute.
+            {name} is working through materials, manufacturing, use and disposal. This usually takes under a minute{hasBuiltInAi() ? ', and up to three when the free AI service is busy' : ''}.
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -295,7 +296,7 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
       <div className="flex flex-col gap-6">
         {/* No estimate service reachable: the estimate runs from this browser with
             an access key saved on this computer. */}
-        {health.data?.mode === 'browser' && (
+        {health.data?.mode === 'browser' && !hasBuiltInAi() && (
           <AccessKeyPanel
             assistant={health.data.assistant}
             hasKey={health.data.ai_ready}

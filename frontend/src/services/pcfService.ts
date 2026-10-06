@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { env } from '../config/env';
 import { authService } from './authService';
-import { BrowserAiError, estimateInBrowser, hasAccessKey } from './browserAi';
+import {
+  BrowserAiError, estimateInBrowser, estimateWithGemini, hasAccessKey, hasBuiltInAi,
+} from './browserAi';
 import {
   EstimateInput,
   EstimateResponse,
@@ -74,7 +76,7 @@ function browserHealth(): PcfHealth {
   return {
     status: 'ok',
     assistant: env.ASSISTANT_NAME,
-    ai_ready: hasAccessKey(),
+    ai_ready: hasBuiltInAi() || hasAccessKey(),
     engine_version: 'browser',
     catalogue_rows: 0,
     verified_factors: 0,
@@ -102,10 +104,47 @@ export async function getPcfHealth(): Promise<PcfHealth> {
   return browserHealth();
 }
 
+/**
+ * Estimates made from this browser, kept so the same product asked twice gets
+ * the same answer. The server caches the same way; without this a free model
+ * could give two different figures for one product in the same demo.
+ */
+const ESTIMATE_CACHE = 'insity_edge_ai_estimates_v1';
+const CACHE_LIMIT = 40;
+
+const cacheKey = (input: EstimateInput) =>
+  JSON.stringify([input.product.trim().toLowerCase(), input.region, input.details.trim().toLowerCase()]);
+
+function readCache(): Record<string, EstimateResponse> {
+  try {
+    return JSON.parse(localStorage.getItem(ESTIMATE_CACHE) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function remember(input: EstimateInput, estimate: EstimateResponse): void {
+  try {
+    const cache = readCache();
+    cache[cacheKey(input)] = estimate;
+    const keys = Object.keys(cache);
+    keys.slice(0, Math.max(0, keys.length - CACHE_LIMIT)).forEach((key) => delete cache[key]);
+    localStorage.setItem(ESTIMATE_CACHE, JSON.stringify(cache));
+  } catch {
+    // storage unavailable: the estimate is still shown, just not kept
+  }
+}
+
 async function estimateHere(input: EstimateInput, signal?: AbortSignal): Promise<EstimateResponse> {
+  const kept = EstimateResponseSchema.safeParse(readCache()[cacheKey(input)]);
+  if (kept.success) return kept.data;
   let body: unknown;
   try {
-    body = await estimateInBrowser(input, signal);
+    // A visitor's own Claude key, when they gave one, is used; otherwise the
+    // free Gemini models built into the site.
+    body = hasAccessKey() || !hasBuiltInAi()
+      ? await estimateInBrowser(input, signal)
+      : await estimateWithGemini(input, signal);
   } catch (err) {
     if (err instanceof BrowserAiError) throw new PcfError(err.code, err.message);
     throw err;
@@ -115,6 +154,7 @@ async function estimateHere(input: EstimateInput, signal?: AbortSignal): Promise
     throw new PcfError('bad_response',
       'The service returned a result in an unexpected shape, so it was not displayed.');
   }
+  remember(input, parsed.data);
   return parsed.data;
 }
 
