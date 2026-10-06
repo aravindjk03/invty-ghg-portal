@@ -29,12 +29,61 @@ const verifyOtpSchema = z.object({
 });
 
 const googleAuthSchema = z.object({
+  /** ID token from the Google Sign-In button / One Tap. */
   credential: z.string().optional(),
+  /** OAuth access token from the Google account-chooser popup. */
+  accessToken: z.string().optional(),
   email: z.string().email().optional(),
   name: z.string().optional(),
   picture: z.string().optional(),
   companyName: z.string().optional(),
 });
+
+interface VerifiedGoogleIdentity {
+  email: string;
+  name?: string;
+  picture?: string;
+}
+
+/**
+ * Asks Google whether a token is genuine, unexpired and was issued to this
+ * app, and returns the verified identity. The browser's own claims about the
+ * user (email, name) are never trusted: without this check anyone could POST
+ * someone else's email address and be signed in as them.
+ */
+async function verifyGoogleToken(
+  kind: 'id_token' | 'access_token',
+  token: string
+): Promise<VerifiedGoogleIdentity | null> {
+  const info = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?${kind}=${encodeURIComponent(token)}`
+  );
+  if (!info.ok) return null;
+  const claims = (await info.json()) as Record<string, string | boolean | undefined>;
+
+  // A token minted for another site must not open an account here.
+  const audience = String(claims.aud ?? claims.azp ?? '');
+  if (env.GOOGLE_CLIENT_ID && audience !== env.GOOGLE_CLIENT_ID) return null;
+
+  const email = typeof claims.email === 'string' ? claims.email : '';
+  const emailVerified = claims.email_verified === true || claims.email_verified === 'true';
+  if (!email || !emailVerified) return null;
+
+  if (kind === 'id_token') {
+    return {
+      email,
+      name: typeof claims.name === 'string' ? claims.name : undefined,
+      picture: typeof claims.picture === 'string' ? claims.picture : undefined,
+    };
+  }
+
+  // tokeninfo for an access token carries no profile; read it with the token.
+  const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const profile = profileRes.ok ? ((await profileRes.json()) as Record<string, string>) : {};
+  return { email, name: profile.name, picture: profile.picture };
+}
 
 export const authController = {
   // 1. Email + Password Sign Up
@@ -275,38 +324,49 @@ export const authController = {
         return;
       }
 
-      let email = parsed.data.email;
-      let name = parsed.data.name;
-      let picture = parsed.data.picture;
-
-      // If a real Google ID token (JWT) is provided from Google Identity Services
-      if (parsed.data.credential) {
-        try {
-          // JWT payload parsing (middle segment)
-          const parts = parsed.data.credential.split('.');
-          if (parts.length === 3) {
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-            if (payload.email) {
-              email = payload.email;
-              name = payload.name || name || payload.given_name;
-              picture = payload.picture || picture;
-            }
-          }
-        } catch (e) {
-          console.warn('[AUTH GOOGLE] JWT token parse fallback:', e);
-        }
-      }
-
-      if (!email) {
+      const { credential, accessToken } = parsed.data;
+      if (!credential && !accessToken) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'MISSING_GOOGLE_EMAIL',
-            message: 'Unable to extract verified Google email address.',
+            code: 'MISSING_GOOGLE_TOKEN',
+            message: 'Google sign-in did not return a token. Please try again.',
           },
         });
         return;
       }
+
+      let identity: VerifiedGoogleIdentity | null;
+      try {
+        identity = credential
+          ? await verifyGoogleToken('id_token', credential)
+          : await verifyGoogleToken('access_token', accessToken!);
+      } catch (error) {
+        console.error('[AUTH GOOGLE] Could not reach Google to verify the token:', error);
+        res.status(502).json({
+          success: false,
+          error: {
+            code: 'GOOGLE_UNREACHABLE',
+            message: 'Could not reach Google to confirm the sign-in. Please try again.',
+          },
+        });
+        return;
+      }
+
+      if (!identity) {
+        res.status(401).json({
+          success: false,
+          error: {
+            code: 'GOOGLE_TOKEN_INVALID',
+            message: 'Google could not confirm this sign-in. Please try again.',
+          },
+        });
+        return;
+      }
+
+      const email = identity.email;
+      const name = identity.name || parsed.data.name;
+      const picture = identity.picture || parsed.data.picture;
 
       const safeUser = dbService.findOrCreateGoogleUser({
         email,

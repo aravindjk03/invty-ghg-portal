@@ -10,6 +10,7 @@ export type PageKey =
   | 'product-carbon'
   | 'scope-1'
   | 'methods'
+  | 'factor-library'
   | 'scope-2'
   | 'scope-3'
   | 'dashboard'
@@ -23,6 +24,7 @@ export const PAGE_KEYS: PageKey[] = [
   'product-carbon',
   'scope-1',
   'methods',
+  'factor-library',
   'scope-2',
   'scope-3',
   'dashboard',

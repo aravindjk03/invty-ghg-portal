@@ -282,9 +282,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     setError(null);
     const clientId = overrideClientId || savedGoogleClientId || env.GOOGLE_CLIENT_ID || localStorage.getItem('invty_google_client_id');
 
-    // If Client ID is not configured, open the quick setup dialog
+    // Visitors cannot be expected to supply a developer Client ID. The site
+    // owner sets VITE_GOOGLE_CLIENT_ID at build time (see SETUP-GOOGLE.md).
     if (!clientId) {
-      setGoogleConfigModalOpen(true);
+      setError('Google sign-in has not been set up on this site yet. Please sign in with email, mobile or the demo account.');
       return;
     }
 
@@ -317,6 +318,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
               // Save to SQLite database and activate session
               const authRes = await authService.googleAuth({
+                accessToken: tokenResponse.access_token,
                 email: profile.email,
                 name: profile.name || profile.given_name || profile.email.split('@')[0],
                 picture: profile.picture,
@@ -336,28 +338,8 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         return;
       }
 
-      // Fallback: Open Google OAuth2 Authorization Window directly
-      const redirectUri = window.location.origin;
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-        clientId
-      )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(
-        'openid email profile'
-      )}&prompt=select_account`;
-
-      const width = 500;
-      const height = 620;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
-
-      const popup = window.open(
-        googleAuthUrl,
-        'google_oauth_popup',
-        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-      );
-
-      if (!popup) {
-        throw new Error('Popup blocked by browser. Please allow popups for localhost to sign in with Google.');
-      }
+      // The Google script did not load (offline, or blocked by an ad or privacy blocker).
+      throw new Error('Google sign-in could not load. Check your internet connection, allow accounts.google.com in any ad or privacy blocker, then reload the page.');
     } catch (err: any) {
       setError(err.message || 'Failed to initialize Google Sign-In.');
     } finally {
