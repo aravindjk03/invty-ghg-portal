@@ -347,16 +347,27 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
       {/* ALL 15 ACCORDION CATEGORIES */}
       <div className="space-y-5">
         {categoriesToRender
-          .filter((cat) => !cat.auto) // Category 3 is auto-rendered above
           .map((cat) => {
             const entries = getCategoryEntries(cat.id);
             const isSingleFiltered = selectedCategoryFilter === cat.id;
+            // Category 3's upstream and T&D lines are derived above. What can be
+            // recorded here is the rest of the category (electricity bought and
+            // resold to end users), which the engine adds to the derived lines
+            // once rather than twice.
+            const title = cat.auto
+              ? `Cat ${cat.num}: ${cat.name} — sources recorded by hand`
+              : `Cat ${cat.num}: ${cat.name}`;
+            const subtitle = cat.auto
+              ? 'Only what is not derived above, e.g. electricity bought and resold to end users'
+              : cat.subtitle;
 
             return (
               <Accordion
-                key={cat.id}
-                title={`Cat ${cat.num}: ${cat.name}`}
-                subtitle={cat.subtitle}
+                // Remount when a tile selects this category, so "Click to Screen
+                // & Add" opens it rather than showing it still collapsed.
+                key={`${cat.id}-${isSingleFiltered ? 'selected' : 'all'}`}
+                title={title}
+                subtitle={subtitle}
                 badge={
                   entries.length > 0 ? (
                     <Badge variant="primary">{entries.length} {entries.length === 1 ? 'item' : 'items'}</Badge>
@@ -364,13 +375,13 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
                     <span className="text-[11px] text-brand-muted">0 entries</span>
                   )
                 }
-                defaultOpen={isSingleFiltered || cat.defaultIncluded}
+                defaultOpen={isSingleFiltered || (cat.defaultIncluded && !cat.auto)}
               >
                 <div className="p-4 space-y-4">
                   {entries.length === 0 ? (
                     <EmptyState
                       title={`No active entries for Cat ${cat.num}: ${cat.name}`}
-                      description={cat.subtitle}
+                      description={subtitle}
                       actionLabel={`Add Entry for Cat ${cat.num}`}
                       onAdd={() => addRow('scope-3', cat.id)}
                     />
