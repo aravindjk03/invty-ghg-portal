@@ -64,7 +64,7 @@ function ServiceStatus() {
   const name = health.data?.assistant ?? env.ASSISTANT_NAME;
 
   let dot = 'bg-brand-muted';
-  let state = 'checking…';
+  let state = 'connecting…';
   if (health.isError) {
     dot = 'bg-status-danger';
     state = 'offline';
