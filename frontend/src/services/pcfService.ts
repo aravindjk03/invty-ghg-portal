@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { env } from '../config/env';
 import { authService } from './authService';
 import {
-  aiReady, BrowserAiError, estimateInBrowser, estimateWithGemini, usesClaude,
+  aiReady, BrowserAiError, estimateInBrowser, estimateWithGemini, hasAccessKey, usesClaude,
 } from './browserAi';
 import {
   EstimateInput,
@@ -62,8 +62,14 @@ export async function getEntitlement(): Promise<Entitlement | null> {
 }
 
 
-/** How long the estimate service gets to answer before the page runs it itself. */
+/**
+ * How long the estimate service gets to answer before the page runs it itself.
+ * A free Render service sleeps when idle and takes up to a minute to wake, so
+ * without a key on this computer (nothing to fall back to) the page waits for
+ * it rather than asking the visitor for a key.
+ */
 const SERVICE_TIMEOUT_MS = 6000;
+const WAKE_TIMEOUT_MS = 90000;
 
 /**
  * Whether estimates go to the service or are made from this browser. Decided by
@@ -90,7 +96,7 @@ export async function getPcfHealth(): Promise<PcfHealth> {
   if (serviceMode === 'browser') return browserHealth();
   try {
     const res = await fetch(`${env.PCF_API_BASE_URL}/health`, {
-      signal: AbortSignal.timeout(SERVICE_TIMEOUT_MS),
+      signal: AbortSignal.timeout(hasAccessKey() ? SERVICE_TIMEOUT_MS : WAKE_TIMEOUT_MS),
     });
     if (res.ok) {
       const health = HealthSchema.parse(await res.json());
