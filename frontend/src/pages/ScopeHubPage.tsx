@@ -318,7 +318,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
 
               {/* Actions */}
               <div className="mt-6 pt-4 border-t border-border flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center flex-wrap gap-3">
                   <Button
                     variant="primary"
                     size="sm"

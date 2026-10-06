@@ -492,10 +492,10 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
-        <div className="max-w-[1440px] mx-auto w-full px-6 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 sm:h-16 py-2 sm:py-0 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
+        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-muted">
+            <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-brand-muted">
               Scope 1 Subtotal:
             </span>
             <div className="flex items-baseline gap-1">
@@ -507,13 +507,14 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => onNavigate('scope-hub')}>
+            <Button variant="ghost" size="sm" onClick={() => onNavigate('scope-hub')} className="hidden md:inline-flex">
               Back to all scopes
             </Button>
             <Button
               variant="secondary"
               size="sm"
               onClick={saveToStorage}
+              className="hidden sm:inline-flex"
             >
               Save Draft
             </Button>

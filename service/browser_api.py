@@ -1,0 +1,103 @@
+"""The calculation endpoints, without a web server, for running in the browser.
+
+The static website (GitHub Pages) has no calculation server behind it unless
+one is deployed. The browser then loads this module under Pyodide and calls
+`handle` with what it would have sent over HTTP. It answers exactly as
+service/app.py does for the same request, from the same ghg_core code and the
+same factor tables, so a figure never depends on where it was calculated.
+
+Only the deterministic endpoints are here. The AI product estimate needs API
+keys that must never reach a browser, so it stays server-only.
+"""
+from __future__ import annotations
+
+import json
+from typing import Any, Optional
+from urllib.parse import parse_qs
+
+from pydantic import BaseModel, TypeAdapter, ValidationError
+
+from .inventory import GWP_SETS, load_gwp
+from .inventory_api import (InventoryRequest, calculate_inventory, catalogue_mappings,
+                            list_activities)
+from .methods_api import MethodRequest, calculate_method, list_methods
+
+_METHOD_REQUEST = TypeAdapter(MethodRequest)
+
+
+def _dump(value: Any) -> Any:
+    """JSON-ready, serialised the way FastAPI serialises a response model."""
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json")
+    if isinstance(value, list):
+        return [_dump(item) for item in value]
+    return TypeAdapter(type(value)).dump_python(value, mode="json")
+
+
+def _query(query: str) -> dict[str, Optional[str]]:
+    return {key: values[-1] for key, values in parse_qs(query or "").items()}
+
+
+def _gwp_sets() -> list[dict]:
+    sets = []
+    for name in GWP_SETS:
+        gwp = load_gwp(name)
+        sets.append({
+            "name": gwp.name,
+            "horizon_years": gwp.horizon_years,
+            "source_name": gwp.source_name,
+            "source_url": gwp.source_url,
+            "gases": sorted(gwp.values),
+        })
+    return sets
+
+
+def _route(method: str, path: str, query: dict, body: Any) -> tuple[int, Any]:
+    if method == "GET" and path == "/health":
+        return 200, {"status": "ok", "engine": "browser"}
+
+    if method == "GET" and path == "/v1/inventory/activities":
+        try:
+            limit = int(query.get("limit") or 200)
+        except ValueError:
+            return 422, {"detail": "limit must be a whole number."}
+        return 200, list_activities(query.get("scope"), query.get("region"),
+                                    query.get("search"), max(1, min(limit, 2000)))
+
+    if method == "GET" and path == "/v1/inventory/catalogue-map":
+        return 200, catalogue_mappings()
+
+    if method == "GET" and path == "/v1/inventory/gwp-sets":
+        return 200, _gwp_sets()
+
+    if method == "POST" and path == "/v1/inventory/calculate":
+        request = InventoryRequest.model_validate(body)
+        gwp = load_gwp(request.gwp_set)
+        try:
+            return 200, calculate_inventory(request, f"{gwp.source_name} ({gwp.source_url})")
+        except ValueError as exc:
+            return 422, {"detail": {"code": "unsourced_factor", "message": str(exc)}}
+
+    if method == "GET" and path == "/v1/methods":
+        return 200, list_methods()
+
+    if method == "POST" and path == "/v1/methods/calculate":
+        request = _METHOD_REQUEST.validate_python(body)
+        try:
+            return 200, calculate_method(request)
+        except (KeyError, ValueError) as exc:
+            return 422, {"detail": str(exc).strip("'")}
+
+    return 404, {"detail": "Not Found"}
+
+
+def handle(method: str, path: str, query: str = "", body: Optional[str] = None) -> str:
+    """Answer one request. Returns JSON text: {"status": <int>, "body": <json>}."""
+    try:
+        payload = json.loads(body) if body else None
+        status, result = _route(method.upper(), path, _query(query), payload)
+    except ValidationError as exc:
+        status, result = 422, {"detail": json.loads(exc.json(include_url=False))}
+    except json.JSONDecodeError:
+        status, result = 422, {"detail": "The request body is not valid JSON."}
+    return json.dumps({"status": status, "body": _dump(result)})

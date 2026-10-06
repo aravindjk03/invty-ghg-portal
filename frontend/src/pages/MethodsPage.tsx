@@ -134,7 +134,7 @@ export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
               Nine sources cannot be a factor per unit of activity. A landfill&apos;s methane
               depends on what was buried in earlier years; a cement kiln&apos;s CO₂ comes out of
               the limestone whatever heats it; an aluminium cell makes CF₄ during an anode
-              effect. They are calculated here, by the same engine and under the same {gwpSet}
+              effect. They are calculated here, by the same engine and under the same {gwpSet}{' '}
               basis as the rest of the inventory.
             </p>
           </div>
