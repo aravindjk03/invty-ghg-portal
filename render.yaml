@@ -72,8 +72,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.10"
+      # INSITY EDGE AI answers with Claude. Only ANTHROPIC_API_KEY is needed;
+      # GEMINI_API_KEY can be left blank.
       - key: PCF_AI_PROVIDER
-        value: gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,gemini:gemini-3.1-flash-lite,anthropic
+        value: anthropic:claude-opus-5-5
       - key: PCF_CORS_ORIGINS
         value: https://aravindjk03.github.io
       - key: GEMINI_API_KEY
@@ -86,7 +88,7 @@ services:
       # that reasons hardest; the free chain is appended automatically behind
       # it, so an outage degrades the answer instead of removing it.
       - key: PCF_AI_PROVIDER_PREMIUM
-        value: anthropic:claude-opus-5,anthropic:claude-sonnet-5
+        value: anthropic:claude-opus-5-5
       # The same secret the backend generated above. Nothing to paste.
       - key: ESTIMATE_SERVICE_SECRET
         fromService:
