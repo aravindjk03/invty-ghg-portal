@@ -44,6 +44,27 @@ export function clearAccessKey(): void {
 }
 
 let sessionKey: string | null = null;
+
+/**
+ * Connect from a team link: https://…/invty-ghg-portal/#ai=<key>.
+ *
+ * The part after # never leaves the browser (it is not sent to any server or
+ * written to GitHub Pages' logs). The key is stored as if pasted and removed
+ * from the address bar at once, so it is not left in history or bookmarks.
+ */
+export function takeKeyFromLink(): void {
+  try {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const key = params.get('ai');
+    if (!key) return;
+    setAccessKey(key);
+    params.delete('ai');
+    const rest = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + window.location.search + (rest ? `#${rest}` : ''));
+  } catch {
+    // An unusual address: leave it alone; the key can still be pasted.
+  }
+}
 const currentKey = (): string | null => getAccessKey() || sessionKey;
 
 export const hasAccessKey = (): boolean => Boolean(currentKey());

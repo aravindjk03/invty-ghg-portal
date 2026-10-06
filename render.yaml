@@ -30,7 +30,9 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci && npm run build
+    # Render builds with NODE_ENV=production, which would skip the TypeScript
+    # compiler (a dev dependency); --include=dev keeps it for the build.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -52,7 +54,7 @@ services:
       # How many AI product estimates a free account gets before it is asked to
       # upgrade. Changed here, never in the browser.
       - key: FREE_ESTIMATE_LIMIT
-        value: "2"
+        value: "50"
       # Lets the estimate service spend a customer's credit. Generated once
       # here; the AI service reads the same value through fromService below, so
       # there is no secret to copy by hand and none in this file.
@@ -72,10 +74,12 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.10"
-      # INSITY EDGE AI answers with Claude. Only ANTHROPIC_API_KEY is needed;
-      # GEMINI_API_KEY can be left blank.
+      # INSITY EDGE AI answers with the free Gemini models, tried in turn so a
+      # busy or rate-limited one hands over to the next. Only GEMINI_API_KEY is
+      # needed; ANTHROPIC_API_KEY can be left blank. Visitors only ever see
+      # INSITY EDGE AI, and the key stays on this server.
       - key: PCF_AI_PROVIDER
-        value: anthropic:claude-opus-5-5
+        value: gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,gemini:gemini-3.1-flash-lite
       - key: PCF_CORS_ORIGINS
         value: https://aravindjk03.github.io
       - key: GEMINI_API_KEY
@@ -84,21 +88,18 @@ services:
         sync: false
       - key: PCF_ADMIN_TOKEN
         generateValue: true
-      # The premium chain. A paying customer's estimate is answered by the model
-      # that reasons hardest; the free chain is appended automatically behind
-      # it, so an outage degrades the answer instead of removing it.
+      # The premium chain. Set to Claude (anthropic:claude-opus-5-5) once an
+      # ANTHROPIC_API_KEY with credit is added; until then the same free chain.
       - key: PCF_AI_PROVIDER_PREMIUM
-        value: anthropic:claude-opus-5-5
+        value: gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,gemini:gemini-3.1-flash-lite
       # The same secret the backend generated above. Nothing to paste.
       - key: ESTIMATE_SERVICE_SECRET
         fromService:
           type: web
           name: iinvty-backend
           envVarKey: ESTIMATE_SERVICE_SECRET
-      # The account service, including its /api/v1 prefix - for example
-      # https://iinvty-backend.onrender.com/api/v1. Render asks for it on the
-      # first deploy: copy the backend service's URL from its own page. Without
-      # it no estimate can be metered, and the page says so rather than running
-      # one for free.
+      # The account service, including its /api/v1 prefix. This is the address
+      # Render gives iinvty-backend; if Render gives it another one, change it
+      # here and in the site (IINVTY_BACKEND_URL).
       - key: BACKEND_BASE_URL
-        sync: false
+        value: https://iinvty-backend.onrender.com/api/v1
