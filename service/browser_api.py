@@ -31,7 +31,7 @@ from .estimator import (EstimatorError, EstimatorNotAProduct, build_request, bui
                         build_user_message, parse_message, public_message)
 from .inventory import GWP_SETS, load_gwp
 from .inventory_api import (InventoryRequest, calculate_inventory, catalogue_mappings,
-                            list_activities)
+                            list_activities, unit_choices)
 from .methods_api import MethodRequest, calculate_method, list_methods
 from .pipeline import build_response
 from .schemas import EstimateRequest
@@ -132,6 +132,9 @@ def _route(method: str, path: str, query: dict, body: Any) -> tuple[int, Any]:
 
     if method == "GET" and path == "/v1/inventory/catalogue-map":
         return 200, catalogue_mappings()
+
+    if method == "GET" and path == "/v1/inventory/unit-choices":
+        return 200, list(unit_choices())
 
     if method == "GET" and path == "/v1/inventory/gwp-sets":
         return 200, _gwp_sets()

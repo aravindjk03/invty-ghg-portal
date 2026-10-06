@@ -91,6 +91,7 @@ SERVICE_MODULES.forEach((name) => add(path.join(root, 'service', name)));
 DATA.forEach(([dir, keep]) => walk(path.join(root, dir), keep).forEach(add));
 add(path.join(root, 'data', 'catalogue_engine_map.csv'));
 add(path.join(root, 'data', 'product_carbon_catalogue.csv'));
+add(path.join(root, 'data', 'emission_source_catalogue.json'));
 
 rmSync(engineOut, { recursive: true, force: true });
 mkdirSync(engineOut, { recursive: true });
