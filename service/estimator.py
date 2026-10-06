@@ -75,6 +75,21 @@ class AIEstimator(Protocol):
     def decompose(self, request: EstimateRequest, catalogue: Catalogue) -> EstimatorResult: ...
 
 
+def public_message(code: str, assistant: str) -> str:
+    """What the page shows for a failure. Never names a vendor, key or billing state."""
+    messages = {
+        "ai_not_configured": f"{assistant} is not available right now. Please try again later.",
+        "ai_quota_exceeded": f"{assistant} has reached its usage limit for now. Please try again "
+                             f"later. Products already estimated still load.",
+        "ai_refused": f"{assistant} could not analyse this request. Describe a physical product "
+                      f"or material.",
+        "not_a_product": f"{assistant} estimates physical products and materials. Try something "
+                         f"like \"cotton T-shirt\" or \"50 kg bag of cement\".",
+    }
+    return messages.get(code, f"{assistant} could not complete this estimate. Please try "
+                              f"again shortly.")
+
+
 SYSTEM_PROMPT = """\
 You are the lifecycle analyst behind IINVTY's Product Carbon page. A visitor names a product - a bag of cement, a litre of sulphuric acid, a split air conditioner, a cotton shirt, an electric scooter - and you decompose what one declared unit of it emits across its lifecycle, following ISO 14067 and the GHG Protocol Product Standard. Your readers are industrial and corporate professionals, mostly in India.
 

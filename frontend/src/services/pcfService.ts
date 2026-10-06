@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { env } from '../config/env';
 import { authService } from './authService';
+import { BrowserAiError, estimateInBrowser, hasAccessKey } from './browserAi';
 import {
   EstimateInput,
   EstimateResponse,
@@ -44,6 +45,8 @@ function authHeaders(): Record<string, string> {
  * customer is asked to pay.
  */
 export async function getEntitlement(): Promise<Entitlement | null> {
+  // Run from this browser there is no account metering to report.
+  if (serviceMode === 'browser') return null;
   let res: Response;
   try {
     res = await fetch(`${env.PCF_API_BASE_URL}/v1/pcf/entitlement`, { headers: authHeaders() });
@@ -56,23 +59,70 @@ export async function getEntitlement(): Promise<Entitlement | null> {
   return parsed.success ? parsed.data : null;
 }
 
-const SERVICE_DOWN = `${env.ASSISTANT_NAME} is offline right now. Please try again later.`;
+
+/** How long the estimate service gets to answer before the page runs it itself. */
+const SERVICE_TIMEOUT_MS = 6000;
+
+/**
+ * Whether estimates go to the service or are made from this browser. Decided by
+ * the health check: no reachable service means the browser, where the visitor's
+ * own access key is used (see browserAi.ts).
+ */
+let serviceMode: 'unknown' | 'server' | 'browser' = 'unknown';
+
+function browserHealth(): PcfHealth {
+  return {
+    status: 'ok',
+    assistant: env.ASSISTANT_NAME,
+    ai_ready: hasAccessKey(),
+    engine_version: 'browser',
+    catalogue_rows: 0,
+    verified_factors: 0,
+    cache_enabled: false,
+    rate_limit_per_hour: 0,
+    mode: 'browser',
+  };
+}
 
 export async function getPcfHealth(): Promise<PcfHealth> {
-  let res: Response;
+  if (serviceMode === 'browser') return browserHealth();
   try {
-    res = await fetch(`${env.PCF_API_BASE_URL}/health`);
+    const res = await fetch(`${env.PCF_API_BASE_URL}/health`, {
+      signal: AbortSignal.timeout(SERVICE_TIMEOUT_MS),
+    });
+    if (res.ok) {
+      const health = HealthSchema.parse(await res.json());
+      serviceMode = 'server';
+      return { ...health, mode: 'server' };
+    }
   } catch {
-    throw new PcfError('service_down', SERVICE_DOWN);
+    // unreachable, asleep or not deployed: fall through to the browser
   }
-  if (!res.ok) throw new PcfError('service_down', SERVICE_DOWN);
-  return HealthSchema.parse(await res.json());
+  serviceMode = 'browser';
+  return browserHealth();
+}
+
+async function estimateHere(input: EstimateInput, signal?: AbortSignal): Promise<EstimateResponse> {
+  let body: unknown;
+  try {
+    body = await estimateInBrowser(input, signal);
+  } catch (err) {
+    if (err instanceof BrowserAiError) throw new PcfError(err.code, err.message);
+    throw err;
+  }
+  const parsed = EstimateResponseSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new PcfError('bad_response',
+      'The service returned a result in an unexpected shape, so it was not displayed.');
+  }
+  return parsed.data;
 }
 
 export async function estimateProduct(
   input: EstimateInput,
   signal?: AbortSignal
 ): Promise<EstimateResponse> {
+  if (serviceMode === 'browser') return estimateHere(input, signal);
   let res: Response;
   try {
     res = await fetch(`${env.PCF_API_BASE_URL}/v1/pcf/estimate`, {
@@ -83,7 +133,9 @@ export async function estimateProduct(
     });
   } catch (err) {
     if ((err as Error).name === 'AbortError') throw err;
-    throw new PcfError('service_down', SERVICE_DOWN);
+    // The service went away after the health check: carry on from the browser.
+    serviceMode = 'browser';
+    return estimateHere(input, signal);
   }
 
   const body = await res.json().catch(() => null);

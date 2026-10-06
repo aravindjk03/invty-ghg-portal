@@ -11,6 +11,7 @@
     "engine": "node ../scripts/build-browser-engine.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",
     "decimal.js": "^10.4.3",
@@ -25,7 +26,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.2",
     "xlsx": "^0.18.5",
-    "zod": "3.23"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/papaparse": "^5.5.2",

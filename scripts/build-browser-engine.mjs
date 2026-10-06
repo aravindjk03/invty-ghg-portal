@@ -30,9 +30,15 @@ const engineOut = path.join(frontend, 'public', 'engine');
 const RUNTIME = ['pyodide.mjs', 'pyodide.asm.mjs', 'pyodide.asm.wasm', 'python_stdlib.zip'];
 const PACKAGES = ['pydantic', 'pydantic-core', 'typing-extensions', 'annotated-types', 'typing-inspection'];
 
-// What service.browser_api imports and reads. Everything else in service/ is
-// the AI estimator and the web server, which the browser must never load.
-const SERVICE_MODULES = ['__init__.py', 'inventory.py', 'inventory_api.py', 'methods_api.py', 'browser_api.py'];
+// What service.browser_api imports and reads. The model clients (Gemini,
+// Anthropic), the web server, the cache and the metering stay out.
+const SERVICE_MODULES = [
+  '__init__.py', 'inventory.py', 'inventory_api.py', 'methods_api.py', 'browser_api.py',
+  // The product carbon estimate's deterministic half: request building, output
+  // validation and the screening maths. No model client is among them.
+  'catalogue.py', 'config.py', 'estimator.py', 'guard.py', 'models.py', 'pipeline.py',
+  'schemas.py', 'text.py',
+];
 const DATA = [
   ['data/factors', /\.csv$/],
   ['data/gwp', /\.json$/],
@@ -84,6 +90,7 @@ walk(path.join(root, 'ghg_core'), /\.(py|json)$/).forEach(add);
 SERVICE_MODULES.forEach((name) => add(path.join(root, 'service', name)));
 DATA.forEach(([dir, keep]) => walk(path.join(root, dir), keep).forEach(add));
 add(path.join(root, 'data', 'catalogue_engine_map.csv'));
+add(path.join(root, 'data', 'product_carbon_catalogue.csv'));
 
 rmSync(engineOut, { recursive: true, force: true });
 mkdirSync(engineOut, { recursive: true });

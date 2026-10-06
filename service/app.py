@@ -31,7 +31,7 @@ from .config import Settings, ai_credentials_present, gemini_api_key, load_env_f
 from .entitlements import (BackendUnavailable, EstimateLimitReached, NotSignedIn,
                            Reservation, entitlement_for, refund, reserve)
 from .estimator import (AIEstimator, ClaudeEstimator, EstimatorError, EstimatorNotAProduct,
-                        EstimatorNotConfigured, prompt_fingerprint)
+                        EstimatorNotConfigured, prompt_fingerprint, public_message)
 from .fallback import FallbackEstimator, ProviderStep
 from .inventory import GWP_SETS, load_gwp, load_registry
 from .inventory_api import (ActivityOut, CatalogueMappingOut, InventoryRequest,
@@ -187,18 +187,7 @@ def public_error(exc: EstimatorError) -> HTTPException:
     """The page sees a brand-level message. The internal message - which may name a
     vendor, a key or a billing state - goes to the log only."""
     log.warning("estimate failed code=%s detail=%s", exc.code, exc.message)
-    name = settings.assistant_name
-    messages = {
-        "ai_not_configured": f"{name} is not available right now. Please try again later.",
-        "ai_quota_exceeded": f"{name} has reached its usage limit for now. Please try again "
-                             f"later. Products already estimated still load.",
-        "ai_refused": f"{name} could not analyse this request. Describe a physical product "
-                      f"or material.",
-        "not_a_product": f"{name} estimates physical products and materials. Try something "
-                         f"like \"cotton T-shirt\" or \"50 kg bag of cement\".",
-    }
-    message = messages.get(exc.code, f"{name} could not complete this estimate. Please try "
-                                     f"again shortly.")
+    message = public_message(exc.code, settings.assistant_name)
     return HTTPException(status_code=exc.status, detail={"code": exc.code, "message": message})
 
 
