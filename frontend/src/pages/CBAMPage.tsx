@@ -1,3 +1,4 @@
+import { safeFilename } from '../lib/utils';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
@@ -214,7 +215,7 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${companyName.replace(/\s+/g, '_')}_CBAM_${quarter}_${reportingYear}_Export.xml`;
+    link.download = safeFilename(`${companyName.replace(/\s+/g, '_')}_CBAM_${quarter}_${reportingYear}_Export.xml`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

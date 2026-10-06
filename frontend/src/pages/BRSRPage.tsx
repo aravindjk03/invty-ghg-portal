@@ -1,3 +1,4 @@
+import { safeFilename } from '../lib/utils';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
@@ -189,7 +190,7 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${companyName.replace(/\s+/g, '_')}_SEBI_BRSR_Core_Principle6_XBRL.xml`;
+    link.download = safeFilename(`${companyName.replace(/\s+/g, '_')}_SEBI_BRSR_Core_Principle6_XBRL.xml`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
