@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useGHG } from '../context/GHGContext';
+import { complianceService } from '../services/complianceService';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -17,6 +18,18 @@ import {
   Layers 
 } from 'lucide-react';
 import { CEMSReading } from '../types/compliance.types';
+
+/** CPCB / EPA reconciliation tolerance between stack CEMS and fuel-log CO2. */
+const CEMS_TOLERANCE_PERCENT = 5;
+
+interface CemsStackSummaryRow {
+  stackId: string;
+  stackName: string;
+  cumulativeCo2Tco2e: number;
+  averageFlowNm3h: number;
+  activeAlerts: number;
+  fuelMassBalanceDeviationPercent: number;
+}
 
 interface CEMSMonitorPageProps {
   onNavigate: (page: string) => void;
@@ -55,6 +68,22 @@ export const CEMSMonitorPage: React.FC<CEMSMonitorPageProps> = ({ onNavigate }) 
   });
 
   const [recentLogs, setRecentLogs] = useState<CEMSReading[]>([]);
+  const [serverStackSummary, setServerStackSummary] = useState<CemsStackSummaryRow | null>(null);
+
+  // The server reconciles ingested telemetry against the fuel logs; use its
+  // figures when reachable so the panel is not just restating the local sim.
+  useEffect(() => {
+    let cancelled = false;
+    complianceService
+      .getCemsSummary<CemsStackSummaryRow[]>(summary.scope1, () => [])
+      .then(({ data, source }) => {
+        if (cancelled || source !== 'api' || !Array.isArray(data)) return;
+        setServerStackSummary(data.find((row) => row.stackId === selectedStack) ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedStack, summary.scope1]);
 
   // Simulation tick every 3 seconds if live
   useEffect(() => {
@@ -108,13 +137,32 @@ export const CEMSMonitorPage: React.FC<CEMSMonitorPageProps> = ({ onNavigate }) 
     return () => clearInterval(interval);
   }, [selectedStack, isLiveStreaming]);
 
-  // Mass balance comparison vs Scope 1 fuel logs
-  const massBalanceComparison = {
-    stoichiometricScope1FuelCo2: summary.scope1,
-    measuredCemsStack24hSum: Number((currentReading.calculatedCo2MassRateTonnePerHour * 2.4).toFixed(1)),
-    deviationPercentage: 2.8,
-    toleranceStatus: 'Within CPCB / EPA 5% Permissible Margin',
-  };
+  // Mass balance comparison vs Scope 1 fuel logs.
+  // The deviation is computed from the figures actually on screen; it used to be
+  // pinned at 2.8% and always rendered as passing, which meant the panel would
+  // report compliance no matter how far the stack diverged from the fuel logs.
+  const massBalanceComparison = useMemo(() => {
+    const measured =
+      serverStackSummary?.cumulativeCo2Tco2e ??
+      Number((currentReading.calculatedCo2MassRateTonnePerHour * 2.4).toFixed(1));
+    const expected = summary.scope1;
+
+    const deviationPercentage =
+      serverStackSummary?.fuelMassBalanceDeviationPercent ??
+      (expected > 0 ? Number((((measured - expected) / expected) * 100).toFixed(1)) : 0);
+
+    const withinTolerance = Math.abs(deviationPercentage) <= CEMS_TOLERANCE_PERCENT;
+
+    return {
+      stoichiometricScope1FuelCo2: expected,
+      measuredCemsStack24hSum: measured,
+      deviationPercentage,
+      withinTolerance,
+      toleranceStatus: withinTolerance
+        ? `Within CPCB / EPA ${CEMS_TOLERANCE_PERCENT}% permissible margin`
+        : `Exceeds CPCB / EPA ${CEMS_TOLERANCE_PERCENT}% margin — reconcile stack data against fuel logs`,
+    };
+  }, [serverStackSummary, currentReading.calculatedCo2MassRateTonnePerHour, summary.scope1]);
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28">
@@ -342,12 +390,24 @@ export const CEMSMonitorPage: React.FC<CEMSMonitorPageProps> = ({ onNavigate }) 
                 </span>
               </div>
 
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded flex items-center justify-between text-emerald-900">
+              <div
+                className={`p-3 rounded flex items-center justify-between ${
+                  massBalanceComparison.withinTolerance
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
+                    : 'bg-amber-50 border border-amber-200 text-amber-900'
+                }`}
+              >
                 <div>
-                  <span className="font-bold block">Mass Balance Variance: {massBalanceComparison.deviationPercentage}%</span>
-                  <span className="text-[10px] text-emerald-800">{massBalanceComparison.toleranceStatus}</span>
+                  <span className="font-bold block">
+                    Mass Balance Variance: {massBalanceComparison.deviationPercentage}%
+                  </span>
+                  <span className="text-[10px] opacity-80">{massBalanceComparison.toleranceStatus}</span>
                 </div>
-                <CheckCircle2 size={18} className="text-emerald-700" />
+                {massBalanceComparison.withinTolerance ? (
+                  <CheckCircle2 size={18} className="text-emerald-700" />
+                ) : (
+                  <AlertTriangle size={18} className="text-amber-700" />
+                )}
               </div>
             </div>
 

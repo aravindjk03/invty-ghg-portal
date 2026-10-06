@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -21,6 +21,12 @@ import {
   Building2, 
   Layers 
 } from 'lucide-react';
+import {
+  complianceService,
+  CbamRequest,
+  CbamResult,
+  ResultSource,
+} from '../services/complianceService';
 
 interface CBAMPageProps {
   onNavigate: (page: string) => void;
@@ -49,6 +55,9 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
   const [unLocode, setUnLocode] = useState('INJAI');
   const [copiedXml, setCopiedXml] = useState(false);
   const [leadGateOpen, setLeadGateOpen] = useState(false);
+
+  const [serverResult, setServerResult] = useState<CbamResult | null>(null);
+  const [resultSource, setResultSource] = useState<ResultSource>('local');
 
   const selectedGood = useMemo(() => {
     return CN_CODES.find((c) => c.value === cnCode) || CN_CODES[0];
@@ -133,8 +142,58 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
 </CBAMQuarterlyReport>`;
   }, [companyName, unLocode, quarter, reportingYear, cnCode, selectedGood, productionVolume, calcResults, carbonPricePaidEur]);
 
+  // The declaration is a regulatory filing, so the server recomputes it and
+  // owns the XML; the local Decimal maths above still drives instant feedback
+  // while the operator types, and stands in when the API is unreachable.
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      complianceService
+        .calculateCbam(
+          {
+            sector: selectedGood.sector as CbamRequest['sector'],
+            cnCode,
+            goodsDescription: selectedGood.label,
+            productionVolumeTonnes: productionVolume > 0 ? productionVolume : 1,
+            scope1AttributedTco2e: Math.max(0, scope1Attributed),
+            scope2AttributedTco2e: Math.max(0, scope2Attributed),
+            carbonPricePaidEurPerTonne: Math.max(0, carbonPricePaidEur),
+            reportingQuarter: quarter,
+            reportingYear,
+            installationName: `${companyName} - Primary Manufacturing Unit`,
+            countryCode: 'IN',
+            unLocode,
+          },
+          () => null as unknown as CbamResult
+        )
+        .then(({ data, source }) => {
+          if (cancelled) return;
+          setServerResult(data);
+          setResultSource(data ? source : 'local');
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    cnCode,
+    selectedGood,
+    productionVolume,
+    scope1Attributed,
+    scope2Attributed,
+    carbonPricePaidEur,
+    quarter,
+    reportingYear,
+    companyName,
+    unLocode,
+  ]);
+
+  const filingXml = serverResult?.xmlPreview ?? generatedXml;
+
   const handleCopyXml = () => {
-    navigator.clipboard.writeText(generatedXml);
+    navigator.clipboard.writeText(filingXml);
     setCopiedXml(true);
     setTimeout(() => setCopiedXml(false), 2000);
     addToast('success', 'CBAM XML communications package copied to clipboard');
@@ -151,7 +210,7 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
   };
 
   const executeDownload = () => {
-    const blob = new Blob([generatedXml], { type: 'application/xml' });
+    const blob = new Blob([filingXml], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -389,6 +448,13 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
                 <h3 className="text-xs font-bold text-brand-heading uppercase tracking-wider flex items-center gap-1.5">
                   <FileCode size={14} className="text-brand-primary" />
                   EU Customs XML Communications Preview
+                  <span className="ml-2 font-sans font-normal normal-case tracking-normal">
+                    {resultSource === 'api' ? (
+                      <Badge variant="verified">Server-verified</Badge>
+                    ) : (
+                      <Badge variant="warning">Computed offline</Badge>
+                    )}
+                  </span>
                 </h3>
                 <Button variant="ghost" size="sm" onClick={handleCopyXml} leftIcon={copiedXml ? <Check size={14} /> : <Copy size={14} />}>
                   {copiedXml ? 'Copied' : 'Copy XML'}
@@ -396,7 +462,7 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
               </div>
 
               <div className="h-44 overflow-y-auto p-3 bg-slate-900 text-slate-200 font-mono text-[11px] rounded border border-slate-800 select-all leading-normal">
-                <pre>{generatedXml}</pre>
+                <pre>{filingXml}</pre>
               </div>
 
               <div className="pt-2 flex justify-end">

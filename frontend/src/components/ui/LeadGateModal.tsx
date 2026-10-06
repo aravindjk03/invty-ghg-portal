@@ -6,6 +6,7 @@ import { Select } from './Select';
 import { env } from '../../config/env';
 import { CustomerLead, LeadSubmissionPayload } from '../../types/leads.types';
 import { ShieldCheck, Lock, Download, CheckCircle2 } from 'lucide-react';
+import { request } from '../../services/api';
 
 export interface LeadGateModalProps {
   isOpen: boolean;
@@ -96,7 +97,6 @@ export const LeadGateModal: React.FC<LeadGateModalProps> = ({
     try {
       const response = await fetch(`${env.API_BASE_URL}/leads`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error(String(response.status));
