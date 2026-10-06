@@ -24,6 +24,7 @@ import {
   LucideIcon,
   Package,
   Sprout,
+  History,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -103,6 +104,14 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(2,132,199,0.18),rgba(6,182,212,0.18))',
     activeTextClass: 'text-sky-600',
     activeIconStyle: { color: '#0284c7' },
+  },
+  {
+    icon: History,
+    label: 'Audit Trail',
+    page: 'audit-trail',
+    gradient: 'linear-gradient(135deg,rgba(71,85,105,0.18),rgba(100,116,139,0.18))',
+    activeTextClass: 'text-slate-700',
+    activeIconStyle: { color: '#334155' },
   },
 ];
 

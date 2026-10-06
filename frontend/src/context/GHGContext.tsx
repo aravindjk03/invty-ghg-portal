@@ -846,6 +846,18 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     addToast('info', 'Logged out successfully');
   }, [addToast]);
 
+  // A 401 from any API call means the server no longer recognises this session.
+  // Send the user back to sign-in rather than leaving them on a page that cannot save.
+  useEffect(() => {
+    const onExpired = () => {
+      authService.clearSession();
+      setCurrentUser(null);
+      addToast('error', 'Your session has expired. Please sign in again.');
+    };
+    window.addEventListener('invty:session-expired', onExpired);
+    return () => window.removeEventListener('invty:session-expired', onExpired);
+  }, [addToast]);
+
   return (
     <GHGContext.Provider
       value={{

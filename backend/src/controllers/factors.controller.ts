@@ -4,10 +4,11 @@ import { FactorsService } from '../services/factors.service';
 export class FactorsController {
   public static getAll(req: Request, res: Response, next: NextFunction): void {
     try {
-      const { scope } = req.query;
-      const factors = scope 
-        ? FactorsService.getFactorsByScope(String(scope))
-        : FactorsService.getAllFactors();
+      const { scope, ghgCategory } = req.query;
+      const factors = FactorsService.query({
+        scope: scope ? String(scope) : undefined,
+        ghgCategory: ghgCategory ? String(ghgCategory) : undefined,
+      });
 
       res.status(200).json({
         success: true,

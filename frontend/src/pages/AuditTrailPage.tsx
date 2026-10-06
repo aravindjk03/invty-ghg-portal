@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { 
   ArrowLeft, 
-  ShieldCheck, 
+  ShieldCheck,
+  ShieldAlert,
   Lock, 
   CheckCircle2, 
   Check, 
@@ -16,6 +17,11 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { AuditBlock, AuditVerificationReport } from '../types/compliance.types';
+import {
+  complianceService,
+  ChainIntegrityReport,
+  ResultSource,
+} from '../services/complianceService';
 
 interface AuditTrailPageProps {
   onNavigate: (page: string) => void;
@@ -26,9 +32,10 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
 
   const [isVerifying, setIsVerifying] = useState(false);
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
+  const [ledgerSource, setLedgerSource] = useState<ResultSource>('local');
 
   // Pre-seeded SHA-256 hash-chained ledger
-  const [ledgerBlocks] = useState<AuditBlock[]>([
+  const [ledgerBlocks, setLedgerBlocks] = useState<AuditBlock[]>([
     {
       blockIndex: 0,
       timestamp: '2026-04-01T00:00:00.000Z',
@@ -103,23 +110,60 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
     verifiedAt: new Date().toISOString(),
   });
 
-  const handleRunVerification = () => {
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      setVerificationResult({
-        isChainValid: true,
-        totalBlocks: ledgerBlocks.length,
-        genesisTimestamp: ledgerBlocks[0].timestamp,
-        lastBlockTimestamp: ledgerBlocks[ledgerBlocks.length - 1].timestamp,
-        lastBlockHash: ledgerBlocks[ledgerBlocks.length - 1].blockHash,
-        deterministicRecalculationPassed: true,
-        deltaTco2eFromEngine: 0.000000,
-        isoStandard: 'ISO 14064-3:2019',
-        verifiedAt: new Date().toISOString(),
+  // Pull the real hash-chained ledger. The seeded blocks above are only a shape
+  // placeholder for the first paint — their hashes do not actually chain, so
+  // they must never be what an auditor is shown as verified.
+  useEffect(() => {
+    let cancelled = false;
+    complianceService
+      .getAuditLedger(() => [])
+      .then(({ data, source }) => {
+        if (cancelled || source !== 'api' || !Array.isArray(data) || data.length === 0) return;
+        setLedgerBlocks(data as unknown as AuditBlock[]);
+        setLedgerSource('api');
       });
-      addToast('success', 'Cryptographic SHA-256 chain integrity & recalculation verified (0.000000 tCO₂e delta)');
-    }, 600);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleRunVerification = async () => {
+    setIsVerifying(true);
+    const { data, source } = await complianceService.verifyAuditChain(
+      () => null as unknown as ChainIntegrityReport
+    );
+    setIsVerifying(false);
+
+    if (source !== 'api' || !data) {
+      // Drop any earlier pass so a stale green banner cannot be read as the
+      // result of this attempt.
+      setVerificationResult(null);
+      addToast(
+        'warning',
+        'Chain verification needs the API — the ledger is held server-side and cannot be verified offline.'
+      );
+      return;
+    }
+
+    const report = data as unknown as AuditVerificationReport & { isChainValid: boolean };
+    setVerificationResult({
+      isChainValid: report.isChainValid,
+      totalBlocks: report.totalBlocks ?? ledgerBlocks.length,
+      genesisTimestamp: report.genesisTimestamp ?? ledgerBlocks[0]?.timestamp,
+      lastBlockTimestamp: report.lastBlockTimestamp ?? '',
+      lastBlockHash: report.lastBlockHash ?? '',
+      tamperedBlockIndex: report.tamperedBlockIndex,
+      deterministicRecalculationPassed: report.isChainValid,
+      deltaTco2eFromEngine: report.deltaTco2eFromEngine ?? 0,
+      isoStandard: 'ISO 14064-3:2019',
+      verifiedAt: new Date().toISOString(),
+    });
+
+    if (report.isChainValid) {
+      addToast('success', `SHA-256 chain integrity verified across ${report.totalBlocks} blocks`);
+    } else {
+      addToast('error', `Chain integrity FAILED at block #${report.tamperedBlockIndex}`);
+    }
   };
 
   const handleCopy = (hash: string) => {
@@ -144,7 +188,11 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
 
         <div className="flex items-center gap-2">
           <Badge variant="verified">ISO 14064-3:2019 Standard</Badge>
-          <Badge variant="default">Immutable SHA-256 Chained</Badge>
+          {ledgerSource === 'api' ? (
+            <Badge variant="default">Immutable SHA-256 Chained</Badge>
+          ) : (
+            <Badge variant="warning">Sample ledger — API unavailable</Badge>
+          )}
         </div>
       </div>
 
@@ -176,16 +224,30 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
         <Card className="p-5 mb-6 bg-surface-raised border border-border shadow-nm-raised">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
-                <ShieldCheck size={22} />
+              <div
+                className={`w-10 h-10 rounded text-white flex items-center justify-center flex-shrink-0 ${
+                  verificationResult.isChainValid ? 'bg-emerald-600' : 'bg-red-600'
+                }`}
+              >
+                {verificationResult.isChainValid ? (
+                  <ShieldCheck size={22} />
+                ) : (
+                  <ShieldAlert size={22} />
+                )}
               </div>
               <div>
                 <span className="text-sm font-bold text-brand-heading flex items-center gap-2">
-                  Cryptographic Integrity Verified: 100% Chain Valid
-                  <Badge variant="verified">ISO 14064-3 Deterministic</Badge>
+                  {verificationResult.isChainValid
+                    ? 'Cryptographic Integrity Verified: Chain Valid'
+                    : `Chain Integrity FAILED at block #${verificationResult.tamperedBlockIndex}`}
+                  <Badge variant={verificationResult.isChainValid ? 'verified' : 'danger'}>
+                    ISO 14064-3 Deterministic
+                  </Badge>
                 </span>
                 <span className="text-xs text-brand-muted mt-0.5 block">
-                  {verificationResult.totalBlocks} consecutive blocks verified · Recalculation Delta: <strong>{verificationResult.deltaTco2eFromEngine.toFixed(6)} tCO₂e</strong> · Verified at {new Date(verificationResult.verifiedAt).toLocaleTimeString()}
+                  {verificationResult.totalBlocks} consecutive blocks checked · Recalculation Delta:{' '}
+                  <strong>{verificationResult.deltaTco2eFromEngine.toFixed(6)} tCO₂e</strong> ·
+                  Verified at {new Date(verificationResult.verifiedAt).toLocaleTimeString()}
                 </span>
               </div>
             </div>

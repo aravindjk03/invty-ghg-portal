@@ -20,6 +20,19 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep the long-lived framework code in its own chunk so app edits
+        // don't invalidate it.
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react/jsx-runtime'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-query': ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     host: true,
