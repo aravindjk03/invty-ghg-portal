@@ -101,6 +101,9 @@ export const HealthSchema = z.object({
   verified_factors: z.number(),
   cache_enabled: z.boolean(),
   rate_limit_per_hour: z.number(),
+  /** 'browser' when no estimate service is reachable and the page runs the
+   *  estimate itself with an access key saved on this computer. */
+  mode: z.enum(['server', 'browser']).optional(),
 });
 
 export type Stage = z.infer<typeof Stage>;

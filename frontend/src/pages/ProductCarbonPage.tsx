@@ -18,6 +18,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { EstimateResult } from '../components/pcf/EstimateResult';
+import { AccessKeyPanel } from '../components/pcf/AccessKeyPanel';
 import { estimateProduct, getEntitlement, getPcfHealth, PcfError } from '../services/pcfService';
 import { EstimateInput, Region } from '../types/pcf';
 import { env } from '../config/env';
@@ -66,6 +67,9 @@ function ServiceStatus() {
   if (health.isError) {
     dot = 'bg-status-danger';
     state = 'offline';
+  } else if (health.data?.mode === 'browser' && !health.data.ai_ready) {
+    dot = 'bg-status-warning';
+    state = 'needs access key';
   } else if (health.data && !health.data.ai_ready) {
     dot = 'bg-status-warning';
     state = 'unavailable';
@@ -82,7 +86,7 @@ function ServiceStatus() {
         <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
         {state}
       </span>
-      {health.data && (
+      {health.data && health.data.mode !== 'browser' && (
         <span className="text-xs text-brand-muted font-mono tabular-nums">
           {health.data.verified_factors} verified factors · {health.data.catalogue_rows} catalogued materials
         </span>
@@ -175,6 +179,9 @@ function Failure({ error, onRetry }: { error: unknown; onRetry: () => void }) {
     invalid_input: 'That description could not be used',
     rate_limited: 'Hourly estimate limit reached',
     ai_quota_exceeded: `${name} is busy`,
+    needs_key: `Connect ${name} first`,
+    key_rejected: 'Access key not accepted',
+    no_credit: `${name} has no usage credit`,
   };
   const title = titles[err.code] ?? 'The estimate could not be completed';
 
@@ -286,8 +293,18 @@ export const ProductCarbonPage: React.FC<ProductCarbonPageProps> = () => {
       </header>
 
       <div className="flex flex-col gap-6">
+        {/* No estimate service reachable: the estimate runs from this browser with
+            an access key saved on this computer. */}
+        {health.data?.mode === 'browser' && (
+          <AccessKeyPanel
+            assistant={health.data.assistant}
+            hasKey={health.data.ai_ready}
+            onChange={() => { estimate.reset(); health.refetch(); }}
+          />
+        )}
+
         {/* Availability notice - brand-level only; operators see detail at /admin/status */}
-        {health.data && !health.data.ai_ready && !estimate.isError && (
+        {health.data && health.data.mode !== 'browser' && !health.data.ai_ready && !estimate.isError && (
           <Card className="p-5 border-[#A66300]/30">
             <div className="flex gap-3">
               <AlertTriangle size={18} className="text-status-warning flex-shrink-0 mt-0.5" />

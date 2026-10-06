@@ -80,3 +80,55 @@ def test_an_invalid_inventory_is_refused_not_calculated():
 
 def test_an_unknown_path_is_not_found():
     assert browser("GET", "/v1/pcf/estimate")[0] == 404
+
+
+# --- the AI estimate, split around the model call made by the browser ----------
+
+from test_pcf_service import decomposition_dict  # noqa: E402
+
+KETTLE = {"product": "electric kettle", "region": "IN", "details": ""}
+
+
+def claude_message(payload: dict, stop_reason: str = "end_turn") -> dict:
+    """A Messages API response as the browser SDK's toJSON gives it."""
+    return {"id": "msg_test", "type": "message", "role": "assistant", "model": "claude-opus-5-5",
+            "stop_reason": stop_reason,
+            "content": [{"type": "thinking", "thinking": "", "signature": "x"},
+                        {"type": "text", "text": json.dumps(payload, default=str)}],
+            "usage": {"input_tokens": 10, "output_tokens": 10}}
+
+
+def test_the_browser_asks_the_model_exactly_what_the_server_would():
+    status, answer = browser("POST", "/v1/pcf/browser-request", body=KETTLE)
+    assert status == 200 and answer["assistant"] == "INSITY EDGE AI"
+    params = answer["params"]
+    assert params["model"] == "claude-opus-5-5"
+    assert params["thinking"] == {"type": "adaptive"}
+    assert params["output_config"]["format"]["type"] == "json_schema"
+    assert answer["use_beta"] and params["fallbacks"] == "default"
+    # Visitor text arrives fenced, never as an instruction.
+    assert "<<<VISITOR_PRODUCT>>>\nelectric kettle" in params["messages"][0]["content"]
+
+
+def test_the_answer_is_computed_by_the_engine_not_the_model():
+    status, answer = browser("POST", "/v1/pcf/browser-assemble",
+                             body={"request": KETTLE, "message": claude_message(decomposition_dict())})
+    assert status == 200, answer
+    assert answer["lines"] and answer["totals"]
+    assert answer["method"]["assistant"] == "INSITY EDGE AI"
+
+
+def test_a_refused_or_non_product_answer_is_shown_under_the_brand():
+    refused = claude_message(decomposition_dict(), stop_reason="refusal")
+    status, answer = browser("POST", "/v1/pcf/browser-assemble",
+                             body={"request": KETTLE, "message": refused})
+    assert status == 422 and answer["detail"]["code"] == "ai_refused"
+    assert "INSITY EDGE AI" in answer["detail"]["message"]
+    assert "Claude" not in answer["detail"]["message"]
+
+    not_product = decomposition_dict()
+    not_product["product"]["is_product"] = False
+    not_product["lines"] = []
+    status, answer = browser("POST", "/v1/pcf/browser-assemble",
+                             body={"request": KETTLE, "message": claude_message(not_product)})
+    assert status == 422 and answer["detail"]["code"] == "not_a_product"
