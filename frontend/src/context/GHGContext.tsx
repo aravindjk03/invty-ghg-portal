@@ -4,7 +4,7 @@ import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
 import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
-import { mappingFor } from '../services/catalogueMap';
+import { mappingFor, startingUnit } from '../services/catalogueMap';
 import { useCatalogueMap } from '../services/useCatalogueMap';
 import { marketRecordId, useEngineInventory } from '../report/useEngineInventory';
 import { useMethodResults } from '../report/useMethodResults';
@@ -31,6 +31,9 @@ interface GHGContextType {
    */
   tdLoss: { rate?: number; source: string };
   setTdLoss: (loss: { rate?: number; source: string }) => void;
+  /** Rupees per US dollar and its source, for spend-based factors published in USD. */
+  fx: { rate?: number; source: string };
+  setFx: (fx: { rate?: number; source: string }) => void;
   /**
    * The upstream emissions of purchased electricity — the fuel burned to
    * generate it, before it reaches the grid — in kgCO2e per kWh, with its
@@ -317,6 +320,24 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [tdLoss]);
 
+  const [fx, setFx] = useState<{ rate?: number; source: string }>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_FX`);
+      const parsed = saved ? JSON.parse(saved) : null;
+      return parsed && typeof parsed.source === 'string' ? parsed : { source: '' };
+    } catch {
+      return { source: '' };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_FX`, JSON.stringify(fx));
+    } catch {
+      // A browser refusing storage must not stop the page working.
+    }
+  }, [fx]);
+
   const [electricityWtt, setElectricityWtt] = useState<{ factor?: number; source: string }>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_ELEC_WTT`);
@@ -539,7 +560,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
 
   const reportingYear = useMemo(() => reportingYearOf(period), [period]);
 
-  const engine = useEngineInventory(allEntries, gwpSet, reportingYear, tdLoss, electricityWtt);
+  const engine = useEngineInventory(allEntries, gwpSet, reportingYear, tdLoss, electricityWtt, fx);
   const methods = useMethodResults(methodEntries, gwpSet);
 
   const addMethodEntry = useCallback((method: MethodKey, label?: string): string => {
@@ -717,7 +738,8 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         || available[0]
         || DEFAULT_FACTORS[0];
 
-      const defaultAmount = factor.unit.toLowerCase() === 'kwh' ? 10000 : 100;
+      const unit = startingUnit(factor.id, factor.unit);
+      const defaultAmount = unit.toLowerCase() === 'kwh' ? 10000 : 100;
 
       const newRow: ActivityEntry = {
         id: `${scope}-row-${Date.now()}`,
@@ -726,7 +748,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         category,
         fuelOrSource: factor.fuelOrActivity,
         amount: defaultAmount,
-        unit: factor.unit,
+        unit,
         emissionFactor: factor,
         calculatedTco2e: 0,
         warning: 'Choose a published factor for this row so it can be calculated.',
@@ -846,6 +868,18 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     addToast('info', 'Logged out successfully');
   }, [addToast]);
 
+  // A 401 from any API call means the server no longer recognises this session.
+  // Send the user back to sign-in rather than leaving them on a page that cannot save.
+  useEffect(() => {
+    const onExpired = () => {
+      authService.clearSession();
+      setCurrentUser(null);
+      addToast('error', 'Your session has expired. Please sign in again.');
+    };
+    window.addEventListener('invty:session-expired', onExpired);
+    return () => window.removeEventListener('invty:session-expired', onExpired);
+  }, [addToast]);
+
   return (
     <GHGContext.Provider
       value={{
@@ -855,6 +889,8 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         setPeriod,
         tdLoss,
         setTdLoss,
+        fx,
+        setFx,
         electricityWtt,
         setElectricityWtt,
         category3,

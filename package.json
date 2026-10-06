@@ -11,7 +11,9 @@
     "deploy:pages": "node scripts/deploy-pages.mjs",
     "build:backend": "npm --prefix backend run build",
     "build:frontend": "npm --prefix frontend run build",
-    "build": "npm run build:backend && npm run build:frontend"
+    "build": "npm run check:catalogue && npm run build:backend && npm run build:frontend",
+    "check:catalogue": "node scripts/check-catalogue-sync.mjs",
+    "sync:catalogue": "node scripts/check-catalogue-sync.mjs --fix"
   },
   "keywords": [
     "ghg-accounting",

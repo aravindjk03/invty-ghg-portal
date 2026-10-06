@@ -54,6 +54,8 @@ PROFILES: dict[str, ModelProfile] = {
                      thinking="adaptive", supports_effort=True, supports_server_fallback=False),
         ModelProfile("claude-opus-5", "Claude Opus 5", "anthropic", Decimal("5"), Decimal("25"),
                      thinking="adaptive", supports_effort=True, supports_server_fallback=True),
+        ModelProfile("claude-opus-5-5", "Claude Opus 5.5", "anthropic", Decimal("4"), Decimal("20"),
+                     thinking="adaptive", supports_effort=True, supports_server_fallback=True),
     ) + tuple(
         # Each Gemini model has its own free-tier daily quota, so listing several in
         # PCF_AI_PROVIDER multiplies the free estimates per day.

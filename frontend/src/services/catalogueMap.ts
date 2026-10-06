@@ -14,7 +14,7 @@
  * bug to paper over with a made-up number.
  */
 import { z } from 'zod';
-import { env } from '../config/env';
+import { engineFetch } from '../engine/engineFetch';
 
 const MappingSchema = z.object({
   catalogue_key: z.string(),
@@ -29,6 +29,47 @@ export type CatalogueMapping = z.infer<typeof MappingSchema>;
 
 /** Catalogue key -> the mappings for it, one per unit the factor is published in. */
 export type CatalogueMap = Map<string, CatalogueMapping[]>;
+
+const UnitChoiceSchema = z.object({
+  catalogue_key: z.string(),
+  unit: z.string(),
+  activity_key: z.string(),
+  region: z.string(),
+  needs_fx: z.boolean(),
+});
+export type UnitChoice = z.infer<typeof UnitChoiceSchema>;
+
+/**
+ * For each source, the units a row may record it in that the engine can
+ * actually calculate, worked out by the engine itself (unit-choices). Filled
+ * when the map loads; empty until then, which leaves every unit on offer.
+ */
+let choicesByKey = new Map<string, UnitChoice[]>();
+
+/** Replaces the engine's unit choices; called when the map loads (and by tests). */
+export function setUnitChoices(choices: UnitChoice[]): void {
+  const byKey = new Map<string, UnitChoice[]>();
+  choices.forEach((choice) => {
+    byKey.set(choice.catalogue_key, [...(byKey.get(choice.catalogue_key) ?? []), choice]);
+  });
+  choicesByKey = byKey;
+}
+
+export function unitChoicesFor(catalogueKey: string | undefined): UnitChoice[] {
+  return (catalogueKey && choicesByKey.get(catalogueKey)) || [];
+}
+
+export function unitChoiceFor(catalogueKey: string | undefined, unit: string | undefined): UnitChoice | undefined {
+  const wanted = (unit ?? '').toLowerCase();
+  return unitChoicesFor(catalogueKey).find((choice) => choice.unit.toLowerCase() === wanted);
+}
+
+/** The unit a row should start in: the source's own unit if it calculates, else the first that does. */
+export function startingUnit(catalogueKey: string, defaultUnit: string): string {
+  const choices = unitChoicesFor(catalogueKey);
+  if (choices.length === 0 || choices.some((choice) => choice.unit === defaultUnit)) return defaultUnit;
+  return (choices.find((choice) => !choice.needs_fx) ?? choices[0]).unit;
+}
 
 /**
  * A row's unit as the user writes it -> the unit the published factor is in.
@@ -68,9 +109,16 @@ const UNIT_EQUIVALENTS: Record<string, string[]> = {
 };
 
 export async function getCatalogueMap(): Promise<CatalogueMap> {
-  const response = await fetch(`${env.PCF_API_BASE_URL}/v1/inventory/catalogue-map`);
+  const [response, choices] = await Promise.all([
+    engineFetch('/v1/inventory/catalogue-map'),
+    engineFetch('/v1/inventory/unit-choices').catch(() => null),
+  ]);
   if (!response.ok) throw new Error('catalogue map unavailable');
   const rows = MappingSchema.array().parse(await response.json());
+  if (choices?.ok) {
+    const parsed = UnitChoiceSchema.array().safeParse(await choices.json());
+    if (parsed.success) setUnitChoices(parsed.data);
+  }
   const map: CatalogueMap = new Map();
   rows.forEach((row) => {
     map.set(row.catalogue_key, [...(map.get(row.catalogue_key) ?? []), row]);
@@ -88,6 +136,11 @@ export function mappingFor(
   if (!catalogueKey) return undefined;
   const candidates = map.get(catalogueKey);
   if (!candidates || candidates.length === 0) return undefined;
+
+  // The engine's own answer for this unit, when it has one.
+  const choice = unitChoiceFor(catalogueKey, unit);
+  const chosen = choice && candidates.find((row) => row.activity_key === choice.activity_key);
+  if (chosen) return chosen;
 
   const wanted = UNIT_EQUIVALENTS[(unit ?? '').toLowerCase()] ?? [];
   for (const engineUnit of wanted) {

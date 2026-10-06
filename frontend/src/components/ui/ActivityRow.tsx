@@ -14,10 +14,11 @@ import {
   Check
 } from 'lucide-react';
 import { CATALOGUE_SOURCES } from '../../data/catalogueData';
-import { groupedSourcesFor, isVerified, toEmissionFactor, unitsFor } from '../../data/factorCatalogue';
+import { groupedSourcesFor, toEmissionFactor, unitsFor } from '../../data/factorCatalogue';
 import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
 import { useCatalogueMap } from '../../services/useCatalogueMap';
+import { startingUnit, unitChoicesFor } from '../../services/catalogueMap';
 import {
   ReportingPeriod, isInPeriod, periodEnd, periodLabel,
 } from '../../report/reportingPeriod';
@@ -90,17 +91,38 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     () => groupedSourcesFor(entry.scope, entry.category),
     [entry.scope, entry.category],
   );
-  const units = useMemo(() => unitsFor(entry.emissionFactor.id), [entry.emissionFactor.id]);
   const catalogueMap = useCatalogueMap();
+  // Only the units the engine can calculate this source in, once it has said
+  // which they are. The row's current unit stays listed so an older row still
+  // shows what it holds, and says why it cannot be calculated.
+  const units = useMemo(() => {
+    const offered = unitsFor(entry.emissionFactor.id);
+    const workable = unitChoicesFor(entry.emissionFactor.id).map((choice) => choice.unit);
+    const list = workable.length > 0 ? offered.filter((unit) => workable.includes(unit)) : offered;
+    return entry.unit && !list.includes(entry.unit) ? [...list, entry.unit] : list;
+    // catalogueMap: the choices arrive with it, so a load re-runs this.
+  }, [entry.emissionFactor.id, entry.unit, catalogueMap]);
   const monthFieldId = useId();
-  const factorUnverified = !isVerified(entry.emissionFactor.id)
-    && entry.customFactorOverride === undefined;
+  // Needs the company's own factor: nothing the engine publishes resolves it
+  // and no factor of their own has been given yet. Judged by the engine's map,
+  // not the catalogue's flag, which predates the engine's factor tables.
+  const needsOwnFactor = entry.customFactorOverride === undefined;
   // The engine calculates a row only when it names a published factor.
   const engineFactorAttached = Boolean(entry.engineActivityKey);
   // Some sources cannot be a factor per unit at all. They are calculated as
   // IPCC methods, on their own page, and counted in Scope 1 from there.
   const method = methodFor(entry.emissionFactor?.id);
   const methodNotImplemented = METHOD_NOT_IMPLEMENTED[entry.emissionFactor?.id ?? ''];
+  // What each option will do once chosen, from what the engine can actually
+  // resolve: a published factor calculates as it stands, an IPCC source is
+  // calculated on the Methods page, and anything else needs the company's own
+  // factor and its source. Until the engine's map has loaded, say nothing.
+  const sourceNote = (activityKey: string): string => {
+    if (catalogueMap.size === 0 || catalogueMap.has(activityKey)) return '';
+    if (methodFor(activityKey)) return '  — IPCC method';
+    if (METHOD_NOT_IMPLEMENTED[activityKey]) return '  — method not available yet';
+    return '  — no published factor: add your own';
+  };
   // What that factor is called. A row should never show a raw activity key.
   const engineFactorName = useMemo(() => {
     if (!entry.engineActivityKey) return undefined;
@@ -118,7 +140,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
       onUpdate({
         fuelOrSource: selectedFactor.fuelOrActivity,
         emissionFactor: selectedFactor,
-        unit: selectedFactor.unit,
+        unit: startingUnit(source.activity_key, selectedFactor.unit),
         customFactorOverride: undefined,
         customFactorSource: undefined,
         // The row is now about a different source, so whatever published factor
@@ -238,7 +260,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         />
       )}
 
-      {factorUnverified && !entry.engineActivityKey && !method && !methodNotImplemented && (
+      {needsOwnFactor && !entry.engineActivityKey && !method && !methodNotImplemented && (
         <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
           <strong>No published set covers this source.</strong> Some never will: a power purchase
           agreement, a green tariff or a retired certificate is priced by contract, and the GHG
@@ -275,7 +297,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
               <optgroup key={group} label={group}>
                 {sources.map((source) => (
                   <option key={source.activity_key} value={source.activity_key}>
-                    {source.display_name}{source.verified ? '' : '  — factor not ingested'}
+                    {source.display_name}{sourceNote(source.activity_key)}
                   </option>
                 ))}
               </optgroup>

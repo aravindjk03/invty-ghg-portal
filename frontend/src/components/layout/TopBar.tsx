@@ -24,6 +24,7 @@ import {
   LucideIcon,
   Package,
   Sprout,
+  History,
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -104,6 +105,22 @@ const NAV_ITEMS: NavItem[] = [
     activeTextClass: 'text-sky-600',
     activeIconStyle: { color: '#0284c7' },
   },
+  {
+    icon: BookOpen,
+    label: 'Factors',
+    page: 'factor-library',
+    gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(14,116,144,0.18))',
+    activeTextClass: 'text-cyan-700',
+    activeIconStyle: { color: '#0e7490' },
+  },
+  {
+    icon: History,
+    label: 'Audit Trail',
+    page: 'audit-trail',
+    gradient: 'linear-gradient(135deg,rgba(71,85,105,0.18),rgba(100,116,139,0.18))',
+    activeTextClass: 'text-slate-700',
+    activeIconStyle: { color: '#334155' },
+  },
 ];
 
 // ─── Framer-motion animation variants ────────────────────────────────────────────
@@ -165,6 +182,8 @@ function NavPill({ item, isActive, onNavigate }: NavPillProps) {
         <button
           type="button"
           onClick={() => onNavigate(item.page)}
+          title={item.label}
+          aria-label={item.label}
           className="relative z-10 block focus-visible:outline-2 focus-visible:outline-blue-600 rounded-xl overflow-hidden"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
@@ -181,7 +200,7 @@ function NavPill({ item, isActive, onNavigate }: NavPillProps) {
               className="h-[15px] w-[15px] flex-shrink-0"
               style={isActive ? item.activeIconStyle : undefined}
             />
-            <span className="hidden xl:inline leading-none">{item.label}</span>
+            <span className="hidden min-[1400px]:inline leading-none">{item.label}</span>
           </motion.div>
 
           {/* Back face – appears on flip */}
@@ -201,7 +220,7 @@ function NavPill({ item, isActive, onNavigate }: NavPillProps) {
               className="h-[15px] w-[15px] flex-shrink-0"
               style={item.activeIconStyle}
             />
-            <span className="hidden xl:inline leading-none">{item.label}</span>
+            <span className="hidden min-[1400px]:inline leading-none">{item.label}</span>
           </motion.div>
         </button>
       </motion.div>
@@ -355,11 +374,11 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
           </button>
 
           {/* ── Divider ──────────────────────────────────────── */}
-          <div className="hidden md:block w-px h-7 bg-[#E2E8F0] flex-shrink-0" />
+          <div className="hidden lg:block w-px h-7 bg-[#E2E8F0] flex-shrink-0" />
 
           {/* ── DESKTOP NAV ──────────────────────────────────── */}
           {currentUser ? (
-            <div className="hidden md:flex items-center flex-shrink-0">
+            <div className="hidden lg:flex items-center flex-shrink-0">
               <AnimatedMenuBar activePage={currentPage} onNavigate={onNavigate} />
             </div>
           ) : (
@@ -374,7 +393,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
 
           {/* ── CONTEXT PILL (centre-ish, desktop only) ──────── */}
           {currentUser && (
-            <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-[#64748B] bg-[#F1F5F9] px-3 py-1.5 rounded-full border border-[#E2E8F0] max-w-[260px] xl:max-w-[340px] overflow-hidden flex-shrink min-w-0">
+            <div className="hidden 2xl:flex items-center gap-1.5 text-[11px] text-[#64748B] bg-[#F1F5F9] px-3 py-1.5 rounded-full border border-[#E2E8F0] max-w-[260px] xl:max-w-[340px] overflow-hidden flex-shrink min-w-0">
               <span className="font-semibold text-[#0F172A] truncate shrink-0 max-w-[100px]">{companyName}</span>
               <span className="text-[#CBD5E1] flex-shrink-0">·</span>
               <span className="truncate flex-shrink min-w-0">{reportingPeriod}</span>
@@ -396,7 +415,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
                   <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[12px] flex-shrink-0">
                     {currentUser.name?.charAt(0).toUpperCase() ?? 'U'}
                   </div>
-                  <div className="hidden sm:flex flex-col text-left pr-1">
+                  <div className="hidden 2xl:flex flex-col text-left pr-1" title={currentUser.name}>
                     <span className="text-[12px] font-semibold text-[#0F172A] leading-tight truncate max-w-[90px]">
                       {currentUser.name}
                     </span>
@@ -444,7 +463,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
                   type="button"
                   aria-label="Toggle navigation"
                   onClick={() => setMobileOpen((v) => !v)}
-                  className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:bg-[#F1F5F9] border border-transparent hover:border-[#E2E8F0] transition-colors"
+                  className="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:bg-[#F1F5F9] border border-transparent hover:border-[#E2E8F0] transition-colors"
                 >
                   {mobileOpen ? <X size={16} /> : <Menu size={16} />}
                 </button>

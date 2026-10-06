@@ -79,7 +79,7 @@ export const ReportDocument: React.FC<ReportDocumentProps> = ({ report, include,
   ];
 
   return (
-    <div className="flex flex-col items-center gap-8 print:gap-0 relative">
+    <div className="w-full flex flex-col items-center gap-8 print:gap-0 relative">
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 flex items-center justify-center print:absolute"

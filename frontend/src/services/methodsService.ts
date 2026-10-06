@@ -5,7 +5,7 @@
  * decay curve and a herd's methane are not things the browser recomputes from a
  * remembered answer; if the engine cannot be reached the page says so.
  */
-import { env } from '../config/env';
+import { engineFetch } from '../engine/engineFetch';
 import { GwpSetName } from '../types/inventory';
 import {
   MethodInfo, MethodInfoSchema, MethodInput, MethodResult, MethodResultSchema,
@@ -26,7 +26,7 @@ const ENGINE_DOWN =
 export async function getMethodCatalogue(): Promise<MethodInfo[]> {
   let response: Response;
   try {
-    response = await fetch(`${env.PCF_API_BASE_URL}/v1/methods`);
+    response = await engineFetch('/v1/methods');
   } catch {
     throw new MethodError('engine_down', ENGINE_DOWN);
   }
@@ -39,7 +39,7 @@ export async function calculateMethod(
 ): Promise<MethodResult> {
   let response: Response;
   try {
-    response = await fetch(`${env.PCF_API_BASE_URL}/v1/methods/calculate`, {
+    response = await engineFetch('/v1/methods/calculate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal,

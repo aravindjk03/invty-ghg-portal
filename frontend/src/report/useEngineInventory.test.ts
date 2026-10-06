@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { ActivityEntry, EmissionFactor } from '../types/ghg';
 import { marketRecordId, recordsFor } from './useEngineInventory';
+import { setUnitChoices } from '../services/catalogueMap';
 
 const factor: EmissionFactor = {
   id: 'elec.green_tariff', fuelOrActivity: 'Green tariff', scope: 'scope-2',
@@ -90,5 +91,33 @@ describe('a factor the company supplied', () => {
     }));
     expect(location.supplied_factor).toBe('0.012');
     expect(market.supplied_factor).toBe('0.012');
+  });
+});
+
+describe('rupee spend against a factor published per US dollar', () => {
+  const service: EmissionFactor = {
+    id: 'cat1.material.it_services', fuelOrActivity: 'IT / cloud services', scope: 'scope-3',
+    category: '', factorValue: 0, unit: 'INR', source: 'fixture',
+    publicationYear: 2022, qualityTier: 'Secondary',
+  };
+  const spend = row({
+    id: 's1', scope: 'scope-3', category: 'cat1_purchased_goods', fuelOrSource: 'IT services',
+    amount: 825000, unit: 'INR', emissionFactor: service,
+    engineActivityKey: 'epa.useeio.fixture', engineRegion: 'US',
+  });
+  setUnitChoices([{ catalogue_key: 'cat1.material.it_services', unit: 'INR',
+    activity_key: 'epa.useeio.fixture', region: 'US', needs_fx: true }]);
+
+  it('is converted at the stated rate, and the row says so', () => {
+    const [record] = recordsFor([spend], { rate: 82.5, source: 'RBI reference rate 2022' }).records;
+    expect(record.unit).toBe('USD');
+    expect(Number(record.value)).toBeCloseTo(10000, 6);
+    expect(record.note).toContain('82.5');
+    expect(record.note).toContain('RBI reference rate 2022');
+  });
+
+  it('is sent as recorded, for the engine to refuse, without a rate and its source', () => {
+    expect(recordsFor([spend], { rate: 82.5, source: '' }).records[0].unit).toBe('INR');
+    expect(recordsFor([spend]).records[0].unit).toBe('INR');
   });
 });

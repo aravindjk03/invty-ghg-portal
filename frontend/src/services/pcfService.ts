@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { env } from '../config/env';
 import { authService } from './authService';
 import {
+  aiReady, BrowserAiError, estimateInBrowser, estimateWithGemini, hasAccessKey, usesClaude,
+} from './browserAi';
+import {
   EstimateInput,
   EstimateResponse,
   EstimateResponseSchema,
@@ -44,6 +47,8 @@ function authHeaders(): Record<string, string> {
  * customer is asked to pay.
  */
 export async function getEntitlement(): Promise<Entitlement | null> {
+  // Run from this browser there is no account metering to report.
+  if (serviceMode === 'browser') return null;
   let res: Response;
   try {
     res = await fetch(`${env.PCF_API_BASE_URL}/v1/pcf/entitlement`, { headers: authHeaders() });
@@ -56,23 +61,114 @@ export async function getEntitlement(): Promise<Entitlement | null> {
   return parsed.success ? parsed.data : null;
 }
 
-const SERVICE_DOWN = `${env.ASSISTANT_NAME} is offline right now. Please try again later.`;
+
+/**
+ * How long the estimate service gets to answer before the page runs it itself.
+ * A free Render service sleeps when idle and takes up to a minute to wake, so
+ * without a key on this computer (nothing to fall back to) the page waits for
+ * it rather than asking the visitor for a key.
+ */
+const SERVICE_TIMEOUT_MS = 6000;
+const WAKE_TIMEOUT_MS = 90000;
+
+/**
+ * Whether estimates go to the service or are made from this browser. Decided by
+ * the health check: no reachable service means the browser, where the visitor's
+ * own access key is used (see browserAi.ts).
+ */
+let serviceMode: 'unknown' | 'server' | 'browser' = 'unknown';
+
+function browserHealth(): PcfHealth {
+  return {
+    status: 'ok',
+    assistant: env.ASSISTANT_NAME,
+    ai_ready: aiReady(),
+    engine_version: 'browser',
+    catalogue_rows: 0,
+    verified_factors: 0,
+    cache_enabled: false,
+    rate_limit_per_hour: 0,
+    mode: 'browser',
+  };
+}
 
 export async function getPcfHealth(): Promise<PcfHealth> {
-  let res: Response;
+  if (serviceMode === 'browser') return browserHealth();
   try {
-    res = await fetch(`${env.PCF_API_BASE_URL}/health`);
+    const res = await fetch(`${env.PCF_API_BASE_URL}/health`, {
+      signal: AbortSignal.timeout(hasAccessKey() ? SERVICE_TIMEOUT_MS : WAKE_TIMEOUT_MS),
+    });
+    if (res.ok) {
+      const health = HealthSchema.parse(await res.json());
+      serviceMode = 'server';
+      return { ...health, mode: 'server' };
+    }
   } catch {
-    throw new PcfError('service_down', SERVICE_DOWN);
+    // unreachable, asleep or not deployed: fall through to the browser
   }
-  if (!res.ok) throw new PcfError('service_down', SERVICE_DOWN);
-  return HealthSchema.parse(await res.json());
+  serviceMode = 'browser';
+  return browserHealth();
+}
+
+/**
+ * Estimates made from this browser, kept so the same product asked twice gets
+ * the same answer. The server caches the same way; without this a free model
+ * could give two different figures for one product in the same demo.
+ */
+const ESTIMATE_CACHE = 'insity_edge_ai_estimates_v1';
+const CACHE_LIMIT = 40;
+
+const cacheKey = (input: EstimateInput) =>
+  JSON.stringify([input.product.trim().toLowerCase(), input.region, input.details.trim().toLowerCase()]);
+
+function readCache(): Record<string, EstimateResponse> {
+  try {
+    return JSON.parse(localStorage.getItem(ESTIMATE_CACHE) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function remember(input: EstimateInput, estimate: EstimateResponse): void {
+  try {
+    const cache = readCache();
+    cache[cacheKey(input)] = estimate;
+    const keys = Object.keys(cache);
+    keys.slice(0, Math.max(0, keys.length - CACHE_LIMIT)).forEach((key) => delete cache[key]);
+    localStorage.setItem(ESTIMATE_CACHE, JSON.stringify(cache));
+  } catch {
+    // storage unavailable: the estimate is still shown, just not kept
+  }
+}
+
+async function estimateHere(input: EstimateInput, signal?: AbortSignal): Promise<EstimateResponse> {
+  const kept = EstimateResponseSchema.safeParse(readCache()[cacheKey(input)]);
+  if (kept.success) return kept.data;
+  let body: unknown;
+  try {
+    // A pasted Claude key uses Claude; anything else (a pasted Gemini key, or
+    // one built into the site) uses the free Gemini models.
+    body = usesClaude()
+      ? await estimateInBrowser(input, signal)
+      : await estimateWithGemini(input, signal);
+  } catch (err) {
+    if (err instanceof BrowserAiError) throw new PcfError(err.code, err.message);
+    throw err;
+  }
+  const parsed = EstimateResponseSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new PcfError('bad_response',
+      'The service returned a result in an unexpected shape, so it was not displayed.');
+  }
+  remember(input, parsed.data);
+  return parsed.data;
 }
 
 export async function estimateProduct(
   input: EstimateInput,
   signal?: AbortSignal
 ): Promise<EstimateResponse> {
+  if (serviceMode === 'browser') return estimateHere(input, signal);
   let res: Response;
   try {
     res = await fetch(`${env.PCF_API_BASE_URL}/v1/pcf/estimate`, {
@@ -83,7 +179,9 @@ export async function estimateProduct(
     });
   } catch (err) {
     if ((err as Error).name === 'AbortError') throw err;
-    throw new PcfError('service_down', SERVICE_DOWN);
+    // The service went away after the health check: carry on from the browser.
+    serviceMode = 'browser';
+    return estimateHere(input, signal);
   }
 
   const body = await res.json().catch(() => null);

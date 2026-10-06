@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGHG } from '../context/GHGContext';
+import { complianceService } from '../services/complianceService';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -95,6 +96,20 @@ export const SupplierPortalPage: React.FC<SupplierPortalPageProps> = ({ onNaviga
 
   // Modal: New invitation
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+
+  // Invitations live server-side; the seeded rows above are only a first paint.
+  useEffect(() => {
+    let cancelled = false;
+    complianceService
+      .getSupplierInvitations(() => [])
+      .then(({ data, source }) => {
+        if (cancelled || source !== 'api' || !Array.isArray(data) || data.length === 0) return;
+        setInvitations(data as unknown as SupplierInvitation[]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [newSupplierName, setNewSupplierName] = useState('');
   const [newSupplierEmail, setNewSupplierEmail] = useState('');
   const [newCategoryNum, setNewCategoryNum] = useState('1');
@@ -115,7 +130,7 @@ export const SupplierPortalPage: React.FC<SupplierPortalPageProps> = ({ onNaviga
   const [vendorSource, setVendorSource] = useState('EPD Environmental Product Declaration (ISO 14025)');
   const [vendorSubmitted, setVendorSubmitted] = useState(false);
 
-  const handleCreateInvitation = (e: React.FormEvent) => {
+  const handleCreateInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSupplierName.trim() || !newSupplierEmail.trim() || !newItemDesc.trim()) {
       addToast('warning', 'Please fill in supplier name, email, and item description.');
@@ -123,29 +138,45 @@ export const SupplierPortalPage: React.FC<SupplierPortalPageProps> = ({ onNaviga
     }
 
     const catObj = SCOPE_3_CATEGORIES.find((c) => c.value === newCategoryNum);
-    const token = `tok_${Math.random().toString(36).substring(2, 14)}`;
-
-    const newInv: SupplierInvitation = {
-      id: `inv-supp-${Date.now()}`,
-      token,
+    const payload = {
       supplierName: newSupplierName.trim(),
       supplierEmail: newSupplierEmail.trim(),
       scope3CategoryNumber: parseInt(newCategoryNum, 10),
       categoryName: catObj ? catObj.label.split(': ')[1] : 'Purchased Goods',
       requestedItemDescription: newItemDesc.trim(),
       purchaseOrderRef: newPoRef.trim() || undefined,
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 86400000 * 30).toISOString(),
     };
 
-    setInvitations([newInv, ...invitations]);
+    // The token has to be issued server-side. Minting one in the browser
+    // produced a link no server could ever verify, so the supplier could not
+    // actually open it.
+    let created: SupplierInvitation;
+    try {
+      created = (await complianceService.createSupplierInvitation(
+        payload
+      )) as unknown as SupplierInvitation;
+      addToast('success', `Magic Link issued for ${created.supplierName}`);
+    } catch {
+      created = {
+        ...payload,
+        id: `inv-local-${Date.now()}`,
+        token: `local-only-${Date.now()}`,
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 86400000 * 30).toISOString(),
+      } as SupplierInvitation;
+      addToast(
+        'warning',
+        'Saved locally — the supplier link is not live until the API is reachable.'
+      );
+    }
+
+    setInvitations([created, ...invitations]);
     setInviteModalOpen(false);
     setNewSupplierName('');
     setNewSupplierEmail('');
     setNewItemDesc('');
     setNewPoRef('');
-    addToast('success', `Created Magic Link for ${newInv.supplierName}`);
   };
 
   const handleCopyLink = (token: string) => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGHG } from '../context/GHGContext';
+import { unitChoiceFor } from '../services/catalogueMap';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -65,7 +66,15 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
     setTdLoss,
     electricityWtt,
     setElectricityWtt,
+    fx,
+    setFx,
   } = useGHG();
+
+  // Rupee spend on a source whose published factor is per US dollar. These
+  // calculate once the inventory states a rate and where it came from.
+  const rupeeRows = scope3Entries.filter((entry) =>
+    (entry.unit || '').toUpperCase() === 'INR' && unitChoiceFor(entry.emissionFactor?.id, 'INR')?.needs_fx);
+  const fxReady = Boolean(fx.rate && fx.rate > 0 && fx.source.trim());
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
 
@@ -344,19 +353,79 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
         </Card>
       )}
 
+      {/* Spend-based factors are published per US dollar (EPA USEEIO, 2022 USD).
+          Rupee spend is converted at the company's own stated rate, never one
+          this product picked. */}
+      <Card className={`p-5 mb-6 border ${rupeeRows.length > 0 && !fxReady ? 'border-[#A66300]/40 bg-[#FFF8E6]' : 'border-border bg-surface-raised'}`}>
+        <h3 className="text-sm font-bold text-brand-heading">Spend in rupees</h3>
+        <p className="text-xs text-brand-muted mt-1 leading-relaxed">
+          Spend-based factors (purchased services, capital goods, warehousing) are published per US
+          dollar of 2022 purchaser price. Rows recorded in INR are converted at the rate entered here.
+          {rupeeRows.length > 0 && (
+            <span className={`ml-1 font-semibold ${fxReady ? 'text-status-success' : 'text-[#8A5A00]'}`}>
+              {fxReady
+                ? `${rupeeRows.length} rupee row${rupeeRows.length === 1 ? '' : 's'} converted.`
+                : `${rupeeRows.length} rupee row${rupeeRows.length === 1 ? ' is' : 's are'} waiting for this rate.`}
+            </span>
+          )}
+        </p>
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-semibold text-brand-body">Rupees per US dollar</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={fx.rate ?? ''}
+              onChange={(event) => {
+                const value = parseFloat(event.target.value);
+                setFx({ ...fx, rate: Number.isFinite(value) && value > 0 ? value : undefined });
+              }}
+              placeholder="₹ per US$"
+              className="w-28 h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+            />
+          </label>
+          <label className="flex flex-col gap-1 flex-1 min-w-[16rem]">
+            <span className="text-[11px] font-semibold text-brand-body">Where it came from</span>
+            <input
+              type="text"
+              value={fx.source}
+              onChange={(event) => setFx({ ...fx, source: event.target.value })}
+              placeholder="e.g. RBI reference rate, annual average for 2022"
+              className="h-8 px-2 rounded border border-border bg-surface text-xs text-brand-body"
+            />
+          </label>
+        </div>
+        <p className="text-[11px] text-brand-muted mt-1.5">
+          Both are needed, and the rate should be for the factors&rsquo; price year (2022). Each
+          converted row records the rate and its source in the report.
+        </p>
+      </Card>
+
       {/* ALL 15 ACCORDION CATEGORIES */}
       <div className="space-y-5">
         {categoriesToRender
-          .filter((cat) => !cat.auto) // Category 3 is auto-rendered above
           .map((cat) => {
             const entries = getCategoryEntries(cat.id);
             const isSingleFiltered = selectedCategoryFilter === cat.id;
+            // Category 3's upstream and T&D lines are derived above. What can be
+            // recorded here is the rest of the category (electricity bought and
+            // resold to end users), which the engine adds to the derived lines
+            // once rather than twice.
+            const title = cat.auto
+              ? `Cat ${cat.num}: ${cat.name} — sources recorded by hand`
+              : `Cat ${cat.num}: ${cat.name}`;
+            const subtitle = cat.auto
+              ? 'Only what is not derived above, e.g. electricity bought and resold to end users'
+              : cat.subtitle;
 
             return (
               <Accordion
-                key={cat.id}
-                title={`Cat ${cat.num}: ${cat.name}`}
-                subtitle={cat.subtitle}
+                // Remount when a tile selects this category, so "Click to Screen
+                // & Add" opens it rather than showing it still collapsed.
+                key={`${cat.id}-${isSingleFiltered ? 'selected' : 'all'}`}
+                title={title}
+                subtitle={subtitle}
                 badge={
                   entries.length > 0 ? (
                     <Badge variant="primary">{entries.length} {entries.length === 1 ? 'item' : 'items'}</Badge>
@@ -364,13 +433,13 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
                     <span className="text-[11px] text-brand-muted">0 entries</span>
                   )
                 }
-                defaultOpen={isSingleFiltered || cat.defaultIncluded}
+                defaultOpen={isSingleFiltered || (cat.defaultIncluded && !cat.auto)}
               >
                 <div className="p-4 space-y-4">
                   {entries.length === 0 ? (
                     <EmptyState
                       title={`No active entries for Cat ${cat.num}: ${cat.name}`}
-                      description={cat.subtitle}
+                      description={subtitle}
                       actionLabel={`Add Entry for Cat ${cat.num}`}
                       onAdd={() => addRow('scope-3', cat.id)}
                     />

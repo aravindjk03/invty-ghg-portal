@@ -9,6 +9,7 @@
  * a verifier can reproduce every figure in the report from one file.
  */
 import * as XLSX from 'xlsx';
+import { safeFilename } from '../../lib/utils';
 import { ActivityEntry } from '../../types/ghg';
 import { SCOPE3_CATEGORIES } from '../build/aggregate';
 import { GhgInventoryReport } from '../model/types';
@@ -239,5 +240,5 @@ export function exportWorkbook(
     Total: row.total, Records: row.recordCount, 'Data present': row.missing ? 'No' : 'Yes',
   })));
 
-  XLSX.writeFile(book, filename);
+  XLSX.writeFile(book, safeFilename(filename));
 }

@@ -6,6 +6,8 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+import { safeFilename } from '../lib/utils';
+
 // Map catalogue entries to EmissionFactor objects
 export const DEFAULT_FACTORS: EmissionFactor[] = CATALOGUE_SOURCES.map((source) => ({
   id: source.activity_key,
@@ -155,7 +157,7 @@ export const ghgService = {
 
     // Sheet 3: Emission Factors Reference
     const factorSheet = XLSX.utils.json_to_sheet(
-      DEFAULT_FACTORS.slice(0, 50).map((f) => ({
+      DEFAULT_FACTORS.map((f) => ({
         ID: f.id,
         Activity: f.fuelOrActivity,
         Scope: f.scope,
@@ -168,7 +170,7 @@ export const ghgService = {
     XLSX.utils.book_append_sheet(workbook, factorSheet, 'Factor Register');
 
     // Save and trigger download
-    XLSX.writeFile(workbook, filename);
+    XLSX.writeFile(workbook, safeFilename(filename));
   },
 
   /**
@@ -180,7 +182,7 @@ export const ghgService = {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.download = safeFilename(filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -197,42 +199,47 @@ export const ghgService = {
       return;
     }
 
-    try {
-      const canvas = await html2canvas(el, {
+    // One report page (a <section>) per PDF page, so no page is cut through
+    // mid-section and the on-screen header above the report stays out. A page
+    // taller than A4 continues on the next sheet.
+    const pages = Array.from(el.querySelectorAll<HTMLElement>('section'));
+    const targets = pages.length ? pages : [el];
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+    const pageW = 210;
+    const pageH = 297;
+    let first = true;
+
+    for (const target of targets) {
+      const canvas = await html2canvas(target, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#FFFFFF',
       });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const imgWidth = 210; // A4 width mm
-      const pageHeight = 297; // A4 height mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // Canvas pixels that fit on one A4 sheet at full page width. A page only
+      // slightly taller than that is shrunk onto one sheet instead of leaving
+      // a nearly empty one after it.
+      const fullH = Math.floor((canvas.width * pageH) / pageW);
+      const sliceH = canvas.height <= fullH * 1.15 ? canvas.height : fullH;
+      for (let y = 0; y < canvas.height; y += sliceH) {
+        const h = Math.min(sliceH, canvas.height - y);
+        const slice = document.createElement('canvas');
+        slice.width = canvas.width;
+        slice.height = h;
+        const ctx = slice.getContext('2d');
+        if (!ctx) throw new Error('Canvas is not available');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, slice.width, h);
+        ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+        if (!first) pdf.addPage();
+        first = false;
+        const drawH = Math.min(pageH, (h * pageW) / canvas.width);
+        const drawW = (drawH * canvas.width) / h;
+        pdf.addImage(slice.toDataURL('image/jpeg', 0.8), 'JPEG', (pageW - drawW) / 2, 0, drawW, drawH);
       }
-
-      pdf.save(filename);
-    } catch (err) {
-      console.error('PDF rendering failed, falling back to window.print()', err);
-      window.print();
     }
+
+    pdf.save(safeFilename(filename));
   },
 
   /**

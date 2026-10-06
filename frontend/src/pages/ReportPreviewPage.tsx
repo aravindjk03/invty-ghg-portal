@@ -113,10 +113,10 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
     ? 'text-status-success' : readiness.level === 'Inventory report' ? 'text-status-warning' : 'text-status-danger';
 
   return (
-    <div className="max-w-[1440px] mx-auto px-6 py-8 pb-32">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 pb-32">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* The document itself */}
-        <div id="report-document-container" className="lg:col-span-8 flex flex-col items-center gap-6 print:w-full print:p-0">
+        <div id="report-document-container" className="min-w-0 w-full lg:col-span-8 flex flex-col items-center gap-6 print:w-full print:p-0">
           <div className="w-full flex items-center justify-between print:hidden">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-brand-muted">

@@ -1,7 +1,12 @@
 export const env = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
+  // Relative by default so requests go through the Vite dev/preview proxy to the backend.
+  // This works from any host (localhost, LAN IP, another device) without CORS changes.
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   PCF_API_BASE_URL: import.meta.env.VITE_PCF_API_BASE_URL || 'http://localhost:8000',
   ASSISTANT_NAME: import.meta.env.VITE_ASSISTANT_NAME || 'INSITY EDGE AI',
   APP_TITLE: import.meta.env.VITE_APP_TITLE || 'IINVTY GHG Portal',
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+  // Free-tier Gemini key for INSITY EDGE AI on the static site. Supplied at
+  // build time (never committed) and restricted by Google to the site's address.
+  GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
 };

@@ -72,7 +72,11 @@ export const toEmissionFactor = (source: CatalogueSource): EmissionFactor => ({
 export function sourcesFor(scope: string, category: string): CatalogueSource[] {
   const wantedScope = SCOPE_OF_ENTRY[scope] ?? scope;
   const names = CATEGORY_TO_CATALOGUE[category];
-  const inScope = CATALOGUE_SOURCES.filter((source) => source.scope === wantedScope);
+  // Sources whose unit is 'auto' (the Category 3 well-to-tank and T&D lines)
+  // are derived by the engine from the Scope 1 and 2 rows already recorded.
+  // Offering them as a row would invite the same emissions being entered twice.
+  const inScope = CATALOGUE_SOURCES.filter(
+    (source) => source.scope === wantedScope && source.default_unit !== 'auto');
   if (!names) return inScope;
   const matching = inScope.filter((source) => names.includes(source.category_name));
   return matching.length > 0 ? matching : inScope;

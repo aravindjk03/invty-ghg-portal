@@ -14,7 +14,7 @@ export const ReportPage: React.FC<{
   <section
     className={
       'w-full max-w-[820px] min-h-[1100px] bg-white border border-border rounded-xl ' +
-      'shadow-nm-raised-lg p-8 md:p-12 relative overflow-hidden ' +
+      'shadow-nm-raised-lg p-5 sm:p-8 md:p-12 relative overflow-hidden ' +
       'print:shadow-none print:border-none print:rounded-none print:m-0 print:p-10 ' +
       (last ? '' : 'page-break-after')
     }
@@ -55,40 +55,43 @@ export const Table: React.FC<{
 }> = ({ headers, rows, align = [], emptyMessage }) => {
   if (rows.length === 0 && emptyMessage) return <GapNote>{emptyMessage}</GapNote>;
   return (
-    <table className="w-full text-[11.5px] border-collapse mb-4">
-      <thead>
-        <tr className="bg-surface-raised">
-          {headers.map((header, index) => (
-            <th
-              key={header}
-              className={
-                'border border-border px-2 py-1.5 font-semibold text-brand-heading ' +
-                (align[index] === 'right' ? 'text-right' : 'text-left')
-              }
-            >
-              {header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, rowIndex) => (
-          <tr key={rowIndex} className="align-top">
-            {row.map((cell, cellIndex) => (
-              <td
-                key={cellIndex}
+    // Wide registers scroll inside the page on a phone instead of widening it.
+    <div className="w-full overflow-x-auto mb-4 print:overflow-visible">
+      <table className="w-full text-[11.5px] border-collapse">
+        <thead>
+          <tr className="bg-surface-raised">
+            {headers.map((header, index) => (
+              <th
+                key={header}
                 className={
-                  'border border-border px-2 py-1.5 text-brand-body ' +
-                  (align[cellIndex] === 'right' ? 'text-right tabular-nums font-mono' : '')
+                  'border border-border px-2 py-1.5 font-semibold text-brand-heading ' +
+                  (align[index] === 'right' ? 'text-right' : 'text-left')
                 }
               >
-                {cell}
-              </td>
+                {header}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex} className="align-top">
+              {row.map((cell, cellIndex) => (
+                <td
+                  key={cellIndex}
+                  className={
+                    'border border-border px-2 py-1.5 text-brand-body ' +
+                    (align[cellIndex] === 'right' ? 'text-right tabular-nums font-mono' : '')
+                  }
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

@@ -49,6 +49,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
     mobile_combustion: 'guided',
     process_emissions: 'guided',
     fugitive_emissions: 'guided',
+    agricultural_emissions: 'guided',
   });
 
   const [csvErrors, setCsvErrors] = useState<Record<string, string[]>>({});
@@ -58,6 +59,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
   const mobileEntries = scope1Entries.filter((r) => r.category === 'mobile_combustion');
   const processEntries = scope1Entries.filter((r) => r.category === 'process_emissions');
   const fugitiveEntries = scope1Entries.filter((r) => r.category === 'fugitive_emissions');
+  const agricultureEntries = scope1Entries.filter((r) => r.category === 'agricultural_emissions');
 
   const stationarySubtotal = stationaryEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
   const mobileSubtotal = mobileEntries.reduce((acc, r) => acc + (r.calculatedTco2e || 0), 0);
@@ -386,6 +388,34 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
             </div>
           </Accordion>
 
+          {/* ACCORDION 5: Agriculture & land use. None of these is a factor per
+              unit; each row points to the IPCC method that calculates it, so the
+              sources can be found here and are never left out of an inventory. */}
+          <Accordion
+            icon={<Sprout size={22} className="text-lime-600" />}
+            title="Agriculture & land use"
+            description="Livestock, manure, fertiliser, urea and lime, rice, land-use change"
+            subtotal={0}
+            defaultOpen={false}
+          >
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b border-border">
+                <span className="text-xs text-brand-muted">
+                  Calculated as IPCC methods — each row links to its method.
+                </span>
+                <span className="text-xs font-mono text-brand-muted">
+                  {agricultureEntries.length} entries logged
+                </span>
+              </div>
+              {renderSectionContent(
+                'agricultural_emissions',
+                agricultureEntries,
+                'Agriculture & Land Use',
+                'Add agriculture or land-use source'
+              )}
+            </div>
+          </Accordion>
+
           {/* Scope 1 does not end at the accordions above. Livestock, land,
               effluent and buried waste are Scope 1 too; none of them can be a
               factor per unit, so they are calculated by method. Saying so here
@@ -492,10 +522,10 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
-        <div className="max-w-[1440px] mx-auto w-full px-6 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 sm:h-16 py-2 sm:py-0 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
+        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-muted">
+            <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-brand-muted">
               Scope 1 Subtotal:
             </span>
             <div className="flex items-baseline gap-1">
@@ -507,13 +537,14 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => onNavigate('scope-hub')}>
+            <Button variant="ghost" size="sm" onClick={() => onNavigate('scope-hub')} className="hidden md:inline-flex">
               Back to all scopes
             </Button>
             <Button
               variant="secondary"
               size="sm"
               onClick={saveToStorage}
+              className="hidden sm:inline-flex"
             >
               Save Draft
             </Button>

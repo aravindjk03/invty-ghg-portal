@@ -8,6 +8,8 @@ and the totals leave it out.
 """
 from __future__ import annotations
 
+import functools
+import json
 from dataclasses import replace
 from decimal import Decimal
 from typing import Literal, Optional
@@ -16,9 +18,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ghg_core.engine import ActivityRecord, CalculationRun
 from ghg_core.factors import EmissionFactor
+from ghg_core.errors import GhgCoreError
 from ghg_core.quantities import D
+from ghg_core.units import convert, normalise_unit
 
-from .inventory import (GWP_SETS, SUPPLIED_PREFIX, activities_for, load_catalogue_map,
+from .inventory import (GWP_SETS, REPO_ROOT, SUPPLIED_PREFIX, activities_for, load_catalogue_map,
                         run_inventory, supplied_factor, wtt_counterparts)
 
 
@@ -150,6 +154,17 @@ class CatalogueMappingOut(_Strict):
     engine_name: str
     region: str
     source: str
+
+
+class UnitChoiceOut(_Strict):
+    """The published factor a row uses when its quantity is in this unit."""
+    catalogue_key: str
+    unit: str
+    activity_key: str
+    region: str
+    #: Rupee spend against a factor published per US dollar: it calculates once
+    #: the inventory states a rupee-per-dollar rate and where it came from.
+    needs_fx: bool = False
 
 
 class ActivityOut(_Strict):
@@ -504,3 +519,61 @@ def catalogue_mappings() -> list[CatalogueMappingOut]:
 __all__ = ["GWP_SETS", "InventoryRequest", "InventoryResponse", "ActivityOut",
            "CatalogueMappingOut", "calculate_inventory", "catalogue_mappings",
            "list_activities"]
+
+
+#: The picker's catalogue: each source and the units a row may record it in.
+SOURCE_CATALOGUE = REPO_ROOT / "data" / "emission_source_catalogue.json"
+#: The one currency conversion the inventory accepts, at a rate the customer states.
+RUPEE, DOLLAR = "INR", "USD"
+
+
+def _converts(unit: str, factor_unit: str) -> bool:
+    try:
+        convert(1, unit, factor_unit)
+        return True
+    except (GhgCoreError, KeyError, ValueError):
+        return False
+
+
+@functools.lru_cache(maxsize=1)
+def unit_choices() -> tuple[UnitChoiceOut, ...]:
+    """For every source and every unit a row offers, the factor that calculates it.
+
+    A unit is listed only when the engine can take a quantity in it to the
+    factor's own unit without an assumption: the same unit, a fixed conversion,
+    or rupee spend once a rate is stated. Floor area against an electricity
+    factor, litres against a grid factor or a count of parcels are left out, so
+    the page never offers a unit that can only fail.
+    """
+    by_key: dict[str, list] = {}
+    for mapping in load_catalogue_map():
+        by_key.setdefault(mapping.catalogue_key, []).append(mapping)
+    sources = json.loads(SOURCE_CATALOGUE.read_text(encoding="utf-8"))
+
+    choices = []
+    for source in sources:
+        mappings = by_key.get(source["activity_key"])
+        if not mappings:
+            continue
+        units = [u.strip() for u in (source.get("allowed_units") or source["default_unit"]).split("|")
+                 if u.strip()]
+        for unit in units:
+            same = [m for m in mappings if _same_unit(unit, m.unit)]
+            usable = same or [m for m in mappings if _converts(unit, m.unit)]
+            needs_fx = False
+            if not usable and unit.upper() == RUPEE:
+                usable = [m for m in mappings if m.unit.upper() == DOLLAR]
+                needs_fx = bool(usable)
+            if usable:
+                choice = usable[0]
+                choices.append(UnitChoiceOut(catalogue_key=source["activity_key"], unit=unit,
+                                             activity_key=choice.activity_key,
+                                             region=choice.region, needs_fx=needs_fx))
+    return tuple(choices)
+
+
+def _same_unit(unit: str, factor_unit: str) -> bool:
+    try:
+        return normalise_unit(unit) == normalise_unit(factor_unit)
+    except (GhgCoreError, KeyError, ValueError):
+        return False
