@@ -153,7 +153,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             Scope 2 Dual Reporting Rule (GHG Protocol Compliance)
           </strong>
           <span>
-            Location-based and Market-based totals reflect two distinct accounting views of the same purchased energy. <strong>They are never added together in the headline gross total.</strong> The portal defaults to the CEA India National Grid location emission factor (0.716 kgCO₂e/kWh) for standard compliance and applies contractual RECs/green tariffs to the market figure.
+            Location-based and Market-based totals reflect two distinct accounting views of the same purchased energy. <strong>They are never added together in the headline gross total.</strong> The location-based figure uses the CEA India grid factor, named on every row; the market-based figure uses the contractual rate where a row carries one, and says so where it does not.
           </span>
         </div>
       </div>
@@ -216,10 +216,19 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
               <span className="text-lg font-mono font-bold text-brand-heading">₹7.80 / kWh</span>
               <span className="text-[11px] text-brand-muted block mt-1">HT Industrial Tariff (JSERC)</span>
             </div>
+            {/*
+              No figure printed here. The grid factor is whatever the ingested
+              CEA table holds for the year being reported, and a number typed
+              into this tile would be a second answer that drifts away from the
+              one every row is actually calculated with — which is exactly the
+              fault this page spent so long fixing. Each row names its own.
+            */}
             <div className="p-4 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-semibold text-brand-body block mb-1">CEA Baseline v19 Factor</span>
-              <span className="text-lg font-mono font-bold text-brand-heading">0.716 kgCO₂e / kWh</span>
-              <span className="text-[11px] text-brand-muted block mt-1">Indian National Grid Average</span>
+              <span className="text-xs font-semibold text-brand-body block mb-1">Grid emission factor</span>
+              <span className="text-sm font-semibold text-brand-heading">CEA CO₂ Baseline Database</span>
+              <span className="text-[11px] text-brand-muted block mt-1">
+                The value used is shown on each row, with its year.
+              </span>
             </div>
             <div className="p-4 rounded-lg bg-surface border border-border flex flex-col justify-between">
               <div>
