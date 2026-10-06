@@ -14,7 +14,7 @@
  * bug to paper over with a made-up number.
  */
 import { z } from 'zod';
-import { env } from '../config/env';
+import { engineFetch } from '../engine/engineFetch';
 
 const MappingSchema = z.object({
   catalogue_key: z.string(),
@@ -68,7 +68,7 @@ const UNIT_EQUIVALENTS: Record<string, string[]> = {
 };
 
 export async function getCatalogueMap(): Promise<CatalogueMap> {
-  const response = await fetch(`${env.PCF_API_BASE_URL}/v1/inventory/catalogue-map`);
+  const response = await engineFetch('/v1/inventory/catalogue-map');
   if (!response.ok) throw new Error('catalogue map unavailable');
   const rows = MappingSchema.array().parse(await response.json());
   const map: CatalogueMap = new Map();

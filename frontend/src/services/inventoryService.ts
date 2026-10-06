@@ -6,7 +6,7 @@
  * from a different method, which is how two figures for the same inventory
  * reach a report.
  */
-import { env } from '../config/env';
+import { engineFetch } from '../engine/engineFetch';
 import {
   ActivitySchema, GwpSetName, GwpSetInfo, GwpSetSchema, InventoryRecordInput,
   InventoryResponseSchema, InventoryResult, SelectableActivity,
@@ -26,7 +26,7 @@ const ENGINE_DOWN =
 async function getJson(path: string): Promise<unknown> {
   let response: Response;
   try {
-    response = await fetch(`${env.PCF_API_BASE_URL}${path}`);
+    response = await engineFetch(path);
   } catch {
     throw new InventoryError('engine_down', ENGINE_DOWN);
   }
@@ -67,7 +67,7 @@ export async function calculateInventory(
 ): Promise<InventoryResult> {
   let response: Response;
   try {
-    response = await fetch(`${env.PCF_API_BASE_URL}/v1/inventory/calculate`, {
+    response = await engineFetch('/v1/inventory/calculate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal,

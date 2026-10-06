@@ -20,6 +20,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // The in-browser calculation engine is a module worker that imports Python
+  // (Pyodide) at runtime.
+  worker: { format: 'es' },
   build: {
     rollupOptions: {
       output: {

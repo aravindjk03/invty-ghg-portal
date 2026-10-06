@@ -413,8 +413,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
       {/* Sticky Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
-        <div className="max-w-[1440px] mx-auto w-full px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 flex items-center justify-between gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <SegmentedControl
               size="sm"
               value={downloadFormat}
@@ -428,11 +428,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-auto">
             <Button
               variant="secondary"
               size="sm"
               onClick={() => onNavigate('scope-hub')}
+              className="hidden sm:inline-flex"
             >
               Back to Hub
             </Button>
@@ -442,7 +443,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               onClick={handleExport}
               leftIcon={<Download size={16} />}
             >
-              {downloadFormat === 'PDF' ? 'Preview & Download PDF Report' : `Export Inventory (${downloadFormat})`}
+              <span className="sm:hidden">{downloadFormat === 'PDF' ? 'Download PDF' : `Export ${downloadFormat}`}</span>
+              <span className="hidden sm:inline">{downloadFormat === 'PDF' ? 'Preview & Download PDF Report' : `Export Inventory (${downloadFormat})`}</span>
             </Button>
           </div>
         </div>
