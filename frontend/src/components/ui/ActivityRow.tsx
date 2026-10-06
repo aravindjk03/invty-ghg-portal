@@ -18,6 +18,7 @@ import { groupedSourcesFor, toEmissionFactor, unitsFor } from '../../data/factor
 import { EngineFactorPicker } from './EngineFactorPicker';
 import { parseIndianNumber, formatIndianNumber } from '../../engine/unitConverter';
 import { useCatalogueMap } from '../../services/useCatalogueMap';
+import { startingUnit, unitChoicesFor } from '../../services/catalogueMap';
 import {
   ReportingPeriod, isInPeriod, periodEnd, periodLabel,
 } from '../../report/reportingPeriod';
@@ -90,8 +91,17 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     () => groupedSourcesFor(entry.scope, entry.category),
     [entry.scope, entry.category],
   );
-  const units = useMemo(() => unitsFor(entry.emissionFactor.id), [entry.emissionFactor.id]);
   const catalogueMap = useCatalogueMap();
+  // Only the units the engine can calculate this source in, once it has said
+  // which they are. The row's current unit stays listed so an older row still
+  // shows what it holds, and says why it cannot be calculated.
+  const units = useMemo(() => {
+    const offered = unitsFor(entry.emissionFactor.id);
+    const workable = unitChoicesFor(entry.emissionFactor.id).map((choice) => choice.unit);
+    const list = workable.length > 0 ? offered.filter((unit) => workable.includes(unit)) : offered;
+    return entry.unit && !list.includes(entry.unit) ? [...list, entry.unit] : list;
+    // catalogueMap: the choices arrive with it, so a load re-runs this.
+  }, [entry.emissionFactor.id, entry.unit, catalogueMap]);
   const monthFieldId = useId();
   // Needs the company's own factor: nothing the engine publishes resolves it
   // and no factor of their own has been given yet. Judged by the engine's map,
@@ -130,7 +140,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
       onUpdate({
         fuelOrSource: selectedFactor.fuelOrActivity,
         emissionFactor: selectedFactor,
-        unit: selectedFactor.unit,
+        unit: startingUnit(source.activity_key, selectedFactor.unit),
         customFactorOverride: undefined,
         customFactorSource: undefined,
         // The row is now about a different source, so whatever published factor

@@ -45,3 +45,37 @@ def test_the_mapping_calculates_in_its_own_scope_and_category(mapping):
     assert Decimal(line.emissions_kgco2e) > 0
     # Its own line, not the Category 3 upstream line a fuel also produces.
     assert (line.scope, line.ghg_category) == (source["scope"], source["ghg_category"])
+
+
+# --- the units a row is offered -------------------------------------------------
+
+from service.inventory_api import unit_choices  # noqa: E402
+
+CHOICES = [c for c in unit_choices() if CATALOGUE[c.catalogue_key]["scope"] != "memo"]
+
+
+@pytest.mark.parametrize("choice", CHOICES, ids=lambda c: f"{c.catalogue_key}[{c.unit}]")
+def test_every_unit_a_row_offers_calculates(choice):
+    source = CATALOGUE[choice.catalogue_key]
+    # A rupee row reaches the engine in dollars, converted at the stated rate.
+    unit = "USD" if choice.needs_fx else choice.unit
+    record = {"record_id": "r", "activity_key": choice.activity_key, "scope": source["scope"],
+              "ghg_category": source["ghg_category"], "region": choice.region,
+              "value": "1000", "unit": unit}
+    if source["scope"] == "2":
+        record["scope2_view"] = "location"
+    response = calculate_inventory(InventoryRequest(
+        records=[record], gwp_set="AR5", reporting_year=2025, scope2_view="location"), "test")
+    line = next(line for line in response.lines if line.record_id == "r")
+    assert line.status == "calculated", line.message
+
+
+def test_only_rupees_need_a_rate():
+    assert {c.unit for c in CHOICES if c.needs_fx} == {"INR"}
+
+
+def test_a_unit_that_cannot_calculate_is_not_offered():
+    offered = {(c.catalogue_key, c.unit) for c in CHOICES}
+    # Floor area against an electricity factor, and a count of parcels.
+    assert ("cat9.warehousing", "m2.yr") not in offered
+    assert ("cat4.courier", "parcel") not in offered

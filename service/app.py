@@ -35,8 +35,8 @@ from .estimator import (AIEstimator, ClaudeEstimator, EstimatorError, EstimatorN
 from .fallback import FallbackEstimator, ProviderStep
 from .inventory import GWP_SETS, load_gwp, load_registry
 from .inventory_api import (ActivityOut, CatalogueMappingOut, InventoryRequest,
-                            InventoryResponse, calculate_inventory, catalogue_mappings,
-                            list_activities)
+                            InventoryResponse, UnitChoiceOut, calculate_inventory,
+                            catalogue_mappings, list_activities, unit_choices)
 from .gemini import GeminiEstimator
 from .methods_api import MethodRequest, MethodResponse, calculate_method, list_methods
 from .models import PROFILES, ModelProfile, estimate_cost_usd
@@ -296,6 +296,12 @@ def inventory_catalogue_map() -> list[CatalogueMappingOut]:
     chosen.
     """
     return catalogue_mappings()
+
+
+@app.get("/v1/inventory/unit-choices", response_model=list[UnitChoiceOut])
+def inventory_unit_choices() -> list[UnitChoiceOut]:
+    """For each source and unit a row offers, the published factor that calculates it."""
+    return list(unit_choices())
 
 
 @app.get("/v1/inventory/gwp-sets")

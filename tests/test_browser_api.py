@@ -35,6 +35,7 @@ def browser(method, path, query="", body=None):
 @pytest.mark.parametrize("path, query", [
     ("/v1/inventory/catalogue-map", ""),
     ("/v1/inventory/gwp-sets", ""),
+    ("/v1/inventory/unit-choices", ""),
     ("/v1/inventory/activities", "scope=1&search=diesel&limit=20"),
     ("/v1/methods", ""),
 ])

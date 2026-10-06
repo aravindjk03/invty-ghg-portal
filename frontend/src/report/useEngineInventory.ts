@@ -26,6 +26,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityEntry } from '../types/ghg';
 import { calculateInventory, InventoryError } from '../services/inventoryService';
+import { unitChoiceFor } from '../services/catalogueMap';
 import { GwpSetName, InventoryRecordInput, InventoryResult } from '../types/inventory';
 
 const GHG_CATEGORY: Record<string, string> = {
@@ -65,7 +66,31 @@ export const marketRecordId = (entryId: string): string => `${entryId}::market`;
  * rules below decide what a customer's market-based figure is, and they are
  * not something to find out by reading a dashboard.
  */
-export function recordsFor(entries: ActivityEntry[]): {
+/** Rupees per US dollar, and where the rate came from, for spend-based factors. */
+export interface FxRate {
+  rate?: number;
+  source?: string;
+}
+
+/**
+ * Rupee spend for a factor published per US dollar, converted at the rate the
+ * company states. Without a rate and its source the row is sent as recorded,
+ * and the engine refuses it rather than assume one.
+ */
+function inDollars(entry: ActivityEntry, fx?: FxRate): { value: string; unit: string; note: string } | undefined {
+  if ((entry.unit || '').toUpperCase() !== 'INR' || !entry.amount) return undefined;
+  if (!unitChoiceFor(entry.emissionFactor?.id, 'INR')?.needs_fx) return undefined;
+  const rate = fx?.rate;
+  const source = fx?.source?.trim();
+  if (!rate || rate <= 0 || !source) return undefined;
+  return {
+    value: (entry.amount / rate).toPrecision(12),
+    unit: 'USD',
+    note: `Spend of INR ${entry.amount} converted at INR ${rate} per USD (${source})`.slice(0, 400),
+  };
+}
+
+export function recordsFor(entries: ActivityEntry[], fx?: FxRate): {
   records: InventoryRecordInput[];
   unmapped: ActivityEntry[];
 } {
@@ -90,12 +115,14 @@ export function recordsFor(entries: ActivityEntry[]): {
       return;
     }
     const isScope2 = scopeOf(entry) === '2';
+    const dollars = inDollars(entry, fx);
     const base = {
       scope: scopeOf(entry),
       ghg_category: categoryOf(entry),
       region: entry.engineRegion || 'IN',
-      value: entry.amount ? String(entry.amount) : null,
-      unit: entry.unit || null,
+      value: dollars ? dollars.value : entry.amount ? String(entry.amount) : null,
+      unit: dollars ? dollars.unit : entry.unit || null,
+      ...(dollars ? { note: dollars.note } : {}),
       facility_id: entry.facility || undefined,
       period_month: entry.periodMonth,
     };
@@ -139,13 +166,14 @@ export function useEngineInventory(
   entries: ActivityEntry[], gwpSet: GwpSetName, reportingYear: number,
   tdLoss?: { rate?: number; source?: string },
   electricityWtt?: { factor?: number; source?: string },
+  fx?: FxRate,
 ): EngineInventory {
   const [result, setResult] = useState<InventoryResult | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const abort = useRef<AbortController>();
 
-  const { records, unmapped } = useMemo(() => recordsFor(entries), [entries]);
+  const { records, unmapped } = useMemo(() => recordsFor(entries, fx), [entries, fx]);
 
   const fingerprint = JSON.stringify([records, gwpSet, reportingYear, tdLoss, electricityWtt]);
 
