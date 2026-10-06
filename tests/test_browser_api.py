@@ -133,3 +133,32 @@ def test_a_refused_or_non_product_answer_is_shown_under_the_brand():
     status, answer = browser("POST", "/v1/pcf/browser-assemble",
                              body={"request": KETTLE, "message": claude_message(not_product)})
     assert status == 422 and answer["detail"]["code"] == "not_a_product"
+
+
+def gemini_reply(payload: dict, finish: str = "STOP") -> dict:
+    """A generateContent response, as the browser receives it."""
+    return {"candidates": [{"finishReason": finish, "content": {"parts": [
+        {"text": "thinking", "thought": True},
+        {"text": json.dumps(payload, default=str)}]}}]}
+
+
+def test_the_browser_asks_gemini_what_the_server_would():
+    status, answer = browser("POST", "/v1/pcf/gemini-request", body=KETTLE)
+    assert status == 200 and answer["models"][0] == "gemini-3.8-flash"
+    assert answer["body"]["generationConfig"]["responseMimeType"] == "application/json"
+    assert "<<<VISITOR_PRODUCT>>>\nelectric kettle" in answer["body"]["contents"][0]["parts"][0]["text"]
+
+
+def test_a_gemini_answer_is_computed_by_the_engine():
+    status, answer = browser("POST", "/v1/pcf/gemini-assemble", body={
+        "request": KETTLE, "status": 200, "model": "gemini-3.8-flash",
+        "data": gemini_reply(decomposition_dict())})
+    assert status == 200, answer
+    assert answer["lines"] and answer["method"]["assistant"] == "INSITY EDGE AI"
+
+
+def test_a_gemini_failure_is_shown_under_the_brand():
+    status, answer = browser("POST", "/v1/pcf/gemini-assemble", body={
+        "request": KETTLE, "status": 429, "model": "gemini-3.8-flash", "data": {"error": {}}})
+    assert status == 429 and answer["detail"]["code"] == "ai_quota_exceeded"
+    assert "Gemini" not in answer["detail"]["message"]

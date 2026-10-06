@@ -36,7 +36,7 @@ const SERVICE_MODULES = [
   '__init__.py', 'inventory.py', 'inventory_api.py', 'methods_api.py', 'browser_api.py',
   // The product carbon estimate's deterministic half: request building, output
   // validation and the screening maths. No model client is among them.
-  'catalogue.py', 'config.py', 'estimator.py', 'guard.py', 'models.py', 'pipeline.py',
+  'catalogue.py', 'config.py', 'estimator.py', 'gemini.py', 'guard.py', 'models.py', 'pipeline.py',
   'schemas.py', 'text.py',
 ];
 const DATA = [
