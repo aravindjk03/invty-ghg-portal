@@ -48,8 +48,23 @@ const currentKey = (): string | null => getAccessKey() || sessionKey;
 
 export const hasAccessKey = (): boolean => Boolean(currentKey());
 
+/** A pasted key is either a Claude key (sk-ant-…) or a Google Gemini key. */
+const isClaudeKey = (key: string | null): boolean => Boolean(key && key.startsWith('sk-ant-'));
+
+/** True when the pasted key is for Claude; otherwise the free Gemini models are used. */
+export const usesClaude = (): boolean => isClaudeKey(currentKey());
+
+/** The Gemini key: one built into the site, or one pasted on this computer. */
+function geminiKey(): string {
+  const pasted = currentKey();
+  return env.GEMINI_API_KEY || (pasted && !isClaudeKey(pasted) ? pasted : '');
+}
+
 /** True when the site itself carries the free Gemini key, so no visitor needs one. */
 export const hasBuiltInAi = (): boolean => Boolean(env.GEMINI_API_KEY);
+
+/** Whether this browser can make an estimate at all. */
+export const aiReady = (): boolean => hasBuiltInAi() || hasAccessKey();
 
 /** A failure with the code and wording the page already knows how to show. */
 export class BrowserAiError extends Error {
@@ -85,7 +100,7 @@ function fromEngine(status: number, body: any): never {
 /** The model call, with every failure translated into the assistant's own words. */
 async function callModel(useBeta: boolean, params: any, signal?: AbortSignal) {
   const apiKey = currentKey();
-  if (!apiKey) {
+  if (!apiKey || !isClaudeKey(apiKey)) {
     throw new BrowserAiError('needs_key', `${NAME} needs its access key on this computer.`);
   }
   // The key is the visitor's own, typed into this page; nothing is embedded in the site.
@@ -165,7 +180,7 @@ async function askGemini(prepared: { models: string[]; endpoint: string; body: u
       try {
         const res = await fetch(prepared.endpoint.replace('{model}', model), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey() },
           body: JSON.stringify(prepared.body),
           signal: combined,
         });
