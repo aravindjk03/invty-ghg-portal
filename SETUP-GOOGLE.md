@@ -23,6 +23,10 @@ it for you, because the client ID is tied to that account.
 
 ## 2. Give the client ID to the site
 
+The current client ID is already set in `frontend/.env.production` and
+`render.yaml`. Change it in both places if you create a new one.
+
+
 - **Website (GitHub Pages):** rebuild with it set:
   ```bash
   IINVTY_BACKEND_URL=https://iinvty-backend.onrender.com/api/v1 \
