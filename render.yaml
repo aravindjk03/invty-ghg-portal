@@ -15,11 +15,14 @@
 #     as `free` here for you to decide.
 #
 #  2. The backend keeps its accounts and saved inventories in a SQLite file
-#     under backend/data. On Render that disk is EPHEMERAL: every deploy wipes
-#     it, and a customer's saved inventory goes with it. The `disk` block below
-#     mounts persistent storage at that path so it survives. A disk is available
-#     on paid instance types only; on free, expect the data to reset and say so
-#     to anyone using it.
+#     under backend/data. On the free plan that disk is EPHEMERAL: every deploy
+#     or restart wipes it, so accounts created there are lost (the built-in demo
+#     accounts are re-seeded each start). Persistent storage needs a paid plan;
+#     to add it, switch iinvty-backend to `starter` and add under it:
+#       disk:
+#         name: iinvty-data
+#         mountPath: /opt/render/project/src/backend/data
+#         sizeGB: 1
 services:
   # Login, inventory and reports API (Express + node:sqlite).
   - type: web
@@ -30,12 +33,6 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
-    # Where the SQLite file lives (backend/data/invty_portal.db). Without this
-    # the accounts and every saved inventory are gone on the next deploy.
-    disk:
-      name: iinvty-data
-      mountPath: /opt/render/project/src/backend/data
-      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "24"              # node:sqlite needs Node 22.5 or later
@@ -44,6 +41,9 @@ services:
       - key: CORS_ORIGIN
         value: https://aravindjk03.github.io
       - key: API_SECRET_KEY
+        generateValue: true
+      # The server refuses to start in production on the development default.
+      - key: JWT_SECRET
         generateValue: true
       # How many AI product estimates a free account gets before it is asked to
       # upgrade. Changed here, never in the browser.
