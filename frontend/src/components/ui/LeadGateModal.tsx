@@ -50,7 +50,7 @@ export const LeadGateModal: React.FC<LeadGateModalProps> = ({
   onClose,
   onSuccess,
   title = 'Enterprise Verification & Report Delivery',
-  description = 'Register your organization profile to unlock verified audit packages, regulatory XML/XBRL exports, and immutable assurance records.',
+  description = 'Tell us about your organisation and we will get in touch about the full reporting package: the assurance-ready export, regulatory XML/XBRL filings and reviewer access.',
   actionType = 'pdf',
   inventorySummary,
 }) => {

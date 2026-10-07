@@ -19,7 +19,8 @@ import {
   Trash2, 
   ArrowLeft,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  BookOpen
 } from 'lucide-react';
 import { ConsolidationBoundary, IntegratedSteelMethod } from '../engine/scopeRouter';
 
@@ -37,6 +38,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
     period,
     setPeriod,
     setBoundaryApproach,
+    annualTurnoverCr,
+    setAnnualTurnoverCr,
     setSteelMethod,
     scope1Entries,
     scope2Entries,
@@ -44,6 +47,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
     summary,
     recalculateAll,
     resetToDefaults,
+    loadExampleInventory,
     saveToStorage,
     addToast,
   } = useGHG();
@@ -146,6 +150,30 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
               </label>
               <PeriodPicker period={period} onChange={setPeriod} variant="panel" />
             </div>
+
+            {/* The denominator for the BRSR intensity ratio. Left empty, the
+                Dashboard says the intensity is not set rather than dividing by
+                a turnover belonging to someone else. */}
+            <div>
+              <label className="block text-xs font-semibold text-brand-body mb-1">
+                Annual Turnover (₹ crore)
+              </label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={annualTurnoverCr ?? ''}
+                onChange={(e) => {
+                  const next = Number(e.target.value);
+                  setAnnualTurnoverCr(e.target.value !== '' && Number.isFinite(next) && next > 0 ? next : undefined);
+                }}
+                placeholder="e.g. 480"
+              />
+              <p className="text-[11px] text-brand-muted mt-1.5 leading-relaxed">
+                Used for the emissions-intensity ratio BRSR Core asks for. Leave it
+                empty and no intensity figure is stated.
+              </p>
+            </div>
           </div>
         </Card>
 
@@ -173,7 +201,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
                 ]}
               />
               <p className="text-[11px] text-brand-muted mt-1.5 leading-relaxed">
-                Under <strong>Operational Control</strong>, 100% of emissions from facilities where Acme Steel holds authority to introduce operating policies are accounted under Scope 1 and Scope 2. Leased assets outside this boundary route to Category 8.
+                Under <strong>Operational Control</strong>, 100% of emissions from facilities where {companyName} holds authority to introduce operating policies are accounted under Scope 1 and Scope 2. Leased assets outside this boundary route to Category 8.
               </p>
             </div>
 
@@ -254,74 +282,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
               Recalculate All Emissions with Latest Factors
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetToDefaults}
-              leftIcon={<Trash2 size={14} />}
-              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              Reset to Acme Steel Factory Baseline
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadExampleInventory}
+                leftIcon={<BookOpen size={14} />}
+                className="text-xs text-brand-primary"
+              >
+                Load the worked example
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm(
+                    'Delete every activity row in this inventory? Your organisation, period and settings are kept. This cannot be undone.'
+                  )) {
+                    resetToDefaults();
+                  }
+                }}
+                leftIcon={<Trash2 size={14} />}
+                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Clear all activity rows
+              </Button>
+            </div>
           </div>
         </Card>
 
-        {/* 4. Captured Enterprise Leads (Portfolio & Report Ingestion) */}
-        <Card className="p-6 bg-surface-raised border border-border shadow-nm-raised">
-          <div className="flex items-center justify-between pb-3 mb-4 border-b border-border">
-            <div>
-              <h2 className="text-sm font-bold text-brand-heading uppercase tracking-wider flex items-center gap-2">
-                <Database size={16} className="text-brand-primary" />
-                Portfolio Customer Ingestion & Captured Leads
-              </h2>
-              <p className="text-xs text-brand-muted mt-0.5">
-                Prospective enterprise clients redirected from your portfolio website who unlocked reports or requested verified exports.
-              </p>
-            </div>
-            <Badge variant="verified">CRM Synchronized</Badge>
-          </div>
-
-          <div className="space-y-3">
-            <div className="p-3 bg-surface border border-border rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div>
-                <span className="font-bold text-brand-heading block">Tata Heavy Engineering Ltd</span>
-                <span className="text-brand-muted">r.sharma@tata-heavy-eng.com · Manufacturing · Ref: Portfolio</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="primary">Scope 3 Audit</Badge>
-                <span className="text-[11px] font-mono text-brand-muted">2 days ago</span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-surface border border-border rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div>
-                <span className="font-bold text-brand-heading block">JSW Specialty Alloys Division</span>
-                <span className="text-brand-muted">a.verma@jsw-specialty-alloys.in · Steel · Ref: Portfolio</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="warning">ISO 14064 Assurance</Badge>
-                <span className="text-[11px] font-mono text-brand-muted">Yesterday</span>
-              </div>
-            </div>
-
-            {localStorage.getItem('INVTY_LEAD_PROFILE') && (
-              <div className="p-3 bg-blue-50/60 border border-blue-200 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                <div>
-                  <span className="font-bold text-brand-heading block">
-                    {JSON.parse(localStorage.getItem('INVTY_LEAD_PROFILE') || '{}').companyName || 'Recent Active Session'}
-                  </span>
-                  <span className="text-brand-muted">
-                    {JSON.parse(localStorage.getItem('INVTY_LEAD_PROFILE') || '{}').workEmail} · Sector: {JSON.parse(localStorage.getItem('INVTY_LEAD_PROFILE') || '{}').sector}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="verified">Active Session Lead</Badge>
-                  <span className="text-[11px] font-mono text-blue-800">Just Now</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
       </div>
 
       {/* Sticky Save Bar */}

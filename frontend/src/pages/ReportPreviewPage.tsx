@@ -239,7 +239,8 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
                   </tbody>
                 </table>
                 <p className="text-[11px] text-brand-muted mt-2">
-                  ghg_core {engine.result.engine_version} · {engine.result.gwp_set} · run{' '}
+                  Calculated by the IINVTY engine v{engine.result.engine_version} on the{' '}
+                  {engine.result.gwp_set} basis · calculation ref{' '}
                   <span className="font-mono">{engine.result.run_id.slice(0, 10)}</span>
                 </p>
               </>

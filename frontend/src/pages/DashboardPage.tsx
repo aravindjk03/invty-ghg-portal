@@ -7,7 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
 import { StackedScopeBar } from '../components/charts/StackedScopeBar';
 import { DonutChart } from '../components/charts/DonutChart';
-import { SankeyDiagram } from '../components/charts/SankeyDiagram';
+import { SankeyDiagram, SankeyRow } from '../components/charts/SankeyDiagram';
 import { useGHG } from '../context/GHGContext';
 import { ghgService } from '../services/ghgService';
 import { formatIndianNumber } from '../engine/unitConverter';
@@ -29,6 +29,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     scenario,
     scenarioResult,
     updateScenario,
+    annualTurnoverCr,
+    boundaryApproach,
+    category3,
     addToast,
   } = useGHG();
 
@@ -63,10 +66,74 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     ].filter((d) => d.value > 0);
   }, [summary]);
 
-  // Bug Guard #8: Intensity guard calculation (denominator = 480 Cr annual turnover)
+  // Intensity needs the company's own turnover. A fixed ₹480 Cr denominator was
+  // used here for every company, which made the figure one about a company the
+  // user had never heard of. Unset means the tile says so.
   const intensityData = useMemo(() => {
-    return calculateIntensity(summary.totalEmissions, 480);
-  }, [summary.totalEmissions]);
+    if (!annualTurnoverCr || annualTurnoverCr <= 0) return null;
+    return calculateIntensity(summary.totalEmissions, annualTurnoverCr);
+  }, [summary.totalEmissions, annualTurnoverCr]);
+
+  // The flow diagram's rows, from this inventory. Capped so the canvas stays
+  // readable; whatever does not fit is summed into one honest remainder rather
+  // than dropped, so the ribbons still add up to the total above.
+  const sankeyRows = useMemo<SankeyRow[]>(() => {
+    const colourFor = (scope: string) =>
+      scope === 'scope-1' ? 'var(--scope-1)' : scope === 'scope-2' ? 'var(--scope-2)' : 'var(--scope-3)';
+    const labelFor = (scope: string) =>
+      scope === 'scope-1' ? 'Scope 1' : scope === 'scope-2' ? 'Scope 2' : 'Scope 3';
+    const humanise = (text: string) =>
+      text.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const calculated = allEntries
+      .filter((e) => ['scope-1', 'scope-2', 'scope-3'].includes(e.scope))
+      .filter((e) => Number.isFinite(e.calculatedTco2e) && e.calculatedTco2e > 0)
+      .sort((a, b) => b.calculatedTco2e - a.calculatedTco2e);
+
+    const MAX_RIBBONS = 11;
+    const shown = calculated.slice(0, MAX_RIBBONS);
+    const rest = calculated.slice(MAX_RIBBONS);
+
+    const rows: SankeyRow[] = shown.map((e) => ({
+      activity: e.fuelOrSource || e.facility,
+      category: humanise(e.category),
+      scope: labelFor(e.scope),
+      amount: e.calculatedTco2e,
+      scopeColor: colourFor(e.scope),
+    }));
+
+    // Category 3 lines the engine derives from the Scope 1 and 2 rows have no
+    // activity row of their own. Leaving them out made the diagram's total fall
+    // short of the inventory total printed above it.
+    if (category3.tco2e > 0) {
+      rows.push({
+        activity: 'Upstream fuel & energy (derived)',
+        category: 'Cat 3 Energy Activities',
+        scope: 'Scope 3',
+        amount: category3.tco2e,
+        scopeColor: 'var(--scope-3)',
+      });
+      rows.sort((a, b) => b.amount - a.amount);
+    }
+
+    if (rest.length > 0) {
+      const byScope = new Map<string, number>();
+      for (const e of rest) {
+        byScope.set(e.scope, (byScope.get(e.scope) ?? 0) + e.calculatedTco2e);
+      }
+      for (const [scope, amount] of byScope) {
+        rows.push({
+          activity: `${rest.filter((e) => e.scope === scope).length} further sources`,
+          category: 'Combined',
+          scope: labelFor(scope),
+          amount,
+          scopeColor: colourFor(scope),
+        });
+      }
+    }
+
+    return rows;
+  }, [allEntries, category3.tco2e]);
 
   const handleExport = () => {
     if (downloadFormat === 'PDF') {
@@ -75,7 +142,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     }
 
     if (downloadFormat === 'XLSX') {
-      ghgService.exportXlsx(allEntries, summary, `${companyName.replace(/\s+/g, '_')}_GHG_Inventory.xlsx`);
+      ghgService.exportXlsx(
+        allEntries,
+        summary,
+        `${companyName.replace(/\s+/g, '_')}_GHG_Inventory.xlsx`,
+        { companyName, reportingPeriod, boundaryApproach }
+      );
       addToast('success', 'Downloaded full Excel inventory audit trail (XLSX)');
       return;
     }
@@ -133,19 +205,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     <div className="max-w-[1440px] mx-auto px-6 py-8 pb-32 space-y-8 select-none">
       {/* ROW 1: 4 KPI Tiles (Uniformly Aligned) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+        {/* No prior-year inventory is held, so no period-on-period change can be
+            stated. The tiles carried a fixed -4.2% and -6.8% regardless of the
+            data, which every reader would have taken for their own trend. */}
         <KPITile
           label="Total Emissions"
           value={summary.totalEmissions}
           unit="tCO₂e"
-          tooltipText="Consolidated operational emissions across Scopes 1, 2, and active Scope 3 categories."
-          delta={{ value: '-4.2%', isDecrease: true }}
+          subtext={`${reportingPeriod} · this period only`}
+          tooltipText="Consolidated operational emissions across Scopes 1, 2, and active Scope 3 categories. A period-on-period change appears once a second reporting period has been entered."
         />
         <KPITile
           label="Emissions Intensity"
-          value={intensityData.value || 0}
-          unit="tCO₂e / ₹ Cr"
-          tooltipText="Gross operational carbon emissions divided by total corporate annual turnover (₹480 Cr)."
-          delta={{ value: '-6.8%', isDecrease: true }}
+          value={intensityData?.value ?? 'Not set'}
+          unit={intensityData ? 'tCO₂e / ₹ Cr' : undefined}
+          subtext={intensityData ? `per ₹ Cr of ₹${annualTurnoverCr} Cr turnover` : 'Add annual turnover in Settings'}
+          tooltipText="Gross operational emissions divided by your annual turnover, the intensity ratio BRSR Core asks for. Enter the turnover in Settings and this figure is calculated from it."
         />
         <KPITile
           label="Data Quality Grade"
@@ -249,7 +324,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             </p>
           </div>
         </div>
-        <SankeyDiagram />
+        <SankeyDiagram rows={sankeyRows} />
       </Card>
 
       {/* ROW 4: Top Emission Contributors Table */}
@@ -311,10 +386,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               Decarbonisation Scenario Modelling & Sensitivity Analysis
             </h3>
           </div>
-          <span className="text-xs font-mono text-brand-muted">FY 2030 Reduction Roadmap</span>
+          <span className="text-xs text-brand-muted">Indicative — not part of the reported inventory</span>
         </div>
         <p className="text-xs text-brand-muted mb-5 max-w-2xl">
-          Simulate capital decarbonisation levers. Instantaneously evaluates emissions reduction across Scope 1, Scope 2, and upstream Category 3 transmission loss baselines.
+          Move a lever to see what it would take off this period&apos;s figures. Each one
+          acts on the rows in your inventory that it applies to, so the answer is as
+          specific as your data — and nothing here changes what is reported.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -387,9 +464,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <span className="text-2xl font-mono font-bold text-brand-heading">
                   {formatIndianNumber(scenarioResult.newTotal)} tCO₂e
                 </span>
-                <span className="text-xs font-bold text-emerald-600 font-mono">
-                  (-{formatIndianNumber(scenarioResult.deltaTco2e)} tCO₂e / -{scenarioResult.deltaPercentage}%)
-                </span>
+                {scenarioResult.deltaTco2e > 0 ? (
+                  <span className="text-xs font-bold text-emerald-600 font-mono">
+                    (-{formatIndianNumber(scenarioResult.deltaTco2e)} tCO₂e / -{scenarioResult.deltaPercentage}%)
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold text-brand-muted">
+                    (no change — move a lever above)
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -408,6 +491,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <strong className="text-purple-700">{formatIndianNumber(scenarioResult.scope3New)} t</strong>
             </div>
           </div>
+        </div>
+
+        {/* What these levers moved, and what they did not. Each one acts on the
+            rows in this inventory, so a company that burns no diesel is told
+            that rather than shown a cut it cannot make. */}
+        <div className="mt-3 text-[11px] text-brand-muted leading-relaxed space-y-1">
+          {scenarioResult.coverage.noDieselInInventory ? (
+            <p>
+              <strong className="text-brand-heading">No diesel in this inventory.</strong>{' '}
+              The diesel and fleet levers have nothing to act on, so they change no figure above.
+            </p>
+          ) : (
+            <p>
+              Diesel lever acts on{' '}
+              <strong className="text-brand-heading">
+                {formatIndianNumber(scenarioResult.coverage.dieselTco2e)} tCO₂e
+              </strong>{' '}
+              of Scope 1 diesel, of which{' '}
+              <strong className="text-brand-heading">
+                {formatIndianNumber(scenarioResult.coverage.mobileDieselTco2e)} tCO₂e
+              </strong>{' '}
+              is vehicles and mobile plant — the part electrifying the fleet removes.
+            </p>
+          )}
+          <p>
+            Scope 3 is held at its reported figure. Buying less grid electricity does reduce
+            upstream fuel-and-energy emissions, but by an amount that depends on a
+            well-to-tank factor for this grid; none is modelled here rather than estimate one.
+          </p>
         </div>
       </Card>
 

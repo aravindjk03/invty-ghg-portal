@@ -39,7 +39,7 @@ export const BRSRPage: React.FC<BRSRPageProps> = ({ onNavigate }) => {
   const [outputMetric, setOutputMetric] = useState('Finished Rolled Steel Products');
   const [cinNumber, setCinNumber] = useState('L27100MH2024PLC198234');
   const [assuranceType, setAssuranceType] = useState<'Reasonable Assurance' | 'Limited Assurance' | 'Internal Audit Only'>('Reasonable Assurance');
-  const [assuranceAgency, setAssuranceAgency] = useState('DNV Business Assurance India');
+  const [assuranceAgency, setAssuranceAgency] = useState('');
   const [copiedXbrl, setCopiedXbrl] = useState(false);
   const [leadGateOpen, setLeadGateOpen] = useState(false);
   const [serverXbrl, setServerXbrl] = useState<string | null>(null);

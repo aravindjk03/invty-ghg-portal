@@ -15,7 +15,10 @@ export const SummaryRail: React.FC<SummaryRailProps> = ({
   onGenerateReport,
   scopedTo = 'all',
 }) => {
-  const { summary, companyName, scope1Entries, scope2Entries, scope3Entries, addToast } = useGHG();
+  const {
+    summary, companyName, reportingPeriod, boundaryApproach,
+    scope1Entries, scope2Entries, scope3Entries, addToast,
+  } = useGHG();
   const [animatedTotal, setAnimatedTotal] = useState(summary.totalEmissions);
 
   const allEntries = useMemo(() => {
@@ -94,7 +97,8 @@ export const SummaryRail: React.FC<SummaryRailProps> = ({
     ghgService.exportXlsx(
       allEntries,
       summary,
-      `${companyName.replace(/\s+/g, '_')}_GHG_Inventory.xlsx`
+      `${companyName.replace(/\s+/g, '_')}_GHG_Inventory.xlsx`,
+      { companyName, reportingPeriod, boundaryApproach }
     );
     addToast('success', 'Exported dataset as Excel audit log (XLSX)');
   };

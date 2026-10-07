@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { ActivityEntry, ScopeSummary, WhatIfScenario, ScenarioResult, ToastMessage } from '../types/ghg';
-import { DEFAULT_FACTORS, ghgService } from '../services/ghgService';
+import { simulateScenario, ScenarioOutcome } from '../engine/scenario';
+import { ActivityEntry, ScopeSummary, WhatIfScenario, ToastMessage } from '../types/ghg';
+import { DEFAULT_FACTORS } from '../services/ghgService';
 import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
@@ -53,6 +54,13 @@ interface GHGContextType {
   };
   boundaryApproach: ConsolidationBoundary;
   steelMethod: IntegratedSteelMethod;
+  /**
+   * Annual turnover in ₹ crore, for the emissions-intensity figure BRSR asks
+   * for. Undefined until the company states it: a denominator nobody supplied
+   * makes the intensity a number about some other company.
+   */
+  annualTurnoverCr?: number;
+  setAnnualTurnoverCr: (value: number | undefined) => void;
   setCompanyName: (name: string) => void;
   setBoundaryApproach: (boundary: ConsolidationBoundary) => void;
   setSteelMethod: (method: IntegratedSteelMethod) => void;
@@ -86,7 +94,8 @@ interface GHGContextType {
     excludedCount: number;
   };
   scenario: WhatIfScenario;
-  scenarioResult: ScenarioResult;
+  /** What-if result, plus which rows the levers could actually act on. */
+  scenarioResult: ScenarioOutcome;
   toasts: ToastMessage[];
   addToast: (type: ToastMessage['type'], message: string) => void;
   dismissToast: (id: string) => void;
@@ -99,18 +108,38 @@ interface GHGContextType {
   recalculateAll: () => void;
   resetToDefaults: () => void;
   saveToStorage: () => void;
+  /**
+   * False until this workspace has been set up: a new visitor states their
+   * organisation, reporting period and consolidation approach before any
+   * figure is entered, because all three change what the numbers mean.
+   */
+  workspaceReady: boolean;
+  /** Records the first-run answers and opens the workspace. */
+  completeSetup: (setup: {
+    companyName: string;
+    period: ReportingPeriod;
+    boundaryApproach: ConsolidationBoundary;
+    withExample: boolean;
+  }) => void;
+  /** Loads the worked steel-plant example over whatever is there. */
+  loadExampleInventory: () => void;
 }
 
 const STORAGE_KEY = 'INVTY_GHG_INVENTORY_DATA_V2';
 
-// The rows a new workspace starts with.
+// A worked example inventory: one integrated steel plant.
+//
+// A new workspace does NOT start with these. Landing a reporter in someone
+// else's plant means their first screen is full of figures they did not enter
+// and must now hunt down and delete. They are loaded only when asked for, from
+// the first-run step or from Settings, so an example stays an example.
 //
 // None of them names a factor. Which published factor calculates a source is
 // the catalogue map's job, and pinning one here let the two drift: the
 // stationary boiler row was pinned to the road diesel blend while the map said
 // 100% mineral diesel, so a demo inventory quietly reported the wrong one.
 
-const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
+const EXAMPLE_SCOPE1_ENTRIES: ActivityEntry[] = [
   {
     id: 's1-row-1',
     facility: 'Plant 1 - Rolling Mill',
@@ -199,7 +228,7 @@ const INITIAL_SCOPE1_ENTRIES: ActivityEntry[] = [
 ];
 
 // Baseline Scope 2 Entries (Purchased Electricity & Steam)
-const INITIAL_SCOPE2_ENTRIES: ActivityEntry[] = [
+const EXAMPLE_SCOPE2_ENTRIES: ActivityEntry[] = [
   {
     id: 's2-row-1',
     facility: 'Main Plant — Jamshedpur',
@@ -228,7 +257,7 @@ const INITIAL_SCOPE2_ENTRIES: ActivityEntry[] = [
 ];
 
 // Baseline Scope 3 Entries (Purchased Goods, Business Travel, Logistics)
-const INITIAL_SCOPE3_ENTRIES: ActivityEntry[] = [
+const EXAMPLE_SCOPE3_ENTRIES: ActivityEntry[] = [
   {
     id: 's3-row-1',
     facility: 'Supply Chain — Inbound Sourcing',
@@ -276,7 +305,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getStoredUser());
   const [companyName, setCompanyName] = useState<string>(() => {
     const stored = authService.getStoredUser();
-    return stored?.companyName || 'Acme Steel Pvt Ltd';
+    // Until first-run setup states it, there is no company. A placeholder that
+    // reads like a real name ends up on exports and reports as if it were one.
+    return stored?.companyName || '';
   });
   // One period for the whole inventory. Stored as a start month and a length
   // so the label, the factor vintage and the months a row may be dated in all
@@ -356,7 +387,44 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [electricityWtt]);
   const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
+
+  // A workspace that has been through first-run setup. Anyone with saved rows
+  // from before this step existed is already past it and is not asked again.
+  const [workspaceReady, setWorkspaceReady] = useState<boolean>(() => {
+    try {
+      if (localStorage.getItem(`${STORAGE_KEY}_SETUP`) === 'done') return true;
+      return !!localStorage.getItem(`${STORAGE_KEY}_S1`)
+        || !!localStorage.getItem(`${STORAGE_KEY}_S2`)
+        || !!localStorage.getItem(`${STORAGE_KEY}_S3`);
+    } catch {
+      // Storage refused: do not trap the visitor behind a step that cannot be
+      // recorded as finished.
+      return true;
+    }
+  });
   const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
+
+  const [annualTurnoverCr, setAnnualTurnoverCr] = useState<number | undefined>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_TURNOVER`);
+      const parsed = saved ? Number(saved) : NaN;
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (annualTurnoverCr && annualTurnoverCr > 0) {
+        localStorage.setItem(`${STORAGE_KEY}_TURNOVER`, String(annualTurnoverCr));
+      } else {
+        localStorage.removeItem(`${STORAGE_KEY}_TURNOVER`);
+      }
+    } catch {
+      // A browser refusing storage must not stop the page working.
+    }
+  }, [annualTurnoverCr]);
 
   useEffect(() => {
     if (!authService.getToken()) {
@@ -406,27 +474,27 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   const [scope1Entries, setScope1Entries] = useState<ActivityEntry[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_S1`);
-      return saved ? reconcileUnits(JSON.parse(saved)) : INITIAL_SCOPE1_ENTRIES;
+      return saved ? reconcileUnits(JSON.parse(saved)) : [];
     } catch {
-      return INITIAL_SCOPE1_ENTRIES;
+      return [];
     }
   });
 
   const [scope2Entries, setScope2Entries] = useState<ActivityEntry[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_S2`);
-      return saved ? reconcileUnits(JSON.parse(saved)) : INITIAL_SCOPE2_ENTRIES;
+      return saved ? reconcileUnits(JSON.parse(saved)) : [];
     } catch {
-      return INITIAL_SCOPE2_ENTRIES;
+      return [];
     }
   });
 
   const [scope3Entries, setScope3Entries] = useState<ActivityEntry[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_S3`);
-      return saved ? reconcileUnits(JSON.parse(saved)) : INITIAL_SCOPE3_ENTRIES;
+      return saved ? reconcileUnits(JSON.parse(saved)) : [];
     } catch {
-      return INITIAL_SCOPE3_ENTRIES;
+      return [];
     }
   });
 
@@ -480,15 +548,6 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     switchFleetToElectric: false,
   });
 
-  const [scenarioResult, setScenarioResult] = useState<ScenarioResult>({
-    baselineTotal: 1992.2,
-    newTotal: 1850.4,
-    deltaTco2e: 141.8,
-    deltaPercentage: 7.1,
-    scope1New: 345.1,
-    scope2New: 309.3,
-    scope3New: 1196.0,
-  });
 
   // Bug Guard #6: Compute summary via useMemo from active entries (never store derived total in useState)
   // Every figure in the app comes from ghg_core. The browser holds the records
@@ -702,14 +761,21 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     };
   }, [engine]);
 
-  // Live Scenario updates
-  useEffect(() => {
-    ghgService
-      .simulateScenario(summary.scope1, summary.scope2Location, summary.scope3, scenario)
-      .then((res) => {
-        setScenarioResult(res);
-      });
-  }, [scenario, summary.scope1, summary.scope2Location, summary.scope3]);
+  // What-if modelling, derived from the rows that are actually in the inventory
+  // rather than fetched. There is no second opinion to drift from, and nothing
+  // is shown before the real answer arrives.
+  const scenarioResult = useMemo(
+    () => simulateScenario(
+      // The engine's values for each row, not the stored ones: a row's saved
+      // figure can predate the factor it is now calculated against.
+      scope1Calculated,
+      summary.scope1,
+      summary.scope2Location,
+      summary.scope3,
+      scenario
+    ),
+    [scope1Calculated, summary.scope1, summary.scope2Location, summary.scope3, scenario]
+  );
 
   // Mutation handlers with Bug Guard #14 (immutable reference returns)
   const updateRow = useCallback(
@@ -841,15 +907,44 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     addToast('info', 'Recalculating with the engine…');
   }, [addToast]);
 
+  const loadExampleInventory = useCallback(() => {
+    setScope1Entries(EXAMPLE_SCOPE1_ENTRIES);
+    setScope2Entries(EXAMPLE_SCOPE2_ENTRIES);
+    setScope3Entries(EXAMPLE_SCOPE3_ENTRIES);
+    addToast('info', 'Loaded the worked example: one integrated steel plant. Edit or delete any row.');
+  }, [addToast]);
+
+  /** Empties the inventory. The example is loaded explicitly, never by a reset. */
   const resetToDefaults = useCallback(() => {
-    setScope1Entries(INITIAL_SCOPE1_ENTRIES);
-    setScope2Entries(INITIAL_SCOPE2_ENTRIES);
-    setScope3Entries(INITIAL_SCOPE3_ENTRIES);
+    setScope1Entries([]);
+    setScope2Entries([]);
+    setScope3Entries([]);
     localStorage.removeItem(`${STORAGE_KEY}_S1`);
     localStorage.removeItem(`${STORAGE_KEY}_S2`);
     localStorage.removeItem(`${STORAGE_KEY}_S3`);
-    addToast('warning', 'Reset all inventory to baseline sample values');
+    addToast('warning', 'Cleared every activity row from this inventory');
   }, [addToast]);
+
+  const completeSetup = useCallback(
+    (setup: {
+      companyName: string;
+      period: ReportingPeriod;
+      boundaryApproach: ConsolidationBoundary;
+      withExample: boolean;
+    }) => {
+      setCompanyName(setup.companyName);
+      setPeriod(setup.period);
+      setBoundaryApproach(setup.boundaryApproach);
+      if (setup.withExample) loadExampleInventory();
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_SETUP`, 'done');
+      } catch {
+        // Nothing to record it in; the workspace still opens for this session.
+      }
+      setWorkspaceReady(true);
+    },
+    [loadExampleInventory]
+  );
 
   const saveToStorage = useCallback(() => {
     try {
@@ -895,6 +990,8 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         setElectricityWtt,
         category3,
         boundaryApproach,
+        annualTurnoverCr,
+        setAnnualTurnoverCr,
         steelMethod,
         setCompanyName,
         setBoundaryApproach,
@@ -930,6 +1027,9 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         updateScenario,
         recalculateAll,
         resetToDefaults,
+        workspaceReady,
+        completeSetup,
+        loadExampleInventory,
         saveToStorage,
       }}
     >

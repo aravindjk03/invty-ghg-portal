@@ -4,7 +4,7 @@ import { Table, Column } from '../ui/Table';
 import { Button } from '../ui/Button';
 import { TableProperties, Network } from 'lucide-react';
 
-interface SankeyRow {
+export interface SankeyRow {
   activity: string;
   category: string;
   scope: string;
@@ -12,24 +12,21 @@ interface SankeyRow {
   scopeColor: string;
 }
 
-const SANKEY_DATA: SankeyRow[] = [
-  { activity: 'Rolling Mill DG Sets (Diesel)', category: 'Stationary Comb.', scope: 'Scope 1', amount: 120.9, scopeColor: 'var(--scope-1)' },
-  { activity: 'Furnace Re-heating (Natural Gas)', category: 'Stationary Comb.', scope: 'Scope 1', amount: 37.5, scopeColor: 'var(--scope-1)' },
-  { activity: 'Billet Lancing (LPG)', category: 'Stationary Comb.', scope: 'Scope 1', amount: 7.1, scopeColor: 'var(--scope-1)' },
-  { activity: 'Heavy Logistics Fleet', category: 'Mobile Comb.', scope: 'Scope 1', amount: 24.7, scopeColor: 'var(--scope-1)' },
-  { activity: 'Scrap Yard Forklifts', category: 'Mobile Comb.', scope: 'Scope 1', amount: 8.3, scopeColor: 'var(--scope-1)' },
-  { activity: 'EAF Limestone Flux', category: 'Process Emissions', scope: 'Scope 1', amount: 140.8, scopeColor: 'var(--scope-1)' },
-  { activity: 'Chiller AC Top-up (R-134a)', category: 'Fugitive Emissions', scope: 'Scope 1', amount: 35.8, scopeColor: 'var(--scope-1)' },
-  { activity: 'Grid Electricity (CEA 2024)', category: 'Purchased Energy', scope: 'Scope 2', amount: 412.4, scopeColor: 'var(--scope-2)' },
-  { activity: 'Purchased Scrap Feedstock', category: 'Cat 1 Purchased Goods', scope: 'Scope 3', amount: 850.0, scopeColor: 'var(--scope-3)' },
-  { activity: 'Grid T&D Losses (India)', category: 'Cat 3 Energy Activities', scope: 'Scope 3', amount: 310.2, scopeColor: 'var(--scope-3)' },
-  { activity: 'Executive Flights & Travel', category: 'Cat 6 Business Travel', scope: 'Scope 3', amount: 44.5, scopeColor: 'var(--scope-3)' },
-];
+export interface SankeyDiagramProps {
+  /**
+   * The inventory's own rows. This diagram used to render eleven hardcoded
+   * activities totalling 1,992.2 tCO2e for every company, printed directly
+   * beside the real total on the same screen — two different answers to the
+   * same question, one of them about nobody.
+   */
+  rows: SankeyRow[];
+}
 
-export const SankeyDiagram: React.FC = () => {
+export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ rows }) => {
   const [viewAsTable, setViewAsTable] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
+  const SANKEY_DATA = rows;
   const totalEmissions = SANKEY_DATA.reduce((acc, row) => acc + row.amount, 0);
 
   const tableColumns: Column<SankeyRow>[] = [
@@ -47,7 +44,7 @@ export const SankeyDiagram: React.FC = () => {
       numeric: true,
       cell: (row) => (
         <span className="font-mono tabular-nums text-brand-muted">
-          {((row.amount / totalEmissions) * 100).toFixed(1)}%
+          {totalEmissions > 0 ? ((row.amount / totalEmissions) * 100).toFixed(1) : '0.0'}%
         </span>
       ),
     },
@@ -74,7 +71,12 @@ export const SankeyDiagram: React.FC = () => {
         </Button>
       </div>
 
-      {viewAsTable ? (
+      {SANKEY_DATA.length === 0 ? (
+        <div className="py-12 text-center text-xs text-brand-muted">
+          No calculated rows yet. Once activity data is entered and the engine has
+          a published factor for it, every source appears here on its way to the total.
+        </div>
+      ) : viewAsTable ? (
         <Table columns={tableColumns} data={SANKEY_DATA} keyExtractor={(r) => r.activity} />
       ) : (
         <div className="w-full min-h-[440px] flex flex-col justify-center relative overflow-x-auto select-none pt-2">
@@ -114,7 +116,7 @@ export const SankeyDiagram: React.FC = () => {
                     d={`M 180 ${y1 + 10} C 250 ${y1 + 10}, 270 ${y2 + 10}, 340 ${y2 + 10} C 440 ${y2 + 10}, 460 ${y3 + 10}, 560 ${y3 + 10} C 670 ${y3 + 10}, 710 ${y4}, 780 ${y4}`}
                     fill="none"
                     stroke={`url(#sankey-grad-${idx})`}
-                    strokeWidth={Math.max(3, (row.amount / totalEmissions) * 45)}
+                    strokeWidth={Math.max(3, totalEmissions > 0 ? (row.amount / totalEmissions) * 45 : 3)}
                     strokeLinecap="round"
                     className="cursor-pointer transition-all duration-200"
                     onMouseEnter={() => setHoveredIdx(idx)}

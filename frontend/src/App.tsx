@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useCallback, useState } from 'react';
 import { GHGProvider, useGHG } from './context/GHGContext';
 import { TopBar } from './components/layout/TopBar';
 import { LoginPage } from './pages/LoginPage';
+import { WorkspaceSetup } from './components/WorkspaceSetup';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Each workspace is a self-contained screen and most sessions only visit a
@@ -88,7 +89,7 @@ function readInitialPage(): PageKey {
 }
 
 function MainApp() {
-  const { currentUser, authLoading, setCompanyName, addToast } = useGHG();
+  const { currentUser, authLoading, workspaceReady, setCompanyName, addToast } = useGHG();
   const [currentPage, setCurrentPage] = useState<PageKey>(readInitialPage);
 
   // Unknown keys (stale links, typos) land on the hub instead of a blank page.
@@ -139,6 +140,12 @@ function MainApp() {
       return <LoginPage onNavigate={navigate} />;
     }
 
+    // A workspace with no organisation, period or boundary cannot produce a
+    // figure that means anything, so setup comes before any page.
+    if (!workspaceReady) {
+      return <WorkspaceSetup />;
+    }
+
     switch (activePage) {
       case 'scope-1':
         return <Scope1Page onNavigate={navigate} />;
@@ -170,10 +177,13 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-canvas text-brand-body flex flex-col antialiased">
-      {/* Persistent Top Navigation Bar */}
-      <div className="print:hidden">
-        <TopBar currentPage={currentPage} onNavigate={navigate} />
-      </div>
+      {/* Persistent Top Navigation Bar. Hidden during first-run setup: there is
+          nowhere to navigate to until the workspace exists. */}
+      {!(currentUser && !workspaceReady) && (
+        <div className="print:hidden">
+          <TopBar currentPage={currentPage} onNavigate={navigate} />
+        </div>
+      )}
 
       {/* Dynamic Page Workspace with Transition */}
       <main className="flex-1 w-full">

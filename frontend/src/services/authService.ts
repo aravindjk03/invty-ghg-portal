@@ -19,23 +19,15 @@ export interface AuthResponse {
   token: string;
 }
 
-export interface DemoAccount {
-  type?: 'email' | 'mobile';
-  email?: string;
-  phone?: string;
-  password?: string;
-  name: string;
-  company: string;
-  role: string;
-}
-
 const TOKEN_KEY = 'invty_auth_token';
 const USER_KEY = 'invty_auth_user';
 const OFFLINE_USERS_KEY = 'invty_offline_users';
 
-// ── Offline / standalone fallback ────────────────────────────────────────────
-// When the API is unreachable (static hosting, backend down), auth falls back to
-// a browser-local account store seeded with the same demo accounts the backend seeds.
+// ── Browser-only trial mode ─────────────────────────────────────────────────
+// When the API is unreachable (static hosting, backend down), accounts are held
+// in this browser alone. The store starts EMPTY: a shipped account would put a
+// working password in the published JavaScript, where any visitor can read it.
+// Visitors register, and the account they create never leaves their browser.
 
 class NetworkUnavailableError extends Error {}
 
@@ -65,34 +57,6 @@ interface OfflineAccount {
   password?: string;
 }
 
-const SEED_ACCOUNTS: OfflineAccount[] = [
-  {
-    password: 'Invty@2026',
-    user: {
-      id: 'usr_offline_admin',
-      email: 'admin@invty.com',
-      phone: '+919876543210',
-      name: 'INVTY Enterprise Admin',
-      companyName: 'INVTY Sustainability Systems',
-      role: 'ADMIN',
-      authProvider: 'email',
-      createdAt: '2026-01-01T00:00:00.000Z',
-    },
-  },
-  {
-    password: 'Demo@1234',
-    user: {
-      id: 'usr_offline_demo',
-      email: 'demo@company.com',
-      name: 'Rajesh Sharma',
-      companyName: 'Tata Heavy Engineering Ltd',
-      role: 'ESG_ANALYST',
-      authProvider: 'email',
-      createdAt: '2026-01-01T00:00:00.000Z',
-    },
-  },
-];
-
 const pendingOtps = new Map<string, string>();
 
 function decodeJwtPayload(token: string): { email?: string; name?: string; picture?: string } | null {
@@ -115,9 +79,9 @@ function loadOfflineAccounts(): OfflineAccount[] {
     const raw = localStorage.getItem(OFFLINE_USERS_KEY);
     if (raw) return JSON.parse(raw);
   } catch {
-    // fall through to seed
+    // storage unavailable or corrupt: start from an empty store
   }
-  return [...SEED_ACCOUNTS];
+  return [];
 }
 
 function saveOfflineAccounts(accounts: OfflineAccount[]) {
@@ -147,6 +111,25 @@ function newOfflineUser(fields: Partial<User> & { name: string; companyName: str
 }
 
 export const authService = {
+  /**
+   * Whether an accounts API is answering at all.
+   *
+   * The portal runs two ways: against the hosted service, where accounts and
+   * inventories live server-side, and as a browser-only trial, where they never
+   * leave the visitor's machine. Which one the visitor is in changes what the
+   * page can honestly promise them, so it is established rather than assumed.
+   */
+  async hasServer(): Promise<boolean> {
+    try {
+      const res = await fetch(`${env.API_BASE_URL}/health`);
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data?.status === 'healthy';
+    } catch {
+      return false;
+    }
+  },
+
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   },
@@ -183,7 +166,9 @@ export const authService = {
         (a) => a.user.email.toLowerCase() === email.trim().toLowerCase()
       );
       if (!account || account.password !== password) {
-        throw new Error('Invalid email or password.');
+        throw new Error(
+          'No account with that email and password exists in this browser. Choose Register to create one.'
+        );
       }
       const token = offlineToken(account.user);
       this.setSession(account.user, token);
@@ -280,28 +265,34 @@ export const authService = {
   },
 
   // 4. Mobile Phone - Send OTP
-  async sendMobileOtp(phone: string): Promise<{ success: boolean; message: string; phone: string; devOtp?: string }> {
+  //
+  // `codeOnScreen` is set only when no SMS service delivered the code, so the
+  // sign-in page can show it instead of leaving the visitor waiting for a text
+  // that is never going to arrive. When a message really was sent it is absent.
+  async sendMobileOtp(
+    phone: string
+  ): Promise<{ success: boolean; message: string; phone: string; codeOnScreen?: string }> {
     let res: Response;
     let data: any;
     try {
       ({ res, data } = await postJson('/auth/mobile/send-otp', { phone: phone.trim() }));
     } catch (err) {
       if (!(err instanceof NetworkUnavailableError)) throw err;
-      const devOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      pendingOtps.set(normalizePhone(phone), devOtp);
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      pendingOtps.set(normalizePhone(phone), code);
       return {
         success: true,
-        message: `One-Time Password (OTP) dispatched to ${phone.trim()}`,
+        message: 'No SMS service is connected, so your code is shown on screen.',
         phone: phone.trim(),
-        devOtp,
+        codeOnScreen: code,
       };
     }
 
     if (!res.ok || !data.success) {
-      throw new Error(data.error?.message || 'Failed to dispatch OTP code.');
+      throw new Error(data.error?.message || 'Could not send the verification code.');
     }
 
-    return data;
+    return { ...data, codeOnScreen: data.devOtp ?? undefined };
   },
 
   // 5. Mobile Phone - Verify OTP
@@ -353,20 +344,6 @@ export const authService = {
 
     this.setSession(data.user, data.token);
     return data;
-  },
-
-  async getDemoAccounts(): Promise<DemoAccount[]> {
-    // No fallback list: seeded credentials live on the server, which serves them
-    // only outside production. A hardcoded copy here would ship the password in
-    // the published JavaScript for anyone to read.
-    try {
-      const res = await fetch(`${env.API_BASE_URL}/auth/demo-accounts`);
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.accounts || [];
-    } catch {
-      return [];
-    }
   },
 
   async verifySession(): Promise<User | null> {

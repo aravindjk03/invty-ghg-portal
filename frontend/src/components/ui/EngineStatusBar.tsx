@@ -32,7 +32,7 @@ export const EngineStatusBar: React.FC = () => {
     <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-2.5 mb-5 text-xs ${tone}`}>
       <span className="flex items-center gap-2 font-semibold">
         {icon}
-        {state === 'calculated' && `Calculated by ghg_core ${engineVersion}`}
+        {state === 'calculated' && `Calculated by the IINVTY engine v${engineVersion}`}
         {state === 'calculating' && 'Calculating…'}
         {state === 'unavailable' && 'The calculation engine is not reachable'}
         {state === 'nothing_mapped' && 'Nothing calculated yet'}
@@ -41,7 +41,9 @@ export const EngineStatusBar: React.FC = () => {
       {message && <span className="text-[11.5px]">{message}</span>}
 
       {state === 'calculated' && (
-        <span className="font-mono text-[11px] text-brand-muted">run {runId?.slice(0, 10)}</span>
+        <span className="text-[11px] text-brand-muted">
+          Calculation ref <span className="font-mono">{runId?.slice(0, 10)}</span>
+        </span>
       )}
 
       {unmappedCount > 0 && (
