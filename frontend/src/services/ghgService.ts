@@ -31,56 +31,10 @@ export const ghgService = {
     }
   },
 
-  async simulateScenario(
-    baselineScope1: number,
-    baselineScope2: number,
-    baselineScope3: number,
-    scenario: WhatIfScenario
-  ): Promise<ScenarioResult> {
-    try {
-      return await request<ScenarioResult>('/emissions/scenario', {
-        method: 'POST',
-        body: JSON.stringify({
-          baselineScope1,
-          baselineScope2,
-          baselineScope3,
-          ...scenario,
-        }),
-      });
-    } catch {
-      // Local fallback simulation with exact decimal proportions
-      const dieselScope1 = baselineScope1 * 0.65;
-      const otherScope1 = baselineScope1 - dieselScope1;
-      let reducedDiesel = dieselScope1 * (1 - scenario.dieselReductionPercent / 100);
-      if (scenario.switchFleetToElectric) {
-        reducedDiesel = Math.max(0, reducedDiesel - baselineScope1 * 0.18);
-      }
-      const scope1New = Number((otherScope1 + reducedDiesel).toFixed(1));
-      const scope2New = Number((baselineScope2 * (1 - scenario.renewableElectricityPercent / 100)).toFixed(1));
-      const scope3New = Number(
-        (baselineScope3 - baselineScope2 * (scenario.renewableElectricityPercent / 100) * 0.1).toFixed(1)
-      );
-      const baselineTotal = Number((baselineScope1 + baselineScope2 + baselineScope3).toFixed(1));
-      const newTotal = Number((scope1New + scope2New + scope3New).toFixed(1));
-      const deltaTco2e = Number((baselineTotal - newTotal).toFixed(1));
-      const deltaPercentage = baselineTotal > 0 ? Number(((deltaTco2e / baselineTotal) * 100).toFixed(1)) : 0;
-
-      return {
-        baselineTotal,
-        newTotal,
-        deltaTco2e,
-        deltaPercentage,
-        scope1New,
-        scope2New,
-        scope3New,
-      };
-    }
-  },
-
   /**
    * Export activity data to CSV and trigger browser download
    */
-  exportCsv(entries: ActivityEntry[], filename = 'Acme_Steel_FY2025_26_GHG_Inventory.csv'): void {
+  exportCsv(entries: ActivityEntry[], filename = 'GHG_Activity_Data.csv'): void {
     const rows = entries.map((e) => ({
       Facility: e.facility,
       Scope: e.scope,
@@ -111,18 +65,24 @@ export const ghgService = {
   /**
    * Export activity entries and summary to XLSX with multiple worksheets
    */
+  /**
+   * The workbook states who is reporting, over what period and on what basis.
+   * Those three came from literals here — every company's export said it was
+   * Acme Steel's FY 2025-26 inventory — so they are now required arguments.
+   */
   exportXlsx(
     entries: ActivityEntry[],
     summary: ScopeSummary,
-    filename = 'Acme_Steel_FY2025_26_GHG_Audit_Trail.xlsx'
+    filename: string,
+    meta: { companyName: string; reportingPeriod: string; boundaryApproach: string }
   ): void {
     const workbook = XLSX.utils.book_new();
 
     // Sheet 1: Summary KPI
     const summaryData = [
-      { Metric: 'Reporting Organisation', Value: 'Acme Steel Pvt Ltd' },
-      { Metric: 'Reporting Period', Value: 'FY 2025–26' },
-      { Metric: 'Boundary Approach', Value: 'Operational Control' },
+      { Metric: 'Reporting Organisation', Value: meta.companyName },
+      { Metric: 'Reporting Period', Value: meta.reportingPeriod },
+      { Metric: 'Boundary Approach', Value: meta.boundaryApproach },
       { Metric: 'Scope 1 (tCO2e)', Value: summary.scope1 },
       { Metric: 'Scope 2 Location-Based (tCO2e)', Value: summary.scope2Location },
       { Metric: 'Scope 2 Market-Based (tCO2e)', Value: summary.scope2Market },
@@ -176,7 +136,7 @@ export const ghgService = {
   /**
    * Export JSON data
    */
-  exportJson(data: any, filename = 'Acme_Steel_GHG_Data.json'): void {
+  exportJson(data: any, filename = 'GHG_Inventory.json'): void {
     const str = JSON.stringify(data, null, 2);
     const blob = new Blob([str], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

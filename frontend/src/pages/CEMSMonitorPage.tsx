@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { env } from '../config/env';
 import { useGHG } from '../context/GHGContext';
 import { complianceService } from '../services/complianceService';
 import { Card } from '../components/ui/Card';
@@ -417,7 +418,9 @@ export const CEMSMonitorPage: React.FC<CEMSMonitorPageProps> = ({ onNavigate }) 
                 <Terminal size={12} />
                 Industrial IoT Webhook Endpoint
               </div>
-              <div className="text-blue-400 select-all">POST http://localhost:5000/api/v1/cems/telemetry</div>
+              <div className="text-blue-400 select-all">
+                POST {new URL(`${env.API_BASE_URL}/cems/telemetry`, window.location.origin).toString()}
+              </div>
               <div className="text-slate-400 text-[10px] pt-1">Accepts JSON sensor frames from Yokogawa, SICK, or ABB gas analyzers.</div>
             </div>
           </Card>

@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { authService, User, DemoAccount } from '../services/authService';
+import { authService, User } from '../services/authService';
 import { useGHG } from '../context/GHGContext';
 import { env } from '../config/env';
-import { 
-  Loader2, 
-  AlertCircle, 
-  Database, 
-  CheckCircle2, 
-  User as UserIcon, 
+import {
+  Loader2,
+  AlertCircle,
+  User as UserIcon,
   Building2,
   Eye,
   EyeOff,
@@ -17,10 +15,7 @@ import {
   ArrowRight,
   RefreshCw,
   Edit2,
-  ShieldCheck,
-  Settings,
-  ExternalLink,
-  KeyRound
+  ShieldCheck
 } from 'lucide-react';
 
 export interface LoginPageProps {
@@ -30,13 +25,12 @@ export interface LoginPageProps {
 type AuthMethod = 'email' | 'mobile';
 
 /**
- * Seeded demo credentials are a development convenience. Printing them on a
- * public sign-in page would hand every visitor an administrator account, so
- * they appear only in development, or when VITE_SHOW_DEMO_LOGINS is set.
+ * Google sign-in appears only where the site owner has configured it, by
+ * setting VITE_GOOGLE_CLIENT_ID at build time (see SETUP-GOOGLE.md). A visitor
+ * is never asked for an OAuth client ID: that is the operator's setting, not
+ * theirs, and a button that cannot work is worse than no button.
  */
-const SHOW_DEMO_LOGINS =
-  import.meta.env.VITE_SHOW_DEMO_LOGINS === 'true'
-  || (import.meta.env.DEV && import.meta.env.VITE_SHOW_DEMO_LOGINS !== 'false');
+const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
 
 export default function LoginPage({ onNavigate }: LoginPageProps) {
   const { setCurrentUser, setCompanyName, addToast } = useGHG();
@@ -58,83 +52,42 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   const [mobileNumber, setMobileNumber] = useState('');
   const [mobileStep, setMobileStep] = useState<'phone' | 'otp'>('phone');
   const [otpCode, setOtpCode] = useState('');
-  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+  const [codeOnScreen, setCodeOnScreen] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [mobileName, setMobileName] = useState('');
   const [mobileCompany, setMobileCompany] = useState('');
 
-  // Real Google OAuth State
-  const [googleConfigModalOpen, setGoogleConfigModalOpen] = useState(false);
-  const [googleClientIdInput, setGoogleClientIdInput] = useState('');
-  const [savedGoogleClientId, setSavedGoogleClientId] = useState<string>('');
   const [googleLoading, setGoogleLoading] = useState(false);
-  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  // null until the probe answers, so no claim is made either way in between.
+  const [hasServer, setHasServer] = useState<boolean | null>(null);
 
   // Shared UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Forgot password modal state
+  // Forgot password panel
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotSent, setForgotSent] = useState(false);
 
-  // Pre-fill remembered email and load Google Client ID
+  // Pre-fill remembered email
   useEffect(() => {
     const savedEmail = localStorage.getItem('invty_remembered_email');
     if (savedEmail) {
       setEmail(savedEmail);
     }
-    const cid = env.GOOGLE_CLIENT_ID || localStorage.getItem('invty_google_client_id') || '';
-    setSavedGoogleClientId(cid);
-    setGoogleClientIdInput(cid);
   }, []);
 
-  // Initialize Google One-Tap / Standard Google Sign In button if Client ID exists
+  // Establish which way this deployment runs before telling the visitor where
+  // their inventory is going to be kept.
   useEffect(() => {
-    if (!savedGoogleClientId) return;
-
-    const checkGoogleSdk = setInterval(() => {
-      if ((window as any).google?.accounts?.id) {
-        clearInterval(checkGoogleSdk);
-
-        try {
-          (window as any).google.accounts.id.initialize({
-            client_id: savedGoogleClientId,
-            callback: async (response: any) => {
-              if (response.credential) {
-                setLoading(true);
-                try {
-                  const authRes = await authService.googleAuth({
-                    credential: response.credential,
-                  });
-                  handleAuthSuccess(authRes.user, 'Google authentication successful.');
-                } catch (err: any) {
-                  setError(err.message || 'Google authentication failed.');
-                } finally {
-                  setLoading(false);
-                }
-              }
-            },
-          });
-
-          if (googleBtnRef.current) {
-            (window as any).google.accounts.id.renderButton(googleBtnRef.current, {
-              theme: 'outline',
-              size: 'large',
-              width: 320,
-              shape: 'pill',
-              text: 'continue_with',
-            });
-          }
-        } catch (e) {
-          console.warn('[GOOGLE SDK INIT NOTICE]', e);
-        }
-      }
-    }, 300);
-
-    return () => clearInterval(checkGoogleSdk);
-  }, [savedGoogleClientId]);
+    let cancelled = false;
+    authService.hasServer().then((ok) => {
+      if (!cancelled) setHasServer(ok);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -205,7 +158,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           password,
           companyName: company.trim(),
         });
-        handleAuthSuccess(res.user, 'Account registered and secured in database.');
+        handleAuthSuccess(res.user, 'Your workspace is ready.');
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed. Please verify your credentials.');
@@ -234,11 +187,17 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       const res = await authService.sendMobileOtp(fullPhone);
       setMobileStep('otp');
       setOtpCode('');
-      setDevOtpHint(res.devOtp || null);
+      setCodeOnScreen(res.codeOnScreen || null);
       setCountdown(30);
-      addToast('info', `Verification OTP dispatched to ${fullPhone}`);
+      // Only claim a message was sent when one actually was.
+      addToast(
+        'info',
+        res.codeOnScreen
+          ? 'Your verification code is shown on screen.'
+          : `Verification code sent to ${fullPhone}`
+      );
     } catch (err: any) {
-      setError(err.message || 'Failed to dispatch verification OTP.');
+      setError(err.message || 'Could not send the verification code.');
     } finally {
       setLoading(false);
     }
@@ -278,14 +237,13 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   // ─────────────────────────────────────────────────────────────
   // 4. REAL Official Google OAuth 2.0 Flow
   // ─────────────────────────────────────────────────────────────
-  const handleLaunchRealGoogleAuth = async (overrideClientId?: string) => {
+  const handleLaunchRealGoogleAuth = async () => {
     setError(null);
-    const clientId = overrideClientId || savedGoogleClientId || env.GOOGLE_CLIENT_ID || localStorage.getItem('invty_google_client_id');
+    const clientId = GOOGLE_CLIENT_ID;
 
-    // Visitors cannot be expected to supply a developer Client ID. The site
-    // owner sets VITE_GOOGLE_CLIENT_ID at build time (see SETUP-GOOGLE.md).
+    // The button is not rendered without a client ID, so this is a guard only.
     if (!clientId) {
-      setError('Google sign-in has not been set up on this site yet. Please sign in with email, mobile or the demo account.');
+      setError('Google sign-in is not set up on this site. Please use your email address or your mobile number.');
       return;
     }
 
@@ -316,7 +274,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 throw new Error('Google did not return an email address for this account.');
               }
 
-              // Save to SQLite database and activate session
               const authRes = await authService.googleAuth({
                 accessToken: tokenResponse.access_token,
                 email: profile.email,
@@ -326,7 +283,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
               handleAuthSuccess(authRes.user, `Signed in with Google as ${profile.email}`);
             } catch (err: any) {
-              setError(err.message || 'Failed to authenticate Google user with the database.');
+              setError(err.message || 'Could not complete Google sign-in.');
             } finally {
               setGoogleLoading(false);
             }
@@ -345,71 +302,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     } finally {
       setGoogleLoading(false);
     }
-  };
-
-  const handleSaveGoogleClientId = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!googleClientIdInput.trim()) {
-      setError('Please enter a valid Google OAuth Client ID.');
-      return;
-    }
-    const cleanId = googleClientIdInput.trim();
-    localStorage.setItem('invty_google_client_id', cleanId);
-    setSavedGoogleClientId(cleanId);
-    setGoogleConfigModalOpen(false);
-    addToast('success', 'Google Client ID saved! Launching Google Sign-In...');
-    // Immediately launch real Google sign in with this ID
-    handleLaunchRealGoogleAuth(cleanId);
-  };
-
-  // Demo accounts come from the API, which serves them only outside
-  // production, so no credential is compiled into the published bundle.
-  const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
-
-  useEffect(() => {
-    if (!SHOW_DEMO_LOGINS) return;
-    authService.getDemoAccounts().then(setDemoAccounts).catch(() => setDemoAccounts([]));
-  }, []);
-
-  const fillFromDemoAccount = (demoEmail: string) => {
-    const account = demoAccounts.find((item) => item.email === demoEmail);
-    if (!account?.password) {
-      setError('Demo accounts are not available on this deployment.');
-      return;
-    }
-    fillEmailDemo(account.email!, account.password);
-  };
-
-  // Demo accounts quick-filler
-  const fillEmailDemo = (demoEmail: string, demoPass: string) => {
-    setAuthMethod('email');
-    setEmailMode('signin');
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError(null);
-  };
-
-  const fillMobileDemo = (phone: string) => {
-    setAuthMethod('mobile');
-    setMobileStep('phone');
-    if (phone.startsWith('+91')) {
-      setCountryCode('+91');
-      setMobileNumber(phone.slice(3));
-    } else {
-      setMobileNumber(phone);
-    }
-    setError(null);
-  };
-
-  const handleForgotSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!forgotEmail.trim()) return;
-    setForgotSent(true);
-    setTimeout(() => {
-      setForgotOpen(false);
-      setForgotSent(false);
-      addToast('info', `Password recovery link dispatched to ${forgotEmail}`);
-    }, 1400);
   };
 
   return (
@@ -452,7 +344,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 Deterministic Carbon Accounting
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-sm">
-                Sign in using your corporate email, verified mobile OTP, or Google SSO to access precision Scope 1, 2, and 3 assurance registers.
+                Sign in with your work email or your mobile number to build a Scope 1, 2 and 3 inventory in which every figure can be traced back to the published factor that produced it.
               </p>
             </div>
           </div>
@@ -595,7 +487,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                     </label>
                     <button
                       type="button"
-                      onClick={() => { setForgotEmail(email); setForgotOpen(true); }}
+                      onClick={() => setForgotOpen(true)}
                       className="text-blue-600 hover:underline font-medium"
                     >
                       Forgot password?
@@ -713,10 +605,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 ) : (
                   <form onSubmit={handleVerifyMobileOtp} className="space-y-3.5">
                     <div className="flex items-center justify-between text-xs text-gray-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                      <span>Code sent to <strong>{countryCode} {mobileNumber}</strong></span>
+                      <span>{codeOnScreen ? 'Verifying' : 'Code sent to'} <strong>{countryCode} {mobileNumber}</strong></span>
                       <button
                         type="button"
-                        onClick={() => { setMobileStep('phone'); setDevOtpHint(null); }}
+                        onClick={() => { setMobileStep('phone'); setCodeOnScreen(null); }}
                         className="text-blue-600 hover:underline flex items-center gap-1 font-semibold"
                       >
                         <Edit2 size={12} />
@@ -724,17 +616,25 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                       </button>
                     </div>
 
-                    {/* Developer OTP Auto-Fill Hint */}
-                    {devOtpHint && (
-                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
-                        <span>Demo OTP: <strong className="font-mono text-sm tracking-wider text-emerald-900">{devOtpHint}</strong></span>
-                        <button
-                          type="button"
-                          onClick={() => setOtpCode(devOtpHint)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-[11px] font-semibold"
-                        >
-                          Auto Fill
-                        </button>
+                    {/* No SMS service is connected on this deployment, so the
+                        code is shown here rather than leaving the visitor
+                        waiting for a text that is never sent. */}
+                    {codeOnScreen && (
+                      <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1.5">
+                        <p className="leading-relaxed">
+                          No SMS service is connected to this preview, so no text was sent.
+                          Your code is:
+                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="font-mono text-base tracking-[0.3em] text-amber-900">{codeOnScreen}</strong>
+                          <button
+                            type="button"
+                            onClick={() => setOtpCode(codeOnScreen)}
+                            className="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[11px] font-semibold flex-shrink-0"
+                          >
+                            Fill it in
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -793,7 +693,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               </div>
             )}
 
-            {/* ── GOOGLE SINGLE SIGN-ON DIVIDER & BUTTON ────────────── */}
+            {/* ── GOOGLE SIGN-IN ─────────────────────────────────────
+                One button, and only where the operator has configured a client
+                ID. Google's own SDK can render a second button of its own, so
+                this page never asks it to. */}
+            {GOOGLE_CLIENT_ID && (
             <div className="w-full my-4">
               <div className="flex items-center gap-3 w-full my-3">
                 <div className="w-full h-px bg-gray-200"></div>
@@ -803,10 +707,6 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 <div className="w-full h-px bg-gray-200"></div>
               </div>
 
-              {/* Real Google One Tap render container if initialized */}
-              <div ref={googleBtnRef} className="w-full flex justify-center mb-1 empty:hidden" />
-
-              {/* Standard Real Google OAuth Launch Button */}
               <button
                 type="button"
                 onClick={() => handleLaunchRealGoogleAuth()}
@@ -842,187 +742,59 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                   </>
                 )}
               </button>
-
-              {/* Google Client ID config button */}
-              <div className="flex justify-end mt-1.5">
-                <button
-                  type="button"
-                  onClick={() => setGoogleConfigModalOpen(true)}
-                  className="text-[11px] text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors"
-                >
-                  <Settings size={11} />
-                  <span>{savedGoogleClientId ? 'Google OAuth Connected' : 'Configure Google Client ID'}</span>
-                </button>
-              </div>
             </div>
+            )}
 
-            {/* ── TEST ACCOUNTS PRE-POPULATE ──────────────────────────
-                Development only. On a public deployment these credentials would
-                hand every visitor an administrator account, so the block is
-                compiled out unless VITE_SHOW_DEMO_LOGINS is set. */}
-            {SHOW_DEMO_LOGINS && (
-            <div className="w-full mt-2 p-3 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Database size={13} className="text-blue-600" />
-                  <span>SQLite Seeded Test Logins</span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-normal">Click to fill</span>
+            {/* Where the visitor's inventory is actually going to be kept.
+                Shown only once the probe has answered, and only when there is
+                no server, so it never states something that is not the case. */}
+            {hasServer === false && (
+              <div className="w-full mt-3 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-[11px] text-slate-600 leading-relaxed">
+                <strong className="text-slate-800">This is the browser trial.</strong>{' '}
+                Your account and your inventory are stored in this browser alone —
+                they are not sent anywhere and are not visible to anyone else. Clearing
+                site data removes them. Export your report before you finish.
               </div>
-
-              <div className="grid grid-cols-1 gap-1.5">
-                {/* Admin Email */}
-                <button
-                  type="button"
-                  onClick={() => fillFromDemoAccount('admin@invty.com')}
-                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs transition-colors group"
-                >
-                  <div>
-                    <span className="font-semibold text-slate-800">Admin: </span>
-                    <span className="text-slate-600">admin@invty.com</span>
-                  </div>
-                  <span className="font-mono text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-blue-100">
-                    {demoAccounts.find((a) => a.email === 'admin@invty.com')?.password ?? '••••••'}
-                  </span>
-                </button>
-
-                {/* Mobile Phone Demo */}
-                <button
-                  type="button"
-                  onClick={() => fillMobileDemo('+919876543210')}
-                  className="flex items-center justify-between text-left p-2 rounded-xl bg-white border border-slate-200 hover:border-blue-400 text-xs transition-colors group"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Smartphone size={13} className="text-emerald-600" />
-                    <span className="font-semibold text-slate-800">Mobile OTP: </span>
-                    <span className="font-mono text-slate-600">+91 98765 43210</span>
-                  </div>
-                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold group-hover:bg-emerald-100">
-                    Instant OTP
-                  </span>
-                </button>
-              </div>
-            </div>
             )}
 
           </div>
         </div>
       </div>
 
-      {/* ── GOOGLE OAUTH CLIENT ID CONFIGURATION MODAL ────────────── */}
-      {googleConfigModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 max-w-md w-full space-y-4">
-            
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <KeyRound size={18} className="text-blue-600" />
-                <span className="text-sm font-bold text-gray-800">Google OAuth 2.0 Configuration</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setGoogleConfigModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              To open Google's authentic account chooser window directly from <strong>accounts.google.com</strong>, paste your Google Cloud OAuth Client ID below:
-            </p>
-
-            <form onSubmit={handleSaveGoogleClientId} className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">
-                  Google Client ID (Web application)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 123456789-xxxx.apps.googleusercontent.com"
-                  value={googleClientIdInput}
-                  onChange={(e) => setGoogleClientIdInput(e.target.value)}
-                  className="w-full h-11 px-4 border border-gray-300 rounded-2xl text-xs font-mono text-gray-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <div className="p-3 bg-blue-50/70 border border-blue-200/70 rounded-xl text-[11px] text-blue-900 space-y-1.5">
-                <div className="font-semibold flex items-center gap-1">
-                  <ExternalLink size={12} />
-                  <span>How to get your Google Client ID:</span>
-                </div>
-                <ol className="list-decimal pl-4 space-y-1 text-blue-800">
-                  <li>Visit <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="underline font-semibold">Google Cloud Credentials</a></li>
-                  <li>Click <strong>Create Credentials</strong> → <strong>OAuth client ID</strong></li>
-                  <li>Select Application type: <strong>Web application</strong></li>
-                  <li>Add Authorized JavaScript origin: <code className="bg-white/80 px-1 py-0.5 rounded font-mono">http://localhost:5173</code></li>
-                  <li>Copy and paste the Client ID here!</li>
-                </ol>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setGoogleConfigModalOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-full"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-sm"
-                >
-                  Save & Sign In with Google
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── FORGOT PASSWORD MODAL ─────────────────────────────────── */}
+      {/* ── FORGOT PASSWORD ────────────────────────────────────────
+          No email is sent, because no mail service is connected. Saying
+          "instructions dispatched" would leave someone waiting for a message
+          that is never coming, so this says what is actually true and offers
+          the one route that works. */}
       {forgotOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-sm w-full">
-            <h3 className="text-base font-bold text-gray-900 mb-1">Reset password</h3>
-            <p className="text-xs text-gray-500 mb-4">
-              Enter your corporate email address to receive password recovery instructions.
+            <h3 className="text-base font-bold text-gray-900 mb-1">Can&apos;t sign in?</h3>
+            <p className="text-xs text-gray-600 leading-relaxed mb-3">
+              Password reset by email is not available yet — this preview has no
+              mail service connected, so no reset link can reach you.
             </p>
-
-            {forgotSent ? (
-              <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-green-600 flex-shrink-0" />
-                <span>Recovery instructions dispatched! Check your corporate inbox.</span>
-              </div>
-            ) : (
-              <form onSubmit={handleForgotSubmit} className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="name@company.com"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full h-11 px-4 border border-gray-300 rounded-full text-xs text-gray-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                  required
-                />
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setForgotOpen(false)}
-                    className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-full"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full"
-                  >
-                    Send instructions
-                  </button>
-                </div>
-              </form>
-            )}
+            <p className="text-xs text-gray-600 leading-relaxed mb-4">
+              Your account is held in this browser only. If the password is lost,
+              register again with a different email address, or sign in with your
+              mobile number instead.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setForgotOpen(false)}
+                className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-full"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => { setForgotOpen(false); setAuthMethod('mobile'); setError(null); }}
+                className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full"
+              >
+                Use mobile number
+              </button>
+            </div>
           </div>
         </div>
       )}

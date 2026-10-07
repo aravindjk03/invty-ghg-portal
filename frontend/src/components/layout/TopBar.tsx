@@ -115,7 +115,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     icon: History,
-    label: 'Audit Trail',
+    label: 'Record',
     page: 'audit-trail',
     gradient: 'linear-gradient(135deg,rgba(71,85,105,0.18),rgba(100,116,139,0.18))',
     activeTextClass: 'text-slate-700',

@@ -73,7 +73,7 @@ export const SupplierPortalPage: React.FC<SupplierPortalPageProps> = ({ onNaviga
         providedUnit: 't.km',
         primaryEmissionFactor: 0.089,
         factorUnit: 'kgCO2e / t.km',
-        factorDataSource: 'ISO 14067 Product Carbon Footprint (Third-Party Verified by DNV)',
+        factorDataSource: 'ISO 14067 product carbon footprint supplied by the carrier',
         calculatedTco2e: 111.25,
         evidenceFileName: 'BlueDart_Fleet_Carbon_Assurance_2024.pdf',
         submittedAt: '2026-04-03T15:20:00.000Z',

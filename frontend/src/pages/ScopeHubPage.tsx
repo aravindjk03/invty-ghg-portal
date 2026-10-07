@@ -49,7 +49,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
             GHG Emissions Inventory Overview
           </h1>
           <p className="text-xs md:text-sm text-brand-muted mt-1 max-w-3xl leading-relaxed">
-            Consolidated organizational inventory compliant with the GHG Protocol Corporate Standard, ISO 14064-1:2018, and SEBI BRSR Core. Data entries auto-synchronize with assurance statements and audit trails.
+            A consolidated organisational inventory built to the GHG Protocol Corporate Standard, ISO 14064-1:2018 and SEBI BRSR Core. Every row you enter carries the factor that calculated it through to the report and the calculation record.
           </p>
         </div>
 

@@ -19,7 +19,8 @@ import { Badge } from '../ui/Badge';
 import { EstimateLine, EstimateResponse, RangeValue, STAGES, Stage } from '../../types/pcf';
 
 /*
- * Every figure on this view is a string computed by ghg_core on the server.
+ * Every figure on this view is computed by the IINVTY engine on the server and
+ * carried as a string, so no decimal is lost on the way to the screen.
  * The helpers below only change how a string LOOKS - digit grouping and unit
  * labels. None of them performs emissions arithmetic.
  */
@@ -534,7 +535,7 @@ function MethodNote({ data }: { data: EstimateResponse }) {
           Inputs that match IINVTY&apos;s verified factor registry use the verified value instead of the AI&apos;s.
         </li>
         <li>
-          IINVTY&apos;s calculation engine (ghg_core {method.engine_version}) multiplied and summed every figure in exact
+          IINVTY&apos;s calculation engine (v{method.engine_version}) multiplied and summed every figure in exact
           decimal arithmetic. Ranges add all the low values and all the high values — a deliberately wide bracket,
           not a statistical confidence interval.
         </li>
