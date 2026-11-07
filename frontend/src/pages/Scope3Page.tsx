@@ -148,7 +148,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-15 gap-2">
+        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-[repeat(15,minmax(0,1fr))] gap-2">
           {ALL_15_CATEGORIES.map((cat) => {
             const entries = getCategoryEntries(cat.id);
             const hasEntries = entries.length > 0;

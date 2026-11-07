@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -167,6 +168,8 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28">
+      <EngineStatusBar />
+
       <div className="flex items-center justify-between mb-6">
         <button
           type="button"

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 import { Card } from '../components/ui/Card';
 import { KPITile } from '../components/ui/KPITile';
 import { Button } from '../components/ui/Button';
@@ -202,7 +203,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="max-w-[1440px] mx-auto px-6 py-8 pb-32 space-y-8 select-none">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 pb-32 space-y-8">
+      <EngineStatusBar />
+
       {/* ROW 1: 4 KPI Tiles (Uniformly Aligned) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
         {/* No prior-year inventory is held, so no period-on-period change can be
@@ -524,8 +527,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       </Card>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
+      <div className="fixed bottom-0 left-0 right-0 py-2.5 bg-surface-raised/95 backdrop-blur-md border-t border-border shadow-nm-raised-sm z-30 flex items-center">
         <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 flex items-center justify-between gap-3">
+          {/* The format picker was `hidden md:flex` while the export button
+              still read `downloadFormat`, so below 768px the format was stuck
+              on PDF and Excel, CSV and JSON could not be reached at all. On a
+              narrow screen it becomes a select, which fits. */}
           <div className="hidden md:flex items-center gap-3">
             <SegmentedControl
               size="sm"
@@ -539,6 +546,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               ]}
             />
           </div>
+
+          <label className="md:hidden flex items-center gap-2 text-xs text-brand-muted">
+            <span className="sr-only">Download format</span>
+            <select
+              value={downloadFormat}
+              onChange={(e) => setDownloadFormat(e.target.value)}
+              className="h-9 rounded-md border border-border bg-surface px-2 text-xs font-semibold text-brand-heading"
+            >
+              <option value="PDF">PDF</option>
+              <option value="XLSX">Excel</option>
+              <option value="CSV">CSV</option>
+              <option value="JSON">JSON</option>
+            </select>
+          </label>
 
           <div className="flex items-center gap-3 ml-auto">
             <Button

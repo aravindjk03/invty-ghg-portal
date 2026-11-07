@@ -144,3 +144,62 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Printing the report
+   ───────────────────────────────────────────────────────────────────────────
+   There was no print stylesheet at all. `primitives.tsx` applied the bare
+   string "page-break-after" to every report section, which is not a Tailwind
+   utility and matched nothing, so both print paths produced one continuous
+   twenty-section document with no page breaks anywhere.
+
+   Printing to PDF from the browser gives selectable, searchable text, which a
+   verifier can copy figures out of — unlike the rasterised image path.
+   ──────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Every report section starts a new sheet. */
+  .page-break-after {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  /* A heading stranded at the foot of a page, or one table row carried alone
+     onto the next, is what makes a printed report look unchecked. */
+  h1, h2, h3, h4 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  table, figure, .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Screen furniture that means nothing on paper. */
+  .print\:hidden,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  /* Let the sheet decide the width, and spend no ink on screen backgrounds. */
+  body {
+    background: #fff !important;
+  }
+  .shadow-nm-raised,
+  .shadow-nm-raised-sm,
+  .shadow-nm-raised-lg {
+    box-shadow: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+}

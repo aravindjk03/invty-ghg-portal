@@ -293,7 +293,7 @@ function MobileDrawer({ open, activePage, onNavigate, onClose }: MobileDrawerPro
           />
           <motion.div
             key="drawer"
-            className="fixed top-[72px] inset-x-0 z-50 bg-white border-b border-[#E2E8F0] shadow-[0_8px_24px_-4px_rgb(15_23_42/0.14)] px-5 py-4"
+            className="fixed top-[64px] inset-x-0 z-50 bg-white border-b border-[#E2E8F0] shadow-[0_8px_24px_-4px_rgb(15_23_42/0.14)] px-5 py-4"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}

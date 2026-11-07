@@ -189,7 +189,6 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
 
     return (
       <div className="space-y-3">
-      <EngineStatusBar />
         {entries.length > 0 ? (
           <>
             {renderColumnHeaders()}
@@ -228,6 +227,11 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8 pb-32">
+      {/* One engine status for the page. It used to render inside each
+          accordion's body, so opening all five put five copies of the banner,
+          the period picker and the GWP toggle on one screen. */}
+      <EngineStatusBar />
+
       {/* Top Breadcrumb & Back Action */}
       <div className="mb-5">
         <Button

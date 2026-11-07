@@ -36,17 +36,35 @@ function load(): Promise<CatalogueMap> {
 }
 
 export function useCatalogueMap(): CatalogueMap {
+  return useCatalogueMapState().map;
+}
+
+/**
+ * The map, and whether it is still being fetched.
+ *
+ * An empty map means two very different things: the engine is still starting
+ * (it boots Python and several wheels, which takes seconds on a first visit),
+ * or it answered and there is genuinely nothing. Without the difference the
+ * app told every visitor "No row names a published factor yet" for the whole
+ * boot — the same words it uses for a real failure — beside 0.00 totals.
+ */
+export function useCatalogueMapState(): { map: CatalogueMap; loading: boolean } {
   const [map, setMap] = useState<CatalogueMap>(cached ?? EMPTY);
+  const [loading, setLoading] = useState<boolean>(cached === null);
 
   useEffect(() => {
     let cancelled = false;
     listeners.add(setMap);
-    load().then((loaded) => { if (!cancelled) setMap(loaded); });
+    load().then((loaded) => {
+      if (cancelled) return;
+      setMap(loaded);
+      setLoading(false);
+    });
     return () => {
       cancelled = true;
       listeners.delete(setMap);
     };
   }, []);
 
-  return map;
+  return { map, loading };
 }

@@ -6,7 +6,7 @@ import { calculateDataQualityGrade } from '../engine/calculator';
 import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
 import { mappingFor, startingUnit } from '../services/catalogueMap';
-import { useCatalogueMap } from '../services/useCatalogueMap';
+import { useCatalogueMapState } from '../services/useCatalogueMap';
 import { EngineInventory, marketRecordId, useEngineInventory } from '../report/useEngineInventory';
 import { useMethodResults } from '../report/useMethodResults';
 import { MethodEntry, MethodKey, MethodResult, emptyInput } from '../types/methods';
@@ -98,7 +98,7 @@ interface GHGContextType {
   engine: EngineInventory;
   /** How the current figures were produced, and what could not be produced. */
   engineStatus: {
-    state: 'calculated' | 'calculating' | 'unavailable' | 'nothing_mapped';
+    state: 'calculated' | 'starting' | 'calculating' | 'unavailable' | 'nothing_mapped';
     message?: string;
     runId?: string;
     engineVersion?: string;
@@ -589,7 +589,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   // Which published factor calculates each source a user may pick. Until it
   // arrives, rows keep whatever key they were saved with, and nothing is
   // invented for the ones that have none.
-  const catalogueMap = useCatalogueMap();
+  const { map: catalogueMap, loading: catalogueLoading } = useCatalogueMapState();
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -836,6 +836,11 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   const engineStatus = useMemo(() => {
     const unmappedCount = engine.unmapped.length;
     const excludedCount = engine.result?.excluded.length ?? 0;
+    // The engine runs Python in the browser and fetches it on first visit,
+    // which takes seconds. Until the catalogue answers, no row can name a
+    // factor yet — that is the engine starting, not a row without a factor,
+    // and saying the latter made a normal first load read as a failure.
+    if (catalogueLoading) return { state: 'starting' as const, unmappedCount, excludedCount };
     if (engine.loading) return { state: 'calculating' as const, unmappedCount, excludedCount };
     if (engine.error) {
       return { state: 'unavailable' as const, message: engine.error, unmappedCount, excludedCount };
@@ -853,7 +858,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
       engineVersion: engine.result.engine_version,
       unmappedCount, excludedCount,
     };
-  }, [engine]);
+  }, [engine, catalogueLoading]);
 
   // What-if modelling, derived from the rows that are actually in the inventory
   // rather than fetched. There is no second opinion to drift from, and nothing
