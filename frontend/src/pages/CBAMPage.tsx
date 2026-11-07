@@ -202,7 +202,10 @@ export const CBAMPage: React.FC<CBAMPageProps> = ({ onNavigate }) => {
 
   const handleDownloadXml = () => {
     // Check if lead profile exists in localStorage
-    const saved = localStorage.getItem('INVTY_LEAD_PROFILE');
+    // Reading storage can throw in a private window; a gate that throws
+    // takes the whole page down with it.
+    let saved: string | null = null;
+    try { saved = localStorage.getItem('INVTY_LEAD_PROFILE'); } catch { saved = null; }
     if (!saved) {
       setLeadGateOpen(true);
       return;

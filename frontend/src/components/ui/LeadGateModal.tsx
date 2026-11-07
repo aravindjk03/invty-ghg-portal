@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { leadService } from '../../services/leadService';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Select } from './Select';
-import { env } from '../../config/env';
 import { CustomerLead, LeadSubmissionPayload } from '../../types/leads.types';
 import { ShieldCheck, Lock, Download, CheckCircle2 } from 'lucide-react';
-import { request } from '../../services/api';
 
 export interface LeadGateModalProps {
   isOpen: boolean;
@@ -94,31 +93,26 @@ export const LeadGateModal: React.FC<LeadGateModalProps> = ({
     };
 
     setIsSubmitting(true);
-    try {
-      const response = await fetch(`${env.API_BASE_URL}/leads`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error(String(response.status));
+    const result = await leadService.submit(payload);
+    setIsSubmitting(false);
 
-      // Remembered so the same details are not asked for twice in a session.
-      localStorage.setItem('INVTY_LEAD_PROFILE', JSON.stringify(payload));
-      setIsSubmitting(false);
-      onSuccess(payload);
-    } catch {
-      localStorage.setItem('INVTY_LEAD_PROFILE', JSON.stringify(payload));
-      setIsSubmitting(false);
-
-      // An upgrade request that never arrived must not be answered with
-      // "we will be in touch". Nobody would be. A report download is
-      // different: the file is produced here, so it is still allowed.
-      if (actionType === 'premium') {
-        setErrorMsg('Your request could not be sent just now, so nobody has received it. '
-          + 'Please try again in a moment.');
-        return;
-      }
-      onSuccess(payload);
+    // An upgrade request that never arrived must not be answered with "we
+    // will be in touch". Nobody would be.
+    if (actionType === 'premium' && !result.delivered) {
+      setErrorMsg(
+        result.queued
+          ? 'This request has not reached us yet — it is saved and will be sent '
+            + 'automatically next time you open the portal. To reach us now, please email us.'
+          : 'Your request could not be sent, and this browser would not store it either. '
+            + 'Please try again, or email us directly.'
+      );
+      return;
     }
+
+    // A report download is different: the file is produced in this browser, so
+    // withholding it would punish the reader for a delivery problem that is
+    // ours. The lead is queued rather than lost.
+    onSuccess(payload);
   };
 
   return (

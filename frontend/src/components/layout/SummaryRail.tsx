@@ -106,7 +106,7 @@ export const SummaryRail: React.FC<SummaryRailProps> = ({
   return (
     <Card
       elevation="raised-lg"
-      className="sticky top-24 p-6 rounded-xl border border-border shadow-nm-raised-lg flex flex-col gap-5 select-none"
+      className="sticky top-24 p-6 rounded-xl border border-border shadow-nm-raised-lg flex flex-col gap-5"
     >
       {/* 1. Header & Large Total */}
       <div aria-live="polite" className="flex flex-col">

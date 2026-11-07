@@ -293,7 +293,7 @@ function MobileDrawer({ open, activePage, onNavigate, onClose }: MobileDrawerPro
           />
           <motion.div
             key="drawer"
-            className="fixed top-[72px] inset-x-0 z-50 bg-white border-b border-[#E2E8F0] shadow-[0_8px_24px_-4px_rgb(15_23_42/0.14)] px-5 py-4"
+            className="fixed top-[64px] inset-x-0 z-50 bg-white border-b border-[#E2E8F0] shadow-[0_8px_24px_-4px_rgb(15_23_42/0.14)] px-5 py-4"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -507,31 +507,34 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
       <Modal
         isOpen={helpOpen}
         onClose={() => setHelpOpen(false)}
-        title="IINVTY GHG Accounting Standards & Guidance"
+        title="How this tool works"
       >
         <div className="space-y-4 text-xs text-[#64748B] leading-relaxed">
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
             <strong className="block font-semibold mb-1 text-blue-950">
-              Regulatory Compliance Frameworks
+              What it follows
             </strong>
-            This portal executes calculations adhering strictly to the GHG Protocol Corporate
-            Standard, ISO 14064-1:2018, and SEBI BRSR Core guidelines for Indian listed and
-            industrial entities.
+            Every figure is calculated to the GHG Protocol Corporate Standard,
+            ISO 14064-1:2018 and SEBI BRSR Core.
           </div>
           <div>
             <h4 className="font-bold text-[#0F172A] mb-1 flex items-center gap-1.5">
-              <BookOpen size={14} /> Core Methodology Rules:
+              <BookOpen size={14} /> The rules it applies
             </h4>
             <ul className="list-disc pl-5 space-y-1.5">
-              <li><strong>Scope 2 Dual Reporting:</strong> Location-based and market-based figures are tracked side-by-side and never summed into the grand total.</li>
-              <li><strong>Derived Category 3:</strong> The upstream emissions of every Scope 1 fuel are
-                derived from the quantity already recorded, against the published well-to-tank factor
-                for that fuel. Transmission and distribution losses are derived once the loss rate
-                published for your grid or utility is entered with its source. What cannot be derived
-                — no published set gives the upstream emissions of Indian grid electricity — is listed
-                on the Scope 3 page rather than quietly left out.</li>
-              <li><strong>Out-of-Scope Memos:</strong> Biogenic CO₂ and Montreal Protocol ODS gases (R-22) are reported separately as memo items and never added to Scope 1 gross.</li>
-              <li><strong>Precision Arithmetic:</strong> Decimal math is enforced to prevent IEEE 754 floating-point drift across large industrial inventories.</li>
+              <li><strong>Electricity is counted twice, side by side.</strong> Once at your grid's
+                average, once at what your contracts actually buy. The two are reported
+                separately and never added together.</li>
+              <li><strong>Some of Scope 3 is worked out for you.</strong> The emissions from
+                producing and delivering the fuel you burn come from the quantities you have
+                already entered, against the published factor for that fuel. Anything that
+                cannot be worked out this way is listed on the Scope 3 page, with the reason,
+                rather than quietly left out.</li>
+              <li><strong>A few gases are reported apart from the totals.</strong> Biogenic CO₂ and
+                ozone-depleting refrigerants such as R-22 are shown on their own, as the
+                standards require, and never added into Scope 1.</li>
+              <li><strong>The arithmetic is exact.</strong> Totals are added in decimal, so a large
+                inventory does not drift by rounding.</li>
             </ul>
           </div>
           <div className="pt-2 flex justify-end">

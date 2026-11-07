@@ -168,6 +168,14 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     fileInputRef.current?.click();
   };
 
+  /**
+   * Records WHERE the supporting document is kept, not the document.
+   *
+   * Picking a file here never stored it — only its name — while the report
+   * exported "Traceable: Yes" against that name. A verifier asking for the
+   * invoice would have found nothing behind the claim. The row now records a
+   * reference the reporter can act on, and says so.
+   */
   const handleEvidenceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -382,7 +390,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
                     className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-blue-50 text-left"
                   >
                     <FileText size={14} className="text-brand-muted" />
-                    <span>Attach invoice / evidence</span>
+                    <span>Note where the evidence is filed</span>
                   </button>
                   <button
                     type="button"
@@ -570,9 +578,12 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
           )}
 
           {entry.evidenceFile && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200 font-medium"
+              title="The name of the document this figure comes from. The document itself is kept in your own records, not in this tool."
+            >
               <Paperclip size={11} />
-              {entry.evidenceFile}
+              Evidence: {entry.evidenceFile}
             </span>
           )}
         </div>

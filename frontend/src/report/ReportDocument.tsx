@@ -15,6 +15,7 @@ import { CoverPage, DashboardPage, DocumentControlPage, ExecutiveSummaryPage } f
 import { ScopeOnePage, ScopeThreePage, ScopeTwoPage } from './sections/Inventory';
 import { MethodologyPage, RegistersPage } from './sections/Methodology';
 import { MonthlyPage, ReviewerTestPage } from './sections/MonthlyAndReview';
+import { WatermarkOpacity } from './sections/primitives';
 
 export interface ReportDocumentProps {
   report: GhgInventoryReport;
@@ -79,17 +80,12 @@ export const ReportDocument: React.FC<ReportDocumentProps> = ({ report, include,
   ];
 
   return (
-    <div className="w-full flex flex-col items-center gap-8 print:gap-0 relative">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 flex items-center justify-center print:absolute"
-        style={{ opacity: watermarkOpacity }}
-      >
-        <img src={`${import.meta.env.BASE_URL}invty-logo.png`} alt="" className="w-[520px] max-w-[70%]" />
+    <WatermarkOpacity.Provider value={watermarkOpacity}>
+      <div className="w-full flex flex-col items-center gap-8 print:gap-0 relative">
+        {pages.filter(([key]) => on(key)).map(([key, page]) => (
+          <React.Fragment key={key}>{page}</React.Fragment>
+        ))}
       </div>
-      {pages.filter(([key]) => on(key)).map(([key, page]) => (
-        <React.Fragment key={key}>{page}</React.Fragment>
-      ))}
-    </div>
+    </WatermarkOpacity.Provider>
   );
 };

@@ -89,7 +89,14 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ rows }) => {
           </div>
 
           {/* Interactive SVG Flow Canvas */}
-          <svg className="w-full h-[400px]" viewBox="0 0 900 400" preserveAspectRatio="none">
+          {/* preserveAspectRatio="none" squashed the 900-unit canvas into the
+              viewport, so on a phone every label was horizontally crushed.
+              The diagram keeps its shape and scrolls instead. */}
+          <svg
+            className="h-[400px] min-w-[760px] w-full"
+            viewBox="0 0 900 400"
+            preserveAspectRatio="xMidYMid meet"
+          >
             <defs>
               {SANKEY_DATA.map((row, idx) => (
                 <linearGradient key={`grad-${idx}`} id={`sankey-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="0%">

@@ -5,12 +5,25 @@
  */
 import React from 'react';
 
+/**
+ * How strongly to draw the watermark, read by every sheet.
+ *
+ * It used to be one `position: fixed` element outside the sections. The PDF
+ * export captures each `<section>` on its own, so the watermark was never
+ * inside a capture target — and `position: fixed` is a known html2canvas
+ * failure mode besides. The slider therefore only ever changed the screen.
+ * Each sheet now draws its own, so print and export both carry it.
+ */
+export const WatermarkOpacity = React.createContext(0);
+
 export const ReportPage: React.FC<{
   children: React.ReactNode;
   part?: string;
   title?: string;
   last?: boolean;
-}> = ({ children, part, title, last }) => (
+}> = ({ children, part, title, last }) => {
+  const watermarkOpacity = React.useContext(WatermarkOpacity);
+  return (
   <section
     className={
       'w-full max-w-[820px] min-h-[1100px] bg-white border border-border rounded-xl ' +
@@ -19,8 +32,17 @@ export const ReportPage: React.FC<{
       (last ? '' : 'page-break-after')
     }
   >
+    {watermarkOpacity > 0 && (
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        style={{ opacity: watermarkOpacity }}
+      >
+        <img src={`${import.meta.env.BASE_URL}invty-logo.png`} alt="" className="w-[520px] max-w-[70%]" />
+      </div>
+    )}
     {(part || title) && (
-      <header className="mb-6 border-b border-border pb-3">
+      <header className="mb-6 border-b border-border pb-3 relative">
         {part && (
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-brand-muted">{part}</p>
         )}
@@ -29,7 +51,8 @@ export const ReportPage: React.FC<{
     )}
     {children}
   </section>
-);
+  );
+};
 
 export const SectionTitle: React.FC<{ number: string; children: React.ReactNode; note?: string }> = ({
   number, children, note,

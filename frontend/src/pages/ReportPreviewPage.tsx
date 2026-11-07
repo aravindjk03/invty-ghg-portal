@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { hasProfile } from '../services/leadService';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
@@ -13,7 +14,6 @@ import { buildReport } from '../report/build/buildReport';
 import { buildMethodSources } from '../report/build/methodSources';
 import { exportWorkbook } from '../report/export/workbook';
 import { loadReportMeta, saveReportMeta, ReportMeta } from '../report/model/reportMeta';
-import { useEngineInventory } from '../report/useEngineInventory';
 import { toTonnes } from '../types/inventory';
 
 export interface ReportPreviewPageProps {
@@ -31,7 +31,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
   const {
     summary, companyName, reportingPeriod, boundaryApproach,
     scope1Entries, scope2Entries, scope3Entries, addToast,
-    methodEntries, methodResults, methodErrors,
+    methodEntries, methodResults, methodErrors, engine, gwpSet, setGwpSet,
   } = useGHG();
 
   const [framework, setFramework] = useState<'GHG Protocol' | 'BRSR Core' | 'ISO 14064-1'>('GHG Protocol');
@@ -65,10 +65,10 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
       summary, meta, methodSources, framework],
   );
 
-  // Every figure in the report comes from the engine. A row without a published
-  // factor is not calculated here or anywhere else: it is listed instead.
-  const engine = useEngineInventory(
-    allEntries, meta.gwpSet, Number(reportingPeriod.match(/\d{4}/)?.[0]) || new Date().getFullYear());
+  // Every figure in the report comes from THE engine run — the one the rest of
+  // the app shows. This page used to start a second run of its own, on
+  // meta.gwpSet and a year scraped out of the period label, and print its
+  // calculation reference next to totals the first run produced.
 
   const updateMeta = (next: ReportMeta) => {
     setMeta(next);
@@ -99,7 +99,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
   };
 
   const gated = (action: 'print' | 'xlsx') => {
-    if (!localStorage.getItem('INVTY_LEAD_PROFILE')) {
+    if (!hasProfile()) {
       setPendingAction(action);
       setLeadGateOpen(true);
       return;
@@ -189,7 +189,8 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
               </div>
             ) : (
               <div className="max-h-[420px] overflow-y-auto pr-1">
-                <ReportSettings meta={meta} onChange={updateMeta} />
+                <ReportSettings meta={meta} onChange={updateMeta}
+                  gwpSet={gwpSet} onGwpSetChange={setGwpSet} />
               </div>
             )}
 

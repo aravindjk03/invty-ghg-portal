@@ -96,7 +96,7 @@ export function exportWorkbook(
 
   add('05_Emission_Source_Register', report.evidenceRegister.map((row) => ({
     ID: row.id, Source: row.source, 'Data type': row.dataType,
-    Frequency: row.frequency, Evidence: row.evidence, Traceable: row.hasEvidence ? 'Yes' : 'No',
+    Frequency: row.frequency, Evidence: row.evidence, 'Evidence named': row.hasEvidence ? 'Yes' : 'No',
   })));
 
   add('06_Scope_1_Stationary', entryRows(report.scope1.stationary.entries));
@@ -216,7 +216,7 @@ export function exportWorkbook(
 
   add('41_Evidence_Register', report.evidenceRegister.map((row) => ({
     ID: row.id, Source: row.source, 'Data type': row.dataType, Frequency: row.frequency,
-    Evidence: row.evidence, Traceable: row.hasEvidence ? 'Yes' : 'No',
+    Evidence: row.evidence, 'Evidence named': row.hasEvidence ? 'Yes' : 'No',
   })));
 
   add('42_Management_Dashboard', [

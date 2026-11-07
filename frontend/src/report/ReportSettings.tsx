@@ -12,6 +12,14 @@ import { ReportMeta, missingMetaFields } from './model/reportMeta';
 interface Props {
   meta: ReportMeta;
   onChange: (meta: ReportMeta) => void;
+  /**
+   * The GWP set the engine is actually calculating under, and the setter for
+   * it. This control used to write a `gwpSet` of its own into the report
+   * metadata, which no longer drove the calculation — so the report could
+   * state one basis while every figure in it was produced under another.
+   */
+  gwpSet: 'AR5' | 'AR6';
+  onGwpSetChange: (set: 'AR5' | 'AR6') => void;
 }
 
 const Field: React.FC<{
@@ -38,7 +46,7 @@ const Field: React.FC<{
   </label>
 );
 
-export const ReportSettings: React.FC<Props> = ({ meta, onChange }) => {
+export const ReportSettings: React.FC<Props> = ({ meta, onChange, gwpSet, onGwpSetChange }) => {
   const set = (patch: Partial<ReportMeta>) => onChange({ ...meta, ...patch });
   const missing = missingMetaFields(meta);
 
@@ -89,9 +97,9 @@ export const ReportSettings: React.FC<Props> = ({ meta, onChange }) => {
           <button
             key={option}
             type="button"
-            onClick={() => set({ gwpSet: option })}
+            onClick={() => onGwpSetChange(option)}
             className={`flex-1 rounded-md border px-3 py-1.5 text-xs font-semibold ${
-              meta.gwpSet === option
+              gwpSet === option
                 ? 'border-brand-link bg-brand-link/10 text-brand-link'
                 : 'border-border bg-surface text-brand-body'
             }`}
@@ -106,10 +114,6 @@ export const ReportSettings: React.FC<Props> = ({ meta, onChange }) => {
         refrigerant losses by about 17%.
       </span>
 
-      <Field label="GWP basis, as stated in the report" value={meta.gwpBasis}
-        placeholder="IPCC AR5, 100-year"
-        hint="Changing the GWP basis changes the inventory even when activity data does not."
-        onChange={(v) => set({ gwpBasis: v })} />
       <Field label="Base year" value={meta.baseYear} placeholder="FY 2022–23"
         onChange={(v) => set({ baseYear: v })} />
       <Field label="Base year emissions (tCO2e, Scope 1 + 2)" type="number" value={meta.baseYearEmissions}

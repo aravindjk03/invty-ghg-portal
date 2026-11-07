@@ -25,6 +25,7 @@ import {
 import { Switch } from '../components/methods/MethodFields';
 import { MethodResultPanel } from '../components/methods/MethodResultPanel';
 import { useGHG } from '../context/GHGContext';
+import { EmptyState } from '../components/ui/EmptyState';
 import { getMethodCatalogue } from '../services/methodsService';
 import {
   ChemicalIndustryInput, EntericInput, LimeAndUreaInput, ManagedSoilsInput,
@@ -221,18 +222,10 @@ export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
 
         {/* The entries */}
         {methodEntries.length === 0 ? (
-          <Card className="p-8 text-center border-2 border-dashed border-border">
-            <h3 className="text-[15px] font-bold text-brand-heading mb-1">
-              No method sources recorded
-            </h3>
-            <p className="text-[13px] text-brand-muted max-w-lg mx-auto">
-              If the site has livestock, applies fertiliser, treats its own effluent, sends
-              waste to a disposal site, or makes cement, lime, glass, chemicals or metal, those
-              are Scope 1 sources and belong here. For a cement works or a steel mill they are
-              usually the larger half of the inventory. Leaving them out understates it; no
-              factor per tonne of fuel can stand in for them.
-            </p>
-          </Card>
+          <EmptyState
+            title="Nothing added here yet"
+            description="Some emissions cannot be worked out from a fuel quantity — cement kilns, livestock, effluent and buried waste among them. If your site has any, add them above; at a cement works or a steel mill they are often the larger half of the inventory."
+          />
         ) : (
           <div className="flex flex-col gap-5">
             {methodEntries.map((entry) => {

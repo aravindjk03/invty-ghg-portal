@@ -5,35 +5,22 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { SummaryRail } from '../components/layout/SummaryRail';
 import { useGHG } from '../context/GHGContext';
 import { formatIndianNumber } from '../engine/unitConverter';
+import { ALL_15_CATEGORIES } from './Scope3Page';
 import { ArrowRight, Building2, CheckCircle2, Package } from 'lucide-react';
 
 export interface ScopeHubPageProps {
   onNavigate: (page: string) => void;
 }
 
-const SCOPE_3_CATEGORIES = [
-  { num: 1, name: 'Purchased goods & services', status: 'active' },
-  { num: 2, name: 'Capital goods', status: 'screened' },
-  { num: 3, name: 'Fuel- and energy-related activities (FERA)', status: 'active' },
-  { num: 4, name: 'Upstream transportation & logistics', status: 'active' },
-  { num: 5, name: 'Waste generated in operations', status: 'screened' },
-  { num: 6, name: 'Business travel', status: 'active' },
-  { num: 7, name: 'Employee commuting', status: 'screened' },
-  { num: 8, name: 'Upstream leased assets', status: 'screened' },
-  { num: 9, name: 'Downstream transportation', status: 'screened' },
-  { num: 10, name: 'Processing of sold products', status: 'screened' },
-  { num: 11, name: 'Use of sold products', status: 'screened' },
-  { num: 12, name: 'End-of-life treatment of sold products', status: 'screened' },
-  { num: 13, name: 'Downstream leased assets', status: 'screened' },
-  { num: 14, name: 'Franchises', status: 'screened' },
-  { num: 15, name: 'Investments & portfolio assets', status: 'screened' },
-];
 
 export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
   const { scope1Entries, scope2Entries, scope3Entries, summary, companyName, reportingPeriod, boundaryApproach } = useGHG();
 
-  const s1Progress = Math.min(100, Math.max(15, scope1Entries.length * 15));
-  const s2Progress = Math.min(100, Math.max(25, scope2Entries.length * 50));
+  // There were two progress bars here, driven by row count with a 15% and a 25%
+  // floor — so an untouched inventory reported Scope 1 "15% complete" and
+  // Scope 2 "25% complete". Nothing knows how many rows a given company's
+  // inventory ought to have, so no honest percentage exists. The row count,
+  // which is true, is shown instead.
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8">
@@ -41,12 +28,12 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
       <div className="mb-8 border-b border-border pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5 text-xs text-brand-muted font-medium">
-            <span>Corporate ESG Reporting Suite</span>
+            <span>IINVTY</span>
             <span>/</span>
-            <span>Accounting Workspaces</span>
+            <span>Your inventory</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-brand-heading tracking-tight">
-            GHG Emissions Inventory Overview
+            Your emissions inventory
           </h1>
           <p className="text-xs md:text-sm text-brand-muted mt-1 max-w-3xl leading-relaxed">
             A consolidated organisational inventory built to the GHG Protocol Corporate Standard, ISO 14064-1:2018 and SEBI BRSR Core. Every row you enter carries the factor that calculated it through to the report and the calculation record.
@@ -118,21 +105,21 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wide bg-orange-50 text-orange-800 border border-orange-200">
                     SCOPE 1
                   </span>
-                  <span className="text-[11px] font-mono text-brand-muted">Direct Combustion</span>
+                  <span className="text-[11px] font-mono text-brand-muted">Scope 1</span>
                 </div>
 
                 <h2 className="text-lg font-bold text-brand-heading">
-                  Direct GHG Emissions
+                  Scope 1 — what you burn
                 </h2>
                 <p className="text-xs text-brand-muted mt-1 leading-normal min-h-[36px]">
-                  Fuel consumption in boilers, re-heating furnaces, captive DG generation, mobile plant fleet, process calcination, and HVAC equipment.
+                  Fuel you burn on site and in your own vehicles, plus process and refrigerant emissions.
                 </p>
 
                 {/* Metric Summary Strip */}
                 <div className="mt-5 pt-3 border-t border-border flex items-center justify-between">
                   <div className="text-xs">
-                    <span className="text-brand-muted block text-[11px]">Logged Activity Lines</span>
-                    <span className="font-semibold text-brand-heading font-mono">{scope1Entries.length} verified records</span>
+                    <span className="text-brand-muted block text-[11px]">Rows entered</span>
+                    <span className="font-semibold text-brand-heading font-mono">{scope1Entries.length} {scope1Entries.length === 1 ? 'row' : 'rows'}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-brand-muted block text-[11px]">Subtotal (tCO₂e)</span>
@@ -142,10 +129,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="w-full h-1 bg-surface-sunken rounded-sm overflow-hidden mt-3 border border-border">
-                  <div className="h-full bg-scope-1" style={{ width: `${s1Progress}%` }} />
-                </div>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-border flex flex-col gap-2">
@@ -191,12 +175,12 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   </span>
                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
                     <CheckCircle2 size={13} />
-                    Dual Reporting Active
+                    Grid and contract figures
                   </span>
                 </div>
 
                 <h2 className="text-lg font-bold text-brand-heading">
-                  Purchased Energy & Grid Power
+                  Scope 2 — electricity you buy
                 </h2>
                 <p className="text-xs text-brand-muted mt-1 leading-normal min-h-[36px]">
                   Purchased grid electricity (CEA India baseline), open-access renewable contracts, green tariffs, and on-site electric fleet charging.
@@ -205,23 +189,20 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                 {/* Metric Summary Strip */}
                 <div className="mt-5 pt-3 border-t border-border grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-brand-muted block text-[11px]">Location-Based (CEA Grid)</span>
+                    <span className="text-brand-muted block text-[11px]">At your grid's average</span>
                     <span className="text-lg font-mono font-bold text-brand-heading tabular-nums">
                       {formatIndianNumber(summary.scope2Location)} t
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-brand-muted block text-[11px]">Market-Based (PPA / EAC)</span>
+                    <span className="text-brand-muted block text-[11px]">At what your contracts buy</span>
                     <span className="text-lg font-mono font-bold text-emerald-700 tabular-nums">
                       {formatIndianNumber(summary.scope2Market)} t
                     </span>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="w-full h-1 bg-surface-sunken rounded-sm overflow-hidden mt-3 border border-border">
-                  <div className="h-full bg-scope-2" style={{ width: `${s2Progress}%` }} />
-                </div>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-border">
@@ -254,13 +235,13 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                     <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wide bg-purple-50 text-purple-800 border border-purple-200">
                       SCOPE 3
                     </span>
-                    <span className="text-xs font-semibold text-brand-muted">Value Chain Standard (All 15 Categories)</span>
+                    <span className="text-xs font-semibold text-brand-muted">All 15 categories available</span>
                   </div>
                   <h2 className="text-xl font-bold text-brand-heading">
-                    Indirect Value Chain Emissions
+                    Scope 3 — your supply chain
                   </h2>
                   <p className="text-xs text-brand-muted mt-1 max-w-2xl leading-normal">
-                    Upstream raw material sourcing (scrap steel, ferroalloys), commercial freight transport, Category 3 transmission losses (auto-derived), and corporate travel.
+                    Everything outside your own operations: what you buy, how it is shipped, and staff travel.
                   </p>
                 </div>
 
@@ -281,18 +262,31 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
               <div className="mt-5">
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-xs font-bold text-brand-heading uppercase tracking-wider">
-                    GHG Protocol 15-Category Matrix Screening Status
+                    The 15 Scope 3 categories
                   </span>
                   <span className="text-xs text-brand-muted font-mono">
-                    {summary.coverage.scope3CategoriesIncluded} active categories · Cat 3 auto-derived
+                    {summary.coverage.scope3CategoriesIncluded} of 15 categories carry data · Category 3 is worked out for you
                   </span>
                 </div>
 
                 <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-[repeat(15,minmax(0,1fr))] gap-1.5">
-                  {SCOPE_3_CATEGORIES.map((cat) => {
-                    const isActive = cat.status === 'active';
+                  {/* Which categories actually carry data, read from the
+                      inventory. These were literals — Cats 1, 3, 4 and 6 showed
+                      as "active" on a workspace with nothing in it. */}
+                  {ALL_15_CATEGORIES.map((cat) => {
+                    const count = scope3Entries.filter((e) => e.category === cat.id).length;
+                    const isActive = count > 0 || Boolean(cat.auto);
                     return (
-                      <Tooltip key={cat.num} content={`Category ${cat.num}: ${cat.name} (${cat.status.toUpperCase()})`}>
+                      <Tooltip
+                        key={cat.num}
+                        content={`Category ${cat.num}: ${cat.name} — ${
+                          cat.auto
+                            ? 'worked out from your Scope 1 and 2 rows'
+                            : count > 0
+                              ? `${count} row${count === 1 ? '' : 's'}`
+                              : 'nothing entered yet'
+                        }`}
+                      >
                         <button
                           type="button"
                           onClick={(e) => {
@@ -306,8 +300,8 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                           }`}
                         >
                           <span className="font-mono text-xs font-semibold leading-none">{cat.num}</span>
-                          <span className="text-[8px] uppercase tracking-tight opacity-80 mt-0.5">
-                            {isActive ? 'ACT' : 'SCR'}
+                          <span className="text-[8px] tracking-tight opacity-80 mt-0.5">
+                            {cat.auto ? 'auto' : count > 0 ? count : '—'}
                           </span>
                         </button>
                       </Tooltip>

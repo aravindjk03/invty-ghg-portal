@@ -16,6 +16,7 @@ export const EngineStatusBar: React.FC = () => {
 
   const tone = {
     calculated: 'border-border bg-surface-raised text-brand-body',
+    starting: 'border-border bg-surface-raised text-brand-muted',
     calculating: 'border-border bg-surface-raised text-brand-muted',
     unavailable: 'border-[#F3C4C0] bg-[#FDECEA] text-[#B42318]',
     nothing_mapped: 'border-[#F0D9A0] bg-[#FFF8E6] text-[#8A5A00]',
@@ -23,6 +24,7 @@ export const EngineStatusBar: React.FC = () => {
 
   const icon = {
     calculated: <CheckCircle2 size={14} className="text-status-success" />,
+    starting: <Loader2 size={14} className="animate-spin" />,
     calculating: <Loader2 size={14} className="animate-spin" />,
     unavailable: <AlertTriangle size={14} />,
     nothing_mapped: <AlertTriangle size={14} />,
@@ -33,10 +35,18 @@ export const EngineStatusBar: React.FC = () => {
       <span className="flex items-center gap-2 font-semibold">
         {icon}
         {state === 'calculated' && `Calculated by the IINVTY engine v${engineVersion}`}
+        {state === 'starting' && 'Starting the calculation engine…'}
         {state === 'calculating' && 'Calculating…'}
         {state === 'unavailable' && 'The calculation engine is not reachable'}
         {state === 'nothing_mapped' && 'Nothing calculated yet'}
       </span>
+
+      {state === 'starting' && (
+        <span className="text-[11.5px]">
+          It runs here in your browser, so the first visit downloads it once. Your figures
+          appear as soon as it is ready.
+        </span>
+      )}
 
       {message && <span className="text-[11.5px]">{message}</span>}
 
