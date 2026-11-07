@@ -5,35 +5,22 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { SummaryRail } from '../components/layout/SummaryRail';
 import { useGHG } from '../context/GHGContext';
 import { formatIndianNumber } from '../engine/unitConverter';
+import { ALL_15_CATEGORIES } from './Scope3Page';
 import { ArrowRight, Building2, CheckCircle2, Package } from 'lucide-react';
 
 export interface ScopeHubPageProps {
   onNavigate: (page: string) => void;
 }
 
-const SCOPE_3_CATEGORIES = [
-  { num: 1, name: 'Purchased goods & services', status: 'active' },
-  { num: 2, name: 'Capital goods', status: 'screened' },
-  { num: 3, name: 'Fuel- and energy-related activities (FERA)', status: 'active' },
-  { num: 4, name: 'Upstream transportation & logistics', status: 'active' },
-  { num: 5, name: 'Waste generated in operations', status: 'screened' },
-  { num: 6, name: 'Business travel', status: 'active' },
-  { num: 7, name: 'Employee commuting', status: 'screened' },
-  { num: 8, name: 'Upstream leased assets', status: 'screened' },
-  { num: 9, name: 'Downstream transportation', status: 'screened' },
-  { num: 10, name: 'Processing of sold products', status: 'screened' },
-  { num: 11, name: 'Use of sold products', status: 'screened' },
-  { num: 12, name: 'End-of-life treatment of sold products', status: 'screened' },
-  { num: 13, name: 'Downstream leased assets', status: 'screened' },
-  { num: 14, name: 'Franchises', status: 'screened' },
-  { num: 15, name: 'Investments & portfolio assets', status: 'screened' },
-];
 
 export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
   const { scope1Entries, scope2Entries, scope3Entries, summary, companyName, reportingPeriod, boundaryApproach } = useGHG();
 
-  const s1Progress = Math.min(100, Math.max(15, scope1Entries.length * 15));
-  const s2Progress = Math.min(100, Math.max(25, scope2Entries.length * 50));
+  // There were two progress bars here, driven by row count with a 15% and a 25%
+  // floor — so an untouched inventory reported Scope 1 "15% complete" and
+  // Scope 2 "25% complete". Nothing knows how many rows a given company's
+  // inventory ought to have, so no honest percentage exists. The row count,
+  // which is true, is shown instead.
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-8">
@@ -132,7 +119,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                 <div className="mt-5 pt-3 border-t border-border flex items-center justify-between">
                   <div className="text-xs">
                     <span className="text-brand-muted block text-[11px]">Logged Activity Lines</span>
-                    <span className="font-semibold text-brand-heading font-mono">{scope1Entries.length} verified records</span>
+                    <span className="font-semibold text-brand-heading font-mono">{scope1Entries.length} {scope1Entries.length === 1 ? 'row' : 'rows'}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-brand-muted block text-[11px]">Subtotal (tCO₂e)</span>
@@ -142,10 +129,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="w-full h-1 bg-surface-sunken rounded-sm overflow-hidden mt-3 border border-border">
-                  <div className="h-full bg-scope-1" style={{ width: `${s1Progress}%` }} />
-                </div>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-border flex flex-col gap-2">
@@ -218,10 +202,7 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="w-full h-1 bg-surface-sunken rounded-sm overflow-hidden mt-3 border border-border">
-                  <div className="h-full bg-scope-2" style={{ width: `${s2Progress}%` }} />
-                </div>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-border">
@@ -284,15 +265,28 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                     GHG Protocol 15-Category Matrix Screening Status
                   </span>
                   <span className="text-xs text-brand-muted font-mono">
-                    {summary.coverage.scope3CategoriesIncluded} active categories · Cat 3 auto-derived
+                    {summary.coverage.scope3CategoriesIncluded} of 15 categories carry data · Category 3 is worked out for you
                   </span>
                 </div>
 
                 <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-[repeat(15,minmax(0,1fr))] gap-1.5">
-                  {SCOPE_3_CATEGORIES.map((cat) => {
-                    const isActive = cat.status === 'active';
+                  {/* Which categories actually carry data, read from the
+                      inventory. These were literals — Cats 1, 3, 4 and 6 showed
+                      as "active" on a workspace with nothing in it. */}
+                  {ALL_15_CATEGORIES.map((cat) => {
+                    const count = scope3Entries.filter((e) => e.category === cat.id).length;
+                    const isActive = count > 0 || Boolean(cat.auto);
                     return (
-                      <Tooltip key={cat.num} content={`Category ${cat.num}: ${cat.name} (${cat.status.toUpperCase()})`}>
+                      <Tooltip
+                        key={cat.num}
+                        content={`Category ${cat.num}: ${cat.name} — ${
+                          cat.auto
+                            ? 'worked out from your Scope 1 and 2 rows'
+                            : count > 0
+                              ? `${count} row${count === 1 ? '' : 's'}`
+                              : 'nothing entered yet'
+                        }`}
+                      >
                         <button
                           type="button"
                           onClick={(e) => {
@@ -306,8 +300,8 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                           }`}
                         >
                           <span className="font-mono text-xs font-semibold leading-none">{cat.num}</span>
-                          <span className="text-[8px] uppercase tracking-tight opacity-80 mt-0.5">
-                            {isActive ? 'ACT' : 'SCR'}
+                          <span className="text-[8px] tracking-tight opacity-80 mt-0.5">
+                            {cat.auto ? 'auto' : count > 0 ? count : '—'}
                           </span>
                         </button>
                       </Tooltip>

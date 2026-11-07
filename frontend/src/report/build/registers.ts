@@ -55,11 +55,13 @@ export function buildEvidenceRegister(entries: ActivityEntry[]): EvidenceRow[] {
       source: `${source || categoryLabel(category)} (${scopeLabel(scope)})`,
       dataType: unit ? `Activity data in ${unit}` : 'Activity data',
       frequency: group.length > 1 ? `${group.length} records in the period` : 'Single record',
+      // The named document is held in the reporting company's own records, not
+      // in this tool, so this column is the reference to it and nothing more.
       evidence: withEvidence.length === group.length && withEvidence.length > 0
         ? withEvidence.map((entry) => entry.evidenceFile).join(', ')
         : withEvidence.length > 0
-          ? `${withEvidence.map((entry) => entry.evidenceFile).join(', ')} — ${group.length - withEvidence.length} record(s) without evidence`
-          : 'No supporting document attached',
+          ? `${withEvidence.map((entry) => entry.evidenceFile).join(', ')} — ${group.length - withEvidence.length} record(s) name no document`
+          : 'No supporting document named',
       hasEvidence: withEvidence.length === group.length && withEvidence.length > 0,
     };
   });

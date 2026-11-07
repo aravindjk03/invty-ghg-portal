@@ -7,7 +7,7 @@ import { factorsFor, isVerified } from '../data/factorCatalogue';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
 import { mappingFor, startingUnit } from '../services/catalogueMap';
 import { useCatalogueMap } from '../services/useCatalogueMap';
-import { marketRecordId, useEngineInventory } from '../report/useEngineInventory';
+import { EngineInventory, marketRecordId, useEngineInventory } from '../report/useEngineInventory';
 import { useMethodResults } from '../report/useMethodResults';
 import { MethodEntry, MethodKey, MethodResult, emptyInput } from '../types/methods';
 import { GwpSetName } from '../types/inventory';
@@ -84,6 +84,18 @@ interface GHGContextType {
   /** Which IPCC basis every figure is calculated under. */
   gwpSet: GwpSetName;
   setGwpSet: (set: GwpSetName) => void;
+  /**
+   * THE engine run for this inventory, and the only one.
+   *
+   * The report page used to call useEngineInventory a second time, on a
+   * different GWP basis and a reporting year scraped out of the display label
+   * by regular expression, without the T&D loss, well-to-tank and FX inputs
+   * this run is given. It then printed that second run's calculation reference
+   * beside totals the first run had produced. A verifier checking the
+   * reference against the figures would have been checking two different
+   * calculations.
+   */
+  engine: EngineInventory;
   /** How the current figures were produced, and what could not be produced. */
   engineStatus: {
     state: 'calculated' | 'calculating' | 'unavailable' | 'nothing_mapped';
@@ -1013,6 +1025,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         summary,
         gwpSet,
         setGwpSet,
+        engine,
         engineStatus,
         scenario,
         scenarioResult,
