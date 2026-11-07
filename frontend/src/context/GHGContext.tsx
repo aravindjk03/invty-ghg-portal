@@ -132,10 +132,24 @@ interface GHGContextType {
     period: ReportingPeriod;
     boundaryApproach: ConsolidationBoundary;
     withExample: boolean;
+    workRole: WorkRole;
   }) => void;
+  /**
+   * What the person at the keyboard does. Plant staff know their diesel and
+   * their meter readings but not "consolidation boundary"; an ESG reviewer
+   * expects the standard's own words. The field existed on the user record,
+   * hardcoded to ESG_ANALYST for every account and shown nowhere, so nothing
+   * could adapt to it.
+   */
+  workRole: WorkRole;
+  setWorkRole: (role: WorkRole) => void;
+  /** True where the plain-language register is wanted over the standard's. */
+  plainLanguage: boolean;
   /** Loads the worked steel-plant example over whatever is there. */
   loadExampleInventory: () => void;
 }
+
+export type WorkRole = 'site' | 'esg' | 'auditor';
 
 const STORAGE_KEY = 'INVTY_GHG_INVENTORY_DATA_V2';
 
@@ -476,6 +490,11 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
   });
+  const [workRole, setWorkRole] = usePersistentState<WorkRole>(
+    `${STORAGE_KEY}_ROLE`, 'esg',
+    (v): v is WorkRole => v === 'site' || v === 'esg' || v === 'auditor');
+  const plainLanguage = workRole === 'site';
+
   const [steelMethod, setSteelMethod] = usePersistentState<IntegratedSteelMethod>(
     `${STORAGE_KEY}_STEEL_METHOD`, 'fuel_based',
     (v): v is IntegratedSteelMethod => v === 'fuel_based' || v === 'carbon_balance');
@@ -917,6 +936,11 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         emissionFactor: factor,
         calculatedTco2e: 0,
         warning: 'Choose a published factor for this row so it can be calculated.',
+        // Who to ask about this figure. The field existed and the calculation
+        // record printed it, but nothing ever filled it, so the column was
+        // always blank — and "who entered this?" is a verifier's first
+        // question. It is editable on the row.
+        dataOwner: currentUser?.name || undefined,
         updatedAt: new Date().toISOString(),
       };
 
@@ -926,7 +950,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
 
       addToast('info', `Added new row in ${category.replace(/_/g, ' ')}`);
     },
-    [addToast]
+    [addToast, currentUser]
   );
 
   const deleteRow = useCallback(
@@ -1030,10 +1054,12 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
       period: ReportingPeriod;
       boundaryApproach: ConsolidationBoundary;
       withExample: boolean;
+      workRole: WorkRole;
     }) => {
       setCompanyName(setup.companyName);
       setPeriod(setup.period);
       setBoundaryApproach(setup.boundaryApproach);
+      setWorkRole(setup.workRole);
       if (setup.withExample) loadExampleInventory();
       try {
         localStorage.setItem(`${STORAGE_KEY}_SETUP`, 'done');
@@ -1042,7 +1068,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
       }
       setWorkspaceReady(true);
     },
-    [loadExampleInventory]
+    [loadExampleInventory, setWorkRole]
   );
 
   const saveToStorage = useCallback(() => {
@@ -1128,6 +1154,9 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         recalculateAll,
         resetToDefaults,
         workspaceReady,
+        workRole,
+        setWorkRole,
+        plainLanguage,
         completeSetup,
         loadExampleInventory,
         saveToStorage,

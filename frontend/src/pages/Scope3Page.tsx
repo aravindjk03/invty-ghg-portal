@@ -109,14 +109,14 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
 
         <div className="flex items-center gap-2">
           <ScopeBadge scope="scope-3" size="md" />
-          <Badge variant="default">All 15 Categories Fully Accessible</Badge>
+          <Badge variant="default">All 15 categories</Badge>
         </div>
       </div>
 
       {/* Page Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-brand-heading tracking-tight">
-          Scope 3 — Value Chain Upstream & Downstream Workspace
+          Scope 3 — your supply chain
         </h1>
         <p className="text-sm text-brand-muted mt-1 max-w-3xl">
           Account for all indirect upstream and downstream supply-chain emissions across all 15 GHG Protocol categories. Click any category box in the matrix to filter view, review category scope boundaries, and log verified activity entries.
@@ -129,7 +129,7 @@ export const Scope3Page: React.FC<Scope3PageProps> = ({ onNavigate }) => {
           <div>
             <h3 className="text-sm font-bold text-brand-heading flex items-center gap-2">
               <Filter size={15} className="text-brand-primary" />
-              GHG Protocol 15-Category Screening Grid
+              The 15 categories
             </h3>
             <p className="text-[11px] text-brand-muted mt-0.5">
               Click any of the 15 category squares below to filter view and add activities.

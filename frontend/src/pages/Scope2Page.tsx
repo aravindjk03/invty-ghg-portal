@@ -41,6 +41,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
     addToast,
     saveToStorage,
     period,
+    plainLanguage,
   } = useGHG();
 
   const [entryMode, setEntryMode] = useState<'guided' | 'csv' | 'quick'>('guided');
@@ -113,10 +114,12 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
       {/* Header Banner */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-brand-heading tracking-tight">
-          Scope 2 — Indirect Purchased Energy Workspace
+          {plainLanguage ? 'Electricity and energy you buy' : 'Scope 2 — energy you buy'}
         </h1>
         <p className="text-sm text-brand-muted mt-1 max-w-3xl">
-          Track emissions from purchased electricity, steam, heating, and cooling. In accordance with the GHG Protocol Scope 2 Guidance, both Location-Based (grid average) and Market-Based (contractual instruments) figures are evaluated concurrently.
+          {plainLanguage
+            ? 'Electricity, steam, heating and cooling bought from someone else. Each one is counted two ways — at your grid\u2019s average, and at what your contracts actually buy — and the two are reported side by side.'
+            : 'Purchased electricity, steam, heating and cooling. Under the GHG Protocol Scope 2 Guidance both the location-based (grid average) and market-based (contractual instrument) figures are calculated, and reported side by side.'}
         </p>
       </div>
 
@@ -124,13 +127,13 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-surface-raised p-3 rounded-xl border border-border">
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold text-brand-body uppercase tracking-wider">
-            Data Input Workflow:
+            How would you like to enter it?
           </span>
           <SegmentedControl
             options={[
-              { value: 'guided', label: 'Activity Registry (Guided)' },
-              { value: 'csv', label: 'Bulk CSV Import' },
-              { value: 'quick', label: 'Quick Utility Bill Estimate' },
+              { value: 'guided', label: 'Enter row by row' },
+              { value: 'csv', label: 'Upload a CSV' },
+              { value: 'quick', label: 'Estimate from a bill' },
             ]}
             value={entryMode}
             onChange={(val) => setEntryMode(val as any)}
@@ -150,7 +153,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
         <Info size={20} className="text-brand-primary flex-shrink-0 mt-0.5" />
         <div className="text-xs leading-relaxed text-blue-950">
           <strong className="font-semibold block mb-0.5 text-blue-900">
-            Scope 2 Dual Reporting Rule (GHG Protocol Compliance)
+            Why electricity is counted twice
           </strong>
           <span>
             Location-based and Market-based totals reflect two distinct accounting views of the same purchased energy. <strong>They are never added together in the headline gross total.</strong> The location-based figure uses the CEA India grid factor, named on every row; the market-based figure uses the contractual rate where a row carries one, and says so where it does not.
@@ -205,7 +208,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
         <Card className="p-6 mb-8 bg-surface-raised border border-border">
           <h3 className="text-sm font-bold text-brand-heading mb-3 flex items-center gap-2">
             <Zap size={16} className="text-amber-500" />
-            Quick Utility Bill Spend / KWh Estimator
+            Estimate from a bill
           </h3>
           <p className="text-xs text-brand-muted mb-4">
             If sub-metered invoices are pending, calculate an interim screening estimate using average industrial tariff rates:
@@ -254,7 +257,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
       <div className="space-y-6">
         {/* Accordion 1: Purchased Electricity */}
         <Accordion
-          title="2.1 Purchased Electricity (Location & Market Reporting)"
+          title="Electricity you buy"
           subtitle="Grid power, open-access, solar PPAs, green tariffs, and on-site EV fleet charging"
           badge={<ScopeBadge scope="scope-2" size="sm" />}
           defaultOpen={true}
@@ -306,7 +309,7 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
 
         {/* Accordion 2: Purchased Steam, Heating & Cooling */}
         <Accordion
-          title="2.2 Purchased Steam, District Heating & Chilled Water"
+          title="Steam, heating and cooling you buy"
           subtitle="Direct imported steam from neighbouring industrial complexes, waste-heat boilers, or district cooling"
           badge={<Badge variant="primary">Thermal Energy</Badge>}
           defaultOpen={false}
@@ -346,11 +349,11 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
           </div>
         </Accordion>
 
-        {/* Accordion 3: Energy Balance Memos */}
+        {/* Accordion 3: Reported separatelys */}
         <Accordion
-          title="Energy Balance Memo Items (Self-Generated Solar & Grid Export)"
+          title="Solar you generate, and power you export"
           subtitle="On-site rooftop solar and wheeling export. Recorded for complete facility energy balance; excluded from Scope 2 gross total."
-          badge={<Badge variant="default">Energy Balance Memo</Badge>}
+          badge={<Badge variant="default">Reported separately</Badge>}
           defaultOpen={false}
         >
           <div className="p-4 space-y-4">
@@ -362,18 +365,12 @@ export const Scope2Page: React.FC<Scope2PageProps> = ({ onNavigate }) => {
             </div>
 
             {memoEnergyEntries.length === 0 ? (
-              <div className="text-center py-6 text-xs text-brand-muted">
-                No self-generation or grid export items logged.
-                <div className="mt-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => addRow('scope-2', 'memo_energy_balance')}
-                  >
-                    + Record On-Site Solar Generation
-                  </Button>
-                </div>
-              </div>
+              <EmptyState
+                title="No solar or exported power recorded"
+                description="If the site generates its own electricity or sells any back to the grid, record it here. It is reported separately and never added into your totals."
+                actionLabel="Add on-site generation"
+                onAdd={() => addRow('scope-2', 'memo_energy_balance')}
+              />
             ) : (
               memoEnergyEntries.map((row) => (
                 <ActivityRow

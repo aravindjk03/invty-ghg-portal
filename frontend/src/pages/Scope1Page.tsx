@@ -250,7 +250,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           {/* Header */}
           <div>
             <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-scope-1 block">
-              DIRECT COMBUSTION & ONSITE EMISSIONS
+              Scope 1
             </span>
             <h1 className="text-[32px] font-bold text-brand-heading tracking-tight mt-0.5">
               Scope 1 — Direct emissions
@@ -330,7 +330,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           <Accordion
             icon={<Factory size={22} className="text-orange-400" />}
             title="Process emissions"
-            description="Limestone calcination, graphite electrode oxidation, carbon mass balance"
+            description="CO₂ released by the process itself, not by burning fuel"
             subtotal={processSubtotal}
             defaultOpen={false}
           >
@@ -363,7 +363,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           <Accordion
             icon={<ShieldAlert size={22} className="text-orange-300" />}
             title="Fugitive emissions"
-            description="HVAC chiller recharges, SF6 switchgear, gas piping leaks"
+            description="Refrigerant top-ups and gas that leaks from equipment"
             subtotal={fugitiveSubtotal}
             defaultOpen={false}
           >
@@ -457,7 +457,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
         <div className="lg:col-span-4 space-y-6">
           <Card elevation="raised" className="p-6">
             <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-brand-muted">
-              SCOPE 1 BREAKDOWN
+              Scope 1 breakdown
             </span>
             <div className="flex items-baseline gap-2 mt-1 mb-2">
               <span className="text-[38px] font-mono font-bold text-brand-heading tabular-nums leading-none">
@@ -516,7 +516,7 @@ export const Scope1Page: React.FC<Scope1PageProps> = ({ onNavigate }) => {
           <Card className="p-5 text-xs text-brand-muted space-y-2">
             <div className="flex items-center gap-2 font-semibold text-brand-heading">
               <Info size={15} className="text-brand-link" />
-              <span>Steel Sector Accounting Guideline</span>
+              <span>A note on steelmaking</span>
             </div>
             <p className="leading-relaxed">
               In integrated and secondary steel manufacturing, emissions from fuels used for metallurgical reduction (e.g. coke, coal) are accounted under stationary combustion, while flux calcination is classified as chemical process emissions.

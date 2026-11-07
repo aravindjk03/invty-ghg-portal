@@ -216,7 +216,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           value={summary.totalEmissions}
           unit="tCO₂e"
           subtext={`${reportingPeriod} · this period only`}
-          tooltipText="Consolidated operational emissions across Scopes 1, 2, and active Scope 3 categories. A period-on-period change appears once a second reporting period has been entered."
+          tooltipText="Everything you have entered across Scopes 1, 2 and 3, added up. A period-on-period change appears once a second reporting period has been entered."
         />
         <KPITile
           label="Emissions Intensity"
@@ -229,15 +229,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           label="Data Quality Grade"
           value={`Grade ${summary.dataQualityGrade}`}
           gradeCircle={{ grade: summary.dataQualityGrade, color: `var(--grade-${summary.dataQualityGrade.toLowerCase()})` }}
-          subtext={`Grade ${summary.dataQualityGrade} · GHG Protocol DQI`}
-          tooltipText="GHG Protocol Data Quality Indicator score based on primary, secondary and proxy factor distributions."
+          subtext="Graded A to E on how much rests on your own data"
+          tooltipText="How much of the inventory rests on your own measured data rather than published averages or estimates."
         />
         <KPITile
           label="Coverage Scope"
           value={`${summary.coverage.scopesCompleted} of 3 Scopes`}
           unit={`· ${summary.coverage.scope3CategoriesIncluded} of 15 Cat`}
-          subtext="BRSR Core & Scope 3 Compliant"
-          tooltipText="Completed operational scopes plus screened Scope 3 value chain categories."
+          subtext="Covers what BRSR Core asks for"
+          tooltipText="How many of the three scopes, and of the 15 Scope 3 categories, carry data."
         />
       </div>
 
@@ -248,12 +248,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h3 className="text-lg font-bold text-brand-heading">Emissions Split by Scope</h3>
+                <h3 className="text-lg font-bold text-brand-heading">Emissions by scope</h3>
                 <p className="text-xs text-brand-muted mt-0.5">
-                  Gross operational boundary distribution (Operational Control)
+                  Where your emissions come from
                 </p>
               </div>
-              <Badge variant="verified">Dual Reporting Ready</Badge>
+              <Badge variant="verified">Grid and contract figures both shown</Badge>
             </div>
 
             <div className="my-6">
@@ -299,9 +299,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         {/* Right: Scope Distribution Donut */}
         <Card className="lg:col-span-4 flex flex-col justify-between p-6">
           <div>
-            <h3 className="text-lg font-bold text-brand-heading mb-1">Source Concentration</h3>
+            <h3 className="text-lg font-bold text-brand-heading mb-1">Biggest sources</h3>
             <p className="text-xs text-brand-muted mb-4">
-              Relative emission mass by greenhouse scope
+              How the total divides between the three scopes
             </p>
             <DonutChart
               data={topDonutData}
@@ -321,9 +321,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-bold text-brand-heading">Emissions Flow Diagram (Sankey)</h3>
+            <h3 className="text-lg font-bold text-brand-heading">How activities add up to the total</h3>
             <p className="text-xs text-brand-muted mt-0.5">
-              Material flow tracing energy inputs and process reactions through to Scopes 1, 2 and 3
+              Each activity you entered, through its category and scope, to the inventory total
             </p>
           </div>
         </div>
@@ -334,9 +334,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-bold text-brand-heading">Top Carbon Contributors</h3>
+            <h3 className="text-lg font-bold text-brand-heading">Largest sources</h3>
             <p className="text-xs text-brand-muted mt-0.5">
-              Ranked descending by absolute greenhouse gas intensity across all logged activities
+              Every activity you have entered, largest first
             </p>
           </div>
           <span className="text-xs text-brand-muted font-mono">
@@ -380,13 +380,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         </div>
       </Card>
 
-      {/* ROW 5: Decarbonisation Scenario Modelling */}
+      {/* ROW 5: What-if levers */}
       <Card className="p-6 bg-surface-raised border border-border">
         <div className="flex items-center justify-between pb-3 border-b border-border mb-4">
           <div className="flex items-center gap-2">
             <Sliders size={18} className="text-brand-primary" />
             <h3 className="text-base font-bold text-brand-heading">
-              Decarbonisation Scenario Modelling & Sensitivity Analysis
+              What if you changed something?
             </h3>
           </div>
           <span className="text-xs text-brand-muted">Indicative — not part of the reported inventory</span>

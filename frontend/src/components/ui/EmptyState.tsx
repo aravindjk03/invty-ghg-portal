@@ -8,6 +8,7 @@ export interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAdd?: () => void;
+  /** @deprecated Use onAdd. Kept so older call sites keep working. */
   onAddFirst?: () => void;
   onUploadCsv?: () => void;
 }

@@ -13,6 +13,7 @@ import {
   Search,
 } from 'lucide-react';
 import { ActivityEntry } from '../types/ghg';
+import { EmptyState } from '../components/ui/EmptyState';
 
 interface AuditTrailPageProps {
   onNavigate: (page: string) => void;
@@ -325,10 +326,10 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({ onNavigate }) =>
         </div>
 
         {rows.length === 0 ? (
-          <div className="p-8 text-center text-xs text-brand-muted">
-            No activity rows yet. Add Scope 1, 2 or 3 data and every calculated row
-            appears here with the factor that produced it.
-          </div>
+          <EmptyState
+            title="Nothing to show yet"
+            description="Once you have entered activity data, every calculated row appears here with the factor that produced it and where that factor came from."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">

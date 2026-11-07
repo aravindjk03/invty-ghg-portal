@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useGHG } from '../context/GHGContext';
+import { useGHG, WorkRole } from '../context/GHGContext';
 import { ConsolidationBoundary } from '../engine/scopeRouter';
 import { ReportingPeriod, periodLabel } from '../report/reportingPeriod';
-import { Building2, CalendarRange, Layers, ArrowRight, BookOpen } from 'lucide-react';
+import { Building2, CalendarRange, Layers, ArrowRight, BookOpen, UserCog } from 'lucide-react';
 
 /**
  * First run. Three questions, asked before any figure is entered, because all
@@ -33,6 +33,24 @@ const BOUNDARIES: Array<{ value: ConsolidationBoundary; label: string; note: str
   },
 ];
 
+const ROLES: Array<{ value: WorkRole; label: string; note: string }> = [
+  {
+    value: 'site',
+    label: 'I run or work at the site',
+    note: 'You know the fuel, the meters and the invoices. The app will keep the language plain and leave the standard\u2019s terms out of your way.',
+  },
+  {
+    value: 'esg',
+    label: 'I handle sustainability or ESG reporting',
+    note: 'You know the GHG Protocol. You get the full technical wording, the methods and the calculation record.',
+  },
+  {
+    value: 'auditor',
+    label: 'I am reviewing or assuring this inventory',
+    note: 'You get everything an ESG reporter sees, with the provenance of each figure to the front.',
+  },
+];
+
 const MONTHS = [
   '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
 ];
@@ -51,6 +69,7 @@ export const WorkspaceSetup: React.FC = () => {
   const [months, setMonths] = useState(12);
   const [boundary, setBoundary] = useState<ConsolidationBoundary>('Operational control');
   const [withExample, setWithExample] = useState(false);
+  const [role, setRole] = useState<WorkRole>('esg');
   const [error, setError] = useState<string | null>(null);
 
   const period: ReportingPeriod = { start: `${startYear}-${startMonth}`, months };
@@ -66,6 +85,7 @@ export const WorkspaceSetup: React.FC = () => {
       period,
       boundaryApproach: boundary,
       withExample,
+      workRole: role,
     });
   };
 
@@ -146,6 +166,39 @@ export const WorkspaceSetup: React.FC = () => {
               {periodLabel(period)} — this decides which factor vintage applies and
               which months a row may be dated in.
             </p>
+          </div>
+
+          {/* Who is at the keyboard. Plant staff and ESG reviewers need very
+              different amounts of the standard's vocabulary on screen. */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
+              <UserCog size={14} className="text-blue-600" />
+              Your role
+            </label>
+            <div className="space-y-2">
+              {ROLES.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors ${
+                    role === option.value
+                      ? 'border-blue-500 bg-blue-50/60'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    checked={role === option.value}
+                    onChange={() => setRole(option.value)}
+                    className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-gray-800">{option.label}</span>
+                    <span className="block text-[11px] text-gray-500 leading-relaxed mt-0.5">{option.note}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* 3. Consolidation boundary */}
