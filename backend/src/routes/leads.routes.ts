@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { leadsService } from '../services/leads.service';
+import { requireAuth, requireRole } from '../middleware/requireAuth';
+import { leadRateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -29,7 +31,7 @@ const createLeadSchema = z.object({
 });
 
 // POST /api/v1/leads - Ingest customer lead from Enterprise Lead Gate
-router.post('/', (req: Request, res: Response) => {
+router.post('/', leadRateLimiter, (req: Request, res: Response) => {
   const parseResult = createLeadSchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({
@@ -53,8 +55,12 @@ router.post('/', (req: Request, res: Response) => {
   });
 });
 
-// GET /api/v1/leads - View captured leads (Admin / CRM integration)
-router.get('/', (_req: Request, res: Response) => {
+// GET /api/v1/leads - the captured prospect list.
+//
+// This was open to anyone who found the URL. It returns every lead with name,
+// work email, company, phone and IP address — the whole prospect list, and a
+// pile of other people's personal data, to an unauthenticated stranger.
+router.get('/', requireAuth, requireRole('ADMIN'), (_req: Request, res: Response) => {
   const leads = leadsService.getAllLeads();
   const stats = leadsService.getLeadStats();
 

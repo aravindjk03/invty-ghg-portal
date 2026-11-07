@@ -77,6 +77,19 @@ export interface SafeUser {
   createdAt: string;
 }
 
+/**
+ * One spelling for a phone number, so the same handset is the same account
+ * however it was typed, and so nothing but digits and a leading + ever
+ * reaches a query.
+ */
+export function normalisePhone(phone: string): string {
+  const trimmed = String(phone ?? '').trim();
+  const hasPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length < 8 || digits.length > 15) return '';
+  return hasPlus ? `+${digits}` : digits;
+}
+
 class DatabaseService {
   private db: any;
   private dbFilePath: string;
@@ -211,11 +224,34 @@ class DatabaseService {
     return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computed, 'hex'));
   }
 
+  /**
+   * Accounts an empty database starts with.
+   *
+   * This had no environment guard. On any fresh production database it
+   * created admin@invty.com with the password IINVTY@2026 and the ADMIN role,
+   * and demo@company.com with Demo@1234 — both passwords sitting in a public
+   * GitHub repository. Anyone who read the source owned the deployment.
+   *
+   * It is worse than a one-off mistake on a host whose disk is ephemeral:
+   * the table is empty again after every restart, so the known-password admin
+   * came back even if someone had changed it.
+   *
+   * In production nothing is seeded unless ADMIN_EMAIL is set, and then the
+   * password is random and printed once to the server log for the operator to
+   * collect and change. Outside production the demo accounts stay, because
+   * that is what they are for.
+   */
   private seedDefaultUsers() {
     const checkStmt = this.db.prepare('SELECT COUNT(*) as count FROM users');
     const result = checkStmt.get() as { count: number };
+    if (!result || result.count !== 0) return;
 
-    if (result && result.count === 0) {
+    if (process.env.NODE_ENV === 'production') {
+      this.seedProductionAdmin();
+      return;
+    }
+
+    {
       console.log('[IINVTY DB] Seeding initial enterprise demonstration accounts...');
 
       const adminCreds = this.hashPassword('IINVTY@2026');
@@ -252,6 +288,47 @@ class DatabaseService {
     }
   }
 
+  /**
+   * The one account a fresh production database gets, if the operator asked
+   * for one. The password is never in the source: it is generated here and
+   * written to the log once, where only someone who can already read the
+   * server's output will see it.
+   */
+  private seedProductionAdmin() {
+    const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    if (!email) {
+      console.log(
+        '[IINVTY DB] Empty database and no ADMIN_EMAIL set, so no account was created. '
+        + 'Set ADMIN_EMAIL and restart to get one.'
+      );
+      return;
+    }
+
+    // 32 hex characters from the system CSPRNG: not guessable, and not in git.
+    const password = crypto.randomBytes(16).toString('hex');
+    const creds = this.hashPassword(password);
+    const now = new Date().toISOString();
+
+    this.createUser({
+      id: `usr-admin-${crypto.randomBytes(6).toString('hex')}`,
+      email,
+      password_hash: creds.hash,
+      salt: creds.salt,
+      name: 'Administrator',
+      company_name: process.env.ADMIN_COMPANY?.trim() || 'IINVTY',
+      role: 'ADMIN',
+      auth_provider: 'email',
+      created_at: now,
+      updated_at: now,
+    });
+
+    console.log(
+      `\n[IINVTY DB] Created the administrator account ${email}.`
+      + `\n[IINVTY DB] One-time password: ${password}`
+      + '\n[IINVTY DB] Sign in and change it. This is printed once and is not stored anywhere else.\n'
+    );
+  }
+
   public createUser(user: UserRecord): SafeUser {
     const stmt = this.db.prepare(`
       INSERT INTO users (id, email, phone, password_hash, salt, name, company_name, role, avatar_url, auth_provider, created_at, updated_at)
@@ -284,11 +361,11 @@ class DatabaseService {
       const admin = this.findUserByEmail('admin@invty.com');
       if (!admin) return;
       const now = new Date().toISOString();
-      if (this.verifyPassword('Invty@2026', admin.password_hash, admin.salt)) {
-        const creds = this.hashPassword('IINVTY@2026');
-        this.db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
-          .run(creds.hash, creds.salt, now, admin.id);
-      }
+      // Deliberately no password rewrite here. This used to notice the old
+      // demo password and replace it with the newer published one, which put
+      // a credential from the public repository back onto a live account.
+      // Outside production the seeder sets it; in production nothing should
+      // move an account's password but its owner.
       this.db.prepare(
         "UPDATE users SET name = 'IINVTY Enterprise Admin', company_name = 'IINVTY Sustainability Systems', updated_at = ? " +
         "WHERE id = ? AND name = 'INVTY Enterprise Admin' AND company_name = 'INVTY Sustainability Systems'"
@@ -305,9 +382,18 @@ class DatabaseService {
   }
 
   public findUserByPhone(phone: string): UserRecord | null {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
-    const stmt = this.db.prepare('SELECT * FROM users WHERE phone = ? OR phone LIKE ?');
-    const row = stmt.get(cleanPhone, `%${cleanPhone.slice(-10)}`) as UserRecord | undefined;
+    // This used to strip only whitespace and hyphens and interpolate what was
+    // left into a LIKE pattern, so `%` and `_` survived as wildcards: a
+    // "phone number" of %%%%%%%% produced phone LIKE '%%%%%%%%%', matched
+    // every account and returned the first row — the seeded administrator.
+    // With the OTP handed back in the response, that was an unauthenticated
+    // takeover in two requests. The suffix match was its own bug besides: two
+    // customers in different countries sharing their last ten digits resolved
+    // to one account.
+    const normalised = normalisePhone(phone);
+    if (!normalised) return null;
+    const stmt = this.db.prepare('SELECT * FROM users WHERE phone = ?');
+    const row = stmt.get(normalised) as UserRecord | undefined;
     return row || null;
   }
 
@@ -319,7 +405,8 @@ class DatabaseService {
 
   // OTP management for mobile sign-in
   public saveOtp(phone: string, code: string, ttlSeconds = 300): void {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
+    if (!cleanPhone) return;
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
 
@@ -336,7 +423,8 @@ class DatabaseService {
   }
 
   public verifyOtp(phone: string, code: string): boolean {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
+    if (!cleanPhone) return false;
     const stmt = this.db.prepare('SELECT * FROM otps WHERE phone = ?');
     const row = stmt.get(cleanPhone) as { phone: string; code: string; expires_at: string } | undefined;
 
@@ -355,14 +443,15 @@ class DatabaseService {
   }
 
   public deleteOtp(phone: string): void {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
     const stmt = this.db.prepare('DELETE FROM otps WHERE phone = ?');
     stmt.run(cleanPhone);
   }
 
   // Find or create user from Mobile Phone OTP
   public findOrCreateMobileUser(phone: string, name?: string, companyName?: string): SafeUser {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
+    if (!cleanPhone) throw new Error('A valid phone number is required.');
     let user = this.findUserByPhone(cleanPhone);
 
     if (!user) {

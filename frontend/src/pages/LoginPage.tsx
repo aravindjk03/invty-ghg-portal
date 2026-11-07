@@ -140,8 +140,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         setError('Please enter a valid corporate email address.');
         return;
       }
-      if (!password || password.length < 6) {
-        setError('Password must be at least 6 characters long.');
+      // Must match the server's rule, or a signup the user was allowed to
+      // submit comes back rejected.
+      if (!password || password.length < 12) {
+        setError('Please choose a password of at least 12 characters. A short phrase you will remember is stronger than a short word.');
         return;
       }
     }
@@ -455,7 +457,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                   <span className="text-gray-400 text-sm font-mono flex-shrink-0">🔒</span>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder={emailMode === 'signin' ? 'Password' : 'Create Password (min 6 chars)'}
+                    placeholder={emailMode === 'signin' ? 'Password' : 'Create a password (at least 12 characters)'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"

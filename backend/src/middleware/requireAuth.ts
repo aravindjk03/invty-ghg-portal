@@ -47,3 +47,27 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   req.user = session.user;
   next();
 }
+
+/**
+ * Rejects the request unless the signed-in user holds one of these roles.
+ *
+ * `role` has been on the user record from the start and nothing ever checked
+ * it, so every signed-in account could reach every endpoint. Chain this after
+ * requireAuth on anything that exposes data belonging to the business rather
+ * than to the person making the request.
+ */
+export function requireRole(...roles: Array<SafeUser['role']>) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      // Deliberately the same shape whether the account is absent or merely
+      // unprivileged: a different answer tells a prober which it was.
+      res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'This account cannot access that resource.' },
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    next();
+  };
+}

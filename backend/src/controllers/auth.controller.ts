@@ -6,10 +6,16 @@ import { env } from '../config/env';
 
 const signupSchema = z.object({
   email: z.string().email('Valid business email address is required'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(12, 'Password must be at least 12 characters')
+    .max(200, 'Password must be at most 200 characters'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   companyName: z.string().min(2, 'Company name is required'),
-  role: z.enum(['ADMIN', 'ESG_MANAGER', 'ESG_ANALYST', 'AUDITOR']).default('ESG_ANALYST'),
+  // `role` is deliberately NOT accepted here. It used to be part of this
+  // schema and was written straight through to the user record, so anyone
+  // could POST {"role":"ADMIN"} to /auth/signup and mint an administrator.
+  // Nothing checked roles at the time, which hid it; the moment a role check
+  // exists it is privilege escalation by request body. A role is granted by
+  // an administrator, never claimed by the person signing up.
 });
 
 const loginSchema = z.object({
@@ -102,7 +108,7 @@ export const authController = {
         return;
       }
 
-      const { email, password, name, companyName, role } = parsed.data;
+      const { email, password, name, companyName } = parsed.data;
 
       const existing = dbService.findUserByEmail(email);
       if (existing) {
@@ -126,7 +132,9 @@ export const authController = {
         salt,
         name,
         company_name: companyName,
-        role,
+        // Everyone who signs up themselves is an analyst. Elevation is an
+        // administrator's act, not a field in the request.
+        role: 'ESG_ANALYST',
         auth_provider: 'email',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -230,20 +238,32 @@ export const authController = {
       }
 
       const { phone } = parsed.data;
-      // Generate a secure 6-digit numeric OTP
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // Math.random() was used here. It is a non-cryptographic PRNG whose
+      // internal state can be recovered from a handful of outputs, so
+      // observing a few codes predicts the next one.
+      const otpCode = crypto.randomInt(100000, 1000000).toString();
 
       // Save to SQLite otps table with 5 minutes validity
       dbService.saveOtp(phone, otpCode, 300);
 
-      console.log(`[SMS SERVICE] Dispatched 6-digit OTP for ${phone}: ${otpCode}`);
+      // No SMS provider is connected, so outside production the code is handed
+      // back for testing. IN PRODUCTION IT MUST NOT BE: returning it to the
+      // caller let anyone request a code for any phone number, read it out of
+      // the response and sign in as that person — a complete authentication
+      // bypass, with no password and no second factor involved.
+      const isProduction = env.NODE_ENV === 'production';
+
+      if (!isProduction) {
+        console.log(`[SMS SERVICE] Dispatched 6-digit OTP for ${phone}: ${otpCode}`);
+      }
 
       res.status(200).json({
         success: true,
-        message: `One-Time Password (OTP) dispatched to ${phone}`,
+        message: isProduction
+          ? `Verification code sent to ${phone}`
+          : `One-Time Password (OTP) dispatched to ${phone}`,
         phone,
-        // In local development / intranet demo, provide the OTP for immediate testing
-        devOtp: otpCode,
+        ...(isProduction ? {} : { devOtp: otpCode }),
         expiresInSeconds: 300,
       });
     } catch (error: any) {
