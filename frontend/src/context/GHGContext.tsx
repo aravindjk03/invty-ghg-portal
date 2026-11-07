@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { simulateScenario, ScenarioOutcome } from '../engine/scenario';
 import { ActivityEntry, ScopeSummary, WhatIfScenario, ToastMessage } from '../types/ghg';
 import { DEFAULT_FACTORS } from '../services/ghgService';
@@ -138,6 +138,39 @@ interface GHGContextType {
 }
 
 const STORAGE_KEY = 'INVTY_GHG_INVENTORY_DATA_V2';
+
+/**
+ * A useState that survives a reload, and refuses a stored value it does not
+ * recognise rather than letting it through.
+ *
+ * Storage can throw outright (a private window, a blocked origin, a full
+ * quota), so every access is total: the setting falls back to its default and
+ * the app keeps working.
+ */
+function usePersistentState<T extends string>(
+  key: string,
+  fallback: T,
+  isValid: (value: string) => value is T,
+): [T, (value: T) => void] {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved && isValid(saved) ? saved : fallback;
+    } catch {
+      return fallback;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Nothing to store it in; the choice holds for this session only.
+    }
+  }, [key, value]);
+
+  return [value, setValue];
+}
 
 // A worked example inventory: one integrated steel plant.
 //
@@ -315,12 +348,29 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const hasStoredToken = Boolean(authService.getToken());
   const [authLoading, setAuthLoading] = useState<boolean>(hasStoredToken);
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getStoredUser());
+  // The organisation the inventory is for. Typing it into Settings used to be
+  // lost on reload, which put a mobile-OTP account's "My Organization" back on
+  // the report cover.
   const [companyName, setCompanyName] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_COMPANY`);
+      if (saved) return saved;
+    } catch {
+      // fall through to the account's own name
+    }
     const stored = authService.getStoredUser();
     // Until first-run setup states it, there is no company. A placeholder that
     // reads like a real name ends up on exports and reports as if it were one.
     return stored?.companyName || '';
   });
+
+  useEffect(() => {
+    try {
+      if (companyName) localStorage.setItem(`${STORAGE_KEY}_COMPANY`, companyName);
+    } catch {
+      // Held for this session only.
+    }
+  }, [companyName]);
   // One period for the whole inventory. Stored as a start month and a length
   // so the label, the factor vintage and the months a row may be dated in all
   // come from the same place and cannot disagree.
@@ -398,7 +448,19 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // As above.
     }
   }, [electricityWtt]);
-  const [boundaryApproach, setBoundaryApproach] = useState<ConsolidationBoundary>('Operational control');
+  /**
+   * Settings that survive a reload.
+   *
+   * The consolidation boundary, the steel method, the organisation name and
+   * the GWP set were held in plain React state while "Save Settings" toasted
+   * success. Changing the boundary, confirming the save and reloading put it
+   * silently back to Operational control — and the boundary is printed on the
+   * report cover, in the workbook and in the calculation record's CSV header.
+   */
+  const [boundaryApproach, setBoundaryApproach] = usePersistentState<ConsolidationBoundary>(
+    `${STORAGE_KEY}_BOUNDARY`, 'Operational control',
+    (v): v is ConsolidationBoundary =>
+      v === 'Operational control' || v === 'Financial control' || v === 'Equity share');
 
   // A workspace that has been through first-run setup. Anyone with saved rows
   // from before this step existed is already past it and is not asked again.
@@ -414,7 +476,9 @@ export const GHGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
   });
-  const [steelMethod, setSteelMethod] = useState<IntegratedSteelMethod>('fuel_based');
+  const [steelMethod, setSteelMethod] = usePersistentState<IntegratedSteelMethod>(
+    `${STORAGE_KEY}_STEEL_METHOD`, 'fuel_based',
+    (v): v is IntegratedSteelMethod => v === 'fuel_based' || v === 'carbon_balance');
 
   const [annualTurnoverCr, setAnnualTurnoverCr] = useState<number | undefined>(() => {
     try {
@@ -541,17 +605,29 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Save to localStorage automatically on entry state changes
+  /**
+   * Autosave. A failure here used to go to the console and nowhere else, so a
+   * reporter whose storage was full or blocked kept typing into an inventory
+   * that had stopped being saved and would be gone on reload. It is said once,
+   * plainly, and not repeated on every keystroke after that.
+   */
+  const autosaveFailed = useRef(false);
   useEffect(() => {
     try {
       localStorage.setItem(`${STORAGE_KEY}_S1`, JSON.stringify(scope1Entries));
       localStorage.setItem(`${STORAGE_KEY}_S2`, JSON.stringify(scope2Entries));
       localStorage.setItem(`${STORAGE_KEY}_S3`, JSON.stringify(scope3Entries));
       localStorage.setItem(`${STORAGE_KEY}_METHODS`, JSON.stringify(methodEntries));
-    } catch (e) {
-      console.warn('Failed to save GHG data to localStorage:', e);
+      autosaveFailed.current = false;
+    } catch {
+      if (!autosaveFailed.current) {
+        autosaveFailed.current = true;
+        addToast('error',
+          'This browser is not saving your inventory — its storage is full or blocked. '
+          + 'Export a backup from Settings before you close this tab.');
+      }
     }
-  }, [scope1Entries, scope2Entries, scope3Entries, methodEntries]);
+  }, [scope1Entries, scope2Entries, scope3Entries, methodEntries, addToast]);
 
   // Scenario Simulator State
   const [scenario, setScenario] = useState<WhatIfScenario>({
@@ -565,14 +641,20 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   // Every figure in the app comes from ghg_core. The browser holds the records
   // and displays the result; it does not compute emissions itself, so there is
   // no second method that could disagree with the report.
-  const [gwpSet, setGwpSet] = useState<GwpSetName>(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('INVTY_GHG_REPORT_META_V1') || '{}');
-      return stored.gwpSet === 'AR6' ? 'AR6' : 'AR5';
-    } catch {
-      return 'AR5';
-    }
-  });
+  // Which IPCC basis every figure is calculated under. This was read from
+  // storage on start-up but never written back, so switching AR5/AR6 changed
+  // the whole inventory and was silently undone by the next reload.
+  const [gwpSet, setGwpSet] = usePersistentState<GwpSetName>(
+    `${STORAGE_KEY}_GWP_SET`,
+    (() => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('INVTY_GHG_REPORT_META_V1') || '{}');
+        return stored.gwpSet === 'AR6' ? 'AR6' : 'AR5';
+      } catch {
+        return 'AR5';
+      }
+    })() as GwpSetName,
+    (v): v is GwpSetName => v === 'AR5' || v === 'AR6');
 
   /**
    * Attach the published factor a row's source maps to.

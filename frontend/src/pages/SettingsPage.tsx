@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createBackup, restoreBackup, BackupError } from '../services/backupService';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -55,20 +56,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   const [useIndianFormat, setUseIndianFormat] = useState(true);
 
   const handleExportBackup = () => {
-    const backupData = {
-      companyName,
-      reportingPeriod,
-      boundaryApproach,
-      steelMethod,
-      scope1Entries,
-      scope2Entries,
-      scope3Entries,
-      summary,
-      exportedAt: new Date().toISOString(),
-      version: '2.0.0',
-    };
-    ghgService.exportJson(backupData, `${companyName.replace(/\s+/g, '_')}_GHG_Backup.json`);
-    addToast('success', 'Complete inventory backup JSON exported');
+    // Everything the app persists, so restoring puts the inventory back under
+    // the same settings it was calculated under.
+    const backup = createBackup();
+    const safeName = companyName.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'inventory';
+    ghgService.exportJson(backup, `${safeName}-GHG-backup.json`);
+    addToast('success', `Backup saved — ${Object.keys(backup.entries).length} stored settings and registers`);
   };
 
   const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,21 +70,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
     const reader = new FileReader();
     reader.onload = (event) => {
+      let parsed: unknown;
       try {
-        const json = JSON.parse(event.target?.result as string);
-        if (json.scope1Entries) {
-          localStorage.setItem('INVTY_GHG_INVENTORY_DATA_V2_S1', JSON.stringify(json.scope1Entries));
+        parsed = JSON.parse(String(event.target?.result ?? ''));
+      } catch {
+        addToast('error', 'That file is not valid JSON, so nothing was changed.');
+        return;
+      }
+
+      // Restoring over a working inventory is not undoable, so it is asked for.
+      if (!window.confirm(
+        'Replace this inventory with the contents of the backup file? '
+        + 'Anything currently here that is not in the file is overwritten. This cannot be undone.'
+      )) {
+        return;
+      }
+
+      try {
+        const { restored, rejected } = restoreBackup(parsed);
+        if (rejected.length > 0) {
+          addToast('warning',
+            `Restored ${restored.length} of ${restored.length + rejected.length} parts. `
+            + `${rejected.length} could not be read and were left as they are.`);
+        } else {
+          addToast('success', `Backup restored — ${restored.length} parts. Reloading…`);
         }
-        if (json.scope2Entries) {
-          localStorage.setItem('INVTY_GHG_INVENTORY_DATA_V2_S2', JSON.stringify(json.scope2Entries));
-        }
-        if (json.scope3Entries) {
-          localStorage.setItem('INVTY_GHG_INVENTORY_DATA_V2_S3', JSON.stringify(json.scope3Entries));
-        }
-        addToast('success', 'Backup restored successfully. Reloading context...');
-        setTimeout(() => window.location.reload(), 800);
+        setTimeout(() => window.location.reload(), 900);
       } catch (err) {
-        addToast('error', 'Invalid JSON backup file format');
+        // Nothing was written: the inventory is exactly as it was.
+        addToast('error', err instanceof BackupError ? err.message
+          : 'That backup could not be read, so nothing was changed.');
       }
     };
     reader.readAsText(file);
