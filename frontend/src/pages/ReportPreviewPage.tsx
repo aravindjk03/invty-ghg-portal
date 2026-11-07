@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { hasProfile } from '../services/leadService';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
@@ -98,7 +99,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
   };
 
   const gated = (action: 'print' | 'xlsx') => {
-    if (!localStorage.getItem('INVTY_LEAD_PROFILE')) {
+    if (!hasProfile()) {
       setPendingAction(action);
       setLeadGateOpen(true);
       return;

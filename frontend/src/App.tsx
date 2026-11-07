@@ -23,6 +23,7 @@ const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then((m) => (
 // CBAMPage, BRSRPage, CEMSMonitorPage and SupplierPortalPage are intentionally
 // not routed. See PARKED_PAGES in config/routes.ts.
 import { authService } from './services/authService';
+import { leadService } from './services/leadService';
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -112,6 +113,14 @@ function MainApp() {
       addToast('info', 'Welcome from Portfolio. Guest session activated.');
     }
   }, [setCompanyName, addToast]);
+
+  // Leads captured while no server was reachable are held in this browser.
+  // Retry them once per load; a no-op when the queue is empty.
+  React.useEffect(() => {
+    leadService.flush().catch(() => {
+      // Still queued. It will be retried on the next load.
+    });
+  }, []);
 
   // Each workspace is a full page swap, so carry-over scroll leaves the user
   // stranded mid-document on arrival.

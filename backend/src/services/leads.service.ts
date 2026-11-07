@@ -24,49 +24,9 @@ export interface CustomerLeadRecord {
   ipAddress?: string;
 }
 
-// Demonstration records, kept so an empty install has something to show. Real
-// leads are written to the database by createLead below: a customer who asked
-// to be contacted must still be there after a restart.
-const sampleLeads: CustomerLeadRecord[] = [
-  {
-    id: 'lead-001-tata-corp',
-    name: 'Rajesh Sharma',
-    workEmail: 'r.sharma@tata-heavy-eng.com',
-    companyName: 'Tata Heavy Engineering Ltd',
-    sector: 'Manufacturing',
-    primaryNeed: 'cbam',
-    referralSource: 'portfolio',
-    annualTurnoverOrProduction: '2,400 Cr INR / 650,000 tonnes',
-    inventoryStats: {
-      totalTco2e: 84520.5,
-      scope1: 52100.2,
-      scope2: 18420.3,
-      scope3: 14000.0,
-      qualityGrade: 'B',
-    },
-    capturedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    ipAddress: '103.21.124.5',
-  },
-  {
-    id: 'lead-002-jsw-steels',
-    name: 'Ananya Verma',
-    workEmail: 'a.verma@jsw-specialty-alloys.in',
-    companyName: 'JSW Specialty Alloys Division',
-    sector: 'Steel',
-    primaryNeed: 'brsr',
-    referralSource: 'portfolio',
-    annualTurnoverOrProduction: '1,850 Cr INR / 420,000 tonnes',
-    inventoryStats: {
-      totalTco2e: 61200.0,
-      scope1: 41000.0,
-      scope2: 11200.0,
-      scope3: 9000.0,
-      qualityGrade: 'A',
-    },
-    capturedAt: new Date(Date.now() - 86400000).toISOString(),
-    ipAddress: '14.139.128.4',
-  },
-];
+// No demonstration records live here. Two were appended to every response and
+// to the aggregate stats, so a fresh install reported two leads it did not
+// have, with named companies, and every sector breakdown started out wrong.
 
 export const leadsService = {
   createLead(data: Omit<CustomerLeadRecord, 'id' | 'capturedAt'>, ip?: string): CustomerLeadRecord {
@@ -82,7 +42,7 @@ export const leadsService = {
   },
 
   getAllLeads(): CustomerLeadRecord[] {
-    return [...(dbService.allLeads() as CustomerLeadRecord[]), ...sampleLeads];
+    return dbService.allLeads() as CustomerLeadRecord[];
   },
 
   getLeadStats() {
