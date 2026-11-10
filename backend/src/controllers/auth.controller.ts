@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { dbService } from '../db/database';
+import { dbService, normalisePhone } from '../db/database';
 import { env } from '../config/env';
 
 const signupSchema = z.object({
@@ -17,6 +17,31 @@ const signupSchema = z.object({
   // exists it is privilege escalation by request body. A role is granted by
   // an administrator, never claimed by the person signing up.
 });
+
+/**
+ * A profile picture is stored as a small inline image, not a link. A link
+ * would let an account point its avatar at any address — a tracking pixel
+ * loaded by everyone who sees the name, or a `javascript:` URL — so only an
+ * image the browser has already decoded and re-encoded is accepted.
+ */
+const AVATAR = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+
+const profileSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120).optional(),
+  companyName: z.string().trim().min(2, 'Organisation name is required').max(200).optional(),
+  avatarUrl: z.union([
+    z.string().max(120_000, 'That picture is too large.').regex(AVATAR, 'That is not a supported picture.'),
+    z.null(),
+  ]).optional(),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: z.string().min(12, 'Password must be at least 12 characters')
+    .max(200, 'Password must be at most 200 characters'),
+});
+
+const deleteAccountSchema = z.object({ confirmEmail: z.string().min(3).max(320) });
 
 const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -68,8 +93,21 @@ async function verifyGoogleToken(
   const claims = (await info.json()) as Record<string, string | boolean | undefined>;
 
   // A token minted for another site must not open an account here.
-  const audience = String(claims.aud ?? claims.azp ?? '');
-  if (env.GOOGLE_CLIENT_ID && audience !== env.GOOGLE_CLIENT_ID) return null;
+  //
+  // This check used to be skipped whenever GOOGLE_CLIENT_ID was unset, and
+  // production start-up does not require it — so one missing variable meant
+  // a valid Google token issued to ANY app on the internet signed its owner
+  // in here. With no client ID configured there is nothing to compare
+  // against, so Google sign-in is refused outright. `azp` is no longer
+  // accepted in place of `aud`: it names who asked for the token, not who it
+  // is for.
+  if (!env.GOOGLE_CLIENT_ID) return null;
+  if (String(claims.aud ?? '') !== env.GOOGLE_CLIENT_ID) return null;
+
+  if (kind === 'id_token') {
+    const issuer = String(claims.iss ?? '');
+    if (issuer !== 'accounts.google.com' && issuer !== 'https://accounts.google.com') return null;
+  }
 
   const email = typeof claims.email === 'string' ? claims.email : '';
   const emailVerified = claims.email_verified === true || claims.email_verified === 'true';
@@ -176,9 +214,30 @@ export const authController = {
       }
 
       const { email, password } = parsed.data;
+
+      // Too many wrong passwords for this account, from anywhere. The IP
+      // limiter alone lets a spread-out guessing run through untouched.
+      const lockedFor = dbService.loginLockSeconds(email);
+      if (lockedFor > 0) {
+        res.setHeader('Retry-After', String(lockedFor));
+        res.status(429).json({
+          success: false,
+          error: {
+            code: 'ACCOUNT_LOCKED',
+            message: `Too many failed sign-in attempts. Try again in ${Math.ceil(lockedFor / 60)} minute(s).`,
+          },
+        });
+        return;
+      }
+
       const user = dbService.findUserByEmail(email);
 
       if (!user) {
+        // Spend the same time hashing as a real attempt would. Returning at
+        // once made "no such account" ten times faster than "wrong password",
+        // which told anyone timing the endpoint which emails are customers.
+        dbService.burnPasswordCheck(password);
+        dbService.recordLoginFailure(email);
         res.status(401).json({
           success: false,
           error: {
@@ -191,6 +250,7 @@ export const authController = {
 
       const valid = dbService.verifyPassword(password, user.password_hash, user.salt);
       if (!valid) {
+        dbService.recordLoginFailure(email);
         res.status(401).json({
           success: false,
           error: {
@@ -201,6 +261,7 @@ export const authController = {
         return;
       }
 
+      dbService.clearLoginFailures(email);
       const token = dbService.createSession(user.id);
       const safeUser = dbService.toSafeUser(user);
 
@@ -237,7 +298,31 @@ export const authController = {
         return;
       }
 
-      const { phone } = parsed.data;
+      // Digits and an optional leading + only; anything else is not a phone
+      // number and gets no "code sent" reply.
+      const phone = normalisePhone(parsed.data.phone);
+      if (!phone) {
+        res.status(400).json({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'Please enter a valid mobile number, with country code.' },
+        });
+        return;
+      }
+
+      // No SMS provider is connected. In production that means a code can be
+      // generated but never delivered, so saying "code sent" would be untrue
+      // and the sign-in could not be completed anyway.
+      if (env.NODE_ENV === 'production') {
+        res.status(503).json({
+          success: false,
+          error: {
+            code: 'SMS_NOT_AVAILABLE',
+            message: 'Sign-in by mobile number is not available yet. Please use your email address.',
+          },
+        });
+        return;
+      }
+
       // Math.random() was used here. It is a non-cryptographic PRNG whose
       // internal state can be recovered from a handful of outputs, so
       // observing a few codes predicts the next one.
@@ -246,24 +331,18 @@ export const authController = {
       // Save to SQLite otps table with 5 minutes validity
       dbService.saveOtp(phone, otpCode, 300);
 
-      // No SMS provider is connected, so outside production the code is handed
-      // back for testing. IN PRODUCTION IT MUST NOT BE: returning it to the
-      // caller let anyone request a code for any phone number, read it out of
-      // the response and sign in as that person — a complete authentication
-      // bypass, with no password and no second factor involved.
-      const isProduction = env.NODE_ENV === 'production';
-
-      if (!isProduction) {
-        console.log(`[SMS SERVICE] Dispatched 6-digit OTP for ${phone}: ${otpCode}`);
-      }
+      // Development and test only — production returned above. The code is
+      // handed back because there is no SMS provider to deliver it. It must
+      // never be returned where real accounts live: doing so let anyone
+      // request a code for any number, read it from the reply and sign in as
+      // that person.
+      console.log(`[SMS SERVICE] Dispatched 6-digit OTP for ${phone}: ${otpCode}`);
 
       res.status(200).json({
         success: true,
-        message: isProduction
-          ? `Verification code sent to ${phone}`
-          : `One-Time Password (OTP) dispatched to ${phone}`,
+        message: `One-Time Password (OTP) dispatched to ${phone}`,
         phone,
-        ...(isProduction ? {} : { devOtp: otpCode }),
+        devOtp: otpCode,
         expiresInSeconds: 300,
       });
     } catch (error: any) {
@@ -464,6 +543,72 @@ export const authController = {
   },
 
   // 8. Demo Accounts List for quick dev/testing
+  // ── Account self-service (all behind requireAuth) ───────────────────────
+
+  updateProfile: (req: Request, res: Response) => {
+    const parsed = profileSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0]?.message || 'Invalid profile details.' },
+      });
+      return;
+    }
+    const user = dbService.updateProfile(req.user!.id, parsed.data);
+    res.status(200).json({ success: true, user });
+  },
+
+  changePassword: (req: Request, res: Response) => {
+    const parsed = changePasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0]?.message || 'Invalid password.' },
+      });
+      return;
+    }
+    const record = dbService.findUserById(req.user!.id);
+    // The current password is asked for again: a borrowed, unlocked session
+    // must not be enough to lock the owner out of their own account.
+    if (!record || !dbService.verifyPassword(parsed.data.currentPassword, record.password_hash, record.salt)) {
+      res.status(403).json({
+        success: false,
+        error: { code: 'WRONG_PASSWORD', message: 'The current password is not correct.' },
+      });
+      return;
+    }
+    const token = (req.headers.authorization || '').slice(7).trim();
+    dbService.changePassword(record.id, parsed.data.newPassword, token);
+    res.status(200).json({ success: true, message: 'Password changed. Other devices have been signed out.' });
+  },
+
+  logoutEverywhere: (req: Request, res: Response) => {
+    const token = (req.headers.authorization || '').slice(7).trim();
+    const ended = dbService.deleteOtherSessions(req.user!.id, token);
+    res.status(200).json({ success: true, sessionsEnded: ended });
+  },
+
+  deleteAccount: (req: Request, res: Response) => {
+    const parsed = deleteAccountSchema.safeParse(req.body);
+    const record = dbService.findUserById(req.user!.id);
+    if (!parsed.success || !record) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Type your email address to confirm.' },
+      });
+      return;
+    }
+    if (parsed.data.confirmEmail.trim().toLowerCase() !== record.email.toLowerCase()) {
+      res.status(403).json({
+        success: false,
+        error: { code: 'CONFIRMATION_MISMATCH', message: 'That is not the email address on this account.' },
+      });
+      return;
+    }
+    dbService.deleteUser(record.id);
+    res.status(200).json({ success: true, message: 'Your account and everything stored with it have been deleted.' });
+  },
+
   getDemoAccounts: (_req: Request, res: Response) => {
     // Seeded credentials are a development convenience. In production this
     // endpoint does not exist, so the passwords never leave the server.

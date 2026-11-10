@@ -76,7 +76,8 @@ const WAKE_TIMEOUT_MS = 90000;
  * the health check: no reachable service means the browser, where the visitor's
  * own access key is used (see browserAi.ts).
  */
-let serviceMode: 'unknown' | 'server' | 'browser' = 'unknown';
+// With no service address there is nothing to probe: this browser is all there is.
+let serviceMode: 'unknown' | 'server' | 'browser' = env.PCF_API_BASE_URL ? 'unknown' : 'browser';
 
 function browserHealth(): PcfHealth {
   return {

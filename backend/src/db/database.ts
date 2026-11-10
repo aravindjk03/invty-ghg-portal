@@ -77,6 +77,18 @@ export interface SafeUser {
   createdAt: string;
 }
 
+export interface AuditBlockRow {
+  owner_id: string;
+  block_index: number;
+  timestamp: string;
+  action: string;
+  entity_id: string;
+  actor: string;
+  payload_summary: string;
+  previous_block_hash: string;
+  block_hash: string;
+}
+
 /**
  * One spelling for a phone number, so the same handset is the same account
  * however it was typed, and so nothing but digits and a leading + ever
@@ -175,6 +187,26 @@ class DatabaseService {
       -- Someone asking to be contacted: for a report, or to be put on Premium.
       -- On disk rather than in memory, because a restart losing the request of
       -- a customer who tried to pay is worse than any bug in this file.
+      CREATE TABLE IF NOT EXISTS login_failures (
+        email TEXT PRIMARY KEY COLLATE NOCASE,
+        failures INTEGER NOT NULL DEFAULT 0,
+        locked_until TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS audit_blocks (
+        owner_id TEXT NOT NULL,
+        block_index INTEGER NOT NULL,
+        timestamp TEXT NOT NULL,
+        action TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        payload_summary TEXT NOT NULL,
+        previous_block_hash TEXT NOT NULL,
+        block_hash TEXT NOT NULL,
+        PRIMARY KEY (owner_id, block_index),
+        FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
       CREATE TABLE IF NOT EXISTS leads (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -217,6 +249,44 @@ class DatabaseService {
     const salt = existingSalt || crypto.randomBytes(16).toString('hex');
     const hash = crypto.scryptSync(password, salt, 64).toString('hex');
     return { hash, salt };
+  }
+
+  /** Does the work of a password check and throws the answer away. */
+  public burnPasswordCheck(password: string): void {
+    crypto.scryptSync(password, 'no-such-account-fixed-salt', 64);
+  }
+
+  // Account lockout. Five wrong passwords lock the account for fifteen
+  // minutes, whatever addresses they came from.
+  private static readonly MAX_FAILURES = 5;
+  private static readonly LOCK_MINUTES = 15;
+
+  public loginLockSeconds(email: string): number {
+    const row = this.db.prepare('SELECT locked_until FROM login_failures WHERE email = ?')
+      .get(email.trim()) as { locked_until: string | null } | undefined;
+    if (!row?.locked_until) return 0;
+    const remaining = Math.ceil((new Date(row.locked_until).getTime() - Date.now()) / 1000);
+    if (remaining <= 0) {
+      this.clearLoginFailures(email);
+      return 0;
+    }
+    return remaining;
+  }
+
+  public recordLoginFailure(email: string): void {
+    const key = email.trim();
+    this.db.prepare('INSERT INTO login_failures (email, failures) VALUES (?, 1) '
+      + 'ON CONFLICT(email) DO UPDATE SET failures = failures + 1').run(key);
+    const row = this.db.prepare('SELECT failures FROM login_failures WHERE email = ?')
+      .get(key) as { failures: number };
+    if (row.failures >= DatabaseService.MAX_FAILURES) {
+      const until = new Date(Date.now() + DatabaseService.LOCK_MINUTES * 60_000).toISOString();
+      this.db.prepare('UPDATE login_failures SET locked_until = ?, failures = 0 WHERE email = ?').run(until, key);
+    }
+  }
+
+  public clearLoginFailures(email: string): void {
+    this.db.prepare('DELETE FROM login_failures WHERE email = ?').run(email.trim());
   }
 
   public verifyPassword(password: string, hash: string, salt: string): boolean {
@@ -663,6 +733,22 @@ class DatabaseService {
 
   // ── Leads ─────────────────────────────────────────────────────────────────
 
+  // Audit chain storage. One chain per owning account, so one customer's
+  // history is never readable from another's session.
+  public auditBlocks(ownerId: string): AuditBlockRow[] {
+    return this.db
+      .prepare('SELECT * FROM audit_blocks WHERE owner_id = ? ORDER BY block_index ASC')
+      .all(ownerId) as unknown as AuditBlockRow[];
+  }
+
+  public appendAuditBlock(row: AuditBlockRow): void {
+    this.db
+      .prepare('INSERT INTO audit_blocks (owner_id, block_index, timestamp, action, entity_id, '
+               + 'actor, payload_summary, previous_block_hash, block_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(row.owner_id, row.block_index, row.timestamp, row.action, row.entity_id,
+           row.actor, row.payload_summary, row.previous_block_hash, row.block_hash);
+  }
+
   public insertLead(lead: LeadRow): LeadRow {
     this.db
       .prepare('INSERT INTO leads (id, name, work_email, company_name, sector, phone, '
@@ -749,6 +835,47 @@ class DatabaseService {
         createdAt: row.created_at,
       },
     };
+  }
+
+  // ── Account self-service ────────────────────────────────────────────────
+  // None of this existed. An account could not change its own name, picture
+  // or password, and could not be deleted — which meant a leaked password had
+  // no remedy inside the product, and no erasure request could be honoured.
+
+  public updateProfile(
+    userId: string,
+    fields: { name?: string; companyName?: string; avatarUrl?: string | null },
+  ): SafeUser | null {
+    const user = this.findUserById(userId);
+    if (!user) return null;
+    const next = {
+      name: fields.name ?? user.name,
+      company: fields.companyName ?? user.company_name,
+      avatar: fields.avatarUrl === undefined ? (user.avatar_url ?? null) : fields.avatarUrl,
+    };
+    this.db.prepare('UPDATE users SET name = ?, company_name = ?, avatar_url = ?, updated_at = ? WHERE id = ?')
+      .run(next.name.trim(), next.company.trim(), next.avatar, new Date().toISOString(), userId);
+    return this.toSafeUser(this.findUserById(userId)!);
+  }
+
+  /** Sets a new password and signs every other device out. */
+  public changePassword(userId: string, newPassword: string, keepToken: string): void {
+    const { hash, salt } = this.hashPassword(newPassword);
+    this.db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
+      .run(hash, salt, new Date().toISOString(), userId);
+    // A password is usually changed because the old one may be known. Any
+    // session opened with it must not outlive it.
+    this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(userId, keepToken);
+  }
+
+  public deleteOtherSessions(userId: string, keepToken: string): number {
+    const result = this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(userId, keepToken);
+    return Number(result.changes ?? 0);
+  }
+
+  /** Erases the account. Sessions, entitlements, ledger and audit rows cascade. */
+  public deleteUser(userId: string): void {
+    this.db.prepare('DELETE FROM users WHERE id = ?').run(userId);
   }
 
   public deleteSession(token: string): void {

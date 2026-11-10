@@ -62,11 +62,12 @@ npm run deploy:pages
 | `IINVTY_BACKEND_URL` | Accounts, sign-in, leads, entitlements | Browser-only trial; leads are queued locally |
 | `IINVTY_AI_URL` | The product carbon estimate service | The estimate cannot run |
 | `IINVTY_GOOGLE_CLIENT_ID` | Google sign-in | Falls back to `frontend/.env.production`, which already has one |
-| `IINVTY_GEMINI_KEY` | Browser-side AI key | AI features ask the visitor for a key |
 
-The script warns you when the first two are unset. **Never commit a key** —
-pass it on the command line; `IINVTY_GEMINI_KEY` in particular ends up in the
-published JavaScript, so restrict it in Google Cloud to this site's address.
+The script warns you when the first two are unset.
+
+**There is no AI-key variable, on purpose.** Anything built into the site is
+readable by every visitor, so the AI key is set only on the estimate service
+(`GEMINI_API_KEY` in `render.yaml`), where usage is metered per account.
 
 ---
 

@@ -40,10 +40,16 @@ router.use('/v1/emissions', requireAuth, emissionsRoutes);
 router.use('/v1/reports', requireAuth, reportsRoutes);
 router.use('/v1/audit', requireAuth, auditRoutes);
 
-// Parked modules: still mounted and protected, but not exposed in the UI.
-router.use('/v1/cbam', requireAuth, cbamRoutes);
-router.use('/v1/brsr', requireAuth, brsrRoutes);
-router.use('/v1/suppliers', requireAuth, suppliersRoutes);
-router.use('/v1/cems', requireAuth, cemsRoutes);
+// Parked modules. The UI does not route to any of them, so by default the API
+// does not serve them either: an endpoint nobody can reach from the product is
+// attack surface with no user. They also keep their state in process memory
+// and CEMS starts with simulated readings, neither of which belongs in front
+// of a customer. Set ENABLE_PARKED_MODULES=true to work on them.
+if (process.env.ENABLE_PARKED_MODULES === 'true') {
+  router.use('/v1/cbam', requireAuth, cbamRoutes);
+  router.use('/v1/brsr', requireAuth, brsrRoutes);
+  router.use('/v1/suppliers', requireAuth, suppliersRoutes);
+  router.use('/v1/cems', requireAuth, cemsRoutes);
+}
 
 export default router;

@@ -50,12 +50,14 @@ export const ghgService = {
       'Last Updated': e.updatedAt,
     }));
 
-    const csvContent = Papa.unparse(rows);
+    // escapeFormulae: a cell beginning =, +, - or @ is prefixed so a
+    // spreadsheet reads it as text rather than running it.
+    const csvContent = Papa.unparse(rows, { escapeFormulae: true });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', filename);
+    link.setAttribute('download', safeFilename(filename));
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -75,17 +75,31 @@ const isClaudeKey = (key: string | null): boolean => Boolean(key && key.startsWi
 /** True when the pasted key is for Claude; otherwise the free Gemini models are used. */
 export const usesClaude = (): boolean => isClaudeKey(currentKey());
 
-/** The Gemini key: one built into the site, or one pasted on this computer. */
+/**
+ * The Gemini key this browser estimates with: only ever one the visitor pasted
+ * on this computer.
+ *
+ * The site used to be able to carry a key of its own, baked in at build time.
+ * A key in a published bundle is public — it is in the JavaScript, and in the
+ * gh-pages history for good — and a referrer restriction is a header anyone
+ * can set. It also unpicked the paywall: when the estimate service did not
+ * answer, the page fell back to this path, which spends that key without ever
+ * asking the server whether the account has estimates left. Blocking one
+ * hostname gave unlimited estimates on the operator's account.
+ *
+ * So the operator's key lives on the server, behind the meter, and nowhere
+ * else. A visitor who brings their own key spends their own quota.
+ */
 function geminiKey(): string {
   const pasted = currentKey();
-  return env.GEMINI_API_KEY || (pasted && !isClaudeKey(pasted) ? pasted : '');
+  return pasted && !isClaudeKey(pasted) ? pasted : '';
 }
 
-/** True when the site itself carries the free Gemini key, so no visitor needs one. */
-export const hasBuiltInAi = (): boolean => Boolean(env.GEMINI_API_KEY);
+/** Always false now: the site never carries a key. Kept for the callers. */
+export const hasBuiltInAi = (): boolean => false;
 
 /** Whether this browser can make an estimate at all. */
-export const aiReady = (): boolean => hasBuiltInAi() || hasAccessKey();
+export const aiReady = (): boolean => hasAccessKey();
 
 /** A failure with the code and wording the page already knows how to show. */
 export class BrowserAiError extends Error {

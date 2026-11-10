@@ -178,6 +178,25 @@ function newOfflineUser(fields: Partial<User> & { name: string; companyName: str
   };
 }
 
+/** A signed-in call to the accounts API that reports failure in plain words. */
+async function accountRequest(method: string, path: string, body: unknown, token: string): Promise<any> {
+  let res: Response;
+  try {
+    res = await fetch(`${env.API_BASE_URL}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('The server could not be reached, so nothing was changed. Please try again.');
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success) {
+    throw new Error(data?.error?.message || 'That change could not be saved.');
+  }
+  return data;
+}
+
 export const authService = {
   /**
    * Whether an accounts API is answering at all.
@@ -420,6 +439,89 @@ export const authService = {
 
     this.setSession(data.user, data.token);
     return data;
+  },
+
+  // ── Your account ────────────────────────────────────────────────────────
+  // There was no way to change a name, a picture or a password, and no way
+  // to delete an account. A trial account (held in this browser) is edited
+  // here; a hosted one is edited on the server, which is the only place it
+  // exists.
+
+  isTrialSession(): boolean {
+    return (this.getToken() || '').startsWith('offline.');
+  },
+
+  async updateProfile(fields: { name?: string; companyName?: string; avatarUrl?: string | null }): Promise<User> {
+    const current = this.getStoredUser();
+    const token = this.getToken();
+    if (!current || !token) throw new Error('Please sign in again.');
+
+    if (this.isTrialSession()) {
+      const accounts = loadOfflineAccounts();
+      const account = accounts.find((a) => a.user.id === current.id);
+      const next: User = {
+        ...current,
+        ...(fields.name !== undefined ? { name: fields.name.trim() } : {}),
+        ...(fields.companyName !== undefined ? { companyName: fields.companyName.trim() } : {}),
+        ...(fields.avatarUrl !== undefined ? { avatarUrl: fields.avatarUrl ?? undefined } : {}),
+      };
+      if (account) {
+        account.user = next;
+        saveOfflineAccounts(accounts);
+      }
+      this.setSession(next, token);
+      return next;
+    }
+
+    const data = await accountRequest('PATCH', '/auth/me', fields, token);
+    this.setSession(data.user, token);
+    return data.user;
+  },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<string> {
+    const current = this.getStoredUser();
+    const token = this.getToken();
+    if (!current || !token) throw new Error('Please sign in again.');
+    if (newPassword.length < 12) throw new Error('Please choose a password of at least 12 characters.');
+
+    if (this.isTrialSession()) {
+      const accounts = loadOfflineAccounts();
+      const account = accounts.find((a) => a.user.id === current.id);
+      if (!account) throw new Error('This account is not stored in this browser.');
+      if (!account.secret && !account.password) {
+        throw new Error('This account signs in without a password, so there is none to change.');
+      }
+      if (!(await passwordMatches(account, currentPassword))) {
+        throw new Error('The current password is not correct.');
+      }
+      account.secret = await hashPassword(newPassword);
+      delete account.password;
+      saveOfflineAccounts(accounts);
+      return 'Password changed.';
+    }
+
+    const data = await accountRequest('POST', '/auth/change-password', { currentPassword, newPassword }, token);
+    return data.message || 'Password changed.';
+  },
+
+  /** Removes the account. For a trial account, optionally its inventory too. */
+  async deleteAccount(confirmEmail: string): Promise<void> {
+    const current = this.getStoredUser();
+    const token = this.getToken();
+    if (!current || !token) throw new Error('Please sign in again.');
+
+    if (this.isTrialSession()) {
+      const expected = (current.email || current.phone || '').toLowerCase();
+      if (confirmEmail.trim().toLowerCase() !== expected) {
+        throw new Error('That does not match this account.');
+      }
+      saveOfflineAccounts(loadOfflineAccounts().filter((a) => a.user.id !== current.id));
+      this.clearSession();
+      return;
+    }
+
+    await accountRequest('DELETE', '/auth/me', { confirmEmail }, token);
+    this.clearSession();
   },
 
   async verifySession(): Promise<User | null> {

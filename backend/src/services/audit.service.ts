@@ -1,4 +1,26 @@
 import crypto from 'crypto';
+import { dbService, AuditBlockRow } from '../db/database';
+import { env } from '../config/env';
+
+/**
+ * A tamper-evident change log, one chain per account.
+ *
+ * What this replaces. The previous ledger was a module-level array that died
+ * with the process, shared between every signed-in user, and started life
+ * with five invented entries — a plant engineer, an ESG director, and an
+ * "External Auditor (DNV)" approving a freight factor — none of which ever
+ * happened. Anyone could append a block under any name, because the actor was
+ * read from the request body. The "hash" was a bare SHA-256 with no key, so
+ * whoever could write the store could recompute a consistent chain, and the
+ * verifier then stamped the result "ISO 14064-3:2019" with a recalculation
+ * delta of exactly zero that nothing had calculated.
+ *
+ * What it is now. Blocks are stored in the database. The actor is the
+ * signed-in account, taken from the session, never from the caller. Each
+ * block's MAC is HMAC-SHA256 under a key only the server holds, so a row
+ * edited in the database no longer verifies. Verification reports what it
+ * checked — linkage and MACs — and claims nothing else.
+ */
 
 export interface AuditLedgerBlock {
   blockIndex: number;
@@ -11,195 +33,102 @@ export interface AuditLedgerBlock {
   blockHash: string;
 }
 
-function computeBlockHash(
-  blockIndex: number,
-  timestamp: string,
-  action: string,
-  entityId: string,
-  actor: string,
-  payloadSummary: string,
-  previousBlockHash: string
-): string {
-  const data = `${blockIndex}|${timestamp}|${action}|${entityId}|${actor}|${payloadSummary}|${previousBlockHash}`;
-  return crypto.createHash('sha256').update(data).digest('hex');
+const ZERO_HASH = '0'.repeat(64);
+
+/** Domain-separated so this key use can never collide with another. */
+const macKey = crypto.createHmac('sha256', env.API_SECRET_KEY).update('audit-chain-v1').digest();
+
+function mac(ownerId: string, b: Omit<AuditLedgerBlock, 'blockHash'>): string {
+  // JSON of a fixed-order array: unambiguous, unlike joining with a separator
+  // that the fields themselves may contain.
+  const data = JSON.stringify([
+    ownerId, b.blockIndex, b.timestamp, b.action, b.entityId, b.actor, b.payloadSummary, b.previousBlockHash,
+  ]);
+  return crypto.createHmac('sha256', macKey).update(data).digest('hex');
 }
 
-// In-memory ledger blocks with initial genesis chain
-const ledger: AuditLedgerBlock[] = [];
-
-function initializeLedger() {
-  const genesisTimestamp = '2026-04-01T00:00:00.000Z';
-  const genesisHash = computeBlockHash(
-    0,
-    genesisTimestamp,
-    'GENESIS',
-    'ORG-IINVTY-001',
-    'System Initializer',
-    'Organization Boundary Established (Operational Control Approach)',
-    '0000000000000000000000000000000000000000000000000000000000000000'
-  );
-
-  ledger.push({
-    blockIndex: 0,
-    timestamp: genesisTimestamp,
-    action: 'GENESIS',
-    entityId: 'ORG-IINVTY-001',
-    actor: 'System Initializer',
-    payloadSummary: 'Organization Boundary Established (Operational Control Approach)',
-    previousBlockHash: '0000000000000000000000000000000000000000000000000000000000000000',
-    blockHash: genesisHash,
-  });
-
-  // Seed consecutive transaction blocks
-  const seedTransactions = [
-    {
-      action: 'CREATE_ENTRY' as const,
-      entityId: 's1-row-1',
-      actor: 'plant.engineer@company.com',
-      payload: 'Stationary Diesel 45,000 L -> 120.89 tCO2e (DESNZ factor 2.686 kgCO2e/L)',
-      time: '2026-04-02T09:15:00.000Z',
-    },
-    {
-      action: 'CREATE_ENTRY' as const,
-      entityId: 's1-row-2',
-      actor: 'plant.engineer@company.com',
-      payload: 'Natural Gas 18,500 m3 -> 37.52 tCO2e (CEA factor 2.028 kgCO2e/m3)',
-      time: '2026-04-02T10:45:00.000Z',
-    },
-    {
-      action: 'CREATE_ENTRY' as const,
-      entityId: 's2-row-1',
-      actor: 'facility.manager@company.com',
-      payload: 'Grid Electricity 576,000 kWh -> 412.42 tCO2e (CEA v20.0 factor 0.716 tCO2e/MWh)',
-      time: '2026-04-03T14:20:00.000Z',
-    },
-    {
-      action: 'FACTOR_OVERRIDE' as const,
-      entityId: 'cat1.material.steel',
-      actor: 'esg.director@company.com',
-      payload: 'Steel crude factor overridden to 1.80 tCO2e/t with verified supplier EPD proof',
-      time: '2026-04-04T11:00:00.000Z',
-    },
-    {
-      action: 'SUPPLIER_OVERRIDE' as const,
-      entityId: 'inv-supp-001',
-      actor: 'External Auditor (DNV)',
-      payload: 'BlueDart DHL freight primary factor approved: 0.089 kgCO2e/t.km (Grade A verification)',
-      time: '2026-04-05T16:30:00.000Z',
-    },
-  ];
-
-  seedTransactions.forEach((tx, idx) => {
-    const prevBlock = ledger[ledger.length - 1];
-    const blockIndex = idx + 1;
-    const hash = computeBlockHash(
-      blockIndex,
-      tx.time,
-      tx.action,
-      tx.entityId,
-      tx.actor,
-      tx.payload,
-      prevBlock.blockHash
-    );
-
-    ledger.push({
-      blockIndex,
-      timestamp: tx.time,
-      action: tx.action,
-      entityId: tx.entityId,
-      actor: tx.actor,
-      payloadSummary: tx.payload,
-      previousBlockHash: prevBlock.blockHash,
-      blockHash: hash,
-    });
-  });
-}
-
-initializeLedger();
+const toBlock = (row: AuditBlockRow): AuditLedgerBlock => ({
+  blockIndex: row.block_index,
+  timestamp: row.timestamp,
+  action: row.action as AuditLedgerBlock['action'],
+  entityId: row.entity_id,
+  actor: row.actor,
+  payloadSummary: row.payload_summary,
+  previousBlockHash: row.previous_block_hash,
+  blockHash: row.block_hash,
+});
 
 export const auditService = {
+  /** Appends a block to the caller's own chain. `actor` comes from the session. */
   recordBlock(
+    ownerId: string,
+    actor: string,
     action: AuditLedgerBlock['action'],
     entityId: string,
     payloadSummary: string,
-    actor = 'System Auditor'
   ): AuditLedgerBlock {
-    const prevBlock = ledger[ledger.length - 1];
-    const blockIndex = ledger.length;
-    const timestamp = new Date().toISOString();
-
-    const blockHash = computeBlockHash(
-      blockIndex,
-      timestamp,
+    const chain = dbService.auditBlocks(ownerId);
+    const previous = chain[chain.length - 1];
+    const body = {
+      blockIndex: chain.length,
+      timestamp: new Date().toISOString(),
       action,
       entityId,
       actor,
       payloadSummary,
-      prevBlock.blockHash
-    );
-
-    const newBlock: AuditLedgerBlock = {
-      blockIndex,
-      timestamp,
-      action,
-      entityId,
-      actor,
-      payloadSummary,
-      previousBlockHash: prevBlock.blockHash,
-      blockHash,
+      previousBlockHash: previous ? previous.block_hash : ZERO_HASH,
     };
+    const block: AuditLedgerBlock = { ...body, blockHash: mac(ownerId, body) };
 
-    ledger.push(newBlock);
-    return newBlock;
+    dbService.appendAuditBlock({
+      owner_id: ownerId,
+      block_index: block.blockIndex,
+      timestamp: block.timestamp,
+      action: block.action,
+      entity_id: block.entityId,
+      actor: block.actor,
+      payload_summary: block.payloadSummary,
+      previous_block_hash: block.previousBlockHash,
+      block_hash: block.blockHash,
+    });
+    return block;
   },
 
-  getLedger(): AuditLedgerBlock[] {
-    return [...ledger];
+  getLedger(ownerId: string): AuditLedgerBlock[] {
+    return dbService.auditBlocks(ownerId).map(toBlock);
   },
 
-  verifyChainIntegrity() {
-    for (let i = 1; i < ledger.length; i++) {
-      const current = ledger[i];
-      const previous = ledger[i - 1];
+  /**
+   * Checks that every block links to the one before it and still carries the
+   * MAC the server gave it. That is all it checks, and all it reports.
+   */
+  verifyChainIntegrity(ownerId: string) {
+    const chain = dbService.auditBlocks(ownerId).map(toBlock);
+    const checked = ['Each block links to the block before it', 'Each block carries the server\'s MAC'];
 
-      // 1. Check previous block hash linkage
-      if (current.previousBlockHash !== previous.blockHash) {
-        return {
-          isChainValid: false,
-          tamperedBlockIndex: i,
-          reason: `Hash pointer mismatch at block #${i}. Expected ${previous.blockHash}, got ${current.previousBlockHash}`,
-        };
+    for (let i = 0; i < chain.length; i++) {
+      const current = chain[i];
+      const expectedPrevious = i === 0 ? ZERO_HASH : chain[i - 1].blockHash;
+
+      if (current.blockIndex !== i || current.previousBlockHash !== expectedPrevious) {
+        return { isChainValid: false, tamperedBlockIndex: i, reason: `Block #${i} does not link to the block before it.`, checked };
       }
-
-      // 2. Re-compute hash of current block
-      const recomputed = computeBlockHash(
-        current.blockIndex,
-        current.timestamp,
-        current.action,
-        current.entityId,
-        current.actor,
-        current.payloadSummary,
-        current.previousBlockHash
-      );
-
-      if (recomputed !== current.blockHash) {
-        return {
-          isChainValid: false,
-          tamperedBlockIndex: i,
-          reason: `Block #${i} signature tampered. Recomputed ${recomputed} != Logged ${current.blockHash}`,
-        };
+      const { blockHash, ...body } = current;
+      const expected = mac(ownerId, body);
+      const same = expected.length === blockHash.length
+        && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(blockHash));
+      if (!same) {
+        return { isChainValid: false, tamperedBlockIndex: i, reason: `Block #${i} has been altered since it was recorded.`, checked };
       }
     }
 
     return {
       isChainValid: true,
-      totalBlocks: ledger.length,
-      genesisTimestamp: ledger[0].timestamp,
-      lastBlockTimestamp: ledger[ledger.length - 1].timestamp,
-      lastBlockHash: ledger[ledger.length - 1].blockHash,
-      deterministicRecalculationPassed: true,
-      deltaTco2eFromEngine: 0.000000,
-      isoStandard: 'ISO 14064-3:2019',
+      totalBlocks: chain.length,
+      firstBlockTimestamp: chain[0]?.timestamp ?? null,
+      lastBlockTimestamp: chain[chain.length - 1]?.timestamp ?? null,
+      lastBlockHash: chain[chain.length - 1]?.blockHash ?? null,
+      checked,
       verifiedAt: new Date().toISOString(),
     };
   },
