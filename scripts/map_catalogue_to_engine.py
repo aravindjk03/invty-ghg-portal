@@ -318,6 +318,8 @@ DESNZ_BY_NAME: dict[str, str] = {
     # A carpool is a car journey; each employee records their share of the
     # vehicle-km, which the row asks for.
     "cat7.carpool": "Business travel- land / Cars (by size) / Average car (Unknown)",
+    # Flared vent gas that is natural gas is natural gas burned.
+    "flare.process_vent": "Fuels / Gaseous fuels / Natural gas",
 }
 
 #: catalogue activity_key -> an engine activity key outside DESNZ, given in full.
@@ -453,6 +455,25 @@ DIRECT: dict[str, str] = {
     "cat7.walk_cycle": "derived.walk_cycle",
     # Already tonnes of CO2e: a unit conversion, nothing more.
     "process.other_process_direct": "direct.tco2e",
+    # --- Added 2026-11-12 (second round) -----------------------------------
+    # IPCC 2006 Volume 5 Chapter 5 incineration defaults, per DRY tonne.
+    "cat5.incineration": "ipcc.2006.incineration.industrial_waste",
+    "cat5.hazardous": "ipcc.2006.incineration.industrial_waste",
+    "cat5.sewage_sludge": "ipcc.2006.incineration.sewage_sludge",
+    # 2019 Refinement, hydrogen by natural gas steam reforming (Tier 1b).
+    "process.hydrogen_smr": "ipcc.2019.hydrogen.natural_gas_reforming",
+    # 2019 Refinement biochar removal, reported as a memo.
+    "land.removals_biochar": "ipcc.2019.biochar.wood_pyrolysis_medium",
+    # Methane vented, recorded by mass.
+    "vent.oil_gas": "gas.released.ch4_fossil",
+    # Memo lines: recorded, never in a scope total.
+    "elec.selfgen_solar_onsite": "derived.energy_balance",
+    "elec.selfgen_wind_onsite": "derived.energy_balance",
+    "elec.exported": "derived.energy_balance",
+    "memo.offsets_retired": "direct.tco2e",
+    "memo.biogenic_co2_scope3": "direct.tco2e",
+    "process.co2_captured": "direct.tco2e",
+    "cat12.reuse": "derived.reuse_eol",
 }
 
 

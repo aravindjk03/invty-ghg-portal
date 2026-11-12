@@ -46,12 +46,6 @@ const SUPPLIER: Record<string, string> = {
 
 /** Recorded beside the inventory, never inside a scope total. */
 const MEMO: Record<string, string> = {
-  'elec.selfgen_solar_onsite': 'No emissions to count: power you make and use yourself is not Scope 2. Recorded for the energy balance only.',
-  'elec.selfgen_wind_onsite': 'No emissions to count: power you make and use yourself is not Scope 2. Recorded for the energy balance only.',
-  'elec.exported': 'Never subtracted from a total. Recorded for the energy balance only.',
-  'memo.offsets_retired': 'Reported separately and never netted off the inventory. Record the registry and serial numbers.',
-  'process.co2_captured': 'Reported separately, never netted off Scope 1. Record the tonnes captured and where they were stored.',
-  'memo.biogenic_co2_scope3': 'Reported separately where a supplier states it. No default exists.',
 };
 
 /** A generic source whose published values differ by material, gas or sector. */
@@ -70,23 +64,27 @@ const CHOOSE: Record<string, string> = {
   'fugitive.hfc_foam': 'Use the row for the blowing agent: HFC-245fa, HFC-365mfc, HFC-152a, or R-134a.',
   'fugitive.hfc_aerosol': 'Use the row for the propellant: HFC-152a or R-134a (HFC-134a).',
   'memo.montreal_cfc': 'Use the row for the gas: CFC-11, CFC-12, Halon-1211 or Halon-1301.',
+  'fuel.png': 'Use "Natural gas / piped natural gas (PNG)": it is the same fuel and the same published factor.',
 };
 
 /** No defensible published value exists. Each says why, and what to do. */
 export const NOT_CALCULATED_REASON: Record<string, string> = {
   'fuel.ammonia_fuel': 'Burning ammonia releases no CO₂, but its N₂O depends on the burner and IPCC publishes no default. Measure it, or enter the N₂O with its source.',
-  'process.hydrogen_smr': 'Hydrogen production is not in IPCC 2006 (it was added in the 2019 Refinement). Record the natural gas fed to the reformer as a fuel row.',
-  'process.phosphoric_acid': 'IPCC 2006 publishes no factor for phosphoric acid. Record any carbonate in the phosphate rock with the carbonates method.',
-  'flare.process_vent': 'Depends on the vent gas composition. Record the fuel gas burned as a fuel row, or work out the CO₂ from its carbon content and enter it directly.',
-  'vent.oil_gas': 'IPCC publishes venting per volume of oil or gas produced, not per m³ vented. Record the methane vented, in kg, as "Process vent — unflared methane".',
   'land.use_change': 'Needs carbon stocks before and after the change, which no default supplies. Follow the GHG Protocol Land Sector guidance and enter the result directly.',
-  'land.removals_biochar': 'A removal must be measured and verified; no default exists. Report it separately and never net it off.',
   'cat4.pipeline': 'No ingested set publishes pipeline freight. Ask the operator for kgCO₂e per tonne-km.',
-  'cat5.incineration': 'DESNZ\'s incineration value covers only transport to an energy-from-waste plant, so using it here would understate. Ask the contractor for the fossil carbon burned.',
-  'cat5.hazardous': 'No ingested set publishes hazardous waste treatment; it depends on the treatment. Ask the treatment operator.',
-  'cat5.sewage_sludge': 'DESNZ publishes water treatment per m³ of water, not per tonne of sludge. Record the wastewater with the wastewater method.',
-  'cat12.reuse': 'No set publishes a reuse route. Product reused counts no end-of-life emissions to you.',
 };
+
+/**
+ * Sources kept out of the picker and the library so each factor appears once:
+ * a generic row whose published values live on more specific rows, a toggle
+ * that is already applied, and lines the engine adds by itself to the rows
+ * that cause them. A row saved against one of these still opens and says why.
+ */
+export const HIDDEN_FROM_LISTS = new Set([
+  ...Object.keys(CHOOSE), ...Object.keys(AUTO),
+]);
+
+export const isListed = (activityKey: string): boolean => !HIDDEN_FROM_LISTS.has(activityKey);
 
 /** The mapping in the source's own unit, else the first one published. */
 export function primaryMapping(

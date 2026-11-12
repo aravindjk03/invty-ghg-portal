@@ -14,7 +14,7 @@ import { Badge, BadgeVariant } from '../components/ui/Badge';
 import { Table, Column } from '../components/ui/Table';
 import { CATALOGUE_SOURCES, CatalogueSource } from '../data/catalogueData';
 import { catalogueCoverage } from '../data/factorCatalogue';
-import { co2ePerUnit, factorStatus, FactorStatusKind } from '../data/factorStatus';
+import { co2ePerUnit, factorStatus, FactorStatusKind, isListed } from '../data/factorStatus';
 import { useCatalogueMapState } from '../services/useCatalogueMap';
 import { useGHG } from '../context/GHGContext';
 
@@ -61,7 +61,7 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
     };
   }, [map]);
   const coverage = useMemo(
-    () => catalogueCoverage((source) => {
+    () => catalogueCoverage(isListed, (source) => {
       const kind = statusOf(source).kind;
       return kind === 'published' || kind === 'method' || kind === 'auto';
     }),
@@ -71,7 +71,9 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
   const categories = useMemo(() => {
     const names = new Set<string>();
     CATALOGUE_SOURCES.forEach((source) => {
-      if (scope === 'all' || source.scope === scope) names.add(source.category_name);
+      if (isListed(source.activity_key) && (scope === 'all' || source.scope === scope)) {
+        names.add(source.category_name);
+      }
     });
     return [...names].sort((a, b) => a.localeCompare(b));
   }, [scope]);
@@ -79,6 +81,7 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return CATALOGUE_SOURCES.filter((source) => {
+      if (!isListed(source.activity_key)) return false;
       if (scope !== 'all' && source.scope !== scope) return false;
       if (category !== 'all' && source.category_name !== category) return false;
       if (!needle) return true;
@@ -156,7 +159,8 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
               Every emission source the inventory can draw on, with the value the engine actually
               calculates with ({gwpSet}) and where it comes from. A source without a value says why,
               and what to use instead. Memo items are reported alongside the inventory but never
-              counted in a scope total.
+              counted in a scope total. Well-to-tank, transmission losses and biogenic CO₂ are not
+              listed separately: the engine adds them to the rows that cause them.
             </p>
           </div>
 

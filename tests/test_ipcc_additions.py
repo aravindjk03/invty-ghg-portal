@@ -111,3 +111,35 @@ def test_derived_values_show_their_working():
     assert Decimal(line.emissions_kgco2e) == Decimal("3.3804")
     rows = (DATA / "factors" / "supplementary.csv").read_text(encoding="utf-8")
     assert "2 x 44.009 / 26.038" in rows
+
+
+# --- second round: incineration, hydrogen, biochar ----------------------------
+
+def test_incineration_of_industrial_waste_is_table_5_2():
+    # 50% carbon x 90% fossil x 100% oxidised x 44/12, per DRY tonne.
+    line = _line("ipcc.2006.incineration.industrial_waste", "1", "tonnes", scope="3", category="3.5")
+    assert Decimal(line.gas_breakdown["CO2"]) == Decimal("1650")
+    assert Decimal(line.gas_breakdown["N2O"]) == Decimal("0.1")       # Table 5.6
+
+
+def test_sewage_sludge_carbon_is_biogenic_and_only_n2o_counts():
+    line = _line("ipcc.2006.incineration.sewage_sludge", "1", "tonnes", scope="3", category="3.5")
+    assert Decimal(line.gas_breakdown["CO2"]) == 0
+    assert Decimal(line.gas_breakdown["N2O"]) == Decimal("0.99")      # 990 g per dry t
+
+
+def test_hydrogen_reforming_is_table_3_30_tier_1b():
+    line = _line("ipcc.2019.hydrogen.natural_gas_reforming", "1", "tonnes", category="1.3")
+    assert Decimal(line.gas_breakdown["CO2"]) == Decimal("9256.5")    # 165 x 0.0153 x 44/12
+
+
+def test_biochar_removal_is_a_memo_never_netted():
+    response = calculate_inventory(InventoryRequest(
+        gwp_set="AR6", reporting_year=2025,
+        records=[{"record_id": "r", "activity_key": "ipcc.2019.biochar.wood_pyrolysis_medium",
+                  "scope": "memo", "ghg_category": "memo", "region": "GLOBAL", "value": "1",
+                  "unit": "tonnes", "memo_bucket": "removals"}]), "test")
+    line = response.lines[0]
+    assert Decimal(line.emissions_kgco2e) == Decimal("2258.67")      # 0.77 x 0.80 x 44/12
+    assert Decimal(response.totals.total_all) == 0
+    assert Decimal(response.totals.memo["removals"]) == Decimal("2258.67")

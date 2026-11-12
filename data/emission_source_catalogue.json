@@ -482,7 +482,7 @@
   },
   {
     "activity_key": "fuel.natural_gas",
-    "display_name": "Natural gas",
+    "display_name": "Natural gas / piped natural gas (PNG)",
     "group": "Gaseous fuel",
     "scope": "1",
     "ghg_category": "1.1",
@@ -1023,8 +1023,8 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.3",
-    "notes": ""
+    "factor_source": "IPCC 2019 Refinement Vol.3",
+    "notes": "Tonnes of hydrogen made by natural gas steam reforming. Do not also report the natural gas burned or fed to the reformer."
   },
   {
     "activity_key": "process.aluminium_anode",
@@ -1223,16 +1223,16 @@
   },
   {
     "activity_key": "process.co2_captured",
-    "display_name": "CO2 captured and stored/utilised (deduction)",
+    "display_name": "CO2 captured and stored / utilised (reported separately)",
     "group": "Process",
-    "scope": "1",
-    "ghg_category": "1.3",
+    "scope": "memo",
+    "ghg_category": "memo",
     "category_name": "Process emissions",
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
     "factor_source": "Measured (CCS/CCU records)",
-    "notes": "NEGATIVE entry. Without this, process totals are overstated for any plant with CCS/CCU."
+    "notes": "Tonnes of CO2 captured. Reported separately and never netted off Scope 1."
   },
   {
     "activity_key": "process.other_process_direct",
@@ -1756,16 +1756,16 @@
   },
   {
     "activity_key": "flare.process_vent",
-    "display_name": "Process vent — flared",
+    "display_name": "Process vent — natural gas flared",
     "group": "Flaring and venting",
     "scope": "1",
     "ghg_category": "1.1",
     "category_name": "Stationary combustion",
     "default_unit": "m3",
-    "allowed_units": "m3|t",
+    "allowed_units": "m3|kWh|t",
     "gases": "CO2,CH4,N2O",
-    "factor_source": "IPCC 2006 Vol.2",
-    "notes": "IPCC 1B2"
+    "factor_source": "DESNZ",
+    "notes": "For vent gas that is natural gas. For any other gas, work out the CO2 from its carbon content and enter it as tCO2e directly."
   },
   {
     "activity_key": "flare.biogas",
@@ -1795,16 +1795,16 @@
   },
   {
     "activity_key": "vent.oil_gas",
-    "display_name": "Oil & gas venting",
+    "display_name": "Oil & gas venting — methane released",
     "group": "Flaring and venting",
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "m3",
-    "allowed_units": "m3",
-    "gases": "CH4,CO2",
-    "factor_source": "IPCC 2006 Vol.2",
-    "notes": ""
+    "default_unit": "kg",
+    "allowed_units": "kg|t",
+    "gases": "CH4",
+    "factor_source": "IPCC AR5 / AR6 GWP",
+    "notes": "Enter the mass of methane vented. IPCC publishes venting only per volume produced, as a range, for developing countries."
   },
   {
     "activity_key": "mobile.offroad.excavator",
@@ -1990,16 +1990,16 @@
   },
   {
     "activity_key": "land.removals_biochar",
-    "display_name": "Durable removals — biochar / sequestration",
+    "display_name": "Biochar removal — wood, pyrolysis 450–600 °C (reported separately)",
     "group": "Agriculture and land",
-    "scope": "1",
+    "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Removals memo",
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "GHG Protocol Land Sector & Removals Guidance",
-    "notes": "Removals are reported SEPARATELY from gross emissions, never netted off"
+    "factor_source": "IPCC 2019 Refinement Vol.4 Ap.4",
+    "notes": "Tonnes of dry biochar applied to cropland or grassland soil. A removal: reported separately, never netted off."
   },
   {
     "activity_key": "elec.grid.location",
@@ -2913,16 +2913,16 @@
   },
   {
     "activity_key": "cat5.incineration",
-    "display_name": "Incineration — no energy recovery",
+    "display_name": "Incineration — no energy recovery (dry tonnes)",
     "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
     "default_unit": "t",
     "allowed_units": "kg|t",
-    "gases": "CO2e",
-    "factor_source": "DESNZ",
-    "notes": ""
+    "gases": "CO2,N2O",
+    "factor_source": "IPCC 2006 Vol.5",
+    "notes": "IPCC industrial waste defaults (Table 5.2, 5.6). Enter the DRY weight of waste burned."
   },
   {
     "activity_key": "cat5.incineration_energy",
@@ -3017,16 +3017,16 @@
   },
   {
     "activity_key": "cat5.hazardous",
-    "display_name": "Hazardous waste treatment",
+    "display_name": "Hazardous waste — incinerated (dry tonnes)",
     "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
     "default_unit": "t",
     "allowed_units": "kg|t",
-    "gases": "CO2e",
-    "factor_source": "DESNZ",
-    "notes": ""
+    "gases": "CO2,N2O",
+    "factor_source": "IPCC 2006 Vol.5",
+    "notes": "IPCC industrial waste defaults (Table 5.2, 5.6). For hazardous waste landfilled or treated another way, use the operator's figure."
   },
   {
     "activity_key": "cat5.ewaste",
@@ -3069,16 +3069,16 @@
   },
   {
     "activity_key": "cat5.sewage_sludge",
-    "display_name": "Sewage sludge",
+    "display_name": "Sewage sludge — incinerated (dry tonnes)",
     "group": "Cat 5 — Waste",
     "scope": "3",
     "ghg_category": "3.5",
     "category_name": "Waste generated in operations",
     "default_unit": "t",
     "allowed_units": "kg|t",
-    "gases": "CO2e",
-    "factor_source": "DESNZ",
-    "notes": ""
+    "gases": "N2O",
+    "factor_source": "IPCC 2006 Vol.5",
+    "notes": "Sludge carbon is biogenic (0% fossil), so only the N2O counts. Enter the DRY weight."
   },
   {
     "activity_key": "cat5.wastewater_treated",
@@ -3728,7 +3728,7 @@
     "allowed_units": "kg|t",
     "gases": "CO2",
     "factor_source": "DESNZ",
-    "notes": "GHG Protocol requires biogenic CO2 be reported separately FOR EACH SCOPE in which it arises — biofuel in Cat 4, composting/AD/incineration of biogenic waste in Cat 5, biofuel sold in Cat 11."
+    "notes": "Tonnes of biogenic CO2 a supplier states. Reported separately."
   },
   {
     "activity_key": "memo.montreal_r22",
@@ -3828,10 +3828,10 @@
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Offsets memo",
-    "default_unit": "tCO2e",
-    "allowed_units": "tCO2e",
+    "default_unit": "t",
+    "allowed_units": "t",
     "gases": "CO2e",
     "factor_source": "registry",
-    "notes": "Reported separately from gross emissions. Gross totals are never reduced by offsets."
+    "notes": "Tonnes of CO2e retired. Record the registry and serial numbers. Never netted off."
   }
 ]

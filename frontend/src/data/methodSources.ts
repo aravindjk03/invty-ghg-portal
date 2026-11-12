@@ -34,6 +34,9 @@ export const METHOD_FOR_SOURCE: Record<string, MethodKey> = {
   'process.ceramics': 'mineral_industry',
   // A pulp mill's lime kiln is limestone calcination like any other.
   'process.pulp_paper_lime_kiln': 'mineral_industry',
+  // IPCC publishes no phosphoric acid factor; its process CO2 is the carbonate
+  // in the phosphate rock, which the carbonates section calculates.
+  'process.phosphoric_acid': 'mineral_industry',
   'process.ammonia_production': 'chemical_industry',
   'process.nitric_acid': 'chemical_industry',
   'process.urea_production': 'chemical_industry',

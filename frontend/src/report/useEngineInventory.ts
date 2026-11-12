@@ -115,6 +115,7 @@ export function recordsFor(entries: ActivityEntry[], fx?: FxRate): {
       return;
     }
     const isScope2 = scopeOf(entry) === '2';
+    const memoBucket = scopeOf(entry) === 'memo' ? memoBucketOf(entry.emissionFactor?.id) : undefined;
     const dollars = inDollars(entry, fx);
     const base = {
       scope: scopeOf(entry),
@@ -125,6 +126,7 @@ export function recordsFor(entries: ActivityEntry[], fx?: FxRate): {
       ...(dollars ? { note: dollars.note } : {}),
       facility_id: entry.facility || undefined,
       period_month: entry.periodMonth,
+      ...(memoBucket ? { memo_bucket: memoBucket } : {}),
     };
     const ownFactor = supplied !== undefined ? {
       supplied_factor: String(supplied),
@@ -207,4 +209,14 @@ export function useEngineInventory(
   }, [fingerprint]);
 
   return { result, loading, error, unmapped };
+}
+
+/** The memo line a memo source belongs to, from its catalogue key. */
+export function memoBucketOf(key: string | undefined): InventoryRecordInput['memo_bucket'] {
+  if (!key) return undefined;
+  if (key.startsWith('memo.montreal')) return 'montreal_protocol_gases';
+  if (key.startsWith('memo.biogenic')) return 'biogenic_co2';
+  if (key === 'memo.offsets_retired') return 'offsets_retired';
+  if (key === 'land.removals_biochar' || key === 'process.co2_captured') return 'removals';
+  return 'energy_balance';
 }

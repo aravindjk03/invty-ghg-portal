@@ -89,8 +89,8 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   // combustion row offers fuels burned in fixed equipment, not refrigerants,
   // grid electricity or air travel.
   const groupedSources = useMemo(
-    () => groupedSourcesFor(entry.scope, entry.category),
-    [entry.scope, entry.category],
+    () => groupedSourcesFor(entry.scope, entry.category, entry.emissionFactor?.id),
+    [entry.scope, entry.category, entry.emissionFactor?.id],
   );
   const catalogueMap = useCatalogueMap();
   const catalogueSource = CATALOGUE_SOURCES.find(

@@ -89,7 +89,8 @@ def test_every_mapping_actually_calculates(mappings):
     # Zero by definition, approved as such: no fuel on a walk, no greenhouse
     # gas in ammonia, no carbon in hydrogen. Each must still CALCULATE.
     zero_by_definition = {"derived.walk_cycle", "derived.r717_release",
-                          "derived.hydrogen_combustion"}
+                          "derived.hydrogen_combustion",
+                          "derived.energy_balance", "derived.reuse_eol"}
     failures = [
         f"{mappings[int(line.record_id)].catalogue_key} -> {line.activity_key}: {line.message}"
         for line in run.line_results
@@ -132,7 +133,7 @@ def test_a_source_with_no_published_factor_is_left_out_rather_than_invented(mapp
     # hazardous waste - which no ingested set publishes - is never invented.
     mapped = {mapping.catalogue_key for mapping in mappings}
     for key in ("process.cement_clinker", "process.nitric_acid", "process.ammonia_production",
-                "cat4.pipeline", "cat5.hazardous"):
+                "cat4.pipeline", "land.use_change"):
         assert key not in mapped
 
 
@@ -204,7 +205,8 @@ def test_every_mapped_source_calculates_in_a_unit_the_product_offers(mappings):
 
     run = run_inventory(records, gwp_set_name="AR5", reporting_year=2025)
     zero_by_definition = {"derived.walk_cycle", "derived.r717_release",
-                          "derived.hydrogen_combustion"}
+                          "derived.hydrogen_combustion",
+                          "derived.energy_balance", "derived.reuse_eol"}
     calculated = {meta[line.record_id][0] for line in run.line_results
                   if line.emissions_kgco2e > 0 or line.biogenic_co2_kg > 0
                   or (line.status == "calculated" and line.activity_key in zero_by_definition)}

@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOGUE_SOURCES } from './catalogueData';
 import { CATEGORY_TO_CATALOGUE, sourcesFor } from './factorCatalogue';
+import { isListed } from './factorStatus';
 
 // The category keys each workspace page actually renders.
 const PAGE_CATEGORIES: Record<string, string[]> = {
@@ -53,7 +54,10 @@ describe('the source picker on each row', () => {
     }
     for (const source of CATALOGUE_SOURCES) {
       const places = placesFor.get(source.activity_key) ?? [];
-      if (isMemo(source.scope, source.category_name) || source.default_unit === 'auto') {
+      // A generic row superseded by specific ones is offered nowhere, so the
+      // same factor never appears twice.
+      if (isMemo(source.scope, source.category_name) || source.default_unit === 'auto'
+        || !isListed(source.activity_key)) {
         expect(places, `${source.activity_key} should not be a row`).toEqual([]);
       } else {
         expect(places, `${source.activity_key} (${source.category_name})`).toHaveLength(1);

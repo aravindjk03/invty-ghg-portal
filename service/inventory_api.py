@@ -45,6 +45,11 @@ class InventoryRecord(_Strict):
     scope2_view: Optional[Literal["location", "market"]] = None
     period_month: Optional[str] = Field(default=None, max_length=7)
     note: str = Field(default="", max_length=400)
+    #: Which memo line a memo record belongs to. Without it every memo record
+    #: was filed as "energy balance" - a retired CFC and a biochar removal
+    #: included.
+    memo_bucket: Optional[Literal["biogenic_co2", "montreal_protocol_gases", "removals",
+                                  "offsets_retired", "energy_balance"]] = None
 
     # A factor the reporting company provides for this row: a power purchase
     # agreement, a green tariff, a retired certificate, a supplier's EPD. The
@@ -212,6 +217,7 @@ def to_records(request: InventoryRequest) -> list[ActivityRecord]:
             facility_id=item.facility_id,
             scope2_view=item.scope2_view,
             note=item.note,
+            memo_bucket=item.memo_bucket if item.scope == "memo" else None,
         )
         for item in request.records
     ]

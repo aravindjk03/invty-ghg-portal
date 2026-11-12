@@ -30,6 +30,7 @@ cat12.recycling_glass,"EOL — recycling, glass",tonnes,desnz.2025.20_501_5267_1
 cat12.recycling_metal,"EOL — recycling, metal",tonnes,desnz.2025.20_504_5365_15,Waste disposal / Metal / Metal: scrap metal (Open-loop),UK,DESNZ UK Government GHG conversion factors
 cat12.recycling_paper,"EOL — recycling, paper and board",tonnes,desnz.2025.20_506_5450_15,Waste disposal / Paper / Paper and board: mixed (Closed-loop),UK,DESNZ UK Government GHG conversion factors
 cat12.recycling_plastic,"EOL — recycling, plastic",tonnes,desnz.2025.20_505_5379_15,Waste disposal / Plastic / Plastics: average plastics (Open-loop),UK,DESNZ UK Government GHG conversion factors
+cat12.reuse,EOL — reuse,tonnes,derived.reuse_eol,Sold product reused at end of life,GLOBAL,"Derived: definition (GHG Protocol Scope 3 Standard, Category 12)"
 cat13.leased_downstream,Downstream leased assets,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 cat14.franchises,Franchises,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 cat2.buildings,Buildings & construction,USD,epa.useeio.v1_3.naics236220,Purchased goods and services — Commercial and Institutional Building Construction (spend-based),US,"EPA Supply Chain GHG Emission Factors v1.3 (USEEIO), purchaser price, 2022 USD"
@@ -62,6 +63,8 @@ cat5.anaerobic_digestion,Anaerobic digestion,tonnes,desnz.2025.20_507_5307_15,Wa
 cat5.composting,Composting,tonnes,desnz.2025.20_507_5305_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Composting),UK,DESNZ UK Government GHG conversion factors
 cat5.construction_recycled,Construction & demolition waste — recycled,tonnes,desnz.2025.20_500_5176_15,Waste disposal / Construction / Average construction (Open-loop),UK,DESNZ UK Government GHG conversion factors
 cat5.ewaste,E-waste,tonnes,desnz.2025.20_503_5330_15,Waste disposal / Electrical items / WEEE - mixed (Open-loop),UK,DESNZ UK Government GHG conversion factors
+cat5.hazardous,Hazardous waste — incinerated (dry tonnes),tonnes,ipcc.2006.incineration.industrial_waste,"Incineration of industrial waste, no energy recovery",GLOBAL,"IPCC 2006 Guidelines, Volume 5 Chapter 5 (Incineration and Open Burning of Waste)"
+cat5.incineration,Incineration — no energy recovery (dry tonnes),tonnes,ipcc.2006.incineration.industrial_waste,"Incineration of industrial waste, no energy recovery",GLOBAL,"IPCC 2006 Guidelines, Volume 5 Chapter 5 (Incineration and Open Burning of Waste)"
 cat5.incineration_energy,Incineration with energy recovery,tonnes,desnz.2025.20_507_5311_15,Waste disposal / Refuse / Commercial and industrial waste (Incineration with Energy Recovery),UK,DESNZ UK Government GHG conversion factors
 cat5.landfill_mixed,Landfill — mixed municipal waste,tonnes,desnz.2025.20_507_5313_15,Waste disposal / Refuse / Commercial and industrial waste (Landfill),UK,DESNZ UK Government GHG conversion factors
 cat5.landfill_organic,Landfill — organic waste,tonnes,desnz.2025.20_507_5306_15,Waste disposal / Refuse / Organic: mixed food and garden waste (Landfill),UK,DESNZ UK Government GHG conversion factors
@@ -69,6 +72,7 @@ cat5.recycling_glass,Recycling — glass,tonnes,desnz.2025.20_501_5267_15,Waste 
 cat5.recycling_metal,Recycling — metal,tonnes,desnz.2025.20_504_5365_15,Waste disposal / Metal / Metal: scrap metal (Open-loop),UK,DESNZ UK Government GHG conversion factors
 cat5.recycling_paper,Recycling — paper,tonnes,desnz.2025.20_506_5450_15,Waste disposal / Paper / Paper and board: mixed (Closed-loop),UK,DESNZ UK Government GHG conversion factors
 cat5.recycling_plastic,Recycling — plastic,tonnes,desnz.2025.20_505_5379_15,Waste disposal / Plastic / Plastics: average plastics (Open-loop),UK,DESNZ UK Government GHG conversion factors
+cat5.sewage_sludge,Sewage sludge — incinerated (dry tonnes),tonnes,ipcc.2006.incineration.sewage_sludge,Incineration of sewage sludge,GLOBAL,"IPCC 2006 Guidelines, Volume 5 Chapter 5 (Incineration and Open Burning of Waste)"
 cat5.wastewater_treated,Wastewater sent for off-site treatment,cubic metres,desnz.2025.18_405_4006_1,Water treatment / Water treatment / Water treatment,UK,DESNZ UK Government GHG conversion factors
 cat5.wastewater_treated,Wastewater sent for off-site treatment,million litres,desnz.2025.18_405_4006_10,Water treatment / Water treatment / Water treatment,UK,DESNZ UK Government GHG conversion factors
 cat6.air_domestic_economy,"Air — domestic, economy",passenger.km,desnz.2025.21_316_3160_11,"Business travel- air / Flights / Domestic, to / from UK / Average passenger (With RF)",UK,DESNZ UK Government GHG conversion factors
@@ -112,16 +116,23 @@ cat9.retail,Retail outlet energy,kWh,cea.grid.weighted_average_incl_res.incl_imp
 cat9.warehousing,Downstream warehousing / storage,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 combustion.acetylene,Acetylene — cutting / welding torch,kg,derived.acetylene_combustion,Acetylene burned (cutting / welding),GLOBAL,Derived: combustion stoichiometry (approved derived value)
 elec.ev_charging_onsite,Electricity — charging owned EVs at own facility,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+elec.exported,Electricity exported to grid,kWh,derived.energy_balance,Energy balance line (no emissions counted),GLOBAL,Derived: definition (GHG Protocol Scope 2 Guidance)
 elec.green_tariff,Electricity — green tariff,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.grid.location,Grid electricity — location-based,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.grid.market_residual,Grid electricity — market-based residual mix,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.irec,Electricity — I-REC / REC retired,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.open_access,Electricity — open access / third-party sale (India),kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.ppa_renewable,Electricity — renewable PPA,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+elec.selfgen_solar_onsite,Self-generated solar consumed on site,kWh,derived.energy_balance,Energy balance line (no emissions counted),GLOBAL,Derived: definition (GHG Protocol Scope 2 Guidance)
+elec.selfgen_wind_onsite,Self-generated wind consumed on site,kWh,derived.energy_balance,Energy balance line (no emissions counted),GLOBAL,Derived: definition (GHG Protocol Scope 2 Guidance)
 elec.submetered_tenant,Electricity — sub-metered from landlord,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 elec.supplier_specific,Electricity — supplier/utility-specific emission rate,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
 flare.biogas,Biogas / landfill gas flared,kWh,desnz.2025.2_105_1047_5,Bioenergy / Biogas / Biogas,UK,DESNZ UK Government GHG conversion factors
 flare.biogas,Biogas / landfill gas flared,tonnes,desnz.2025.2_105_1047_15,Bioenergy / Biogas / Biogas,UK,DESNZ UK Government GHG conversion factors
+flare.process_vent,Process vent — natural gas flared,cubic metres,desnz.2025.1_100_1004_1,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+flare.process_vent,Process vent — natural gas flared,kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+flare.process_vent,Process vent — natural gas flared,kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+flare.process_vent,Process vent — natural gas flared,tonnes,desnz.2025.1_100_1004_15,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
 fuel.biodiesel.stationary,Biodiesel (B100) — stationary,GJ,desnz.2025.2_103_1032_2,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
 fuel.biodiesel.stationary,Biodiesel (B100) — stationary,kg,desnz.2025.2_103_1032_3,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
 fuel.biodiesel.stationary,Biodiesel (B100) — stationary,litres,desnz.2025.2_103_1032_8,Bioenergy / Biofuel / Biodiesel ME,UK,DESNZ UK Government GHG conversion factors
@@ -227,10 +238,10 @@ fuel.naphtha,Naphtha,kWh (Gross CV),desnz.2025.1_101_1016_6,Fuels / Liquid fuels
 fuel.naphtha,Naphtha,kWh (Net CV),desnz.2025.1_101_1016_7,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
 fuel.naphtha,Naphtha,litres,desnz.2025.1_101_1016_8,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
 fuel.naphtha,Naphtha,tonnes,desnz.2025.1_101_1016_15,Fuels / Liquid fuels / Naphtha,UK,DESNZ UK Government GHG conversion factors
-fuel.natural_gas,Natural gas,cubic metres,desnz.2025.1_100_1004_1,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
-fuel.natural_gas,Natural gas,kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
-fuel.natural_gas,Natural gas,kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
-fuel.natural_gas,Natural gas,tonnes,desnz.2025.1_100_1004_15,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas / piped natural gas (PNG),cubic metres,desnz.2025.1_100_1004_1,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas / piped natural gas (PNG),kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas / piped natural gas (PNG),kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
+fuel.natural_gas,Natural gas / piped natural gas (PNG),tonnes,desnz.2025.1_100_1004_15,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
 fuel.png,Piped natural gas (PNG),cubic metres,desnz.2025.1_100_1004_1,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
 fuel.png,Piped natural gas (PNG),kWh (Gross CV),desnz.2025.1_100_1004_6,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
 fuel.png,Piped natural gas (PNG),kWh (Net CV),desnz.2025.1_100_1004_7,Fuels / Gaseous fuels / Natural gas,UK,DESNZ UK Government GHG conversion factors
@@ -282,12 +293,15 @@ fugitive.refrigerant.r744,R-744 (CO2) refrigerant,kg,desnz.2025.3_200_2002_3,Ref
 fugitive.sf6,SF6 — electrical switchgear,kg,desnz.2025.3_200_2077_3,Refrigerant & other / Kyoto protocol products / Sulphur hexafluoride (SF6) (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 fugitive.sf6_magnesium,SF6 — magnesium casting cover gas,kg,desnz.2025.3_200_2077_3,Refrigerant & other / Kyoto protocol products / Sulphur hexafluoride (SF6) (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 heat.purchased,Purchased heat / hot water,kWh,desnz.2025.10_401_4003_5,Heat and steam / Heat and steam / District heat and steam / kWh,UK,DESNZ UK Government GHG conversion factors
+land.removals_biochar,"Biochar removal — wood, pyrolysis 450–600 °C (reported separately)",tonnes,ipcc.2019.biochar.wood_pyrolysis_medium,"Biochar from wood, pyrolysis 450-600 C, carbon stored after 100 years — CO2 removed",GLOBAL,"2019 Refinement to the 2006 IPCC Guidelines, Volume 4 Chapter 2 Appendix 4 (Biochar)"
 memo.avoided_exported_renewable,Avoided emissions from exported renewable power,kWh,cea.grid.weighted_average_incl_res.incl_imports.2025_26,"Grid electricity — weighted average including renewables, including imports, FY 2025-26",IN,"CEA CO2 Baseline Database (Central Electricity Authority, India)"
+memo.biogenic_co2_scope3,Biogenic CO2 arising in Scope 3 activities,tonnes,direct.tco2e,Emissions entered directly in tonnes of CO2e,GLOBAL,Direct entry: your own calculated tCO2e
 memo.montreal_cfc11,CFC-11 / R-11 released,kg,desnz.2025.3_202_2353_3,Refrigerant & other / Montreal protocol products / CFC-11 / R11 = trichlorofluoromethane (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 memo.montreal_cfc12,CFC-12 / R-12 released,kg,desnz.2025.3_202_2356_3,Refrigerant & other / Montreal protocol products / CFC-12 / R12 = dichlorodifluoromethane (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 memo.montreal_halon1211,Halon-1211 released,kg,desnz.2025.3_202_2371_3,Refrigerant & other / Montreal protocol products / Halon-1211 (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 memo.montreal_halon1301,Halon-1301 released,kg,desnz.2025.3_202_2374_3,Refrigerant & other / Montreal protocol products / Halon-1301 (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
 memo.montreal_r22,R-22 / HCFC-22 refrigerant,kg,desnz.2025.3_202_2389_3,Refrigerant & other / Montreal protocol products / HCFC-22 / R22 = chlorodifluoromethane (Total emissions including non-Kyoto products),UK,DESNZ UK Government GHG conversion factors
+memo.offsets_retired,Carbon credits retired,tonnes,direct.tco2e,Emissions entered directly in tonnes of CO2e,GLOBAL,Direct entry: your own calculated tCO2e
 mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,kWh (Gross CV),desnz.2025.1_101_1009_6,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
 mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,kWh (Net CV),desnz.2025.1_101_1009_7,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
 mobile.atf_own_aircraft,Aviation turbine fuel — company-owned/leased aircraft,litres,desnz.2025.1_101_1009_8,Fuels / Liquid fuels / Aviation turbine fuel,UK,DESNZ UK Government GHG conversion factors
@@ -372,6 +386,9 @@ mobile.rail_diesel,Diesel — owned locomotive / siding shunter,kWh (Gross CV),d
 mobile.rail_diesel,Diesel — owned locomotive / siding shunter,kWh (Net CV),desnz.2025.1_101_1014_7,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
 mobile.rail_diesel,Diesel — owned locomotive / siding shunter,litres,desnz.2025.1_101_1014_8,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
 mobile.rail_diesel,Diesel — owned locomotive / siding shunter,tonnes,desnz.2025.1_101_1014_15,Fuels / Liquid fuels / Gas oil,UK,DESNZ UK Government GHG conversion factors
+process.co2_captured,CO2 captured and stored / utilised (reported separately),tonnes,direct.tco2e,Emissions entered directly in tonnes of CO2e,GLOBAL,Direct entry: your own calculated tCO2e
+process.hydrogen_smr,Hydrogen production — SMR,tonnes,ipcc.2019.hydrogen.natural_gas_reforming,"Hydrogen production, natural gas steam reforming",GLOBAL,"2019 Refinement to the 2006 IPCC Guidelines, Volume 3 Chapter 3 (Chemical Industry), section 3.11"
 process.other_process_direct,Other process — enter tCO2e directly,tonnes,direct.tco2e,Emissions entered directly in tonnes of CO2e,GLOBAL,Direct entry: your own calculated tCO2e
 steam.purchased,Purchased steam,kWh,desnz.2025.10_401_4003_5,Heat and steam / Heat and steam / District heat and steam / kWh,UK,DESNZ UK Government GHG conversion factors
+vent.oil_gas,Oil & gas venting — methane released,kg,gas.released.ch4_fossil,Methane released to air (fossil),GLOBAL,Mass of gas released; GWP from IPCC AR5 Table 8.7 / AR6 Table 7.15 as selected
 vent.process_ch4,Process vent — unflared methane,kg,gas.released.ch4_fossil,Methane released to air (fossil),GLOBAL,Mass of gas released; GWP from IPCC AR5 Table 8.7 / AR6 Table 7.15 as selected

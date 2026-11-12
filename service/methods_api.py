@@ -142,7 +142,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "mineral_industry",
-        "computes": ["process.cement_clinker", "process.lime_calcination", "process.dolomite_calcination", "process.limestone_flux", "process.soda_ash_use", "process.glass_carbonates", "process.ceramics", "process.pulp_paper_lime_kiln"],
+        "computes": ["process.cement_clinker", "process.lime_calcination", "process.dolomite_calcination", "process.limestone_flux", "process.soda_ash_use", "process.glass_carbonates", "process.ceramics", "process.pulp_paper_lime_kiln", "process.phosphoric_acid"],
         "name": "CO2 from cement, lime, glass and carbonates",
         "scope": "1",
         "gases": ["CO2"],

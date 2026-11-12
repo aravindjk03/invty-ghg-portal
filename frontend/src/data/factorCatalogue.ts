@@ -13,6 +13,7 @@
  */
 import { CATALOGUE_SOURCES, CatalogueSource } from './catalogueData';
 import { EmissionFactor, ScopeType } from '../types/ghg';
+import { isListed } from './factorStatus';
 
 /** Entry category key -> the catalogue category names that belong to it. */
 export const CATEGORY_TO_CATALOGUE: Record<string, string[]> = {
@@ -69,14 +70,19 @@ export const toEmissionFactor = (source: CatalogueSource): EmissionFactor => ({
  * scope only when the category is unknown, so a new category never silently
  * shows an empty list.
  */
-export function sourcesFor(scope: string, category: string): CatalogueSource[] {
+export function sourcesFor(
+  scope: string, category: string, keep?: string,
+): CatalogueSource[] {
   const wantedScope = SCOPE_OF_ENTRY[scope] ?? scope;
   const names = CATEGORY_TO_CATALOGUE[category];
   // Sources whose unit is 'auto' (the Category 3 well-to-tank and T&D lines)
   // are derived by the engine from the Scope 1 and 2 rows already recorded.
   // Offering them as a row would invite the same emissions being entered twice.
+  // A generic row superseded by more specific ones is left out so each factor
+  // is offered once - unless it is the one this row already holds.
   const inScope = CATALOGUE_SOURCES.filter(
-    (source) => source.scope === wantedScope && source.default_unit !== 'auto');
+    (source) => source.scope === wantedScope && source.default_unit !== 'auto'
+      && (isListed(source.activity_key) || source.activity_key === keep));
   if (!names) return inScope;
   const matching = inScope.filter((source) => names.includes(source.category_name));
   return matching.length > 0 ? matching : inScope;
@@ -86,9 +92,11 @@ export const factorsFor = (scope: string, category: string): EmissionFactor[] =>
   sourcesFor(scope, category).map(toEmissionFactor);
 
 /** Sources grouped by their catalogue group, for <optgroup> in a picker. */
-export function groupedSourcesFor(scope: string, category: string): [string, CatalogueSource[]][] {
+export function groupedSourcesFor(
+  scope: string, category: string, keep?: string,
+): [string, CatalogueSource[]][] {
   const groups = new Map<string, CatalogueSource[]>();
-  sourcesFor(scope, category).forEach((source) => {
+  sourcesFor(scope, category, keep).forEach((source) => {
     const key = source.group || 'Other';
     groups.set(key, [...(groups.get(key) ?? []), source]);
   });
@@ -110,11 +118,13 @@ export function unitsFor(activityKey: string): string[] {
  * method behind it - read from the engine, not from the picker's own data.
  */
 export function catalogueCoverage(
+  isListed: (activityKey: string) => boolean = () => true,
   isCalculable: (source: CatalogueSource) => boolean = () => false,
 ): { total: number; verified: number; byScope: Record<string, { total: number; verified: number }> } {
   const byScope: Record<string, { total: number; verified: number }> = {};
   let verified = 0;
-  CATALOGUE_SOURCES.forEach((source) => {
+  const listed = CATALOGUE_SOURCES.filter((source) => isListed(source.activity_key));
+  listed.forEach((source) => {
     const bucket = byScope[source.scope] ?? { total: 0, verified: 0 };
     bucket.total += 1;
     if (isCalculable(source)) {
@@ -123,5 +133,5 @@ export function catalogueCoverage(
     }
     byScope[source.scope] = bucket;
   });
-  return { total: CATALOGUE_SOURCES.length, verified, byScope };
+  return { total: listed.length, verified, byScope };
 }

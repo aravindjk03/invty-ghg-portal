@@ -46,6 +46,8 @@ export interface InventoryRecordInput {
   unit: string | null;
   facility_id?: string;
   scope2_view?: 'location' | 'market';
+  /** Which memo line a memo record belongs to; never in a scope total. */
+  memo_bucket?: 'biogenic_co2' | 'montreal_protocol_gases' | 'removals' | 'offsets_retired' | 'energy_balance';
   period_month?: string;
   note?: string;
   /**
