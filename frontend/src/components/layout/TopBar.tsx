@@ -18,7 +18,6 @@ import {
   BookOpen,
   LogIn,
   LogOut,
-  Lock,
   Menu,
   X,
   LucideIcon,
@@ -381,12 +380,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
             <div className="hidden lg:flex items-center flex-shrink-0">
               <AnimatedMenuBar activePage={currentPage} onNavigate={onNavigate} />
             </div>
-          ) : (
-            <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg font-semibold flex-shrink-0">
-              <Lock size={11} className="flex-shrink-0" />
-              <span>Sign in required</span>
-            </div>
-          )}
+          ) : null}
 
           {/* ── SPACER (pushes right content to edge) ────────── */}
           <div className="flex-1" />
@@ -412,9 +406,18 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
               <>
                 {/* User avatar pill */}
                 <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full pl-1 pr-1 py-1 shadow-[0_1px_2px_0_rgb(15_23_42/0.04)]">
-                  <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[12px] flex-shrink-0">
-                    {currentUser.name?.charAt(0).toUpperCase() ?? 'U'}
-                  </div>
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[12px] flex-shrink-0">
+                      {currentUser.name?.charAt(0).toUpperCase() ?? 'U'}
+                    </div>
+                  )}
                   <div className="hidden 2xl:flex flex-col text-left pr-1" title={currentUser.name}>
                     <span className="text-[12px] font-semibold text-[#0F172A] leading-tight truncate max-w-[90px]">
                       {currentUser.name}
@@ -468,7 +471,9 @@ export const TopBar: React.FC<TopBarProps> = ({ currentPage, onNavigate }) => {
                   {mobileOpen ? <X size={16} /> : <Menu size={16} />}
                 </button>
               </>
-            ) : (
+            ) : currentPage === 'login' ? null : (
+              // On the sign-in page itself a "Sign In" button only repeated
+              // the form beneath it.
               <button
                 type="button"
                 onClick={() => onNavigate('login')}
