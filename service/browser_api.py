@@ -27,20 +27,15 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ghg_core import InMemoryFactorRegistry
 
-from .catalogue import Catalogue
-from .config import Settings
-from .estimator import (EstimatorError, EstimatorNotAProduct, build_request, build_system,
-                        build_user_message, parse_message, public_message)
-from .gemini import ENDPOINT as GEMINI_ENDPOINT
-from .gemini import build_body as gemini_body
-from .gemini import error_for_status as gemini_error
-from .gemini import parse_response as gemini_parse
 from .inventory import GWP_SETS, load_gwp
 from .inventory_api import (InventoryRequest, calculate_inventory, catalogue_mappings,
                             list_activities, unit_choices)
 from .methods_api import MethodRequest, calculate_method, list_methods
-from .pipeline import build_response
-from .schemas import EstimateRequest
+
+# The product-estimate modules (estimator, gemini, pipeline, schemas and the
+# product catalogue) are imported inside the four estimate handlers below.
+# The inventory never needs them, and importing them at start-up made every
+# visitor wait for the AI stack before the first figure could be calculated.
 
 _METHOD_REQUEST = TypeAdapter(MethodRequest)
 
@@ -59,6 +54,8 @@ BROWSER_MODEL = "claude-opus-5-5"
 @functools.lru_cache(maxsize=1)
 def _pcf():
     """Settings, catalogue and (empty, as on the server) verified registry."""
+    from .catalogue import Catalogue
+    from .config import Settings
     from .models import PROFILES
 
     settings = Settings.from_env()
@@ -77,11 +74,14 @@ def _as_attrs(value: Any) -> Any:
     return value
 
 
-def _ai_error(exc: EstimatorError, assistant: str) -> tuple[int, dict]:
+def _ai_error(exc, assistant: str) -> tuple[int, dict]:
+    from .estimator import public_message
     return exc.status, {"detail": {"code": exc.code, "message": public_message(exc.code, assistant)}}
 
 
 def _browser_request(body: Any) -> tuple[int, Any]:
+    from .estimator import build_request, build_system, build_user_message
+    from .schemas import EstimateRequest
     settings, _, _, prompt_catalogue, profile = _pcf()
     request = EstimateRequest.model_validate(body)
     use_beta, params = build_request(
@@ -91,6 +91,9 @@ def _browser_request(body: Any) -> tuple[int, Any]:
 
 
 def _browser_assemble(body: Any) -> tuple[int, Any]:
+    from .estimator import EstimatorError, EstimatorNotAProduct, parse_message
+    from .pipeline import build_response
+    from .schemas import EstimateRequest
     settings, catalogue, registry, _, _ = _pcf()
     request = EstimateRequest.model_validate((body or {}).get("request"))
     try:
@@ -105,6 +108,10 @@ def _browser_assemble(body: Any) -> tuple[int, Any]:
 
 
 def _gemini_request(body: Any) -> tuple[int, Any]:
+    from .estimator import build_system, build_user_message
+    from .gemini import ENDPOINT as GEMINI_ENDPOINT
+    from .gemini import build_body as gemini_body
+    from .schemas import EstimateRequest
     settings, _, _, prompt_catalogue, _ = _pcf()
     request = EstimateRequest.model_validate(body)
     return 200, {
@@ -117,6 +124,11 @@ def _gemini_request(body: Any) -> tuple[int, Any]:
 
 
 def _gemini_assemble(body: Any) -> tuple[int, Any]:
+    from .estimator import EstimatorError, EstimatorNotAProduct
+    from .gemini import error_for_status as gemini_error
+    from .gemini import parse_response as gemini_parse
+    from .pipeline import build_response
+    from .schemas import EstimateRequest
     settings, catalogue, registry, _, _ = _pcf()
     body = body or {}
     request = EstimateRequest.model_validate(body.get("request"))

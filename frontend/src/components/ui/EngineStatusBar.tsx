@@ -5,13 +5,27 @@
  * reached, or a row has no published factor, the page says so rather than
  * falling back to a second calculation that would disagree with the report.
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { EngineStage, engineStage, onEngineStage } from '../../engine/engineFetch';
 import { AlertTriangle, CheckCircle2, Loader2, Plug } from 'lucide-react';
 import { useGHG } from '../../context/GHGContext';
 import { PeriodPicker } from './PeriodPicker';
 
+const STAGE_TEXT: Partial<Record<EngineStage, string>> = {
+  downloading: 'Downloading the engine (kept on this device after the first visit)…',
+  starting_python: 'Starting the engine…',
+  loading_factors: 'Loading the published factor tables…',
+};
+
+function useEngineStage(): EngineStage {
+  const [current, setCurrent] = useState<EngineStage>(engineStage());
+  useEffect(() => onEngineStage(setCurrent), []);
+  return current;
+}
+
 export const EngineStatusBar: React.FC = () => {
   const { engineStatus, gwpSet, setGwpSet, period, setPeriod } = useGHG();
+  const stage = useEngineStage();
   const { state, message, runId, engineVersion, unmappedCount, excludedCount } = engineStatus;
 
   const tone = {
@@ -41,10 +55,9 @@ export const EngineStatusBar: React.FC = () => {
         {state === 'nothing_mapped' && 'Nothing calculated yet'}
       </span>
 
-      {state === 'starting' && (
+      {(state === 'starting' || (state === 'calculating' && STAGE_TEXT[stage])) && (
         <span className="text-[11.5px]">
-          It runs here in your browser, so the first visit downloads it once. Your figures
-          appear as soon as it is ready.
+          {STAGE_TEXT[stage] ?? 'It runs here in your browser. Your figures appear as soon as it is ready.'}
         </span>
       )}
 

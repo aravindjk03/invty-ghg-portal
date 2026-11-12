@@ -862,7 +862,17 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
     // factor yet — that is the engine starting, not a row without a factor,
     // and saying the latter made a normal first load read as a failure.
     if (catalogueLoading) return { state: 'starting' as const, unmappedCount, excludedCount };
-    if (engine.loading) return { state: 'calculating' as const, unmappedCount, excludedCount };
+    if (engine.loading) {
+      return {
+        state: 'calculating' as const,
+        // A returning visitor's last figures, for exactly these inputs and this
+        // engine build, are on screen while the engine confirms them.
+        message: engine.result
+          ? 'Showing your last calculation for these exact figures while the engine confirms it.'
+          : undefined,
+        unmappedCount, excludedCount,
+      };
+    }
     if (engine.error) {
       return { state: 'unavailable' as const, message: engine.error, unmappedCount, excludedCount };
     }
