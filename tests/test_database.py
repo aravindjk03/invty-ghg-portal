@@ -288,12 +288,18 @@ def test_calculation_run_and_line_result_append_only(db_session):
 
 def test_seed_activity_catalogue_leaves_emission_factor_empty(db_session):
     """Assert seed_activity_catalogue loads entries and leaves emission_factor completely empty."""
+    import csv
+    from pathlib import Path
+    catalogue_csv = Path(__file__).resolve().parents[1] / "data" / "emission_source_catalogue.csv"
+    with catalogue_csv.open(encoding="utf-8", newline="") as handle:
+        expected = sum(1 for _ in csv.DictReader(handle))
+
     count = seed_activity_catalogue(db_session)
-    assert count == 266, f"Expected 266 catalogue entries, seeded {count}"
+    assert count == expected, f"Expected {expected} catalogue entries, seeded {count}"
 
     # Verify activity_catalogue has entries
     cat_entries = db_session.scalars(select(ActivityCatalogue)).all()
-    assert len(cat_entries) == 266
+    assert len(cat_entries) == expected
 
     # Verify emission_factor table remains completely empty (0 rows)
     factors_count = db_session.scalar(select(sa.func.count()).select_from(EmissionFactor))

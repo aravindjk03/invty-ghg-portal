@@ -123,7 +123,6 @@ export const ghgService = {
         ID: f.id,
         Activity: f.fuelOrActivity,
         Scope: f.scope,
-        'Factor Value': f.factorValue,
         Unit: f.unit,
         Source: f.source,
         Tier: f.qualityTier,
@@ -244,7 +243,9 @@ export const ghgService = {
               amount: numAmount,
               unit,
               emissionFactor: factor,
-              calculatedTco2e: Number(((numAmount * factor.factorValue) / 1000).toFixed(2)),
+              // The engine calculates the row once it is added; no figure is
+              // guessed here from the picker's data.
+              calculatedTco2e: 0,
               updatedAt: new Date().toISOString(),
             });
           });

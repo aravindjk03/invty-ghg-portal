@@ -85,6 +85,8 @@ export interface ActivityEntry {
   engineFactorValue?: number;
   engineFactorSource?: string;
   engineFactorUnit?: string;
+  /** The publication year of the factor the engine used. */
+  engineFactorYear?: number;
   /** True when the user picked that factor themselves rather than letting the
    *  catalogue map attach it. A choice they made is never overwritten; one the
    *  map made is re-checked, so a row saved before a mapping was corrected

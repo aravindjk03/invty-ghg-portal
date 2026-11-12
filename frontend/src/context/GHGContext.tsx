@@ -3,9 +3,9 @@ import { simulateScenario, ScenarioOutcome } from '../engine/scenario';
 import { ActivityEntry, ScopeSummary, WhatIfScenario, ToastMessage } from '../types/ghg';
 import { DEFAULT_FACTORS } from '../services/ghgService';
 import { calculateDataQualityGrade } from '../engine/calculator';
-import { factorsFor, isVerified } from '../data/factorCatalogue';
+import { factorsFor } from '../data/factorCatalogue';
 import { CATALOGUE_SOURCES } from '../data/catalogueData';
-import { mappingFor, startingUnit } from '../services/catalogueMap';
+import { mappingFor, startingUnit, unitChoicesFor } from '../services/catalogueMap';
 import { useCatalogueMapState } from '../services/useCatalogueMap';
 import { EngineInventory, marketRecordId, useEngineInventory } from '../report/useEngineInventory';
 import { useMethodResults } from '../report/useMethodResults';
@@ -771,7 +771,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   const engineByRecord = useMemo(() => {
     const map = new Map<string, {
       tco2e: number; warning?: string;
-      factorValue?: number; factorSource?: string; factorUnit?: string;
+      factorValue?: number; factorSource?: string; factorUnit?: string; factorYear?: number;
     }>();
     engine.result?.lines.forEach((line) => {
       map.set(line.record_id, {
@@ -785,6 +785,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
           : line.factor_value != null ? Number(line.factor_value) : undefined,
         factorSource: line.factor_source ?? undefined,
         factorUnit: line.factor_unit ?? undefined,
+        factorYear: line.factor_reference_year ?? undefined,
       });
     });
     engine.unmapped.forEach((entry) => map.set(entry.id, {
@@ -808,6 +809,7 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
         engineFactorValue: line.factorValue,
         engineFactorSource: line.factorSource,
         engineFactorUnit: line.factorUnit,
+        engineFactorYear: line.factorYear,
       };
     }),
     [engineByRecord],
@@ -916,9 +918,9 @@ function reconcileUnits(entries: ActivityEntry[]): ActivityEntry[] {
   const addRow = useCallback(
     (scope: 'scope-1' | 'scope-2' | 'scope-3', category: string) => {
       // A new row starts on a source that belongs to ITS scope and category, and
-      // prefers one whose factor has actually been ingested.
+      // prefers one the engine can actually calculate.
       const available = factorsFor(scope, category);
-      const factor = available.find((candidate) => isVerified(candidate.id))
+      const factor = available.find((candidate) => unitChoicesFor(candidate.id).length > 0)
         || available[0]
         || DEFAULT_FACTORS[0];
 

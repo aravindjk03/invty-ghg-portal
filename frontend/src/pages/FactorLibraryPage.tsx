@@ -14,6 +14,9 @@ import { Badge, BadgeVariant } from '../components/ui/Badge';
 import { Table, Column } from '../components/ui/Table';
 import { CATALOGUE_SOURCES, CatalogueSource } from '../data/catalogueData';
 import { catalogueCoverage } from '../data/factorCatalogue';
+import { co2ePerUnit, factorStatus, FactorStatusKind } from '../data/factorStatus';
+import { useCatalogueMapState } from '../services/useCatalogueMap';
+import { useGHG } from '../context/GHGContext';
 
 export interface FactorLibraryPageProps {
   onNavigate: (page: string) => void;
@@ -44,7 +47,26 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
   const [scope, setScope] = useState('all');
   const [category, setCategory] = useState('all');
 
-  const coverage = useMemo(() => catalogueCoverage(), []);
+  const { gwpSet } = useGHG();
+  const { map, loading } = useCatalogueMapState();
+  const statusOf = useMemo(() => {
+    const cache = new Map<string, ReturnType<typeof factorStatus>>();
+    return (source: CatalogueSource) => {
+      let status = cache.get(source.activity_key);
+      if (!status) {
+        status = factorStatus(map, source);
+        cache.set(source.activity_key, status);
+      }
+      return status;
+    };
+  }, [map]);
+  const coverage = useMemo(
+    () => catalogueCoverage((source) => {
+      const kind = statusOf(source).kind;
+      return kind === 'published' || kind === 'method' || kind === 'auto';
+    }),
+    [statusOf],
+  );
 
   const categories = useMemo(() => {
     const names = new Set<string>();
@@ -81,7 +103,9 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
     {
       header: 'Scope',
       cell: (row) => (
-        <Badge variant={SCOPE_BADGE[row.scope] ?? 'default'}>{SCOPE_LABEL[row.scope] ?? row.scope}</Badge>
+        <span className="whitespace-nowrap">
+          <Badge variant={SCOPE_BADGE[row.scope] ?? 'default'}>{SCOPE_LABEL[row.scope] ?? row.scope}</Badge>
+        </span>
       ),
     },
     {
@@ -93,16 +117,8 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
       ),
     },
     {
-      header: 'Factor',
-      numeric: true,
-      cell: (row) => (row.verified ? (
-        <span className="font-mono tabular-nums whitespace-nowrap">
-          {row.factorValue.toLocaleString('en-IN', { maximumFractionDigits: 6 })}
-          <span className="text-brand-muted"> kgCO₂e/{row.default_unit}</span>
-        </span>
-      ) : (
-        <span className="text-[12px] text-brand-muted whitespace-nowrap">No published value yet</span>
-      )),
+      header: 'Value used',
+      cell: (row) => <ValueCell status={statusOf(row)} gwpSet={gwpSet} loading={loading} />,
     },
     {
       header: 'Gases',
@@ -112,8 +128,7 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
       header: 'Published source',
       cell: (row) => (
         <span className="text-[12px] text-brand-body block max-w-[320px]">
-          {row.factor_source || '—'}
-          {row.publicationYear ? ` (${row.publicationYear})` : ''}
+          {statusOf(row).mapping?.source ?? row.factor_source ?? '—'}
         </span>
       ),
     },
@@ -138,9 +153,10 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
               Factor library
             </h1>
             <p className="text-[15px] text-brand-muted mt-1">
-              Every emission source the inventory can draw on, with its published factor and
-              where it comes from. Memo items are listed too: they are reported alongside the
-              inventory but never counted in a scope total.
+              Every emission source the inventory can draw on, with the value the engine actually
+              calculates with ({gwpSet}) and where it comes from. A source without a value says why,
+              and what to use instead. Memo items are reported alongside the inventory but never
+              counted in a scope total.
             </p>
           </div>
 
@@ -153,7 +169,7 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
                 {coverage.total}
               </span>
               <span className="text-[13px] font-medium text-brand-muted">
-                {coverage.verified} with a published value
+                {loading ? 'checking the engine…' : `${coverage.verified} calculated by the engine`}
               </span>
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[12px] text-brand-muted">
@@ -210,6 +226,77 @@ export const FactorLibraryPage: React.FC<FactorLibraryPageProps> = ({ onNavigate
           </Card>
         )}
       </div>
+    </div>
+  );
+};
+
+const KIND_LABEL: Record<FactorStatusKind, string> = {
+  published: 'Published',
+  method: 'IPCC method',
+  auto: 'Automatic',
+  supplier: 'Your supplier\'s figure',
+  memo: 'Memo',
+  choose: 'Use a specific row',
+  not_calculated: 'Not calculated',
+};
+
+const KIND_CLASS: Record<FactorStatusKind, string> = {
+  published: 'text-brand-body',
+  method: 'text-brand-primary',
+  auto: 'text-brand-primary',
+  supplier: 'text-brand-body',
+  memo: 'text-brand-muted',
+  choose: 'text-brand-body',
+  not_calculated: 'text-status-warning',
+};
+
+const formatNumber = (value: string) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return value;
+  return n.toLocaleString('en-IN', { maximumSignificantDigits: 6 });
+};
+
+/** The value the engine uses, or what stands in its place, with the reason. */
+const ValueCell: React.FC<{
+  status: ReturnType<typeof factorStatus>;
+  gwpSet: 'AR5' | 'AR6';
+  loading: boolean;
+}> = ({ status, gwpSet, loading }) => {
+  if (status.kind === 'published' && status.mapping) {
+    const mapping = status.mapping;
+    const co2e = co2ePerUnit(mapping, gwpSet);
+    const perGas = mapping.values.filter((v) => v.gas !== 'CO2e');
+    return (
+      <div className="flex flex-col py-1.5 min-w-[200px] max-w-[300px]">
+        {co2e !== undefined && (
+          <span className="font-mono tabular-nums whitespace-nowrap text-brand-heading">
+            {formatNumber(co2e)}
+            <span className="text-brand-muted"> kgCO₂e/{mapping.unit}</span>
+          </span>
+        )}
+        {perGas.length > 0 && (
+          <span className="text-[11px] text-brand-muted leading-snug">
+            {perGas.map((v) => `${v.gas} ${formatNumber(v.value)} kg`).join(' · ')} per {mapping.unit}
+          </span>
+        )}
+        {mapping.values[0]?.reference && (
+          <span className="text-[11px] text-brand-muted leading-snug line-clamp-2"
+                title={mapping.values[0].reference}>
+            {mapping.values[0].reference}
+          </span>
+        )}
+      </div>
+    );
+  }
+  if (loading && status.kind === 'not_calculated') {
+    return <span className="text-[12px] text-brand-muted">Loading…</span>;
+  }
+  return (
+    <div className="flex flex-col py-1.5 min-w-[200px] max-w-[300px]">
+      <span className={`text-[12px] font-semibold ${KIND_CLASS[status.kind]}`}>
+        {KIND_LABEL[status.kind]}
+      </span>
+      <span className="text-[11px] text-brand-muted leading-snug">{status.text}</span>
     </div>
   );
 };

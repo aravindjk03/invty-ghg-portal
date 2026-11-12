@@ -20,6 +20,7 @@ export const METHOD_KEYS = [
   'mineral_industry',
   'chemical_industry',
   'metal_industry',
+  'rice_cultivation',
 ] as const;
 export type MethodKey = (typeof METHOD_KEYS)[number];
 
@@ -198,6 +199,16 @@ export type ChemicalIndustryInput = {
   carbide_basis: 'product' | 'petroleum_coke' | 'carbide_used';
   titanium_dioxide_tonnes: number;
   titanium_dioxide_product: string;
+  methanol_tonnes: number;
+  methanol_process: string;
+  ethylene_tonnes: number;
+  ethylene_feedstock: string;
+  ethylene_region: string;
+  carbon_black_tonnes: number;
+  carbon_black_process: string;
+  carbon_black_thermal_treatment: boolean;
+  hcfc22_tonnes: number;
+  hfc23_plant: string;
 };
 
 export type MetalIndustryInput = {
@@ -215,6 +226,19 @@ export type MetalIndustryInput = {
   zinc_process: string;
 };
 
+export type RiceSeasonRow = {
+  harvested_area_ha: number;
+  cultivation_days: number;
+  water_regime: string;
+  pre_season: string;
+  amendments_t_per_ha: Record<string, number>;
+};
+
+export type RiceCultivationInput = {
+  method: 'rice_cultivation';
+  seasons: RiceSeasonRow[];
+};
+
 export type MethodInput =
   | ManagedSoilsInput
   | LimeAndUreaInput
@@ -224,7 +248,8 @@ export type MethodInput =
   | SolidWasteInput
   | MineralIndustryInput
   | ChemicalIndustryInput
-  | MetalIndustryInput;
+  | MetalIndustryInput
+  | RiceCultivationInput;
 
 /**
  * A saved method calculation in the inventory.
@@ -295,6 +320,11 @@ export const emptyInput = (method: MethodKey, reportingYear: number): MethodInpu
         adipic_acid_tonnes: 0, carbide_tonnes: 0, carbide_type: 'calcium_carbide',
         carbide_basis: 'product', titanium_dioxide_tonnes: 0,
         titanium_dioxide_product: 'rutile_tio2_chloride_route',
+        methanol_tonnes: 0, methanol_process: 'conventional_steam_reforming_natural_gas',
+        ethylene_tonnes: 0, ethylene_feedstock: 'naphtha', ethylene_region: 'asia_africa_russia',
+        carbon_black_tonnes: 0, carbon_black_process: 'furnace_black',
+        carbon_black_thermal_treatment: true, hcfc22_tonnes: 0,
+        hfc23_plant: 'recent_not_optimised',
       };
     case 'metal_industry':
       return {
@@ -302,6 +332,8 @@ export const emptyInput = (method: MethodKey, reportingYear: number): MethodInpu
         magnesium_tonnes: 0, lead_tonnes: 0, lead_route: 'default_mix',
         zinc_tonnes: 0, zinc_process: 'default_mix',
       };
+    case 'rice_cultivation':
+      return { method, seasons: [] };
     default: {
       const exhaustive: never = method;
       throw new Error(`No blank input for ${exhaustive}`);

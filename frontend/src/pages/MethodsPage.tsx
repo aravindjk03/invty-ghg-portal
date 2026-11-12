@@ -16,7 +16,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EngineStatusBar } from '../components/ui/EngineStatusBar';
 import {
-  EntericForm, LimeAndUreaForm, ManagedSoilsForm, ManureForm, MethodIdentity,
+  EntericForm, LimeAndUreaForm, RiceCultivationForm, ManagedSoilsForm, ManureForm, MethodIdentity,
   SolidWasteForm, WastewaterForm,
 } from '../components/methods/MethodForms';
 import {
@@ -30,7 +30,7 @@ import { getMethodCatalogue } from '../services/methodsService';
 import {
   ChemicalIndustryInput, EntericInput, LimeAndUreaInput, ManagedSoilsInput,
   ManureInput, MetalIndustryInput, MethodEntry, MethodInfo, MethodInput, MethodKey,
-  MineralIndustryInput, SolidWasteInput, WastewaterInput,
+  MineralIndustryInput, RiceCultivationInput, SolidWasteInput, WastewaterInput,
 } from '../types/methods';
 
 export interface MethodsPageProps {
@@ -47,6 +47,7 @@ const ICONS: Record<MethodKey, React.ReactNode> = {
   mineral_industry: <Mountain size={18} />,
   chemical_industry: <FlaskConical size={18} />,
   metal_industry: <Hammer size={18} />,
+  rice_cultivation: <Sprout size={18} />,
 };
 
 export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
@@ -108,6 +109,8 @@ export const MethodsPage: React.FC<MethodsPageProps> = ({ onNavigate }) => {
         return <ChemicalIndustryForm input={entry.input as ChemicalIndustryInput} info={info} onChange={onChange} />;
       case 'metal_industry':
         return <MetalIndustryForm input={entry.input as MetalIndustryInput} info={info} onChange={onChange} />;
+      case 'rice_cultivation':
+        return <RiceCultivationForm input={entry.input as RiceCultivationInput} info={info} onChange={onChange} />;
       default:
         return null;
     }

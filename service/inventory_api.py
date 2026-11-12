@@ -23,7 +23,8 @@ from ghg_core.quantities import D
 from ghg_core.units import convert, normalise_unit
 
 from .inventory import (GWP_SETS, REPO_ROOT, SUPPLIED_PREFIX, activities_for, load_catalogue_map,
-                        run_inventory, supplied_factor, wtt_counterparts)
+                        load_gwp, load_registry, run_inventory, supplied_factor,
+                        wtt_counterparts)
 
 
 class _Strict(BaseModel):
@@ -146,6 +147,15 @@ class InventoryResponse(_Strict):
     not_derived: list[NotDerivedOut] = Field(default_factory=list)
 
 
+class PublishedValueOut(_Strict):
+    """One gas of a published factor, exactly as the engine resolves it."""
+    gas: str
+    value: str
+    per: str
+    factor_id: str
+    reference: str
+
+
 class CatalogueMappingOut(_Strict):
     catalogue_key: str
     catalogue_name: str
@@ -154,6 +164,11 @@ class CatalogueMappingOut(_Strict):
     engine_name: str
     region: str
     source: str
+    # The value the engine calculates with - the same resolution path a row
+    # takes - so the figure a library shows is the figure an inventory uses.
+    values: list[PublishedValueOut] = Field(default_factory=list)
+    co2e_ar5: Optional[str] = None
+    co2e_ar6: Optional[str] = None
 
 
 class UnitChoiceOut(_Strict):
@@ -502,18 +517,72 @@ def catalogue_mappings() -> list[CatalogueMappingOut]:
     source absent from this list has no published factor and stays honestly
     uncalculated.
     """
-    return [
-        CatalogueMappingOut(
-            catalogue_key=mapping.catalogue_key,
-            catalogue_name=mapping.catalogue_name,
-            unit=mapping.unit,
-            activity_key=mapping.activity_key,
-            engine_name=mapping.engine_name,
-            region=mapping.region,
-            source=mapping.source,
-        )
-        for mapping in load_catalogue_map()
-    ]
+    return list(_all_mappings())
+
+
+@functools.lru_cache(maxsize=1)
+def _all_mappings() -> tuple:
+    return tuple(_with_values(mapping) for mapping in load_catalogue_map())
+
+
+#: The gases the inventory resolves, in the engine's order (inventory.py).
+_GASES = ("CO2", "CH4", "N2O", "FK-5-1-12", "CO2e")
+#: The year the library shows. A row resolves against its own reporting year;
+#: the published sets here carry one edition each, so the value is the same.
+_LIBRARY_YEAR = 2025
+
+
+@functools.lru_cache(maxsize=None)
+def _published(activity_key: str, region: str, unit: str) -> tuple:
+    registry, _ = load_registry()
+    found = []
+    for gas in _GASES:
+        try:
+            factor = registry.resolve(activity_key, region, _LIBRARY_YEAR, gas,
+                                      measured_in=unit).factor
+        except GhgCoreError:
+            continue
+        found.append(factor)
+    if any(f.gas != "CO2e" for f in found):
+        # Where a gas split resolves, the composite is never used alongside it.
+        found = [f for f in found if f.gas != "CO2e"]
+    return tuple(found)
+
+
+def _co2e(factors: tuple, gwp_set: str) -> Optional[str]:
+    if not factors:
+        return None
+    gwp = load_gwp(gwp_set)
+    total = D(0)
+    try:
+        for factor in factors:
+            if factor.numerator_unit == "kgCO2e":
+                total += factor.value
+            else:
+                total += factor.value * gwp.gwp("CH4_fossil" if factor.gas == "CH4"
+                                                else factor.gas)
+    except GhgCoreError:
+        return None
+    return str(total.normalize()) if total else "0"
+
+
+def _with_values(mapping) -> CatalogueMappingOut:
+    factors = _published(mapping.activity_key, mapping.region, mapping.unit)
+    return CatalogueMappingOut(
+        catalogue_key=mapping.catalogue_key,
+        catalogue_name=mapping.catalogue_name,
+        unit=mapping.unit,
+        activity_key=mapping.activity_key,
+        engine_name=mapping.engine_name,
+        region=mapping.region,
+        source=mapping.source,
+        values=[PublishedValueOut(gas=f.gas, value=str(f.value.normalize()),
+                                  per=f.denominator_unit, factor_id=f.version_id,
+                                  reference=f.source_table_ref)
+                for f in factors],
+        co2e_ar5=_co2e(factors, "AR5"),
+        co2e_ar6=_co2e(factors, "AR6"),
+    )
 
 
 __all__ = ["GWP_SETS", "InventoryRequest", "InventoryResponse", "ActivityOut",

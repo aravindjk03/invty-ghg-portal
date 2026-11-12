@@ -20,6 +20,7 @@ export const METHOD_FOR_SOURCE: Record<string, MethodKey> = {
   'agri.fertiliser_n2o': 'managed_soils',
   'agri.urea_application': 'lime_and_urea',
   'agri.lime_application': 'lime_and_urea',
+  'agri.rice_cultivation': 'rice_cultivation',
   'fugitive.ch4_wastewater': 'wastewater',
   'fugitive.n2o_wastewater': 'wastewater',
 
@@ -40,6 +41,10 @@ export const METHOD_FOR_SOURCE: Record<string, MethodKey> = {
   'process.calcium_carbide': 'chemical_industry',
   'process.silicon_carbide': 'chemical_industry',
   'process.titanium_dioxide': 'chemical_industry',
+  'process.methanol_production': 'chemical_industry',
+  'process.ethylene_petchem': 'chemical_industry',
+  'process.carbon_black': 'chemical_industry',
+  'process.hfc23_byproduct': 'chemical_industry',
   'process.iron_steel_bf': 'metal_industry',
   'process.iron_steel_dri': 'metal_industry',
   'process.ferroalloys': 'metal_industry',
@@ -62,24 +67,17 @@ export const METHOD_NAME: Record<MethodKey, string> = {
   wastewater: 'CH₄ and N₂O from wastewater',
   solid_waste: 'CH₄ from solid waste disposal',
   mineral_industry: 'CO₂ from cement, lime, glass and carbonates',
-  chemical_industry: 'CO₂ and N₂O from ammonia, nitric acid, adipic acid and carbides',
+  chemical_industry: 'CO₂, CH₄, N₂O and HFC-23 from ammonia, acids, carbides, methanol, ethylene and carbon black',
   metal_industry: 'CO₂, CH₄, PFCs and SF₆ from iron, steel, ferroalloys and aluminium',
+  rice_cultivation: 'CH₄ from rice cultivation',
 };
 
 /**
- * Sources a method covers but which this product does not implement.
- *
- * Rice cultivation is IPCC 2006 Volume 4 Chapter 5. It is a real source with a
- * published method, and saying so is more use to a reader than an unexplained
- * blank — but nothing here calculates it yet, so it must not look as though
- * something does.
+ * Sources a method covers but which this product does not implement. Empty
+ * now that rice cultivation (IPCC 2006 Volume 4 Chapter 5) is calculated; kept
+ * so a future gap is stated on the row rather than left blank.
  */
-export const METHOD_NOT_IMPLEMENTED: Record<string, string> = {
-  'agri.rice_cultivation':
-    'Rice cultivation methane is IPCC 2006 Volume 4 Chapter 5, which this engine does not '
-    + 'implement yet. Record the area, water regime and organic amendments in your own '
-    + 'records and report the source as excluded until it is added.',
-};
+export const METHOD_NOT_IMPLEMENTED: Record<string, string> = {};
 
 export const methodFor = (catalogueKey: string | undefined): MethodKey | undefined =>
   (catalogueKey ? METHOD_FOR_SOURCE[catalogueKey] : undefined);

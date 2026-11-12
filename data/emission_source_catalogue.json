@@ -306,10 +306,10 @@
     "ghg_category": "1.1",
     "category_name": "Stationary combustion",
     "default_unit": "t",
-    "allowed_units": "kg|t|lb",
+    "allowed_units": "GJ|kg|t",
     "gases": "CO2,CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": ""
+    "notes": "IPCC publishes this fuel (Industrial wastes) per GJ only: enter the energy content in GJ."
   },
   {
     "activity_key": "fuel.diesel.stationary",
@@ -854,7 +854,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "Tier 2: clinker production x CaO content. Do not use cement output."
   },
   {
@@ -867,7 +867,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -880,7 +880,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -893,7 +893,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "Common in steel and glass"
   },
   {
@@ -906,7 +906,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -919,7 +919,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "MUTUALLY EXCLUSIVE with fuel.coke.metallurgical, fuel.blast_furnace_gas, fuel.coke_oven_gas and fuel.converter_gas. IPCC Vol.3 Ch.4 accounts for integrated steel by ONE carbon balance. Engine must enforce a method flag: carbon-balance OR fuel-based, never both."
   },
   {
@@ -932,7 +932,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "Very common in India"
   },
   {
@@ -945,7 +945,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -958,7 +958,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -971,7 +971,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "N2O",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "N2O — dominant gas, not CO2"
   },
   {
@@ -984,7 +984,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "N2O",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "N2O — dominant gas"
   },
   {
@@ -997,7 +997,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "Net of CO2 consumed"
   },
   {
@@ -1010,7 +1010,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1023,7 +1023,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1036,7 +1036,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1049,7 +1049,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "PFC",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "CF4 and C2F6 — very high GWP"
   },
   {
@@ -1062,7 +1062,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1075,7 +1075,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1088,7 +1088,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1101,7 +1101,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1114,7 +1114,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1127,7 +1127,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1140,7 +1140,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1150,10 +1150,10 @@
     "scope": "1",
     "ghg_category": "1.3",
     "category_name": "Process emissions",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "HFC",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": "GWP ~12,700 — tiny masses are material"
   },
   {
@@ -1166,7 +1166,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1179,7 +1179,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1192,7 +1192,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1205,7 +1205,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1218,7 +1218,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.3",
     "notes": ""
   },
   {
@@ -1231,7 +1231,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "Measured (CCS/CCU records)",
     "notes": "NEGATIVE entry. Without this, process totals are overstated for any plant with CCS/CCU."
   },
   {
@@ -1244,7 +1244,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "Your own calculation (tCO2e)",
     "notes": "Escape hatch so a user with their own calculation is never blocked"
   },
   {
@@ -1495,6 +1495,58 @@
     "notes": ""
   },
   {
+    "activity_key": "fugitive.pfc_c4f8",
+    "display_name": "PFC-318 (c-C4F8) released — etch / clean",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "c-C4F8",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released to air, after any abatement."
+  },
+  {
+    "activity_key": "fugitive.pfc_c3f8",
+    "display_name": "PFC-218 (C3F8) released — etch / clean",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "C3F8",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released to air, after any abatement."
+  },
+  {
+    "activity_key": "fugitive.pfc_c2f6",
+    "display_name": "PFC-116 (C2F6) released — etch / clean",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "C2F6",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released to air, after any abatement."
+  },
+  {
+    "activity_key": "fugitive.pfc_cf4",
+    "display_name": "PFC-14 (CF4) released — etch / clean",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "CF4",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released to air, after any abatement."
+  },
+  {
     "activity_key": "fugitive.fire_co2",
     "display_name": "Fire suppression — CO2",
     "group": "Fugitive — other",
@@ -1543,7 +1595,7 @@
     "default_unit": "m3",
     "allowed_units": "m3|kL|kg",
     "gases": "CH4",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.5",
     "notes": ""
   },
   {
@@ -1554,10 +1606,10 @@
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
     "default_unit": "m3",
-    "allowed_units": "m3|scm",
+    "allowed_units": "kg|m3|scm",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": ""
+    "notes": "Enter the kilograms of methane released; a volume of gas needs its methane content and density first."
   },
   {
     "activity_key": "fugitive.ch4_coal_mine",
@@ -1566,11 +1618,11 @@
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "t",
-    "allowed_units": "t",
+    "default_unit": "kg",
+    "allowed_units": "kg|t",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": ""
+    "notes": "Enter the kilograms of methane released."
   },
   {
     "activity_key": "fugitive.co2_welding",
@@ -1621,7 +1673,7 @@
     "default_unit": "m3",
     "allowed_units": "m3|kL|kg",
     "gases": "N2O",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.5",
     "notes": "IPCC Vol.5 Ch.6 — nitrogen in effluent. Pairs with fugitive.ch4_wastewater."
   },
   {
@@ -1638,6 +1690,32 @@
     "notes": ""
   },
   {
+    "activity_key": "fugitive.hfc_365mfc",
+    "display_name": "HFC-365mfc released — foam blowing",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "HFC-365mfc",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released."
+  },
+  {
+    "activity_key": "fugitive.hfc_245fa",
+    "display_name": "HFC-245fa released — foam blowing",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "HFC-245fa",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released."
+  },
+  {
     "activity_key": "fugitive.hfc_aerosol",
     "display_name": "HFCs — aerosols and solvents",
     "group": "Fugitive — other",
@@ -1649,6 +1727,19 @@
     "gases": "HFC",
     "factor_source": "IPCC AR6",
     "notes": ""
+  },
+  {
+    "activity_key": "fugitive.hfc_152a",
+    "display_name": "HFC-152a released — aerosol / foam",
+    "group": "Fugitive — other",
+    "scope": "1",
+    "ghg_category": "1.4",
+    "category_name": "Fugitive emissions",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "HFC-152a",
+    "factor_source": "DESNZ",
+    "notes": "Mass of gas released."
   },
   {
     "activity_key": "fugitive.sf6_magnesium",
@@ -1684,10 +1775,10 @@
     "ghg_category": "1.1",
     "category_name": "Stationary combustion",
     "default_unit": "m3",
-    "allowed_units": "m3",
+    "allowed_units": "kWh|t|m3",
     "gases": "CH4,N2O",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": "Biogenic CO2 to memo"
+    "notes": "Biogenic CO2 to memo Enter the energy flared (kWh) or the mass (tonnes) - DESNZ publishes biogas per kWh and per tonne."
   },
   {
     "activity_key": "vent.process_ch4",
@@ -1696,11 +1787,11 @@
     "scope": "1",
     "ghg_category": "1.4",
     "category_name": "Fugitive emissions",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "CH4",
     "factor_source": "IPCC 2006 Vol.2",
-    "notes": ""
+    "notes": "Enter the kilograms of methane released."
   },
   {
     "activity_key": "vent.oil_gas",
@@ -1816,7 +1907,7 @@
     "default_unit": "head.yr",
     "allowed_units": "head.yr",
     "gases": "CH4",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.4",
     "notes": ""
   },
   {
@@ -1829,7 +1920,7 @@
     "default_unit": "head.yr",
     "allowed_units": "head.yr",
     "gases": "CH4,N2O",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.4",
     "notes": ""
   },
   {
@@ -1842,7 +1933,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "N2O",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.4",
     "notes": "Direct and indirect N2O"
   },
   {
@@ -1855,7 +1946,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.4",
     "notes": ""
   },
   {
@@ -1868,7 +1959,7 @@
     "default_unit": "t",
     "allowed_units": "kg|t",
     "gases": "CO2",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.4",
     "notes": ""
   },
   {
@@ -1881,7 +1972,7 @@
     "default_unit": "ha",
     "allowed_units": "ha",
     "gases": "CH4",
-    "factor_source": "IPCC 2006 Vol.2",
+    "factor_source": "IPCC 2006 Vol.4",
     "notes": ""
   },
   {
@@ -2197,6 +2288,58 @@
     "notes": "Average-data method; prefer supplier-specific where available"
   },
   {
+    "activity_key": "cat1.material.plastic_rigid",
+    "display_name": "Packaging — rigid plastic (average)",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
+  },
+  {
+    "activity_key": "cat1.material.plastic_film",
+    "display_name": "Packaging — plastic film (average)",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
+  },
+  {
+    "activity_key": "cat1.material.plastic_ldpe",
+    "display_name": "Plastic — LDPE / LLDPE",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
+  },
+  {
+    "activity_key": "cat1.material.plastic_hdpe",
+    "display_name": "Plastic — HDPE",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
+  },
+  {
     "activity_key": "cat1.material.plastic_pe",
     "display_name": "Plastic — polyethylene",
     "group": "Cat 1 — Purchased goods",
@@ -2247,6 +2390,45 @@
     "gases": "CO2e",
     "factor_source": "ecoinvent / EXIOBASE / DESNZ",
     "notes": "Average-data method; prefer supplier-specific where available"
+  },
+  {
+    "activity_key": "cat1.material.aluminium_cans",
+    "display_name": "Packaging — aluminium cans and foil",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
+  },
+  {
+    "activity_key": "cat1.material.steel_cans",
+    "display_name": "Packaging — steel cans",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
+  },
+  {
+    "activity_key": "cat1.material.board",
+    "display_name": "Packaging — paper board / cartons",
+    "group": "Cat 1 — Purchased goods",
+    "scope": "3",
+    "ghg_category": "3.1",
+    "category_name": "Purchased goods and services",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "Primary material production, cradle to gate."
   },
   {
     "activity_key": "cat1.material.glass",
@@ -2652,6 +2834,58 @@
     "notes": ""
   },
   {
+    "activity_key": "cat4.spend_air",
+    "display_name": "Upstream transport spend — air freight",
+    "group": "Cat 4 — Upstream transport",
+    "scope": "3",
+    "ghg_category": "3.4",
+    "category_name": "Upstream transportation and distribution",
+    "default_unit": "USD",
+    "allowed_units": "USD|INR",
+    "gases": "CO2e",
+    "factor_source": "EPA USEEIO v1.3",
+    "notes": "Spend-based screening. US industry average (NAICS 481112)."
+  },
+  {
+    "activity_key": "cat4.spend_sea",
+    "display_name": "Upstream transport spend — sea freight",
+    "group": "Cat 4 — Upstream transport",
+    "scope": "3",
+    "ghg_category": "3.4",
+    "category_name": "Upstream transportation and distribution",
+    "default_unit": "USD",
+    "allowed_units": "USD|INR",
+    "gases": "CO2e",
+    "factor_source": "EPA USEEIO v1.3",
+    "notes": "Spend-based screening. US industry average (NAICS 483111)."
+  },
+  {
+    "activity_key": "cat4.spend_rail",
+    "display_name": "Upstream transport spend — rail freight",
+    "group": "Cat 4 — Upstream transport",
+    "scope": "3",
+    "ghg_category": "3.4",
+    "category_name": "Upstream transportation and distribution",
+    "default_unit": "USD",
+    "allowed_units": "USD|INR",
+    "gases": "CO2e",
+    "factor_source": "EPA USEEIO v1.3",
+    "notes": "Spend-based screening. US industry average (NAICS 482111)."
+  },
+  {
+    "activity_key": "cat4.spend_road",
+    "display_name": "Upstream transport spend — road freight (trucking)",
+    "group": "Cat 4 — Upstream transport",
+    "scope": "3",
+    "ghg_category": "3.4",
+    "category_name": "Upstream transportation and distribution",
+    "default_unit": "USD",
+    "allowed_units": "USD|INR",
+    "gases": "CO2e",
+    "factor_source": "EPA USEEIO v1.3",
+    "notes": "Spend-based screening. US industry average (NAICS 484121); enter spend in USD, or INR with a stated exchange rate."
+  },
+  {
     "activity_key": "cat5.landfill_mixed",
     "display_name": "Landfill — mixed municipal waste",
     "group": "Cat 5 — Waste",
@@ -2819,6 +3053,19 @@
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": ""
+  },
+  {
+    "activity_key": "cat5.construction_recycled",
+    "display_name": "Construction & demolition waste — recycled",
+    "group": "Cat 5 — Waste",
+    "scope": "3",
+    "ghg_category": "3.5",
+    "category_name": "Waste generated in operations",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "DESNZ Average construction, open-loop recycling. DESNZ publishes no landfill route for construction waste."
   },
   {
     "activity_key": "cat5.sewage_sludge",
@@ -3029,6 +3276,19 @@
     "notes": ""
   },
   {
+    "activity_key": "cat6.spend_air",
+    "display_name": "Business travel spend — flights",
+    "group": "Cat 6 — Business travel",
+    "scope": "3",
+    "ghg_category": "3.6",
+    "category_name": "Business travel",
+    "default_unit": "USD",
+    "allowed_units": "USD|INR",
+    "gases": "CO2e",
+    "factor_source": "EPA USEEIO v1.3",
+    "notes": "Spend-based screening. US industry average (NAICS 481111). A distance-based flight row is better where the trips are known."
+  },
+  {
     "activity_key": "cat6.air_rf_uplift",
     "display_name": "Air travel — radiative forcing uplift",
     "group": "Cat 6 — Business travel",
@@ -3169,7 +3429,7 @@
     "allowed_units": "km|mi",
     "gases": "CO2e",
     "factor_source": "DESNZ",
-    "notes": "Modelled: headcount x mode split x average distance x working days"
+    "notes": "Modelled: headcount x mode split x average distance x working days Enter each employee's share of the car-km: the distance driven divided by the number of people in the car."
   },
   {
     "activity_key": "cat7.wfh",
@@ -3315,6 +3575,19 @@
     "notes": "Mass of product sold x material composition x disposal route split"
   },
   {
+    "activity_key": "cat12.incineration_energy",
+    "display_name": "EOL — incineration with energy recovery",
+    "group": "Cat 8-15 — Other",
+    "scope": "3",
+    "ghg_category": "3.12",
+    "category_name": "End-of-life treatment of sold products",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "DESNZ commercial and industrial waste, incineration with energy recovery."
+  },
+  {
     "activity_key": "cat12.recycling",
     "display_name": "EOL — recycling",
     "group": "Cat 8-15 — Other",
@@ -3326,6 +3599,58 @@
     "gases": "CO2e",
     "factor_source": "DESNZ",
     "notes": "Mass of product sold x material composition x disposal route split"
+  },
+  {
+    "activity_key": "cat12.recycling_glass",
+    "display_name": "EOL — recycling, glass",
+    "group": "Cat 8-15 — Other",
+    "scope": "3",
+    "ghg_category": "3.12",
+    "category_name": "End-of-life treatment of sold products",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "DESNZ glass, open-loop."
+  },
+  {
+    "activity_key": "cat12.recycling_paper",
+    "display_name": "EOL — recycling, paper and board",
+    "group": "Cat 8-15 — Other",
+    "scope": "3",
+    "ghg_category": "3.12",
+    "category_name": "End-of-life treatment of sold products",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "DESNZ mixed paper and board, closed-loop."
+  },
+  {
+    "activity_key": "cat12.recycling_plastic",
+    "display_name": "EOL — recycling, plastic",
+    "group": "Cat 8-15 — Other",
+    "scope": "3",
+    "ghg_category": "3.12",
+    "category_name": "End-of-life treatment of sold products",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "DESNZ average plastics, open-loop."
+  },
+  {
+    "activity_key": "cat12.recycling_metal",
+    "display_name": "EOL — recycling, metal",
+    "group": "Cat 8-15 — Other",
+    "scope": "3",
+    "ghg_category": "3.12",
+    "category_name": "End-of-life treatment of sold products",
+    "default_unit": "t",
+    "allowed_units": "kg|t",
+    "gases": "CO2e",
+    "factor_source": "DESNZ",
+    "notes": "DESNZ scrap metal, open-loop."
   },
   {
     "activity_key": "cat12.reuse",
@@ -3386,7 +3711,7 @@
     "scope": "memo",
     "ghg_category": "memo",
     "category_name": "Biogenic memo item",
-    "default_unit": "t",
+    "default_unit": "kg",
     "allowed_units": "kg|t",
     "gases": "CO2",
     "factor_source": "DESNZ",
@@ -3430,6 +3755,58 @@
     "gases": "CFC",
     "factor_source": "IPCC AR6",
     "notes": "Reported separately, outside the scopes"
+  },
+  {
+    "activity_key": "memo.montreal_halon1301",
+    "display_name": "Halon-1301 released",
+    "group": "Memo — outside scopes",
+    "scope": "memo",
+    "ghg_category": "memo",
+    "category_name": "Montreal Protocol gas",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "Halon-1301",
+    "factor_source": "DESNZ",
+    "notes": "Montreal Protocol gas: reported separately, never in a scope total."
+  },
+  {
+    "activity_key": "memo.montreal_halon1211",
+    "display_name": "Halon-1211 released",
+    "group": "Memo — outside scopes",
+    "scope": "memo",
+    "ghg_category": "memo",
+    "category_name": "Montreal Protocol gas",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "Halon-1211",
+    "factor_source": "DESNZ",
+    "notes": "Montreal Protocol gas: reported separately, never in a scope total."
+  },
+  {
+    "activity_key": "memo.montreal_cfc12",
+    "display_name": "CFC-12 / R-12 released",
+    "group": "Memo — outside scopes",
+    "scope": "memo",
+    "ghg_category": "memo",
+    "category_name": "Montreal Protocol gas",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "CFC-12",
+    "factor_source": "DESNZ",
+    "notes": "Montreal Protocol gas: reported separately, never in a scope total."
+  },
+  {
+    "activity_key": "memo.montreal_cfc11",
+    "display_name": "CFC-11 / R-11 released",
+    "group": "Memo — outside scopes",
+    "scope": "memo",
+    "ghg_category": "memo",
+    "category_name": "Montreal Protocol gas",
+    "default_unit": "kg",
+    "allowed_units": "kg|g",
+    "gases": "CFC-11",
+    "factor_source": "DESNZ",
+    "notes": "Montreal Protocol gas: reported separately, never in a scope total."
   },
   {
     "activity_key": "memo.avoided_exported_renewable",

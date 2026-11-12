@@ -104,21 +104,24 @@ export function unitsFor(activityKey: string): string[] {
   return allowed.length > 0 ? allowed : [source.default_unit].filter(Boolean);
 }
 
-export const isVerified = (activityKey: string): boolean =>
-  CATALOGUE_SOURCES.find((item) => item.activity_key === activityKey)?.verified ?? false;
-
-/** How much of the library carries a published value, for the factor library view. */
-export function catalogueCoverage(): { total: number; verified: number; byScope: Record<string, { total: number; verified: number }> } {
+/**
+ * How much of the library the engine can calculate, for the factor library
+ * view. A source counts when it has a published value joined to it or an IPCC
+ * method behind it - read from the engine, not from the picker's own data.
+ */
+export function catalogueCoverage(
+  isCalculable: (source: CatalogueSource) => boolean = () => false,
+): { total: number; verified: number; byScope: Record<string, { total: number; verified: number }> } {
   const byScope: Record<string, { total: number; verified: number }> = {};
+  let verified = 0;
   CATALOGUE_SOURCES.forEach((source) => {
     const bucket = byScope[source.scope] ?? { total: 0, verified: 0 };
     bucket.total += 1;
-    if (source.verified) bucket.verified += 1;
+    if (isCalculable(source)) {
+      bucket.verified += 1;
+      verified += 1;
+    }
     byScope[source.scope] = bucket;
   });
-  return {
-    total: CATALOGUE_SOURCES.length,
-    verified: CATALOGUE_SOURCES.filter((source) => source.verified).length,
-    byScope,
-  };
+  return { total: CATALOGUE_SOURCES.length, verified, byScope };
 }

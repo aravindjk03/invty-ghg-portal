@@ -21,7 +21,7 @@ def test_every_method_says_what_it_is_and_where_it_came_from():
     assert {m["key"] for m in methods} == {
         "managed_soils", "lime_and_urea", "enteric_fermentation",
         "manure_management", "wastewater", "solid_waste",
-        "mineral_industry", "chemical_industry", "metal_industry"}
+        "mineral_industry", "chemical_industry", "metal_industry", "rice_cultivation"}
     for method in methods:
         assert "IPCC 2006" in method["source"]
         assert method["why_not_a_factor"]
