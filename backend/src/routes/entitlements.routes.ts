@@ -18,6 +18,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { dbService } from '../db/database';
+import { bumpUsage } from '../services/ops.service';
 
 const router = Router();
 
@@ -105,6 +106,7 @@ router.post('/reserve', requireServiceSecret, (req: Request, res: Response) => {
     return;
   }
 
+  bumpUsage(userId, 'ai_estimate');
   res.status(200).json({
     success: true,
     ledgerId: reservation.ledgerId,

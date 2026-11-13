@@ -13,7 +13,10 @@ export interface UserRecord {
   salt: string;
   name: string;
   company_name: string;
-  role: 'ADMIN' | 'ESG_MANAGER' | 'ESG_ANALYST' | 'AUDITOR';
+  role: 'ADMIN' | 'ESG_MANAGER' | 'ESG_ANALYST' | 'AUDITOR' | 'OPERATOR' | 'SECURITY';
+  status?: 'active' | 'suspended';
+  last_login_at?: string | null;
+  suspended_reason?: string | null;
   avatar_url?: string | null;
   auth_provider?: string;
   created_at: string;
@@ -75,6 +78,8 @@ export interface SafeUser {
   avatarUrl?: string;
   authProvider?: string;
   createdAt: string;
+  /** 'suspended' accounts are refused at sign-in and on every request. */
+  status?: 'active' | 'suspended';
 }
 
 export interface AuditBlockRow {
@@ -112,7 +117,8 @@ class DatabaseService {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    this.dbFilePath = path.join(dataDir, 'invty_portal.db');
+    // IINVTY_DB_FILE lets the test suite use a throwaway database.
+    this.dbFilePath = process.env.IINVTY_DB_FILE || path.join(dataDir, 'invty_portal.db');
     this.db = new DatabaseSync(this.dbFilePath);
     this.initSchema();
     this.seedDefaultUsers();
@@ -224,6 +230,62 @@ class DatabaseService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_leads_captured ON leads(captured_at);
+
+      -- ── Operations console ────────────────────────────────────────────
+      -- What happened to accounts and requests, for the developer and cyber
+      -- team. IP addresses are stored masked (last octet / last 80 bits
+      -- removed) and every row is deleted after 90 days.
+      CREATE TABLE IF NOT EXISTS security_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        type TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        user_id TEXT,
+        actor_id TEXT,
+        subject TEXT,
+        ip_masked TEXT,
+        user_agent TEXT,
+        detail TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_sec_at ON security_events(at);
+      CREATE INDEX IF NOT EXISTS idx_sec_type ON security_events(type, at);
+      CREATE INDEX IF NOT EXISTS idx_sec_user ON security_events(user_id, at);
+
+      -- Counts per account per day. No content, no figures: only how often.
+      CREATE TABLE IF NOT EXISTS usage_daily (
+        user_id TEXT NOT NULL,
+        day TEXT NOT NULL,
+        metric TEXT NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, day, metric)
+      );
+      CREATE INDEX IF NOT EXISTS idx_usage_day ON usage_daily(day);
+
+      CREATE TABLE IF NOT EXISTS ops_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        detail TEXT,
+        resolved_at TEXT,
+        resolved_by TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_alerts_status ON ops_alerts(status, at);
+
+      -- Every action taken in the console, chained with a keyed hash so an
+      -- edited or deleted row breaks verification.
+      CREATE TABLE IF NOT EXISTS admin_actions (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        actor_id TEXT NOT NULL,
+        actor_email TEXT NOT NULL,
+        action TEXT NOT NULL,
+        target_id TEXT,
+        detail TEXT,
+        prev_hash TEXT NOT NULL,
+        hash TEXT NOT NULL
+      );
     `);
 
     // Schema migrations for existing SQLite file
@@ -238,6 +300,15 @@ class DatabaseService {
       }
       if (!columns.includes('auth_provider')) {
         this.db.exec("ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'email';");
+      }
+      if (!columns.includes('status')) {
+        this.db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active';");
+      }
+      if (!columns.includes('last_login_at')) {
+        this.db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT;');
+      }
+      if (!columns.includes('suspended_reason')) {
+        this.db.exec('ALTER TABLE users ADD COLUMN suspended_reason TEXT;');
       }
     } catch (err) {
       console.warn('[IINVTY DB] Schema migration check notice:', err);
@@ -594,6 +665,7 @@ class DatabaseService {
   }
 
   public createSession(userId: string, expiresInDays = 7): string {
+    this.db.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(new Date().toISOString(), userId);
     const token = crypto.randomBytes(32).toString('hex');
     const now = new Date();
     const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
@@ -801,7 +873,8 @@ class DatabaseService {
   public getSession(token: string): { session: SessionRecord; user: SafeUser } | null {
     const stmt = this.db.prepare(`
       SELECT s.token, s.user_id, s.created_at as session_created_at, s.expires_at,
-             u.id, u.email, u.phone, u.name, u.company_name, u.role, u.avatar_url, u.auth_provider, u.created_at
+             u.id, u.email, u.phone, u.name, u.company_name, u.role, u.avatar_url, u.auth_provider, u.created_at,
+             u.status
       FROM sessions s
       JOIN users u ON s.user_id = u.id
       WHERE s.token = ?
@@ -833,8 +906,14 @@ class DatabaseService {
         avatarUrl: row.avatar_url,
         authProvider: row.auth_provider,
         createdAt: row.created_at,
+        status: row.status === 'suspended' ? 'suspended' : 'active',
       },
     };
+  }
+
+  /** The shared connection, for the operations console store. */
+  public get connection(): any {
+    return this.db;
   }
 
   // ── Account self-service ────────────────────────────────────────────────
@@ -894,6 +973,7 @@ class DatabaseService {
       avatarUrl: user.avatar_url || undefined,
       authProvider: user.auth_provider || 'email',
       createdAt: user.created_at,
+      status: user.status === 'suspended' ? 'suspended' : 'active',
     };
   }
 }

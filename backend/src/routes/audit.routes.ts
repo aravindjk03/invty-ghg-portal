@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { auditService } from '../services/audit.service';
+import { bumpUsage } from '../services/ops.service';
 
 const router = Router();
 
@@ -50,6 +51,7 @@ router.post('/record', (req: Request, res: Response) => {
     result.data.payloadSummary,
   );
 
+  bumpUsage(req.user!.id, 'audit_entry');
   res.status(201).json({
     success: true,
     data: block,

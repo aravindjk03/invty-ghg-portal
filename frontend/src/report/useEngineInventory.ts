@@ -28,6 +28,7 @@ import { ActivityEntry } from '../types/ghg';
 import { calculateInventory, InventoryError } from '../services/inventoryService';
 import { unitChoiceFor } from '../services/catalogueMap';
 import { engineVersion } from '../engine/engineFetch';
+import { reportUsage } from '../services/opsService';
 import { GwpSetName, InventoryRecordInput, InventoryResult } from '../types/inventory';
 
 const GHG_CATEGORY: Record<string, string> = {
@@ -238,6 +239,8 @@ export function useEngineInventory(
     }, controller.signal)
       .then((calculated) => {
         fresh = true;
+        // Counted once per recalculation, never what was calculated.
+        reportUsage('calculation');
         setResult(calculated);
         setError(undefined);
         versionReady.then((stamp) => {

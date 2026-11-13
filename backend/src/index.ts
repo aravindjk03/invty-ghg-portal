@@ -4,6 +4,7 @@ import { env } from './config/env';
 import { helmetMiddleware, corsMiddleware, requestSanitizer } from './middleware/security';
 import { globalRateLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
+import { startRetentionSweep } from './services/ops.service';
 import apiRoutes from './routes';
 
 const app = express();
@@ -44,6 +45,8 @@ app.use((_req, res) => {
 app.use(errorHandler);
 
 // Start server
+startRetentionSweep();
+
 const server = app.listen(env.PORT, () => {
   console.log(`=========================================`);
   console.log(`[IINVTY Enterprise GHG Engine] Server Started`);

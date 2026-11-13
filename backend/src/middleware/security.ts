@@ -1,4 +1,5 @@
 import helmet from 'helmet';
+import { recordEvent } from '../services/ops.service';
 import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env';
@@ -43,6 +44,7 @@ export const corsMiddleware = cors({
     // No CORS headers for anyone else: the browser then refuses to let that
     // page read the reply. Raising an error here turned every such request
     // into a 500 in the logs.
+    recordEvent({ type: 'access.cors_refused', subject: origin.slice(0, 200) });
     return callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

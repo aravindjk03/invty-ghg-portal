@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculateMethod, MethodError } from '../services/methodsService';
 import { GwpSetName } from '../types/inventory';
+import { reportUsage } from '../services/opsService';
 import { MethodEntry, MethodResult } from '../types/methods';
 
 export interface MethodResults {
@@ -56,6 +57,7 @@ export function useMethodResults(entries: MethodEntry[], gwpSet: GwpSetName): Me
           };
         })))
       .then((settled) => {
+        reportUsage('method_calculation', settled.length);
         const results = new Map<string, MethodResult>();
         const failures = new Map<string, string>();
         settled.forEach((item) => {

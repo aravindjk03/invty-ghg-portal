@@ -15,6 +15,9 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ 
 const ReportPreviewPage = lazy(() => import('./pages/ReportPreviewPage').then((m) => ({ default: m.ReportPreviewPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage').then((m) => ({ default: m.ShowcasePage })));
+// Loaded only when a staff account opens it, so the console's code is not in
+// the bundle every visitor downloads.
+const OpsConsolePage = lazy(() => import('./pages/OpsConsolePage').then((m) => ({ default: m.OpsConsolePage })));
 const ProductCarbonPage = lazy(() => import('./pages/ProductCarbonPage').then((m) => ({ default: m.ProductCarbonPage })));
 const MethodsPage = lazy(() => import('./pages/MethodsPage').then((m) => ({ default: m.MethodsPage })));
 const FactorLibraryPage = lazy(() => import('./pages/FactorLibraryPage').then((m) => ({ default: m.FactorLibraryPage })));
@@ -27,6 +30,7 @@ import { leadService } from './services/leadService';
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { isStaff } from './services/opsService';
 import { DEFAULT_PAGE, PageKey, resolvePage } from './config/routes';
 
 const queryClient = new QueryClient({
@@ -178,6 +182,10 @@ function MainApp() {
         return <SettingsPage onNavigate={navigate} />;
       case 'showcase':
         return <ShowcasePage />;
+      case 'ops':
+        // The internal console. Anyone else lands on the hub with no hint that
+        // the page exists; the server refuses them regardless.
+        return isStaff(currentUser.role) ? <OpsConsolePage /> : <ScopeHubPage onNavigate={navigate} />;
       case 'scope-hub':
       default:
         return <ScopeHubPage onNavigate={navigate} />;

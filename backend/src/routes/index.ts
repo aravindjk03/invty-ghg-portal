@@ -10,7 +10,9 @@ import cemsRoutes from './cems.routes';
 import auditRoutes from './audit.routes';
 import authRoutes from './auth.routes';
 import entitlementsRoutes from './entitlements.routes';
+import opsRoutes from './ops.routes';
 import { requireAuth } from '../middleware/requireAuth';
+import { bumpUsage, UsageMetric } from '../services/ops.service';
 
 const router = Router();
 
@@ -39,6 +41,27 @@ router.use('/v1/leads', leadsRoutes);
 router.use('/v1/emissions', requireAuth, emissionsRoutes);
 router.use('/v1/reports', requireAuth, reportsRoutes);
 router.use('/v1/audit', requireAuth, auditRoutes);
+
+// The operations console, for the internal developer and cyber team. Every
+// route inside names the staff roles allowed; nothing here is for customers.
+router.use('/v1/ops', requireAuth, opsRoutes);
+
+/**
+ * How often a signed-in account used a feature that runs in the browser
+ * (calculations happen there, not on this server). Only a metric name from
+ * this list and a small count are accepted - never content or figures.
+ */
+const REPORTABLE: UsageMetric[] = ['calculation', 'method_calculation', 'rows_saved', 'report_export'];
+router.post('/v1/usage', requireAuth, (req: Request, res: Response) => {
+  const metric = String(req.body?.metric ?? '') as UsageMetric;
+  const count = Math.min(Math.max(Math.floor(Number(req.body?.count ?? 1)) || 1, 1), 50);
+  if (!REPORTABLE.includes(metric)) {
+    res.status(400).json({ success: false, error: { code: 'UNKNOWN_METRIC', message: 'Unknown usage metric.' } });
+    return;
+  }
+  bumpUsage(req.user!.id, metric, count);
+  res.status(204).end();
+});
 
 // Parked modules. The UI does not route to any of them, so by default the API
 // does not serve them either: an endpoint nobody can reach from the product is

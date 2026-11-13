@@ -3,6 +3,27 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { dbService, normalisePhone } from '../db/database';
 import { env } from '../config/env';
+import { bumpUsage, countAdmins as countActiveAdmins, recordEvent } from '../services/ops.service';
+
+/**
+ * A suspended account is refused at every way in, not only on the next
+ * request. Returns true when the response has been sent.
+ */
+function refuseSuspended(req: Request, res: Response, user: { id: string; status?: string }, via: string): boolean {
+  if (user.status !== 'suspended') return false;
+  recordEvent({ type: 'auth.suspended_login', userId: user.id, req, detail: { via } });
+  res.status(403).json({
+    success: false,
+    error: { code: 'ACCOUNT_SUSPENDED', message: 'This account has been suspended. Contact your administrator.' },
+  });
+  return true;
+}
+
+/** A signed-in account: recorded once, the same way for every sign-in method. */
+function signedIn(req: Request, userId: string, via: string): void {
+  recordEvent({ type: 'auth.login_ok', userId, req, detail: { via } });
+  bumpUsage(userId, 'sign_in');
+}
 
 const signupSchema = z.object({
   email: z.string().email('Valid business email address is required'),
@@ -179,6 +200,8 @@ export const authController = {
       });
 
       const token = dbService.createSession(user.id);
+      recordEvent({ type: 'auth.signup', userId: user.id, req, detail: { via: 'email' } });
+      signedIn(req, user.id, 'signup');
 
       res.status(201).json({
         success: true,
@@ -219,6 +242,7 @@ export const authController = {
       // limiter alone lets a spread-out guessing run through untouched.
       const lockedFor = dbService.loginLockSeconds(email);
       if (lockedFor > 0) {
+        recordEvent({ type: 'auth.locked', subject: email, req, detail: { retryAfterSeconds: lockedFor } });
         res.setHeader('Retry-After', String(lockedFor));
         res.status(429).json({
           success: false,
@@ -238,6 +262,7 @@ export const authController = {
         // which told anyone timing the endpoint which emails are customers.
         dbService.burnPasswordCheck(password);
         dbService.recordLoginFailure(email);
+        recordEvent({ type: 'auth.login_failed', subject: email, req, detail: { reason: 'unknown_account' } });
         res.status(401).json({
           success: false,
           error: {
@@ -251,6 +276,7 @@ export const authController = {
       const valid = dbService.verifyPassword(password, user.password_hash, user.salt);
       if (!valid) {
         dbService.recordLoginFailure(email);
+        recordEvent({ type: 'auth.login_failed', userId: user.id, subject: email, req, detail: { reason: 'wrong_password' } });
         res.status(401).json({
           success: false,
           error: {
@@ -261,9 +287,11 @@ export const authController = {
         return;
       }
 
+      if (refuseSuspended(req, res, user, 'email')) return;
       dbService.clearLoginFailures(email);
       const token = dbService.createSession(user.id);
       const safeUser = dbService.toSafeUser(user);
+      signedIn(req, user.id, 'email');
 
       res.status(200).json({
         success: true,
@@ -376,6 +404,7 @@ export const authController = {
       const isValid = dbService.verifyOtp(phone, code);
 
       if (!isValid) {
+        recordEvent({ type: 'auth.otp_failed', subject: phone, req });
         res.status(400).json({
           success: false,
           error: {
@@ -388,7 +417,9 @@ export const authController = {
 
       // Find existing user or auto-create enterprise mobile user in SQLite
       const safeUser = dbService.findOrCreateMobileUser(phone, name, companyName);
+      if (refuseSuspended(req, res, safeUser, 'mobile')) return;
       const token = dbService.createSession(safeUser.id);
+      signedIn(req, safeUser.id, 'mobile');
 
       res.status(200).json({
         success: true,
@@ -453,6 +484,7 @@ export const authController = {
       }
 
       if (!identity) {
+        recordEvent({ type: 'auth.google_failed', req });
         res.status(401).json({
           success: false,
           error: {
@@ -474,7 +506,9 @@ export const authController = {
         companyName: parsed.data.companyName,
       });
 
+      if (refuseSuspended(req, res, safeUser, 'google')) return;
       const token = dbService.createSession(safeUser.id);
+      signedIn(req, safeUser.id, 'google');
 
       res.status(200).json({
         success: true,
@@ -533,7 +567,9 @@ export const authController = {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
+      const session = dbService.getSession(token);
       dbService.deleteSession(token);
+      if (session) recordEvent({ type: 'auth.logout', userId: session.user.id, req });
     }
 
     res.status(200).json({
@@ -555,6 +591,8 @@ export const authController = {
       return;
     }
     const user = dbService.updateProfile(req.user!.id, parsed.data);
+    recordEvent({ type: 'account.profile_changed', userId: req.user!.id, req,
+      detail: { fields: Object.keys(parsed.data) } });
     res.status(200).json({ success: true, user });
   },
 
@@ -571,6 +609,7 @@ export const authController = {
     // The current password is asked for again: a borrowed, unlocked session
     // must not be enough to lock the owner out of their own account.
     if (!record || !dbService.verifyPassword(parsed.data.currentPassword, record.password_hash, record.salt)) {
+      recordEvent({ type: 'account.password_change_refused', severity: 'warning', userId: req.user!.id, req });
       res.status(403).json({
         success: false,
         error: { code: 'WRONG_PASSWORD', message: 'The current password is not correct.' },
@@ -579,12 +618,14 @@ export const authController = {
     }
     const token = (req.headers.authorization || '').slice(7).trim();
     dbService.changePassword(record.id, parsed.data.newPassword, token);
+    recordEvent({ type: 'account.password_changed', userId: record.id, req });
     res.status(200).json({ success: true, message: 'Password changed. Other devices have been signed out.' });
   },
 
   logoutEverywhere: (req: Request, res: Response) => {
     const token = (req.headers.authorization || '').slice(7).trim();
     const ended = dbService.deleteOtherSessions(req.user!.id, token);
+    recordEvent({ type: 'account.signed_out_everywhere', userId: req.user!.id, req, detail: { sessionsEnded: ended } });
     res.status(200).json({ success: true, sessionsEnded: ended });
   },
 
@@ -605,7 +646,16 @@ export const authController = {
       });
       return;
     }
+    if (record.role === 'ADMIN' && countActiveAdmins(record.id) === 0) {
+      res.status(409).json({
+        success: false,
+        error: { code: 'LAST_ADMIN', message: 'This is the only administrator. Make another account ADMIN first.' },
+      });
+      return;
+    }
     dbService.deleteUser(record.id);
+    // The account is gone, so the event keeps only the email it had.
+    recordEvent({ type: 'account.deleted', subject: record.email, req, detail: { by: 'self' } });
     res.status(200).json({ success: true, message: 'Your account and everything stored with it have been deleted.' });
   },
 
