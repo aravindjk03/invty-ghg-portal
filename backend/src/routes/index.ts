@@ -12,6 +12,7 @@ import authRoutes from './auth.routes';
 import entitlementsRoutes from './entitlements.routes';
 import opsRoutes from './ops.routes';
 import { requireAuth } from '../middleware/requireAuth';
+import { opsGate } from '../middleware/opsGate';
 import { bumpUsage, UsageMetric } from '../services/ops.service';
 
 const router = Router();
@@ -44,7 +45,9 @@ router.use('/v1/audit', requireAuth, auditRoutes);
 
 // The operations console, for the internal developer and cyber team. Every
 // route inside names the staff roles allowed; nothing here is for customers.
-router.use('/v1/ops', requireAuth, opsRoutes);
+// opsGate first: from the wrong site or network the console API looks like any
+// unknown route, before the token is even read.
+router.use('/v1/ops', opsGate, requireAuth, opsRoutes);
 
 /**
  * How often a signed-in account used a feature that runs in the browser

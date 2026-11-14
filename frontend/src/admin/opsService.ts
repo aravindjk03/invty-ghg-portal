@@ -6,7 +6,7 @@
  * role may see or do; this file never assumes a permission.
  */
 import { env } from '../config/env';
-import { authService } from './authService';
+import { adminSession } from './adminSession';
 
 export type StaffRole = 'ADMIN' | 'SECURITY' | 'OPERATOR';
 export const STAFF_ROLES: StaffRole[] = ['ADMIN', 'SECURITY', 'OPERATOR'];
@@ -20,10 +20,8 @@ export class OpsError extends Error {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const token = authService.getToken();
-  if (!token || authService.isTrialSession()) {
-    throw new OpsError('The console needs the backend. This session is the browser-only trial.', 0);
-  }
+  const token = adminSession.token();
+  if (!token) throw new OpsError('Please sign in.', 401);
   let res: Response;
   try {
     res = await fetch(`${env.API_BASE_URL}/ops${path}`, {
@@ -35,6 +33,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new OpsError('The server could not be reached.', 0);
   }
   const data = await res.json().catch(() => null);
+  if (res.status === 401) adminSession.clear();
   if (!res.ok || !data?.success) {
     throw new OpsError(data?.error?.message || `Request failed (${res.status}).`, res.status);
   }
@@ -126,7 +125,7 @@ export const opsService = {
 
   /** Downloads the filtered security log as CSV. */
   async downloadSecurityCsv(params: { type?: string; severity?: string; user?: string }): Promise<void> {
-    const token = authService.getToken();
+    const token = adminSession.token();
     const res = await fetch(`${env.API_BASE_URL}/ops/security.csv${qs(params)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -139,19 +138,3 @@ export const opsService = {
     URL.revokeObjectURL(url);
   },
 };
-
-/**
- * Counts one use of a feature that runs in the browser, for the console's
- * usage view. Only for server accounts; the browser-only trial is never sent.
- * Fire-and-forget: a lost count never interrupts the person using the app.
- */
-export function reportUsage(metric: 'calculation' | 'method_calculation' | 'rows_saved' | 'report_export', count = 1): void {
-  const token = authService.getToken();
-  if (!token || authService.isTrialSession()) return;
-  fetch(`${env.API_BASE_URL}/usage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ metric, count }),
-    keepalive: true,
-  }).catch(() => { /* counts are best effort */ });
-}

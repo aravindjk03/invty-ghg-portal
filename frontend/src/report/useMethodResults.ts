@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { calculateMethod, MethodError } from '../services/methodsService';
 import { GwpSetName } from '../types/inventory';
-import { reportUsage } from '../services/opsService';
+import { reportUsage } from '../services/usageReporter';
 import { MethodEntry, MethodResult } from '../types/methods';
 
 export interface MethodResults {

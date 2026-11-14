@@ -28,7 +28,7 @@ import { ActivityEntry } from '../types/ghg';
 import { calculateInventory, InventoryError } from '../services/inventoryService';
 import { unitChoiceFor } from '../services/catalogueMap';
 import { engineVersion } from '../engine/engineFetch';
-import { reportUsage } from '../services/opsService';
+import { reportUsage } from '../services/usageReporter';
 import { GwpSetName, InventoryRecordInput, InventoryResult } from '../types/inventory';
 
 const GHG_CATEGORY: Record<string, string> = {

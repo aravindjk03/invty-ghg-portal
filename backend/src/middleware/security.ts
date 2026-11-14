@@ -3,6 +3,7 @@ import { recordEvent } from '../services/ops.service';
 import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env';
+import { adminOrigins } from './opsGate';
 
 export const helmetMiddleware = helmet({
   contentSecurityPolicy: {
@@ -31,7 +32,7 @@ export const corsMiddleware = cors({
   origin: (origin, callback) => {
     // Allow non-browser requests or dev origin
     if (!origin) return callback(null, true);
-    const allowed = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+    const allowed = env.CORS_ORIGIN.split(',').concat(adminOrigins()).map((o) => o.trim());
     if (allowed.includes(origin)) return callback(null, true);
     // Outside production any LOCAL origin is accepted, for the dev servers.
     // It used to accept every origin on earth whenever NODE_ENV was

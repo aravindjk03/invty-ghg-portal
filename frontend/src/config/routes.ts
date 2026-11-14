@@ -17,9 +17,7 @@ export type PageKey =
   | 'report'
   | 'audit-trail'
   | 'settings'
-  | 'showcase'
-  /** Internal operations console. In no menu; staff roles only. */
-  | 'ops';
+  | 'showcase';
 
 export const PAGE_KEYS: PageKey[] = [
   'scope-hub',
@@ -34,7 +32,6 @@ export const PAGE_KEYS: PageKey[] = [
   'audit-trail',
   'settings',
   'showcase',
-  'ops',
 ];
 
 export const DEFAULT_PAGE: PageKey = 'scope-hub';

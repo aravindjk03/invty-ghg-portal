@@ -14,7 +14,7 @@ import { buildReport } from '../report/build/buildReport';
 import { buildMethodSources } from '../report/build/methodSources';
 import { exportWorkbook } from '../report/export/workbook';
 import { loadReportMeta, saveReportMeta, ReportMeta } from '../report/model/reportMeta';
-import { reportUsage } from '../services/opsService';
+import { reportUsage } from '../services/usageReporter';
 import { toTonnes } from '../types/inventory';
 
 export interface ReportPreviewPageProps {

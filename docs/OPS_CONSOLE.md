@@ -4,24 +4,41 @@ An internal console for the developer and cyber-security team to watch the
 portal in operation: accounts, usage and traffic, the security log, alerts,
 and a tamper-evident record of every action taken in the console.
 
-It is **not** for customers. It appears in no menu and every endpoint behind
-it checks the caller's role on the server.
+It is **not** for customers. It is a separate website with its own address
+and its own staff-only sign-in, like a CMS admin. The customer site contains
+none of its code, pages or links, so customers have no way to learn it exists.
+Every endpoint behind it also checks the caller's role on the server.
 
 ## Turning it on
 
-The console reads from the backend. The static GitHub Pages site has no server
-(accounts there live in each visitor's browser), so on that site the console
-says it needs the backend and shows nothing else.
+The console reads from the backend, so it needs the backend deployed.
 
 1. Deploy the backend with `render.yaml` (see `DEPLOY.md`). Use a paid instance
    with the persistent disk, or the accounts and logs reset on every restart.
 2. Set `ADMIN_EMAIL` on the backend. On first boot it creates that ADMIN
-   account and prints a one-time password to the log. Sign in and change it.
-3. Publish the site pointing at the backend:
-   `IINVTY_BACKEND_URL=https://<your-backend>/api/v1 npm run deploy:pages`
-4. Sign in as the ADMIN and open **`<site>/?page=ops`**.
-5. In **Users**, give team members their staff role. They sign in again and
-   open the same address.
+   account and prints a one-time password to the log.
+3. Build the admin site against that backend:
+   `cd frontend && VITE_API_BASE_URL=https://<your-backend>/api/v1 npm run build:admin`
+   This writes `frontend/dist-admin` (with `robots.txt` and a `_headers` file
+   that keep it out of search engines and out of frames).
+4. Host `dist-admin` on its own, hard-to-guess address, for example
+   `ops-<random>.yourdomain.com` on Cloudflare Pages. Put it behind
+   **Cloudflare Access** (or Netlify password protection) so only your team
+   can load it at all. Do not put it on GitHub Pages: that is public.
+5. On the backend set `ADMIN_ORIGIN=https://ops-<random>.yourdomain.com`, and
+   optionally `OPS_ALLOWED_IPS` to your office or VPN range (IPs or CIDR,
+   comma-separated). From any other site or network the console API answers
+   with the same 404 as an unknown route, and the attempt is logged.
+6. Open the admin address, sign in as the ADMIN and change the password.
+7. In **Users**, give team members their staff role. They sign in at the same
+   admin address.
+
+To try it locally: run the backend, then `cd frontend && npm run dev:admin`
+(port 5174).
+
+The admin site keeps its own session (closed with the tab), separate from the
+customer portal. A customer account that signs in there is signed straight out
+and told it has no access.
 
 ## Roles
 
@@ -40,7 +57,6 @@ Safeguards:
   password and all sessions stop working at once, and the temporary password is
   never stored in clear or logged. Google and mobile accounts have no password,
   so a reset just ends their sessions.
-- Staff open the console without filling in the customer workspace setup.
 - Staff cannot suspend or delete themselves.
 - A role change signs the person out.
 - A suspended account is refused at every sign-in method and on every request.
@@ -54,7 +70,8 @@ Safeguards:
 - Account changes: profile edits, password changes (and refused attempts),
   sign out everywhere, and self-deletion.
 - Blocked requests: invalid or expired token, role refused, suspended account,
-  rate-limit hits, and refused CORS origins.
+  rate-limit hits, refused CORS origins, and console requests from the wrong
+  site or network.
 - Console actions: every suspend, reactivate, sign-out, reset, role change,
   delete, alert resolution and log export. These are also chained with a keyed
   hash; editing or removing a row shows "Chain broken" on the Console actions

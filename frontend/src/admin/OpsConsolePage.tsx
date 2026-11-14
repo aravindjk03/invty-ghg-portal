@@ -14,8 +14,8 @@ import {
 import {
   ALL_ROLES, AdminAction, Alert, Capabilities, OpsError, OpsUser, Overview, SecurityEvent, StaffRole,
   UsageData, opsService,
-} from '../services/opsService';
-import { useGHG } from '../context/GHGContext';
+} from './opsService';
+import { useToast } from './toast';
 
 type Tab = 'overview' | 'users' | 'usage' | 'security' | 'alerts' | 'actions';
 
@@ -165,7 +165,7 @@ const UserDrawer: React.FC<{ id: string; can: Capabilities; onClose: () => void;
   const [role, setRole] = useState('');
   const [confirm, setConfirm] = useState('');
   const [temporary, setTemporary] = useState<string | null>(null);
-  const { addToast } = useGHG();
+  const addToast = useToast();
 
   useEffect(() => { if (data) setRole(data.user.role); }, [data]);
 
@@ -440,7 +440,7 @@ const SecurityTab: React.FC = () => {
   const [applied, setApplied] = useState({ type: '', severity: '', user: '' });
   const [page, setPage] = useState(1);
   const { data, error, loading, reload } = useLoad(() => opsService.events({ ...applied, page }), [applied, page]);
-  const { addToast } = useGHG();
+  const addToast = useToast();
   return (
     <div className="flex flex-col gap-3">
       <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); setPage(1); setApplied({ type, severity, user: user.trim() }); }}>
@@ -499,7 +499,7 @@ const SecurityTab: React.FC = () => {
 const AlertsTab: React.FC = () => {
   const [status, setStatus] = useState<'open' | 'resolved' | 'all'>('open');
   const { data, error, loading, reload } = useLoad<Alert[]>(() => opsService.alerts(status), [status]);
-  const { addToast } = useGHG();
+  const addToast = useToast();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2">
@@ -580,15 +580,19 @@ const ActionsTab: React.FC = () => {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 
-export const OpsConsolePage: React.FC = () => {
+export const OpsConsolePage: React.FC<{ onSignedOut?: () => void }> = ({ onSignedOut }) => {
   const [state, setState] = useState<{ role?: StaffRole; can?: Capabilities; error?: string; offline?: boolean }>({});
   const [tab, setTab] = useState<Tab>('overview');
 
   useEffect(() => {
     opsService.whoami()
       .then((me) => setState({ role: me.role, can: me.can }))
-      .catch((e: OpsError) => setState({ error: e.message, offline: e.status === 0 || e.status === 404 }));
-  }, []);
+      .catch((e: OpsError) => {
+        // Session expired or ended by another admin: back to the sign-in screen.
+        if (e.status === 401 || e.status === 403) { onSignedOut?.(); return; }
+        setState({ error: e.message, offline: e.status === 0 || e.status === 404 });
+      });
+  }, [onSignedOut]);
 
   if (state.offline) {
     return (
@@ -596,12 +600,11 @@ export const OpsConsolePage: React.FC = () => {
         <div className={panel}>
           <h1 className="text-[20px] font-bold text-brand-heading flex items-center gap-2"><Shield size={18} /> Operations console</h1>
           <p className="text-[14px] text-brand-body mt-2 leading-relaxed">
-            The console needs the backend server, and this site is running without one: accounts here live
-            only in each visitor's browser, so there are no users, usage or security events to show.
+            The backend server could not be reached, or it does not allow this address.
           </p>
           <p className="text-[13px] text-brand-muted mt-2">
-            Deploy the backend with <span className="font-mono">render.yaml</span> (see <span className="font-mono">DEPLOY.md</span>),
-            point the site at it with <span className="font-mono">IINVTY_BACKEND_URL</span>, and sign in with a staff account.
+            Build this site with <span className="font-mono">VITE_API_BASE_URL</span> pointing at the backend, and set
+            the backend's <span className="font-mono">ADMIN_ORIGIN</span> to this site's address (see <span className="font-mono">docs/OPS_CONSOLE.md</span>).
           </p>
         </div>
       </div>

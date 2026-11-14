@@ -127,6 +127,32 @@ calling `localhost`.
 
 ---
 
+## The admin site (operations console)
+
+The console is its **own website**, built separately from the customer site,
+so nothing about it is in the customer site's code, menus or pages.
+
+```bash
+cd frontend
+VITE_API_BASE_URL=https://<your-backend>/api/v1 npm run build:admin   # -> frontend/dist-admin
+```
+
+Host `dist-admin` on its own address, **never on GitHub Pages** (that site is
+public and tied to this repository). Good choices:
+
+- **Cloudflare Pages** (free): drag-and-drop `dist-admin`, give it a custom
+  domain such as `ops-<random>.yourdomain.com`, and turn on **Cloudflare
+  Access** so only your team's emails can even load the page.
+- **Netlify** (free tier, password protection on paid plans): drop
+  `dist-admin` into a new site.
+
+Then on the backend set `ADMIN_ORIGIN` to that address (and optionally
+`OPS_ALLOWED_IPS` to your office or VPN range). The console API then answers
+only that site; from the customer site or anywhere else it looks like a route
+that does not exist. Details in `docs/OPS_CONSOLE.md`.
+
+---
+
 ## Checking a deploy worked
 
 ```bash

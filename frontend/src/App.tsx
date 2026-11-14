@@ -15,9 +15,6 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ 
 const ReportPreviewPage = lazy(() => import('./pages/ReportPreviewPage').then((m) => ({ default: m.ReportPreviewPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage').then((m) => ({ default: m.ShowcasePage })));
-// Loaded only when a staff account opens it, so the console's code is not in
-// the bundle every visitor downloads.
-const OpsConsolePage = lazy(() => import('./pages/OpsConsolePage').then((m) => ({ default: m.OpsConsolePage })));
 const ProductCarbonPage = lazy(() => import('./pages/ProductCarbonPage').then((m) => ({ default: m.ProductCarbonPage })));
 const MethodsPage = lazy(() => import('./pages/MethodsPage').then((m) => ({ default: m.MethodsPage })));
 const FactorLibraryPage = lazy(() => import('./pages/FactorLibraryPage').then((m) => ({ default: m.FactorLibraryPage })));
@@ -30,7 +27,6 @@ import { leadService } from './services/leadService';
 import { Toast } from './components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { isStaff } from './services/opsService';
 import { DEFAULT_PAGE, PageKey, resolvePage } from './config/routes';
 
 const queryClient = new QueryClient({
@@ -153,12 +149,6 @@ function MainApp() {
       return <LoginPage onNavigate={navigate} />;
     }
 
-    // The operations console is for staff, not an inventory: it never asks a
-    // developer or the cyber team to set up a reporting organisation first.
-    if (activePage === 'ops' && isStaff(currentUser.role)) {
-      return <OpsConsolePage />;
-    }
-
     // A workspace with no organisation, period or boundary cannot produce a
     // figure that means anything, so setup comes before any page.
     if (!workspaceReady) {
@@ -188,10 +178,6 @@ function MainApp() {
         return <SettingsPage onNavigate={navigate} />;
       case 'showcase':
         return <ShowcasePage />;
-      case 'ops':
-        // The internal console. Anyone else lands on the hub with no hint that
-        // the page exists; the server refuses them regardless.
-        return isStaff(currentUser.role) ? <OpsConsolePage /> : <ScopeHubPage onNavigate={navigate} />;
       case 'scope-hub':
       default:
         return <ScopeHubPage onNavigate={navigate} />;
@@ -202,7 +188,7 @@ function MainApp() {
     <div className="min-h-screen bg-canvas text-brand-body flex flex-col antialiased">
       {/* Persistent Top Navigation Bar. Hidden during first-run setup: there is
           nowhere to navigate to until the workspace exists. */}
-      {!(currentUser && !workspaceReady && !(activePage === 'ops' && isStaff(currentUser.role))) && (
+      {!(currentUser && !workspaceReady) && (
         <div className="print:hidden">
           <TopBar currentPage={currentPage} onNavigate={navigate} />
         </div>
