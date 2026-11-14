@@ -108,7 +108,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       setCompanyName(user.companyName);
     }
     addToast('success', `${msg} Welcome, ${user.name}!`);
-    onNavigate('scope-hub');
+    // Land where the visitor was going (a ?page= link, such as the staff
+    // console), not always on the hub. Unknown pages resolve to the hub, and
+    // a page the account may not see is refused where it renders.
+    onNavigate(new URLSearchParams(window.location.search).get('page') || 'scope-hub');
   };
 
   // ─────────────────────────────────────────────────────────────

@@ -164,18 +164,23 @@ const UserDrawer: React.FC<{ id: string; can: Capabilities; onClose: () => void;
   const [message, setMessage] = useState<string>();
   const [role, setRole] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [temporary, setTemporary] = useState<string | null>(null);
   const { addToast } = useGHG();
 
   useEffect(() => { if (data) setRole(data.user.role); }, [data]);
 
-  const act = async (label: string, work: () => Promise<unknown>) => {
+  const act = async (label: string, work: () => Promise<unknown>, closes = false) => {
     setBusy(true);
     setMessage(undefined);
     try {
       await work();
       addToast('success', label);
-      reload();
       onChanged();
+      if (closes) {
+        onClose();
+        return;
+      }
+      reload();
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
@@ -233,11 +238,24 @@ const UserDrawer: React.FC<{ id: string; can: Capabilities; onClose: () => void;
                     <LogOut size={13} /> Sign out everywhere
                   </button>
                   <button type="button" disabled={busy} className={`${btn} border-border text-brand-body hover:bg-slate-50`}
-                    onClick={() => window.confirm('Invalidate the current password and end every session? The account holder must reset it.')
-                      && void act('Password reset forced.', () => opsService.forceReset(id))}>
+                    onClick={() => window.confirm('Invalidate the current password and end every session? You will be shown a one-time temporary password to give the account holder.')
+                      && void act('Password reset forced.', async () => {
+                        const result = await opsService.forceReset(id);
+                        setTemporary(result.temporaryPassword);
+                        if (!result.temporaryPassword) setMessage(result.message);
+                      })}>
                     <KeyRound size={13} /> Force password reset
                   </button>
                 </div>
+                {temporary && (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-[12.5px] text-amber-900">
+                    <div className="font-semibold mb-1">One-time temporary password — shown once</div>
+                    <div className="font-mono text-[14px] select-all break-all bg-white rounded px-2 py-1 border border-amber-200">{temporary}</div>
+                    <p className="mt-1.5">Give it to the account holder through a trusted channel (not email). They should
+                      change it in Settings straight after signing in. It is not stored or logged anywhere.</p>
+                    <button type="button" className="mt-1.5 underline" onClick={() => setTemporary(null)}>I have handed it over — hide it</button>
+                  </div>
+                )}
                 {can.changeRoles && (
                   <div className="flex flex-wrap items-center gap-2">
                     <UserCog size={14} className="text-brand-muted" />
@@ -258,7 +276,7 @@ const UserDrawer: React.FC<{ id: string; can: Capabilities; onClose: () => void;
                       placeholder={`Type ${data.user.email} to delete`} aria-label="Confirm email to delete" />
                     <button type="button" disabled={busy || confirm.trim().toLowerCase() !== data.user.email.toLowerCase()}
                       className={`${btn} border-red-300 bg-red-600 text-white hover:bg-red-700`}
-                      onClick={() => void act('Account deleted.', async () => { await opsService.remove(id, confirm); onClose(); })}>
+                      onClick={() => void act('Account deleted.', () => opsService.remove(id, confirm), true)}>
                       <Trash2 size={13} /> Delete account
                     </button>
                   </div>

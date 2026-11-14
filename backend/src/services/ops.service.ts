@@ -92,6 +92,42 @@ const DEFAULT_SEVERITY: Record<string, Severity> = {
  * exactly who the alert is for.
  */
 
+/*
+ * Refused requests are recorded at most once per kind, network and subject
+ * every few seconds. Without this a script hammering the server would write
+ * one row per refused request - and refused cross-origin requests are checked
+ * before the rate limiter - so the log itself became a way to fill the disk.
+ * The skipped count is carried on the next row that is written.
+ */
+const THROTTLE_MS = 5_000;
+const THROTTLE_MAX_KEYS = 5_000;
+const lastWritten = new Map<string, { at: number; skipped: number }>();
+
+function throttled(type: string, ip: string | null, subject: string | null): number | null {
+  if (!type.startsWith('access.')) return 0;
+  const key = `${type}|${ip ?? ''}|${subject ?? ''}`;
+  const nowMs = Date.now();
+  const seen = lastWritten.get(key);
+  if (seen && nowMs - seen.at < THROTTLE_MS) {
+    seen.skipped += 1;
+    // A burst too fast for the throttle still has to raise its alert.
+    if (ip && seen.skipped === ALERT_RULES.refusedRequests.count) {
+      try {
+        raiseAlert('refused_requests_burst', ip, { refused: seen.skipped + 1, seconds: THROTTLE_MS / 1000, type });
+      } catch { /* the log must never break a request */ }
+    }
+    return null; // skip this one
+  }
+  if (lastWritten.size >= THROTTLE_MAX_KEYS) lastWritten.clear();
+  lastWritten.set(key, { at: nowMs, skipped: 0 });
+  return seen?.skipped ?? 0;
+}
+
+/** Test hook: forget the throttle state. */
+export function resetEventThrottle(): void {
+  lastWritten.clear();
+}
+
 /**
  * Records one event and runs the alert rules on it. Never throws: a failure
  * to log must not turn a successful sign-in into an error page.
@@ -101,11 +137,14 @@ export function recordEvent(input: SecurityEventInput): void {
     const { ip, ua } = requestContext(input.req);
     const severity = input.severity ?? DEFAULT_SEVERITY[input.type] ?? 'info';
     const subject = input.subject ? String(input.subject).toLowerCase().slice(0, 200) : null;
+    const skipped = throttled(input.type, ip, subject);
+    if (skipped === null) return;
+    const detail = skipped > 0 ? { ...(input.detail ?? {}), similarSkipped: skipped } : input.detail;
     db().prepare(`INSERT INTO security_events
       (at, type, severity, user_id, actor_id, subject, ip_masked, user_agent, detail)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
       now(), input.type, severity, input.userId ?? null, input.actorId ?? null, subject, ip, ua,
-      input.detail ? JSON.stringify(input.detail).slice(0, 2000) : null);
+      detail ? JSON.stringify(detail).slice(0, 2000) : null);
     evaluateAlerts(input.type, input.userId ?? null, subject, ip);
   } catch (err) {
     console.warn('[ops] could not record security event:', (err as Error).message);
@@ -438,14 +477,21 @@ export function endSessions(userId: string): number {
 }
 
 /**
- * Forces a password reset: the current password stops working at once and
- * every session ends. The account holder sets a new one through the reset
- * flow (or, until email is configured, an ADMIN issues one).
+ * Forces a password reset. The current password stops working at once and
+ * every session ends. Until a reset-by-email flow exists, a one-time temporary
+ * password is returned to the staff member who asked, to hand over through a
+ * trusted channel; the account holder changes it from Settings after signing in.
+ * It is never logged and never stored in clear.
  */
-export function forcePasswordReset(userId: string): void {
-  const unusable = crypto.randomBytes(32).toString('hex');
-  const { hash, salt } = dbService.hashPassword(unusable);
+export function forcePasswordReset(userId: string): string {
+  // 20 characters from an unambiguous alphabet: about 113 bits.
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  const bytes = crypto.randomBytes(20);
+  const temporary = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
+  const { hash, salt } = dbService.hashPassword(temporary);
   db().prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
     .run(hash, salt, now(), userId);
   endSessions(userId);
+  dbService.clearLoginFailures(dbService.findUserById(userId)?.email ?? '');
+  return temporary;
 }

@@ -109,7 +109,8 @@ export const opsService = {
   suspend: (id: string, reason: string) => request('POST', `/users/${encodeURIComponent(id)}/suspend`, { reason }),
   reactivate: (id: string) => request('POST', `/users/${encodeURIComponent(id)}/reactivate`, {}),
   signOut: (id: string) => request('POST', `/users/${encodeURIComponent(id)}/signout`, {}),
-  forceReset: (id: string) => request('POST', `/users/${encodeURIComponent(id)}/force-reset`, {}),
+  forceReset: (id: string) => request<{ temporaryPassword: string | null; message: string }>(
+    'POST', `/users/${encodeURIComponent(id)}/force-reset`, {}),
   setRole: (id: string, role: string) => request('PATCH', `/users/${encodeURIComponent(id)}/role`, { role }),
   remove: (id: string, confirmEmail: string) =>
     request('DELETE', `/users/${encodeURIComponent(id)}`, { confirmEmail }),

@@ -153,6 +153,12 @@ function MainApp() {
       return <LoginPage onNavigate={navigate} />;
     }
 
+    // The operations console is for staff, not an inventory: it never asks a
+    // developer or the cyber team to set up a reporting organisation first.
+    if (activePage === 'ops' && isStaff(currentUser.role)) {
+      return <OpsConsolePage />;
+    }
+
     // A workspace with no organisation, period or boundary cannot produce a
     // figure that means anything, so setup comes before any page.
     if (!workspaceReady) {
@@ -196,7 +202,7 @@ function MainApp() {
     <div className="min-h-screen bg-canvas text-brand-body flex flex-col antialiased">
       {/* Persistent Top Navigation Bar. Hidden during first-run setup: there is
           nowhere to navigate to until the workspace exists. */}
-      {!(currentUser && !workspaceReady) && (
+      {!(currentUser && !workspaceReady && !(activePage === 'ops' && isStaff(currentUser.role))) && (
         <div className="print:hidden">
           <TopBar currentPage={currentPage} onNavigate={navigate} />
         </div>

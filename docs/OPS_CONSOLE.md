@@ -28,11 +28,19 @@ says it needs the backend and shows nothing else.
 | Role | For | Sees | Can do |
 |---|---|---|---|
 | `OPERATOR` | Developers | Overview, Users, Usage & traffic | Read only |
-| `SECURITY` | Cyber team | Everything above, plus the Security log, Alerts and Console actions | Suspend or reactivate accounts, sign out everywhere, force a password reset, resolve alerts, export the log |
+| `SECURITY` | Cyber team | Everything above, plus the Security log, Alerts and Console actions | Suspend or reactivate accounts, sign out everywhere, force a password reset, resolve alerts, export the log (but not on ADMIN accounts) |
 | `ADMIN` | Owners | Everything | All of the above, plus change roles and delete accounts |
 
 Safeguards:
 - The last active ADMIN cannot be demoted, suspended or deleted.
+- Only an ADMIN can act on an ADMIN account, so a SECURITY account cannot
+  lock out the owners.
+- **Force password reset** shows the staff member a one-time temporary
+  password, once, to hand over through a trusted channel (not email). The old
+  password and all sessions stop working at once, and the temporary password is
+  never stored in clear or logged. Google and mobile accounts have no password,
+  so a reset just ends their sessions.
+- Staff open the console without filling in the customer workspace setup.
 - Staff cannot suspend or delete themselves.
 - A role change signs the person out.
 - A suspended account is refused at every sign-in method and on every request.
@@ -50,7 +58,12 @@ Safeguards:
 - Console actions: every suspend, reactivate, sign-out, reset, role change,
   delete, alert resolution and log export. These are also chained with a keyed
   hash; editing or removing a row shows "Chain broken" on the Console actions
-  tab.
+  tab. **Console actions are the permanent audit record and are not deleted
+  after 90 days** (deleting old rows would break the chain). They hold staff
+  and account emails, so state this in your privacy notice.
+- Refused requests are recorded at most once every 5 seconds per kind and
+  network, with a count of the ones skipped. This stops a flood of requests from
+  filling the database, and the burst alert still fires.
 
 **Usage counts** (per account per day, never content or figures):
 - sign-ins

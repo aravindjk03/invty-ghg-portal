@@ -96,6 +96,12 @@ function target(req: Request, res: Response) {
     fail(res, 404, 'NOT_FOUND', 'No such account.');
     return null;
   }
+  // The cyber team acts on customer and staff accounts, but only an ADMIN may
+  // act on an ADMIN: otherwise one SECURITY account could lock out the owners.
+  if (user.role === 'ADMIN' && req.user!.role !== 'ADMIN') {
+    fail(res, 403, 'ADMIN_ONLY', 'Only an administrator can change an administrator account.');
+    return null;
+  }
   return user;
 }
 
@@ -133,9 +139,17 @@ router.post('/users/:id/force-reset', SECURITY, (req, res) => {
   const user = target(req, res);
   if (!user) return undefined;
   if (user.id === req.user!.id) return fail(res, 409, 'SELF', 'Change your own password from your account settings.');
-  forcePasswordReset(user.id);
+  if ((user.auth_provider ?? 'email') !== 'email') {
+    // Google and mobile accounts have no password; ending their sessions is the reset.
+    const ended = endSessions(user.id);
+    recordAdminAction(actor(req), 'sessions_ended_no_password', user.id, { email: user.email, sessionsEnded: ended }, req);
+    return res.json({ success: true, temporaryPassword: null,
+      message: `This account signs in with ${user.auth_provider}; it has no password. Its sessions were ended.` });
+  }
+  const temporaryPassword = forcePasswordReset(user.id);
   recordAdminAction(actor(req), 'password_reset_forced', user.id, { email: user.email }, req);
-  return res.json({ success: true });
+  return res.json({ success: true, temporaryPassword,
+    message: 'Shown once. Give it to the account holder through a trusted channel; they change it in Settings.' });
 });
 
 const roleSchema = z.object({ role: z.enum(ALL_ROLES) });

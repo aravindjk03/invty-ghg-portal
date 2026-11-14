@@ -169,3 +169,44 @@ test('the security log exports as CSV that a spreadsheet will not execute', asyn
   assert.ok(text.startsWith('id,at,type'));
   assert.ok(!/(^|,)=cmd/m.test(text), 'a formula reached the CSV unescaped');
 });
+
+test('the cyber team cannot act on an administrator', async () => {
+  const admin = await login('admin@invty.com', 'IINVTY@2026');
+  const me = (await call('GET', '/auth/me', { token: admin })).body.user;
+  const sec = await login('security@example.com', 'correct horse battery staple');
+  for (const action of ['suspend', 'signout', 'force-reset']) {
+    const res = await call('POST', `/ops/users/${me.id}/${action}`, { token: sec, body: { reason: 'locking out the owner' } });
+    assert.equal(res.status, 403, action);
+  }
+});
+
+test('a forced reset hands over a one-time password that works, and the old one does not', async () => {
+  const admin = await login('admin@invty.com', 'IINVTY@2026');
+  const user = await signup('reset-me@example.com');
+  const res = await call('POST', `/ops/users/${user.id}/force-reset`, { token: admin });
+  assert.equal(res.status, 200);
+  const temporary = res.body.temporaryPassword;
+  assert.ok(typeof temporary === 'string' && temporary.length >= 20);
+  assert.equal((await call('GET', '/auth/me', { token: user.token })).status, 401); // signed out
+  const old = await call('POST', '/auth/login', { body: { email: 'reset-me@example.com', password: 'correct horse battery staple' } });
+  assert.equal(old.status, 401);
+  assert.ok(await login('reset-me@example.com', temporary));
+  // The temporary password never reaches the log.
+  const log = await call('GET', '/ops/security?user=reset-me@example.com', { token: admin });
+  assert.ok(!JSON.stringify(log.body).includes(temporary));
+  const actions = await call('GET', '/ops/admin-actions', { token: admin });
+  assert.ok(!JSON.stringify(actions.body).includes(temporary));
+});
+
+test('a flood of refused requests writes a handful of rows, not one per request', async () => {
+  const admin = await login('admin@invty.com', 'IINVTY@2026');
+  const before = (await call('GET', '/ops/security?type=access.invalid_token', { token: admin })).body.data.total;
+  await Promise.all(Array.from({ length: 60 }, () =>
+    call('GET', '/ops/overview', { token: 'forged-token', ip: '192.0.2.200' })));
+  const after = (await call('GET', '/ops/security?type=access.invalid_token', { token: admin })).body.data.total;
+  assert.ok(after - before <= 3, `60 refused requests wrote ${after - before} rows`);
+  assert.ok(after - before >= 1);
+  // ...but the burst still raises its alert.
+  const alerts = (await call('GET', '/ops/alerts', { token: admin })).body.data;
+  assert.ok(alerts.some((a) => a.kind === 'refused_requests_burst'), JSON.stringify(alerts.map((a) => a.kind)));
+});
