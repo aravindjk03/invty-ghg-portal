@@ -104,6 +104,17 @@ FUELS: list[tuple[str, str, float, float, float, float, bool, str]] = [
     ("other_biogas", "Biogas", 50.4, 54_600, 1, 0.1, True, "biomass"),
 ]
 
+#: Fuels IPCC publishes per TJ but with NO net calorific value (Table 1.2 gives
+#: "NA"), so there is no honest per-tonne figure - only the energy basis.
+#: Industrial wastes: Volume 2 Chapter 1 Table 1.1 names tyres as the example
+#: ("solid and liquid products (e.g. tyres) combusted directly"); CO2 from Table
+#: 1.4 (143,000 kg/TJ), CH4 and N2O from Table 2.3. Read 2026-11-12.
+#: (key, display name, CO2 kg/TJ, CH4 kg/TJ, N2O kg/TJ)
+ENERGY_ONLY: list[tuple[str, str, float, float, float]] = [
+    ("industrial_wastes", "Industrial wastes, incl. tyre-derived fuel (non-biomass)",
+     143_000, 30, 4),
+]
+
 #: kg CO2 per tonne must land inside this band for the fuel class, or a digit
 #: went astray between the two published tables.
 CO2_BAND = {
@@ -273,6 +284,28 @@ def rows(retrieved: str) -> list[dict]:
                 "co2e_basis": energy_basis + " - biogenic carbon, a memo item under the "
                                              "GHG Protocol and not part of Scope 1",
             })
+    for key, name, co2, ch4, n2o in ENERGY_ONLY:
+        activity = f"ipcc.2006.energy.{key}"
+        for gas, value in (("CO2", per_gj(co2)), ("CH4", per_gj(ch4)), ("N2O", per_gj(n2o))):
+            written.append({
+                "factor_id": f"{activity}.{gas.lower()}_gj",
+                "name": f"{name} — {gas}",
+                "scope": "1",
+                "category_path": "Stationary combustion / IPCC default / Fossil",
+                "unit": "GJ",
+                "gas": gas,
+                "value_kgco2e_per_unit": f"{value:.6g}",
+                "gas_mass_kg_per_unit": f"{value:.6g}",
+                "co2e_basis": "the published kg/TJ factor, per GJ of fuel (net calorific value); "
+                              "IPCC publishes no NCV for this fuel, so no per-tonne figure exists",
+                "geography": "GLOBAL",
+                "publication_year": 2006,
+                "source": SOURCE,
+                "source_version": "Ch1 Table 1.1 (definition) and Table 1.4 (CO2); Ch2 Table 2.3 "
+                                  "(CH4 and N2O, manufacturing industries and construction)",
+                "licence": "IPCC Guidelines, free to use with attribution",
+                "retrieved_on": retrieved,
+                })
     return written
 
 
@@ -288,12 +321,19 @@ def main() -> None:
         raise SystemExit(1)
 
     written = rows(dt.date.today().isoformat())
+    # A re-run must not re-date rows that were read earlier and have not changed.
+    if OUT.exists():
+        earlier = {row["factor_id"]: row for row in csv.DictReader(OUT.open(encoding="utf-8"))}
+        for row in written:
+            before = earlier.get(row["factor_id"])
+            if before and before["value_kgco2e_per_unit"] == row["value_kgco2e_per_unit"]:
+                row["retrieved_on"] = before["retrieved_on"]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     fields = ["factor_id", "name", "scope", "category_path", "unit", "gas",
               "value_kgco2e_per_unit", "gas_mass_kg_per_unit", "co2e_basis", "geography",
               "publication_year", "source", "source_version", "licence", "retrieved_on"]
     with OUT.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for row in written:
             writer.writerow(row)

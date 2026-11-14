@@ -23,6 +23,7 @@ import {
   ReportingPeriod, isInPeriod, periodEnd, periodLabel,
 } from '../../report/reportingPeriod';
 import { METHOD_NAME, METHOD_NOT_IMPLEMENTED, methodFor } from '../../data/methodSources';
+import { factorStatus } from '../../data/factorStatus';
 
 export interface ActivityRowProps {
   entry: ActivityEntry;
@@ -55,7 +56,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
     entry.customFactorSource ?? '');
   const [overrideError, setOverrideError] = useState<string | null>(null);
   const [overrideFactorValue, setOverrideFactorValue] = useState<string>(
-    String(entry.emissionFactor.factorValue)
+    entry.customFactorOverride !== undefined ? String(entry.customFactorOverride) : ''
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,10 +89,13 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
   // combustion row offers fuels burned in fixed equipment, not refrigerants,
   // grid electricity or air travel.
   const groupedSources = useMemo(
-    () => groupedSourcesFor(entry.scope, entry.category),
-    [entry.scope, entry.category],
+    () => groupedSourcesFor(entry.scope, entry.category, entry.emissionFactor?.id),
+    [entry.scope, entry.category, entry.emissionFactor?.id],
   );
   const catalogueMap = useCatalogueMap();
+  const catalogueSource = CATALOGUE_SOURCES.find(
+    (source) => source.activity_key === entry.emissionFactor?.id);
+  const sourceStatus = catalogueSource ? factorStatus(catalogueMap, catalogueSource) : undefined;
   // Only the units the engine can calculate this source in, once it has said
   // which they are. The row's current unit stays listed so an older row still
   // shows what it holds, and says why it cannot be calculated.
@@ -152,7 +156,9 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
         factorChosenByUser: undefined,
         warning: undefined,
       });
-      setOverrideFactorValue(source.verified ? String(selectedFactor.factorValue) : '');
+      // Starts empty: a supplied factor is the company's own figure, never a
+      // number the picker suggests.
+      setOverrideFactorValue('');
       setOverrideFactorSource('');
       setOverrideError(null);
     }
@@ -270,12 +276,32 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({
 
       {needsOwnFactor && !entry.engineActivityKey && !method && !methodNotImplemented && (
         <div className="mb-2 rounded-md border border-[#F0D9A0] bg-[#FFF8E6] px-3 py-2 text-[11.5px] text-[#8A5A00]">
-          <strong>No published set covers this source.</strong> Some never will: a power purchase
-          agreement, a green tariff or a retired certificate is priced by contract, and the GHG
-          Protocol asks for that rate rather than a grid average. Choose{' '}
-          <em>Use my own emission factor</em> from the menu on this row, enter the rate and say
-          where it came from — the engine will then calculate it and the report will show it as
-          supplied by you. Until then the row contributes 0, so nothing made up reaches a total.
+          {sourceStatus && sourceStatus.kind !== 'published' && sourceStatus.kind !== 'method' ? (
+            <>
+              <strong>
+                {sourceStatus.kind === 'choose' ? 'Use a more specific row. '
+                  : sourceStatus.kind === 'supplier' ? 'This needs your supplier\'s figure. '
+                  : sourceStatus.kind === 'memo' ? 'Recorded outside the totals. '
+                  : sourceStatus.kind === 'auto' ? 'Calculated automatically. '
+                  : 'No published factor. '}
+              </strong>
+              {sourceStatus.text}
+              {(sourceStatus.kind === 'supplier' || sourceStatus.kind === 'not_calculated') && (
+                <> Choose <em>Use my own emission factor</em> from the menu on this row and say
+                where it came from. Until then the row contributes 0, so nothing made up reaches
+                a total.</>
+              )}
+            </>
+          ) : (
+            <>
+              <strong>No published set covers this source.</strong> Some never will: a power purchase
+              agreement, a green tariff or a retired certificate is priced by contract, and the GHG
+              Protocol asks for that rate rather than a grid average. Choose{' '}
+              <em>Use my own emission factor</em> from the menu on this row, enter the rate and say
+              where it came from — the engine will then calculate it and the report will show it as
+              supplied by you. Until then the row contributes 0, so nothing made up reaches a total.
+            </>
+          )}
         </div>
       )}
 

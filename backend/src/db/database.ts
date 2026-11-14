@@ -13,7 +13,10 @@ export interface UserRecord {
   salt: string;
   name: string;
   company_name: string;
-  role: 'ADMIN' | 'ESG_MANAGER' | 'ESG_ANALYST' | 'AUDITOR';
+  role: 'ADMIN' | 'ESG_MANAGER' | 'ESG_ANALYST' | 'AUDITOR' | 'OPERATOR' | 'SECURITY';
+  status?: 'active' | 'suspended';
+  last_login_at?: string | null;
+  suspended_reason?: string | null;
   avatar_url?: string | null;
   auth_provider?: string;
   created_at: string;
@@ -75,6 +78,33 @@ export interface SafeUser {
   avatarUrl?: string;
   authProvider?: string;
   createdAt: string;
+  /** 'suspended' accounts are refused at sign-in and on every request. */
+  status?: 'active' | 'suspended';
+}
+
+export interface AuditBlockRow {
+  owner_id: string;
+  block_index: number;
+  timestamp: string;
+  action: string;
+  entity_id: string;
+  actor: string;
+  payload_summary: string;
+  previous_block_hash: string;
+  block_hash: string;
+}
+
+/**
+ * One spelling for a phone number, so the same handset is the same account
+ * however it was typed, and so nothing but digits and a leading + ever
+ * reaches a query.
+ */
+export function normalisePhone(phone: string): string {
+  const trimmed = String(phone ?? '').trim();
+  const hasPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length < 8 || digits.length > 15) return '';
+  return hasPlus ? `+${digits}` : digits;
 }
 
 class DatabaseService {
@@ -87,7 +117,8 @@ class DatabaseService {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    this.dbFilePath = path.join(dataDir, 'invty_portal.db');
+    // IINVTY_DB_FILE lets the test suite use a throwaway database.
+    this.dbFilePath = process.env.IINVTY_DB_FILE || path.join(dataDir, 'invty_portal.db');
     this.db = new DatabaseSync(this.dbFilePath);
     this.initSchema();
     this.seedDefaultUsers();
@@ -162,6 +193,26 @@ class DatabaseService {
       -- Someone asking to be contacted: for a report, or to be put on Premium.
       -- On disk rather than in memory, because a restart losing the request of
       -- a customer who tried to pay is worse than any bug in this file.
+      CREATE TABLE IF NOT EXISTS login_failures (
+        email TEXT PRIMARY KEY COLLATE NOCASE,
+        failures INTEGER NOT NULL DEFAULT 0,
+        locked_until TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS audit_blocks (
+        owner_id TEXT NOT NULL,
+        block_index INTEGER NOT NULL,
+        timestamp TEXT NOT NULL,
+        action TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        payload_summary TEXT NOT NULL,
+        previous_block_hash TEXT NOT NULL,
+        block_hash TEXT NOT NULL,
+        PRIMARY KEY (owner_id, block_index),
+        FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
       CREATE TABLE IF NOT EXISTS leads (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -179,6 +230,62 @@ class DatabaseService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_leads_captured ON leads(captured_at);
+
+      -- ── Operations console ────────────────────────────────────────────
+      -- What happened to accounts and requests, for the developer and cyber
+      -- team. IP addresses are stored masked (last octet / last 80 bits
+      -- removed) and every row is deleted after 90 days.
+      CREATE TABLE IF NOT EXISTS security_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        type TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        user_id TEXT,
+        actor_id TEXT,
+        subject TEXT,
+        ip_masked TEXT,
+        user_agent TEXT,
+        detail TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_sec_at ON security_events(at);
+      CREATE INDEX IF NOT EXISTS idx_sec_type ON security_events(type, at);
+      CREATE INDEX IF NOT EXISTS idx_sec_user ON security_events(user_id, at);
+
+      -- Counts per account per day. No content, no figures: only how often.
+      CREATE TABLE IF NOT EXISTS usage_daily (
+        user_id TEXT NOT NULL,
+        day TEXT NOT NULL,
+        metric TEXT NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, day, metric)
+      );
+      CREATE INDEX IF NOT EXISTS idx_usage_day ON usage_daily(day);
+
+      CREATE TABLE IF NOT EXISTS ops_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        detail TEXT,
+        resolved_at TEXT,
+        resolved_by TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_alerts_status ON ops_alerts(status, at);
+
+      -- Every action taken in the console, chained with a keyed hash so an
+      -- edited or deleted row breaks verification.
+      CREATE TABLE IF NOT EXISTS admin_actions (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        at TEXT NOT NULL,
+        actor_id TEXT NOT NULL,
+        actor_email TEXT NOT NULL,
+        action TEXT NOT NULL,
+        target_id TEXT,
+        detail TEXT,
+        prev_hash TEXT NOT NULL,
+        hash TEXT NOT NULL
+      );
     `);
 
     // Schema migrations for existing SQLite file
@@ -194,6 +301,15 @@ class DatabaseService {
       if (!columns.includes('auth_provider')) {
         this.db.exec("ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'email';");
       }
+      if (!columns.includes('status')) {
+        this.db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active';");
+      }
+      if (!columns.includes('last_login_at')) {
+        this.db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT;');
+      }
+      if (!columns.includes('suspended_reason')) {
+        this.db.exec('ALTER TABLE users ADD COLUMN suspended_reason TEXT;');
+      }
     } catch (err) {
       console.warn('[IINVTY DB] Schema migration check notice:', err);
     }
@@ -206,16 +322,77 @@ class DatabaseService {
     return { hash, salt };
   }
 
+  /** Does the work of a password check and throws the answer away. */
+  public burnPasswordCheck(password: string): void {
+    crypto.scryptSync(password, 'no-such-account-fixed-salt', 64);
+  }
+
+  // Account lockout. Five wrong passwords lock the account for fifteen
+  // minutes, whatever addresses they came from.
+  private static readonly MAX_FAILURES = 5;
+  private static readonly LOCK_MINUTES = 15;
+
+  public loginLockSeconds(email: string): number {
+    const row = this.db.prepare('SELECT locked_until FROM login_failures WHERE email = ?')
+      .get(email.trim()) as { locked_until: string | null } | undefined;
+    if (!row?.locked_until) return 0;
+    const remaining = Math.ceil((new Date(row.locked_until).getTime() - Date.now()) / 1000);
+    if (remaining <= 0) {
+      this.clearLoginFailures(email);
+      return 0;
+    }
+    return remaining;
+  }
+
+  public recordLoginFailure(email: string): void {
+    const key = email.trim();
+    this.db.prepare('INSERT INTO login_failures (email, failures) VALUES (?, 1) '
+      + 'ON CONFLICT(email) DO UPDATE SET failures = failures + 1').run(key);
+    const row = this.db.prepare('SELECT failures FROM login_failures WHERE email = ?')
+      .get(key) as { failures: number };
+    if (row.failures >= DatabaseService.MAX_FAILURES) {
+      const until = new Date(Date.now() + DatabaseService.LOCK_MINUTES * 60_000).toISOString();
+      this.db.prepare('UPDATE login_failures SET locked_until = ?, failures = 0 WHERE email = ?').run(until, key);
+    }
+  }
+
+  public clearLoginFailures(email: string): void {
+    this.db.prepare('DELETE FROM login_failures WHERE email = ?').run(email.trim());
+  }
+
   public verifyPassword(password: string, hash: string, salt: string): boolean {
     const computed = crypto.scryptSync(password, salt, 64).toString('hex');
     return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computed, 'hex'));
   }
 
+  /**
+   * Accounts an empty database starts with.
+   *
+   * This had no environment guard. On any fresh production database it
+   * created admin@invty.com with the password IINVTY@2026 and the ADMIN role,
+   * and demo@company.com with Demo@1234 — both passwords sitting in a public
+   * GitHub repository. Anyone who read the source owned the deployment.
+   *
+   * It is worse than a one-off mistake on a host whose disk is ephemeral:
+   * the table is empty again after every restart, so the known-password admin
+   * came back even if someone had changed it.
+   *
+   * In production nothing is seeded unless ADMIN_EMAIL is set, and then the
+   * password is random and printed once to the server log for the operator to
+   * collect and change. Outside production the demo accounts stay, because
+   * that is what they are for.
+   */
   private seedDefaultUsers() {
     const checkStmt = this.db.prepare('SELECT COUNT(*) as count FROM users');
     const result = checkStmt.get() as { count: number };
+    if (!result || result.count !== 0) return;
 
-    if (result && result.count === 0) {
+    if (process.env.NODE_ENV === 'production') {
+      this.seedProductionAdmin();
+      return;
+    }
+
+    {
       console.log('[IINVTY DB] Seeding initial enterprise demonstration accounts...');
 
       const adminCreds = this.hashPassword('IINVTY@2026');
@@ -252,6 +429,47 @@ class DatabaseService {
     }
   }
 
+  /**
+   * The one account a fresh production database gets, if the operator asked
+   * for one. The password is never in the source: it is generated here and
+   * written to the log once, where only someone who can already read the
+   * server's output will see it.
+   */
+  private seedProductionAdmin() {
+    const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    if (!email) {
+      console.log(
+        '[IINVTY DB] Empty database and no ADMIN_EMAIL set, so no account was created. '
+        + 'Set ADMIN_EMAIL and restart to get one.'
+      );
+      return;
+    }
+
+    // 32 hex characters from the system CSPRNG: not guessable, and not in git.
+    const password = crypto.randomBytes(16).toString('hex');
+    const creds = this.hashPassword(password);
+    const now = new Date().toISOString();
+
+    this.createUser({
+      id: `usr-admin-${crypto.randomBytes(6).toString('hex')}`,
+      email,
+      password_hash: creds.hash,
+      salt: creds.salt,
+      name: 'Administrator',
+      company_name: process.env.ADMIN_COMPANY?.trim() || 'IINVTY',
+      role: 'ADMIN',
+      auth_provider: 'email',
+      created_at: now,
+      updated_at: now,
+    });
+
+    console.log(
+      `\n[IINVTY DB] Created the administrator account ${email}.`
+      + `\n[IINVTY DB] One-time password: ${password}`
+      + '\n[IINVTY DB] Sign in and change it. This is printed once and is not stored anywhere else.\n'
+    );
+  }
+
   public createUser(user: UserRecord): SafeUser {
     const stmt = this.db.prepare(`
       INSERT INTO users (id, email, phone, password_hash, salt, name, company_name, role, avatar_url, auth_provider, created_at, updated_at)
@@ -284,11 +502,11 @@ class DatabaseService {
       const admin = this.findUserByEmail('admin@invty.com');
       if (!admin) return;
       const now = new Date().toISOString();
-      if (this.verifyPassword('Invty@2026', admin.password_hash, admin.salt)) {
-        const creds = this.hashPassword('IINVTY@2026');
-        this.db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
-          .run(creds.hash, creds.salt, now, admin.id);
-      }
+      // Deliberately no password rewrite here. This used to notice the old
+      // demo password and replace it with the newer published one, which put
+      // a credential from the public repository back onto a live account.
+      // Outside production the seeder sets it; in production nothing should
+      // move an account's password but its owner.
       this.db.prepare(
         "UPDATE users SET name = 'IINVTY Enterprise Admin', company_name = 'IINVTY Sustainability Systems', updated_at = ? " +
         "WHERE id = ? AND name = 'INVTY Enterprise Admin' AND company_name = 'INVTY Sustainability Systems'"
@@ -305,9 +523,18 @@ class DatabaseService {
   }
 
   public findUserByPhone(phone: string): UserRecord | null {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
-    const stmt = this.db.prepare('SELECT * FROM users WHERE phone = ? OR phone LIKE ?');
-    const row = stmt.get(cleanPhone, `%${cleanPhone.slice(-10)}`) as UserRecord | undefined;
+    // This used to strip only whitespace and hyphens and interpolate what was
+    // left into a LIKE pattern, so `%` and `_` survived as wildcards: a
+    // "phone number" of %%%%%%%% produced phone LIKE '%%%%%%%%%', matched
+    // every account and returned the first row — the seeded administrator.
+    // With the OTP handed back in the response, that was an unauthenticated
+    // takeover in two requests. The suffix match was its own bug besides: two
+    // customers in different countries sharing their last ten digits resolved
+    // to one account.
+    const normalised = normalisePhone(phone);
+    if (!normalised) return null;
+    const stmt = this.db.prepare('SELECT * FROM users WHERE phone = ?');
+    const row = stmt.get(normalised) as UserRecord | undefined;
     return row || null;
   }
 
@@ -319,7 +546,8 @@ class DatabaseService {
 
   // OTP management for mobile sign-in
   public saveOtp(phone: string, code: string, ttlSeconds = 300): void {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
+    if (!cleanPhone) return;
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
 
@@ -336,7 +564,8 @@ class DatabaseService {
   }
 
   public verifyOtp(phone: string, code: string): boolean {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
+    if (!cleanPhone) return false;
     const stmt = this.db.prepare('SELECT * FROM otps WHERE phone = ?');
     const row = stmt.get(cleanPhone) as { phone: string; code: string; expires_at: string } | undefined;
 
@@ -355,14 +584,15 @@ class DatabaseService {
   }
 
   public deleteOtp(phone: string): void {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
     const stmt = this.db.prepare('DELETE FROM otps WHERE phone = ?');
     stmt.run(cleanPhone);
   }
 
   // Find or create user from Mobile Phone OTP
   public findOrCreateMobileUser(phone: string, name?: string, companyName?: string): SafeUser {
-    const cleanPhone = phone.replace(/[\s\-]/g, '').trim();
+    const cleanPhone = normalisePhone(phone);
+    if (!cleanPhone) throw new Error('A valid phone number is required.');
     let user = this.findUserByPhone(cleanPhone);
 
     if (!user) {
@@ -435,6 +665,7 @@ class DatabaseService {
   }
 
   public createSession(userId: string, expiresInDays = 7): string {
+    this.db.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(new Date().toISOString(), userId);
     const token = crypto.randomBytes(32).toString('hex');
     const now = new Date();
     const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
@@ -574,6 +805,22 @@ class DatabaseService {
 
   // ── Leads ─────────────────────────────────────────────────────────────────
 
+  // Audit chain storage. One chain per owning account, so one customer's
+  // history is never readable from another's session.
+  public auditBlocks(ownerId: string): AuditBlockRow[] {
+    return this.db
+      .prepare('SELECT * FROM audit_blocks WHERE owner_id = ? ORDER BY block_index ASC')
+      .all(ownerId) as unknown as AuditBlockRow[];
+  }
+
+  public appendAuditBlock(row: AuditBlockRow): void {
+    this.db
+      .prepare('INSERT INTO audit_blocks (owner_id, block_index, timestamp, action, entity_id, '
+               + 'actor, payload_summary, previous_block_hash, block_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(row.owner_id, row.block_index, row.timestamp, row.action, row.entity_id,
+           row.actor, row.payload_summary, row.previous_block_hash, row.block_hash);
+  }
+
   public insertLead(lead: LeadRow): LeadRow {
     this.db
       .prepare('INSERT INTO leads (id, name, work_email, company_name, sector, phone, '
@@ -626,7 +873,8 @@ class DatabaseService {
   public getSession(token: string): { session: SessionRecord; user: SafeUser } | null {
     const stmt = this.db.prepare(`
       SELECT s.token, s.user_id, s.created_at as session_created_at, s.expires_at,
-             u.id, u.email, u.phone, u.name, u.company_name, u.role, u.avatar_url, u.auth_provider, u.created_at
+             u.id, u.email, u.phone, u.name, u.company_name, u.role, u.avatar_url, u.auth_provider, u.created_at,
+             u.status
       FROM sessions s
       JOIN users u ON s.user_id = u.id
       WHERE s.token = ?
@@ -658,8 +906,55 @@ class DatabaseService {
         avatarUrl: row.avatar_url,
         authProvider: row.auth_provider,
         createdAt: row.created_at,
+        status: row.status === 'suspended' ? 'suspended' : 'active',
       },
     };
+  }
+
+  /** The shared connection, for the operations console store. */
+  public get connection(): any {
+    return this.db;
+  }
+
+  // ── Account self-service ────────────────────────────────────────────────
+  // None of this existed. An account could not change its own name, picture
+  // or password, and could not be deleted — which meant a leaked password had
+  // no remedy inside the product, and no erasure request could be honoured.
+
+  public updateProfile(
+    userId: string,
+    fields: { name?: string; companyName?: string; avatarUrl?: string | null },
+  ): SafeUser | null {
+    const user = this.findUserById(userId);
+    if (!user) return null;
+    const next = {
+      name: fields.name ?? user.name,
+      company: fields.companyName ?? user.company_name,
+      avatar: fields.avatarUrl === undefined ? (user.avatar_url ?? null) : fields.avatarUrl,
+    };
+    this.db.prepare('UPDATE users SET name = ?, company_name = ?, avatar_url = ?, updated_at = ? WHERE id = ?')
+      .run(next.name.trim(), next.company.trim(), next.avatar, new Date().toISOString(), userId);
+    return this.toSafeUser(this.findUserById(userId)!);
+  }
+
+  /** Sets a new password and signs every other device out. */
+  public changePassword(userId: string, newPassword: string, keepToken: string): void {
+    const { hash, salt } = this.hashPassword(newPassword);
+    this.db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
+      .run(hash, salt, new Date().toISOString(), userId);
+    // A password is usually changed because the old one may be known. Any
+    // session opened with it must not outlive it.
+    this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(userId, keepToken);
+  }
+
+  public deleteOtherSessions(userId: string, keepToken: string): number {
+    const result = this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(userId, keepToken);
+    return Number(result.changes ?? 0);
+  }
+
+  /** Erases the account. Sessions, entitlements, ledger and audit rows cascade. */
+  public deleteUser(userId: string): void {
+    this.db.prepare('DELETE FROM users WHERE id = ?').run(userId);
   }
 
   public deleteSession(token: string): void {
@@ -678,6 +973,7 @@ class DatabaseService {
       avatarUrl: user.avatar_url || undefined,
       authProvider: user.auth_provider || 'email',
       createdAt: user.created_at,
+      status: user.status === 'suspended' ? 'suspended' : 'active',
     };
   }
 }

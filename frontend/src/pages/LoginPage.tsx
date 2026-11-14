@@ -108,7 +108,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       setCompanyName(user.companyName);
     }
     addToast('success', `${msg} Welcome, ${user.name}!`);
-    onNavigate('scope-hub');
+    // Land where the visitor was going (a ?page= link, such as the staff
+    // console), not always on the hub. Unknown pages resolve to the hub, and
+    // a page the account may not see is refused where it renders.
+    onNavigate(new URLSearchParams(window.location.search).get('page') || 'scope-hub');
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -120,7 +123,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
     if (emailMode === 'signin') {
       if (!email.trim() || !email.includes('@')) {
-        setError('Please enter a valid business email address.');
+        setError('Please enter a valid email address.');
         return;
       }
       if (!password) {
@@ -133,15 +136,17 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         return;
       }
       if (!company.trim()) {
-        setError('Please enter your corporate or organizational name.');
+        setError('Please enter the name of your company or organisation.');
         return;
       }
       if (!email.trim() || !email.includes('@')) {
-        setError('Please enter a valid corporate email address.');
+        setError('Please enter a valid email address.');
         return;
       }
-      if (!password || password.length < 6) {
-        setError('Password must be at least 6 characters long.');
+      // Must match the server's rule, or a signup the user was allowed to
+      // submit comes back rejected.
+      if (!password || password.length < 12) {
+        setError('Please choose a password of at least 12 characters. A short phrase you will remember is stronger than a short word.');
         return;
       }
     }
@@ -176,7 +181,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
     const cleanNum = mobileNumber.replace(/\D/g, '');
     if (cleanNum.length < 8 || cleanNum.length > 15) {
-      setError('Please enter a valid 10-digit mobile number.');
+      setError('Please enter a valid mobile number.');
       return;
     }
 
@@ -211,7 +216,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     setError(null);
 
     if (otpCode.trim().length !== 6) {
-      setError('Please enter the full 6-digit OTP code.');
+      setError('Please enter all 6 digits of the code.');
       return;
     }
 
@@ -228,7 +233,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       });
       handleAuthSuccess(res.user, 'Mobile verified successfully.');
     } catch (err: any) {
-      setError(err.message || 'Invalid or expired OTP code.');
+      setError(err.message || 'That code is wrong or has expired.');
     } finally {
       setLoading(false);
     }
@@ -308,45 +313,40 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
     <div className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 sm:p-6 bg-[#EDF1F7]">
       <div className="flex flex-col md:flex-row max-w-5xl w-full bg-white rounded-3xl shadow-2xl border border-gray-200/80 overflow-hidden min-h-[670px]">
         
-        {/* ── Left Side Hero Banner ─────────────────────────────────── */}
-        <div className="w-full md:w-1/2 relative hidden md:block bg-slate-900">
-          <img
-            className="h-full w-full object-cover"
-            src="https://cdn.21st.dev/assets/mirror/f4/f48e20bd4dcdcf2ca40eafe923e1134d17f43dce1c5bff8f1b96b7301e126ec3.png"
-            alt="IINVTY GHG Portal Hero"
-            onError={(e) => {
-              (e.target as HTMLElement).style.display = 'none';
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent p-8 flex flex-col justify-between">
-            {/* Logo Badge */}
-            <div className="flex items-center gap-3">
-              <img
-                src={`${import.meta.env.BASE_URL}invty-logo.png`}
-                alt="IINVTY Logo"
-                className="w-10 h-10 object-contain drop-shadow-md brightness-110"
-              />
-              <div className="flex flex-col">
-                <span className="font-mono font-bold text-white tracking-wider text-base">IINVTY</span>
-                <span className="text-[10px] uppercase tracking-widest text-slate-300 font-semibold">
-                  GHG Accounting Portal
-                </span>
-              </div>
+        {/* ── What this is ───────────────────────────────────────────
+            Drawn here rather than loaded from someone else's image host, and
+            shown on a phone too: it used to be hidden below 768px, which left
+            a mobile visitor facing a sign-in form with no word about what
+            they were signing in to. */}
+        <div className="w-full md:w-1/2 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 sm:p-8 flex flex-col justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <img
+              src={`${import.meta.env.BASE_URL}invty-logo.png`}
+              alt=""
+              className="w-10 h-10 object-contain drop-shadow-md brightness-110"
+            />
+            <div className="flex flex-col">
+              <span className="font-mono font-bold text-white tracking-wider text-base">IINVTY</span>
+              <span className="text-[11px] text-slate-300 font-medium">Carbon accounting</span>
             </div>
+          </div>
 
-            {/* Bottom Value Props */}
-            <div className="text-white space-y-2">
-              <div className="flex items-center gap-1.5 text-xs text-blue-300 font-semibold bg-blue-500/20 px-3 py-1 rounded-full border border-blue-400/30 w-fit backdrop-blur-sm">
-                <ShieldCheck size={14} className="text-blue-400" />
-                <span>Enterprise Multi-Method Auth</span>
-              </div>
-              <h3 className="text-xl font-bold text-white tracking-tight">
-                Deterministic Carbon Accounting
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed max-w-sm">
-                Sign in with your work email or your mobile number to build a Scope 1, 2 and 3 inventory in which every figure can be traced back to the published factor that produced it.
-              </p>
-            </div>
+          <div className="text-white">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-snug">
+              Work out your company&apos;s carbon footprint, and show how you got there.
+            </h1>
+            <ul className="mt-4 space-y-2.5 text-sm text-slate-200 hidden sm:block">
+              {[
+                'Enter your fuel, electricity and purchases — the tool does the arithmetic.',
+                'Every figure names the published factor that produced it.',
+                'Download a report built to the GHG Protocol and BRSR Core.',
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-2.5">
+                  <ShieldCheck size={16} className="text-blue-300 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{line}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
@@ -354,12 +354,37 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         <div className="w-full md:w-1/2 flex flex-col justify-center p-6 sm:p-10">
           <div className="w-full max-w-sm mx-auto flex flex-col items-center">
             
-            {/* Header */}
-            <h2 className="text-2xl sm:text-3xl text-gray-900 font-bold tracking-tight text-center">
-              Welcome to IINVTY
+            {/* Sign in or create an account: two equal choices. "Register"
+                used to be a 12px link under the form. */}
+            <div className="grid grid-cols-2 gap-1 w-full bg-slate-100 p-1 rounded-xl border border-slate-200">
+              {([['signin', 'Sign in'], ['signup', 'Create account']] as const).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => { setEmailMode(mode); setAuthMethod('email'); setError(null); }}
+                  className={cn(
+                    'py-2 rounded-lg text-sm font-semibold transition-all',
+                    emailMode === mode && authMethod === 'email'
+                      ? 'bg-white text-blue-700 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-800'
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <h2 className="text-xl sm:text-2xl text-gray-900 font-bold tracking-tight text-center mt-5">
+              {authMethod === 'mobile'
+                ? 'Sign in with your mobile'
+                : emailMode === 'signin' ? 'Sign in to your account' : 'Create your account'}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1.5 text-center">
-              Select your preferred authentication method
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 text-center">
+              {authMethod === 'mobile'
+                ? 'We will give you a 6-digit code to confirm the number.'
+                : emailMode === 'signin'
+                  ? 'Use the email address and password you registered with.'
+                  : 'It takes a minute. You can start entering data straight away.'}
             </p>
 
             {/* ── Auth Method Tabs (Email vs Mobile) ───────────────── */}
@@ -375,7 +400,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 )}
               >
                 <Mail size={14} />
-                <span>Business Email</span>
+                <span>Email</span>
               </button>
 
               <button
@@ -389,7 +414,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 )}
               >
                 <Smartphone size={14} />
-                <span>Mobile OTP</span>
+                <span>Mobile number</span>
               </button>
             </div>
 
@@ -411,7 +436,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                       <UserIcon size={15} className="text-gray-400 flex-shrink-0" />
                       <input
                         type="text"
-                        placeholder="Full Name"
+                        placeholder="Your full name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
@@ -424,7 +449,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                       <Building2 size={15} className="text-gray-400 flex-shrink-0" />
                       <input
                         type="text"
-                        placeholder="Company or Organization"
+                        placeholder="Company or organisation"
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
@@ -455,7 +480,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                   <span className="text-gray-400 text-sm font-mono flex-shrink-0">🔒</span>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder={emailMode === 'signin' ? 'Password' : 'Create Password (min 6 chars)'}
+                    placeholder={emailMode === 'signin' ? 'Password' : 'Create a password (at least 12 characters)'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-transparent text-gray-800 placeholder-gray-400 outline-none text-xs sm:text-sm w-full"
@@ -507,41 +532,15 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                   {loading ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      <span>Verifying credentials...</span>
+                      <span>{emailMode === 'signin' ? 'Signing in…' : 'Creating your account…'}</span>
                     </>
                   ) : emailMode === 'signin' ? (
-                    'Sign In with Email'
+                    'Sign in'
                   ) : (
-                    'Create Corporate Account'
+                    'Create account'
                   )}
                 </button>
 
-                {/* Toggle sign in / sign up */}
-                <p className="text-xs text-gray-500 text-center pt-2">
-                  {emailMode === 'signin' ? (
-                    <>
-                      Don’t have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => { setEmailMode('signup'); setError(null); }}
-                        className="text-blue-600 hover:underline font-semibold"
-                      >
-                        Register
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Already registered?{' '}
-                      <button
-                        type="button"
-                        onClick={() => { setEmailMode('signin'); setError(null); }}
-                        className="text-blue-600 hover:underline font-semibold"
-                      >
-                        Sign in
-                      </button>
-                    </>
-                  )}
-                </p>
               </form>
             )}
 
@@ -551,7 +550,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 {mobileStep === 'phone' ? (
                   <form onSubmit={handleSendMobileOtp} className="space-y-3.5">
                     <p className="text-xs text-gray-500">
-                      Enter your registered corporate mobile number to receive a 6-digit verification code.
+                      Enter your mobile number with its country code.
                     </p>
 
                     <div className="flex items-center w-full border border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all h-11 rounded-full overflow-hidden px-3 gap-2">
@@ -592,11 +591,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                       {loading ? (
                         <>
                           <Loader2 size={16} className="animate-spin" />
-                          <span>Dispatching OTP...</span>
+                          <span>Sending the code…</span>
                         </>
                       ) : (
                         <>
-                          <span>Send 6-Digit OTP</span>
+                          <span>Send me a code</span>
                           <ArrowRight size={15} />
                         </>
                       )}
@@ -640,7 +639,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
                     <div>
                       <label className="text-xs font-semibold text-gray-700 block mb-1">
-                        Enter 6-Digit Verification Code
+                        Enter the 6-digit code
                       </label>
                       <input
                         type="text"
@@ -666,7 +665,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                           className="text-blue-600 hover:underline font-semibold flex items-center gap-1"
                         >
                           <RefreshCw size={12} />
-                          <span>Resend OTP</span>
+                          <span>Send it again</span>
                         </button>
                       )}
                     </div>
@@ -682,10 +681,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                       {loading ? (
                         <>
                           <Loader2 size={16} className="animate-spin" />
-                          <span>Verifying OTP code...</span>
+                          <span>Checking the code…</span>
                         </>
                       ) : (
-                        'Verify & Sign In'
+                        'Confirm and sign in'
                       )}
                     </button>
                   </form>

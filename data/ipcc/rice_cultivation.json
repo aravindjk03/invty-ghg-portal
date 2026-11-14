@@ -1,0 +1,57 @@
+{
+  "source_name": "IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 4 Chapter 5 (Cropland), section 5.5 (Methane emissions from rice cultivation)",
+  "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/4_Volume4/V4_05_Ch5_Cropland.pdf",
+  "read_on": "2026-11-12",
+  "read_from": "Equations 5.1 to 5.3 (printed pages 5.45, 5.48, 5.50); Tables 5.11 and 5.12 (page 5.49), 5.13 (page 5.50) and 5.14 (page 5.51), read from the published pages",
+  "tier": 1,
+  "equations": {
+    "5.1": "CH4 (kg) = EF_i (kg CH4 per ha per day) x cultivation period (days) x harvested area (ha)",
+    "5.2": "EF_i = EF_c x SF_w x SF_p x SF_o",
+    "5.3": "SF_o = (1 + sum of ROA_i x CFOA_i) ^ 0.59"
+  },
+  "baseline_ef": {
+    "value": 1.30,
+    "unit": "kg CH4 per ha per day",
+    "error_range": "0.80 - 2.20",
+    "read_from": "Table 5.11 (printed page 5.49)",
+    "note": "Fields not flooded for less than 180 days before cultivation, continuously flooded during it, no organic amendments."
+  },
+  "water_regime_during": {
+    "read_from": "Table 5.12 (printed page 5.49), disaggregated case",
+    "values": {
+      "upland": 0,
+      "irrigated_continuously_flooded": 1,
+      "irrigated_intermittent_single_aeration": 0.60,
+      "irrigated_intermittent_multiple_aeration": 0.52,
+      "rainfed_regular": 0.28,
+      "rainfed_drought_prone": 0.25,
+      "deep_water": 0.31
+    },
+    "aggregated": {
+      "upland": 0,
+      "irrigated": 0.78,
+      "rainfed_and_deep_water": 0.27
+    }
+  },
+  "water_regime_before": {
+    "read_from": "Table 5.13 (printed page 5.50), disaggregated case",
+    "values": {
+      "non_flooded_under_180_days": 1,
+      "non_flooded_over_180_days": 0.68,
+      "flooded_over_30_days": 1.90
+    },
+    "aggregated": 1.22
+  },
+  "organic_amendments": {
+    "read_from": "Table 5.14 (printed page 5.51) and Equation 5.3 (printed page 5.50)",
+    "exponent": 0.59,
+    "rate_basis": "tonnes per hectare: dry weight for straw, fresh weight for the others",
+    "values": {
+      "straw_under_30_days_before": 1,
+      "straw_over_30_days_before": 0.29,
+      "compost": 0.05,
+      "farmyard_manure": 0.14,
+      "green_manure": 0.50
+    }
+  }
+}

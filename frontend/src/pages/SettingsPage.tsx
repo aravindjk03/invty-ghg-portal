@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createBackup, restoreBackup, BackupError } from '../services/backupService';
+import { AccountCard } from '../components/AccountCard';
 import { useGHG } from '../context/GHGContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -131,6 +132,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
       </div>
 
       <div className="space-y-6">
+        <AccountCard />
+
         {/* Section 1: Corporate Profile */}
         <Card className="p-6 bg-surface-raised border border-border shadow-nm-raised">
           <div className="flex items-center gap-2 mb-4">

@@ -54,7 +54,75 @@ async function postJson(path: string, body: unknown): Promise<{ res: Response; d
 
 interface OfflineAccount {
   user: User;
+  /**
+   * Plaintext, from before this store hashed anything. Still read so an
+   * account made by an older build can still sign in; the first successful
+   * sign-in replaces it with a hash.
+   */
   password?: string;
+  /** PBKDF2-SHA256 over the password. See hashPassword below. */
+  secret?: StoredSecret;
+}
+
+interface StoredSecret {
+  algorithm: 'PBKDF2-SHA256';
+  iterations: number;
+  salt: string;
+  hash: string;
+}
+
+/**
+ * Passwords for the browser-only trial were kept in localStorage in plain
+ * text. Anyone with the device, and any script running on this origin, could
+ * read them — and people reuse passwords, so the damage would not stop at
+ * this app.
+ *
+ * They are stored as a PBKDF2 derivation instead. This is a trial store on
+ * the visitor's own machine, not a credential database, but there is no
+ * reason for it to hand the password to whoever looks.
+ */
+const PBKDF2_ITERATIONS = 210_000;
+
+const toHex = (buffer: ArrayBuffer): string =>
+  Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, '0')).join('');
+
+async function derive(password: string, saltHex: string, iterations: number): Promise<string> {
+  const encoder = new TextEncoder();
+  const salt = Uint8Array.from(saltHex.match(/.{2}/g) ?? [], (byte) => parseInt(byte, 16));
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits'],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, key, 256,
+  );
+  return toHex(bits);
+}
+
+async function hashPassword(password: string): Promise<StoredSecret> {
+  const salt = toHex(crypto.getRandomValues(new Uint8Array(16)).buffer);
+  return {
+    algorithm: 'PBKDF2-SHA256',
+    iterations: PBKDF2_ITERATIONS,
+    salt,
+    hash: await derive(password, salt, PBKDF2_ITERATIONS),
+  };
+}
+
+/** Constant-time-ish compare, so a wrong guess does not leak its prefix. */
+function sameSecret(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function passwordMatches(account: OfflineAccount, password: string): Promise<boolean> {
+  if (account.secret) {
+    const candidate = await derive(password, account.secret.salt, account.secret.iterations);
+    return sameSecret(candidate, account.secret.hash);
+  }
+  // Pre-hash account; accepted once so the visitor is not locked out.
+  return typeof account.password === 'string' && account.password === password;
 }
 
 const pendingOtps = new Map<string, string>();
@@ -110,6 +178,25 @@ function newOfflineUser(fields: Partial<User> & { name: string; companyName: str
   };
 }
 
+/** A signed-in call to the accounts API that reports failure in plain words. */
+async function accountRequest(method: string, path: string, body: unknown, token: string): Promise<any> {
+  let res: Response;
+  try {
+    res = await fetch(`${env.API_BASE_URL}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('The server could not be reached, so nothing was changed. Please try again.');
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success) {
+    throw new Error(data?.error?.message || 'That change could not be saved.');
+  }
+  return data;
+}
+
 export const authService = {
   /**
    * Whether an accounts API is answering at all.
@@ -162,13 +249,21 @@ export const authService = {
       ({ res, data } = await postJson('/auth/login', { email: email.trim(), password }));
     } catch (err) {
       if (!(err instanceof NetworkUnavailableError)) throw err;
-      const account = loadOfflineAccounts().find(
+      const accounts = loadOfflineAccounts();
+      const account = accounts.find(
         (a) => a.user.email.toLowerCase() === email.trim().toLowerCase()
       );
-      if (!account || account.password !== password) {
+      if (!account || !(await passwordMatches(account, password))) {
         throw new Error(
           'No account with that email and password exists in this browser. Choose Register to create one.'
         );
+      }
+      // An account stored before this hashed anything gets upgraded on the
+      // first correct sign-in, so the plaintext stops being on disk.
+      if (!account.secret) {
+        account.secret = await hashPassword(password);
+        delete account.password;
+        saveOfflineAccounts(accounts);
       }
       const token = offlineToken(account.user);
       this.setSession(account.user, token);
@@ -197,7 +292,7 @@ export const authService = {
         throw new Error('An account with this email already exists.');
       }
       const user = newOfflineUser({ ...payload, email }, 'email');
-      saveOfflineAccounts([...accounts, { user, password: payload.password }]);
+      saveOfflineAccounts([...accounts, { user, secret: await hashPassword(payload.password) }]);
       const token = offlineToken(user);
       this.setSession(user, token);
       return { success: true, user, token };
@@ -344,6 +439,89 @@ export const authService = {
 
     this.setSession(data.user, data.token);
     return data;
+  },
+
+  // ── Your account ────────────────────────────────────────────────────────
+  // There was no way to change a name, a picture or a password, and no way
+  // to delete an account. A trial account (held in this browser) is edited
+  // here; a hosted one is edited on the server, which is the only place it
+  // exists.
+
+  isTrialSession(): boolean {
+    return (this.getToken() || '').startsWith('offline.');
+  },
+
+  async updateProfile(fields: { name?: string; companyName?: string; avatarUrl?: string | null }): Promise<User> {
+    const current = this.getStoredUser();
+    const token = this.getToken();
+    if (!current || !token) throw new Error('Please sign in again.');
+
+    if (this.isTrialSession()) {
+      const accounts = loadOfflineAccounts();
+      const account = accounts.find((a) => a.user.id === current.id);
+      const next: User = {
+        ...current,
+        ...(fields.name !== undefined ? { name: fields.name.trim() } : {}),
+        ...(fields.companyName !== undefined ? { companyName: fields.companyName.trim() } : {}),
+        ...(fields.avatarUrl !== undefined ? { avatarUrl: fields.avatarUrl ?? undefined } : {}),
+      };
+      if (account) {
+        account.user = next;
+        saveOfflineAccounts(accounts);
+      }
+      this.setSession(next, token);
+      return next;
+    }
+
+    const data = await accountRequest('PATCH', '/auth/me', fields, token);
+    this.setSession(data.user, token);
+    return data.user;
+  },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<string> {
+    const current = this.getStoredUser();
+    const token = this.getToken();
+    if (!current || !token) throw new Error('Please sign in again.');
+    if (newPassword.length < 12) throw new Error('Please choose a password of at least 12 characters.');
+
+    if (this.isTrialSession()) {
+      const accounts = loadOfflineAccounts();
+      const account = accounts.find((a) => a.user.id === current.id);
+      if (!account) throw new Error('This account is not stored in this browser.');
+      if (!account.secret && !account.password) {
+        throw new Error('This account signs in without a password, so there is none to change.');
+      }
+      if (!(await passwordMatches(account, currentPassword))) {
+        throw new Error('The current password is not correct.');
+      }
+      account.secret = await hashPassword(newPassword);
+      delete account.password;
+      saveOfflineAccounts(accounts);
+      return 'Password changed.';
+    }
+
+    const data = await accountRequest('POST', '/auth/change-password', { currentPassword, newPassword }, token);
+    return data.message || 'Password changed.';
+  },
+
+  /** Removes the account. For a trial account, optionally its inventory too. */
+  async deleteAccount(confirmEmail: string): Promise<void> {
+    const current = this.getStoredUser();
+    const token = this.getToken();
+    if (!current || !token) throw new Error('Please sign in again.');
+
+    if (this.isTrialSession()) {
+      const expected = (current.email || current.phone || '').toLowerCase();
+      if (confirmEmail.trim().toLowerCase() !== expected) {
+        throw new Error('That does not match this account.');
+      }
+      saveOfflineAccounts(loadOfflineAccounts().filter((a) => a.user.id !== current.id));
+      this.clearSession();
+      return;
+    }
+
+    await accountRequest('DELETE', '/auth/me', { confirmEmail }, token);
+    this.clearSession();
   },
 
   async verifySession(): Promise<User | null> {

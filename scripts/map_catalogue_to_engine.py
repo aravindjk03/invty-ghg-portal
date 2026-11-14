@@ -282,6 +282,44 @@ DESNZ_BY_NAME: dict[str, str] = {
     # A Montreal Protocol substance is not in the Kyoto basket, so it is
     # reported separately. DESNZ still publishes its warming effect.
     "memo.montreal_r22": "Refrigerant & other / Montreal protocol products / HCFC-22 / R22 = chlorodifluoromethane (Total emissions including non-Kyoto products)",
+
+    # --- Added 2026-11-12: sources that showed no value although DESNZ ------
+    # publishes one. Each generic catalogue row (packaging, "PFCs", "CFCs and
+    # halons", "EOL recycling") now has one row per material or gas, because
+    # the published values differ several-fold between them and an average
+    # would be a number nobody published.
+    "cat1.material.plastic_hdpe": "Material use / Plastic / Plastics: HDPE (incl. forming) (Primary material production)",
+    "cat1.material.plastic_ldpe": "Material use / Plastic / Plastics: LDPE and LLDPE (incl. forming) (Primary material production)",
+    "cat1.material.plastic_film": "Material use / Plastic / Plastics: average plastic film (Primary material production)",
+    "cat1.material.plastic_rigid": "Material use / Plastic / Plastics: average plastic rigid (Primary material production)",
+    "cat1.material.board": "Material use / Paper / Paper and board: board (Primary material production)",
+    "cat1.material.steel_cans": "Material use / Metal / Metal: steel cans (Primary material production)",
+    "cat1.material.aluminium_cans": "Material use / Metal / Metal: aluminium cans and foil (excl. forming) (Primary material production)",
+    "cat5.construction_recycled": "Waste disposal / Construction / Average construction (Open-loop)",
+    "cat12.incineration_energy": "Waste disposal / Refuse / Commercial and industrial waste (Incineration with Energy Recovery)",
+    "cat12.recycling_metal": "Waste disposal / Metal / Metal: scrap metal (Open-loop)",
+    "cat12.recycling_plastic": "Waste disposal / Plastic / Plastics: average plastics (Open-loop)",
+    "cat12.recycling_paper": "Waste disposal / Paper / Paper and board: mixed (Closed-loop)",
+    "cat12.recycling_glass": "Waste disposal / Other / Glass (Open-loop)",
+    "fugitive.pfc_cf4": "Refrigerant & other / Kyoto protocol products / Perfluoromethane (PFC-14) (Total emissions including non-Kyoto products)",
+    "fugitive.pfc_c2f6": "Refrigerant & other / Kyoto protocol products / Perfluoroethane (PFC-116) (Total emissions including non-Kyoto products)",
+    "fugitive.pfc_c3f8": "Refrigerant & other / Kyoto protocol products / Perfluoropropane (PFC-218) (Total emissions including non-Kyoto products)",
+    "fugitive.pfc_c4f8": "Refrigerant & other / Kyoto protocol products / Perfluorocyclobutane (PFC-318) (Total emissions including non-Kyoto products)",
+    "fugitive.hfc_152a": "Refrigerant & other / Kyoto protocol products / HFC-152a (Total emissions including non-Kyoto products)",
+    "fugitive.hfc_245fa": "Refrigerant & other / Kyoto protocol products / HFC-245fa (Total emissions including non-Kyoto products)",
+    "fugitive.hfc_365mfc": "Refrigerant & other / Kyoto protocol products / HFC-365mfc (Total emissions including non-Kyoto products)",
+    "memo.montreal_cfc11": "Refrigerant & other / Montreal protocol products / CFC-11 / R11 = trichlorofluoromethane (Total emissions including non-Kyoto products)",
+    "memo.montreal_cfc12": "Refrigerant & other / Montreal protocol products / CFC-12 / R12 = dichlorodifluoromethane (Total emissions including non-Kyoto products)",
+    "memo.montreal_halon1211": "Refrigerant & other / Montreal protocol products / Halon-1211 (Total emissions including non-Kyoto products)",
+    "memo.montreal_halon1301": "Refrigerant & other / Montreal protocol products / Halon-1301 (Total emissions including non-Kyoto products)",
+    # Flaring biogas is burning it: the same CH4 and N2O per kWh or per tonne,
+    # with the biogenic CO2 outside the scopes.
+    "flare.biogas": "Bioenergy / Biogas / Biogas",
+    # A carpool is a car journey; each employee records their share of the
+    # vehicle-km, which the row asks for.
+    "cat7.carpool": "Business travel- land / Cars (by size) / Average car (Unknown)",
+    # Flared vent gas that is natural gas is natural gas burned.
+    "flare.process_vent": "Fuels / Gaseous fuels / Natural gas",
 }
 
 #: catalogue activity_key -> an engine activity key outside DESNZ, given in full.
@@ -391,6 +429,51 @@ DIRECT: dict[str, str] = {
     # still has to show the kilowatt hours, so it resolves against the grid
     # factor the avoided import would have carried.
     "memo.avoided_exported_renewable": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+
+    # --- Added 2026-11-12 ------------------------------------------------------
+    # Spend by transport mode: the EPA USEEIO sector for that mode, US dollars.
+    "cat4.spend_road": "epa.useeio.v1_3.naics484121",
+    "cat4.spend_rail": "epa.useeio.v1_3.naics482111",
+    "cat4.spend_sea": "epa.useeio.v1_3.naics483111",
+    "cat4.spend_air": "epa.useeio.v1_3.naics481112",
+    "cat6.spend_air": "epa.useeio.v1_3.naics481111",
+    # Electricity a utility buys and sells on: generation at the grid factor.
+    "cat3.generation_sold_to_end_users": "cea.grid.weighted_average_incl_res.incl_imports.2025_26",
+    # Tyres are "Industrial wastes" in IPCC 2006 Vol.2 Table 1.1; per GJ only.
+    "fuel.tyre_derived": "ipcc.2006.energy.industrial_wastes",
+    # Gases recorded as the mass released (data/factors/supplementary.csv).
+    "vent.process_ch4": "gas.released.ch4_fossil",
+    "fugitive.ch4_coal_mine": "gas.released.ch4_fossil",
+    "fugitive.ch4_ng_distribution": "gas.released.ch4_fossil",
+    "fugitive.fire_novec": "gas.released.fk_5_1_12",
+    # Values derived from chemistry or definition, approved by the owner on
+    # 2026-11-12 on condition the working is shown (it is, in the source).
+    "combustion.acetylene": "derived.acetylene_combustion",
+    "fuel.hydrogen.grey": "derived.hydrogen_combustion",
+    "fuel.hydrogen.green": "derived.hydrogen_combustion",
+    "fugitive.refrigerant.r717": "derived.r717_release",
+    "cat7.walk_cycle": "derived.walk_cycle",
+    # Already tonnes of CO2e: a unit conversion, nothing more.
+    "process.other_process_direct": "direct.tco2e",
+    # --- Added 2026-11-12 (second round) -----------------------------------
+    # IPCC 2006 Volume 5 Chapter 5 incineration defaults, per DRY tonne.
+    "cat5.incineration": "ipcc.2006.incineration.industrial_waste",
+    "cat5.hazardous": "ipcc.2006.incineration.industrial_waste",
+    "cat5.sewage_sludge": "ipcc.2006.incineration.sewage_sludge",
+    # 2019 Refinement, hydrogen by natural gas steam reforming (Tier 1b).
+    "process.hydrogen_smr": "ipcc.2019.hydrogen.natural_gas_reforming",
+    # 2019 Refinement biochar removal, reported as a memo.
+    "land.removals_biochar": "ipcc.2019.biochar.wood_pyrolysis_medium",
+    # Methane vented, recorded by mass.
+    "vent.oil_gas": "gas.released.ch4_fossil",
+    # Memo lines: recorded, never in a scope total.
+    "elec.selfgen_solar_onsite": "derived.energy_balance",
+    "elec.selfgen_wind_onsite": "derived.energy_balance",
+    "elec.exported": "derived.energy_balance",
+    "memo.offsets_retired": "direct.tco2e",
+    "memo.biogenic_co2_scope3": "direct.tco2e",
+    "process.co2_captured": "direct.tco2e",
+    "cat12.reuse": "derived.reuse_eol",
 }
 
 
@@ -438,7 +521,7 @@ def load_engine() -> tuple[dict, dict]:
     by_name: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
 
     for name in ("desnz_2025", "cea_grid", "india_transport", "epa_supply_chain",
-                 "ipcc_energy"):
+                 "ipcc_energy", "supplementary"):
         path = REPO / "data" / "factors" / f"{name}.csv"
         if not path.exists():
             continue
@@ -452,6 +535,8 @@ def load_engine() -> tuple[dict, dict]:
                     raw = row["factor_id"]
                     raw = raw[:-3] if raw.endswith("_gj") else raw
                     key = (raw.rsplit(".", 1)[0] if row["scope"] != "memo" else raw)
+                elif name == "supplementary":
+                    key = row["factor_id"].rsplit(".", 1)[0]
                 else:
                     key = row["factor_id"]
                 record = activities.setdefault(key, {
@@ -563,7 +648,7 @@ def main() -> None:
     fields = ["catalogue_key", "catalogue_name", "unit", "engine_activity_key",
               "engine_name", "engine_region", "engine_source"]
     with OUT.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for row in sorted(rows, key=lambda item: (item["catalogue_key"], item["unit"])):
             writer.writerow(row)

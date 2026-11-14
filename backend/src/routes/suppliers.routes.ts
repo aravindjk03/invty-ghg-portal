@@ -5,24 +5,24 @@ import { suppliersService } from '../services/suppliers.service';
 const router = Router();
 
 const createInvitationSchema = z.object({
-  supplierName: z.string().min(2),
+  supplierName: z.string().min(2).max(200),
   supplierEmail: z.string().email(),
   scope3CategoryNumber: z.number().int().min(1).max(15),
-  categoryName: z.string().min(2),
-  requestedItemDescription: z.string().min(2),
-  purchaseOrderRef: z.string().optional(),
+  categoryName: z.string().min(2).max(200),
+  requestedItemDescription: z.string().min(2).max(200),
+  purchaseOrderRef: z.string().max(100).optional(),
 });
 
 const submitDataSchema = z.object({
-  supplierName: z.string().min(2),
-  supplierCompanyPanOrEin: z.string().min(4),
-  reportingPeriod: z.string().min(2),
+  supplierName: z.string().min(2).max(200),
+  supplierCompanyPanOrEin: z.string().min(4).max(200),
+  reportingPeriod: z.string().min(2).max(200),
   providedQuantity: z.number().positive(),
-  providedUnit: z.string().min(1),
+  providedUnit: z.string().min(1).max(200),
   primaryEmissionFactor: z.number().positive(),
-  factorUnit: z.string().min(1),
-  factorDataSource: z.string().min(3),
-  evidenceFileName: z.string().optional(),
+  factorUnit: z.string().min(1).max(200),
+  factorDataSource: z.string().min(3).max(200),
+  evidenceFileName: z.string().max(200).optional(),
 });
 
 // POST /api/v1/suppliers/invite - Create Magic Link
@@ -36,7 +36,7 @@ router.post('/invite', (req: Request, res: Response) => {
     return;
   }
 
-  const invitation = suppliersService.createInvitation(result.data);
+  const invitation = suppliersService.createInvitation(req.user!.id, result.data);
   res.status(201).json({
     success: true,
     data: invitation,
@@ -45,8 +45,8 @@ router.post('/invite', (req: Request, res: Response) => {
 });
 
 // GET /api/v1/suppliers/invitations - List all invitations (Enterprise Admin)
-router.get('/invitations', (_req: Request, res: Response) => {
-  const list = suppliersService.getAllInvitations();
+router.get('/invitations', (req: Request, res: Response) => {
+  const list = suppliersService.getAllInvitations(req.user!.id);
   res.status(200).json({
     success: true,
     data: list,
@@ -99,7 +99,7 @@ router.post('/submit/:token', (req: Request, res: Response) => {
 
 // POST /api/v1/suppliers/approve/:id - Admin approves primary factor override
 router.post('/approve/:id', (req: Request, res: Response) => {
-  const approved = suppliersService.approveSubmission(req.params.id, req.body.auditorName);
+  const approved = suppliersService.approveSubmission(req.user!.id, req.params.id, req.user!.email);
   if (!approved) {
     res.status(404).json({
       success: false,

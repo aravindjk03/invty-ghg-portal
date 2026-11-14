@@ -31,9 +31,12 @@ const env = { ...process.env, VITE_BASE_PATH: `/${repo}/` };
 if (process.env.IINVTY_BACKEND_URL) env.VITE_API_BASE_URL = process.env.IINVTY_BACKEND_URL;
 if (process.env.IINVTY_AI_URL) env.VITE_PCF_API_BASE_URL = process.env.IINVTY_AI_URL;
 if (process.env.IINVTY_GOOGLE_CLIENT_ID) env.VITE_GOOGLE_CLIENT_ID = process.env.IINVTY_GOOGLE_CLIENT_ID;
-// Free-tier Gemini key for INSITY EDGE AI. Passed at build time only, never committed;
-// restrict it in Google Cloud to this site's address and the Generative Language API.
-if (process.env.IINVTY_GEMINI_KEY) env.VITE_GEMINI_API_KEY = process.env.IINVTY_GEMINI_KEY;
+// An AI key is never built into the site: anything baked in here is public the
+// moment it is published. The key belongs to the estimate service (render.yaml).
+if (process.env.IINVTY_GEMINI_KEY) {
+  console.error('\n[deploy:pages] IINVTY_GEMINI_KEY is set, and is being IGNORED. A key built into the\n' +
+    'site is readable by every visitor. Set GEMINI_API_KEY on the estimate service instead.\n');
+}
 if (!process.env.IINVTY_BACKEND_URL || !process.env.IINVTY_AI_URL) {
   console.warn('\n[deploy:pages] IINVTY_BACKEND_URL or IINVTY_AI_URL is not set: the published site\n' +
     'will call localhost for login and INSITY EDGE AI.\n');

@@ -24,6 +24,12 @@ CATALOGUE = {
 }
 MAPPINGS = [m for m in catalogue_mappings() if CATALOGUE[m.catalogue_key]["scope"] != "memo"]
 
+#: The only activities allowed to calculate to zero, each zero by definition and
+#: approved as such: no fuel on a walk, no greenhouse gas in ammonia, no carbon
+#: in hydrogen. Anything else coming to zero is a mapping that resolved nothing.
+ZERO_BY_DEFINITION = {"derived.walk_cycle", "derived.r717_release", "derived.hydrogen_combustion",
+                          "derived.energy_balance", "derived.reuse_eol"}
+
 
 def test_every_mapping_names_a_catalogue_source():
     assert {m.catalogue_key for m in catalogue_mappings()} <= set(CATALOGUE)
@@ -42,7 +48,10 @@ def test_the_mapping_calculates_in_its_own_scope_and_category(mapping):
 
     line = next(line for line in response.lines if line.record_id == "r")
     assert line.status == "calculated", line.message
-    assert Decimal(line.emissions_kgco2e) > 0
+    if mapping.activity_key in ZERO_BY_DEFINITION:
+        assert Decimal(line.emissions_kgco2e) == 0
+    else:
+        assert Decimal(line.emissions_kgco2e) > 0
     # Its own line, not the Category 3 upstream line a fuel also produces.
     assert (line.scope, line.ghg_category) == (source["scope"], source["ghg_category"])
 

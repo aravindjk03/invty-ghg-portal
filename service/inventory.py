@@ -228,6 +228,38 @@ def load_registry() -> tuple[InMemoryFactorRegistry, tuple[SelectableActivity, .
             entry["gases"].add(row["gas"])
             entry["units"].add(row["unit"])
 
+    # Gases recorded as the mass released (methane, Novec 1230), the values the
+    # owner approved deriving from chemistry or definition (acetylene, hydrogen,
+    # ammonia refrigerant, walking and cycling), and direct tCO2e entry. Each
+    # row states its working in co2e_basis and source_version, which is what the
+    # report prints in place of a table reference.
+    supplementary = FACTOR_DIR / "supplementary.csv"
+    if supplementary.exists():
+        for row in csv.DictReader(supplementary.open(encoding="utf-8")):
+            gas = row["gas"]
+            value = _decimal(row["value_kgco2e_per_unit"] if gas == "CO2e"
+                             else row["gas_mass_kg_per_unit"])
+            if value is None:
+                continue
+            key = row["factor_id"].rsplit(".", 1)[0]
+            registry.add(EmissionFactor(
+                version_id=row["factor_id"], activity_key=key, region=row["geography"],
+                reference_year=int(row["publication_year"] or 0), gas=gas,
+                value=value, numerator_unit=f"kg{gas}", denominator_unit=row["unit"],
+                ef_basis=PHYSICAL_BASIS, source_name=row["source"],
+                source_table_ref=f"{row['source_version']}. {row['co2e_basis']}",
+                source_url=row["source_url"], factor_set_id="supplementary",
+            ))
+            entry = activities.setdefault(key, {
+                "name": row["name"].rsplit(" — ", 1)[0], "scope": row["scope"],
+                "category_path": row["category_path"], "unit": row["unit"],
+                "region": row["geography"], "source": row["source"],
+                "year": int(row["publication_year"] or 0), "gases": set(),
+                "units": set(),
+            })
+            entry["gases"].add(gas)
+            entry["units"].add(row["unit"])
+
     epa = FACTOR_DIR / "epa_supply_chain.csv"
     if epa.exists():
         for row in csv.DictReader(epa.open(encoding="utf-8")):
@@ -353,7 +385,10 @@ def run_inventory(
         # CO2e last: it is the publisher's composite, used only where no gas
         # split is published. Where a split exists the three gases resolve and
         # the composite is absent, so there is no double counting.
-        gases=("CO2", "CH4", "N2O", "CO2e"),
+        # FK-5-1-12 (Novec 1230) is recorded as the mass of agent released and
+        # is the one gas carried by mass outside the three, so the inventory's
+        # own GWP set applies to it (supplementary.csv).
+        gases=("CO2", "CH4", "N2O", "FK-5-1-12", "CO2e"),
         scope2_headline_view=scope2_view,
     )
 

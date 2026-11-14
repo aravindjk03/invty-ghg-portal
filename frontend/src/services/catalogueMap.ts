@@ -16,6 +16,15 @@
 import { z } from 'zod';
 import { engineFetch } from '../engine/engineFetch';
 
+const PublishedValueSchema = z.object({
+  gas: z.string(),
+  value: z.string(),
+  per: z.string(),
+  factor_id: z.string(),
+  reference: z.string(),
+});
+export type PublishedValue = z.infer<typeof PublishedValueSchema>;
+
 const MappingSchema = z.object({
   catalogue_key: z.string(),
   catalogue_name: z.string(),
@@ -24,6 +33,10 @@ const MappingSchema = z.object({
   engine_name: z.string(),
   region: z.string(),
   source: z.string(),
+  /** The value the engine calculates with, gas by gas, and its CO2e per unit. */
+  values: PublishedValueSchema.array().default([]),
+  co2e_ar5: z.string().nullable().default(null),
+  co2e_ar6: z.string().nullable().default(null),
 });
 export type CatalogueMapping = z.infer<typeof MappingSchema>;
 

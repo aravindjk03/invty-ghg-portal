@@ -14,6 +14,7 @@ import { buildReport } from '../report/build/buildReport';
 import { buildMethodSources } from '../report/build/methodSources';
 import { exportWorkbook } from '../report/export/workbook';
 import { loadReportMeta, saveReportMeta, ReportMeta } from '../report/model/reportMeta';
+import { reportUsage } from '../services/usageReporter';
 import { toTonnes } from '../types/inventory';
 
 export interface ReportPreviewPageProps {
@@ -83,6 +84,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
         `${companyName.replace(/\s+/g, '_')}_GHG_Inventory_Report_${reportingPeriod.replace(/\s+/g, '_')}.pdf`,
       );
       addToast('success', 'Report generated and downloaded');
+      reportUsage('report_export');
     } catch {
       window.print();
     } finally {
@@ -96,6 +98,7 @@ export const ReportPreviewPage: React.FC<ReportPreviewPageProps> = () => {
       { scope1: scope1Entries, scope2: scope2Entries, scope3: scope3Entries },
       `${companyName.replace(/\s+/g, '_')}_GHG_Master_${reportingPeriod.replace(/\s+/g, '_')}.xlsx`);
     addToast('success', 'Calculation workbook exported — 43 sheets (Annexure F)');
+    reportUsage('report_export');
   };
 
   const gated = (action: 'print' | 'xlsx') => {

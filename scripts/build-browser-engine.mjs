@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import {
   copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -97,6 +98,34 @@ rmSync(engineOut, { recursive: true, force: true });
 mkdirSync(engineOut, { recursive: true });
 const bundle = JSON.stringify(files);
 writeFileSync(path.join(engineOut, 'engine-files.json'), bundle);
+
+// --- fixed answers as static files ---------------------------------------------
+// The factor map, unit choices, methods list and GWP sets are fixed data. Written
+// here by the engine's own handler, the page shows them at once instead of
+// waiting for Python to start. Without python3 the page simply asks the engine.
+const staticOut = path.join(engineOut, 'static');
+const exported = spawnSync('python3', [path.join(root, 'scripts', 'export_engine_static.py'), staticOut],
+  { cwd: root, encoding: 'utf8' });
+if (exported.status === 0) {
+  process.stdout.write(exported.stdout);
+} else {
+  console.warn('[browser-engine] static answers not written (python3 unavailable or failed); '
+    + 'the page will ask the engine instead.\n' + (exported.stderr || exported.error || ''));
+}
+
+// --- version stamp ---------------------------------------------------------------
+// One hash over everything the engine runs on. The service worker keeps the
+// engine on disk between visits under this name, so a deploy that changes any
+// of it is downloaded exactly once and an unchanged one never again.
+const stamp = createHash('sha256').update(bundle).update(JSON.stringify(shipped))
+  .update(lock.info.version ?? '');
+if (existsSync(staticOut)) {
+  for (const file of readdirSync(staticOut).sort()) stamp.update(readFileSync(path.join(staticOut, file)));
+}
+const version = stamp.digest('hex').slice(0, 16);
+writeFileSync(path.join(engineOut, 'engine-version.json'), JSON.stringify({
+  version, pyodide: lock.info.version ?? '', static: existsSync(staticOut) ? readdirSync(staticOut).sort() : [],
+}));
 
 console.log(`[browser-engine] ${Object.keys(files).length} engine files (${(bundle.length / 1e6).toFixed(1)} MB), `
   + `Python ${lock.info.python} with ${PACKAGES.length} packages.`);

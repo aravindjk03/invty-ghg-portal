@@ -25,6 +25,17 @@ const envSchema = z.object({
   /** Minimum password length accepted at registration. */
   MIN_PASSWORD_LENGTH: z.string().transform((v) => parseInt(v, 10)).default('12'),
   DATA_DIR: z.string().optional(),
+  /**
+   * The admin site's address(es), comma-separated, e.g. https://ops-x7k2.example.com.
+   * When set, the console API answers only browser requests from these origins
+   * (any other origin gets a plain 404), and they are added to the CORS list.
+   */
+  ADMIN_ORIGIN: z.string().optional(),
+  /**
+   * Optional network allowlist for the console API: comma-separated IPs or CIDR
+   * ranges (office, VPN). Any other address gets a plain 404.
+   */
+  OPS_ALLOWED_IPS: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
