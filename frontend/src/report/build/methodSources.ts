@@ -17,6 +17,10 @@ const METHOD_NAME: Record<string, string> = {
   manure_management: 'CH4 and N2O from manure management',
   wastewater: 'CH4 and N2O from wastewater',
   solid_waste: 'CH4 from solid waste disposal',
+  mineral_industry: 'CO2 from cement, lime, glass and carbonates',
+  chemical_industry: 'CO2, CH4, N2O and HFC-23 from the chemical industry',
+  metal_industry: 'CO2, CH4, PFCs and SF6 from the metal industry',
+  rice_cultivation: 'CH4 from rice cultivation',
 };
 
 export function buildMethodSources(

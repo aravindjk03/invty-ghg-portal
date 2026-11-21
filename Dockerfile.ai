@@ -1,0 +1,24 @@
+# INSITY EDGE AI, the Product Carbon estimate service (FastAPI). Built from the
+# repository root because it uses the ghg_core engine package.
+#
+#   docker build -f Dockerfile.ai -t iinvty-ai .
+#   docker run -p 8000:8000 --env-file service/.env iinvty-ai
+
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+WORKDIR /app
+COPY pyproject.toml ./
+COPY ghg_core ./ghg_core
+COPY service ./service
+COPY data ./data
+RUN pip install --no-cache-dir ".[service]" \
+  && useradd --create-home app \
+  && chown -R app:app /app
+USER app
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import os,urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT','8000')); sys.exit(0)"
+# Behind a host's proxy, trust X-Forwarded-For so the per-visitor rate limit works.
+CMD ["sh", "-c", "uvicorn service.app:app --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'"]

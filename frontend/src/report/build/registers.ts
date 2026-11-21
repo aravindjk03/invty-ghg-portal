@@ -68,27 +68,39 @@ export function buildEvidenceRegister(entries: ActivityEntry[]): EvidenceRow[] {
 }
 
 export function buildFactorRegister(entries: ActivityEntry[], reportingYear: number): EmissionFactorRow[] {
-  const byFactor = new Map<string, { entries: ActivityEntry[] }>();
+  // One register line per factor the ENGINE used (or the company supplied),
+  // with the value it calculated with. The catalogue picker once carried its
+  // own hand-typed number per source; printing that here put a figure in the
+  // report that no line was calculated from.
+  const keyFor = (entry: ActivityEntry) => (entry.customFactorOverride !== undefined
+    ? `supplied:${entry.emissionFactor?.id ?? entry.id}:${entry.customFactorOverride}`
+    : `${entry.engineActivityKey ?? entry.emissionFactor?.id ?? 'UNSPECIFIED'}|${entry.engineFactorUnit ?? ''}`);
+  const byFactor = new Map<string, ActivityEntry[]>();
   entries.forEach((entry) => {
-    const id = entry.emissionFactor?.id ?? 'UNSPECIFIED';
-    byFactor.set(id, { entries: [...(byFactor.get(id)?.entries ?? []), entry] });
+    const key = keyFor(entry);
+    byFactor.set(key, [...(byFactor.get(key) ?? []), entry]);
   });
 
   return [...byFactor.entries()]
-    .map(([id, group]) => {
-      const factor = group.entries[0]?.emissionFactor;
-      const publicationYear = factor?.publicationYear ?? 0;
+    .map(([key, group]) => {
+      const first = group[0];
+      const factor = first?.emissionFactor;
+      const supplied = first?.customFactorOverride !== undefined;
+      const value = supplied ? first.customFactorOverride : first?.engineFactorValue;
+      const publicationYear = supplied ? 0 : first?.engineFactorYear ?? 0;
       return {
-        id,
-        activity: factor?.fuelOrActivity ?? group.entries[0]?.fuelOrSource ?? 'Not recorded',
-        factorValue: factor?.factorValue ?? 0,
-        unit: factor?.unit ?? '',
-        source: factor?.source ?? 'Not recorded',
+        id: supplied ? (factor?.id ?? key) : (first?.engineActivityKey ?? factor?.id ?? 'UNSPECIFIED'),
+        activity: factor?.fuelOrActivity ?? first?.fuelOrSource ?? 'Not recorded',
+        factorValue: value ?? null,
+        unit: (supplied ? first?.unit : first?.engineFactorUnit) ?? factor?.unit ?? '',
+        source: supplied
+          ? `Supplied by the company: ${first.customFactorSource ?? 'source not stated'}`
+          : first?.engineFactorSource ?? 'Not calculated: no published factor',
         publicationYear,
-        qualityTier: factor?.qualityTier ?? 'Estimated',
+        qualityTier: supplied ? 'Estimated' : factor?.qualityTier ?? 'Estimated',
         gwpSet: factor?.gwpSet ?? 'Not recorded',
         ageYears: publicationYear > 0 ? Math.max(0, reportingYear - publicationYear) : -1,
-        usedByEntries: group.entries.length,
+        usedByEntries: group.length,
       };
     })
     .sort((a, b) => b.usedByEntries - a.usedByEntries);

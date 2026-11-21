@@ -2,7 +2,7 @@
   "source_name": "IPCC 2006 Guidelines for National Greenhouse Gas Inventories, Volume 3 (Industrial Processes and Product Use)",
   "source_url": "https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol3.html",
   "read_on": "2026-09-27",
-  "read_from": "Chapter 2 Tables 2.1, 2.4, 2.6 and Equations 2.4 and 2.8; Chapter 3 Tables 3.1, 3.3, 3.4, 3.7, 3.8, 3.9; Chapter 4 Tables 4.1, 4.2, 4.5, 4.10, 4.15, 4.20, 4.21, 4.24",
+  "read_from": "Chapter 2 Tables 2.1, 2.4, 2.6 and Equations 2.4 and 2.8; Chapter 3 Tables 3.1, 3.3, 3.4, 3.7, 3.8, 3.9, 3.12, 3.14, 3.15, 3.16, 3.23, 3.24, 3.28; Chapter 4 Tables 4.1, 4.2, 4.5, 4.10, 4.15, 4.20, 4.21, 4.24",
   "tier": 1,
   "carbonates": {
     "unit": "tonnes CO2 per tonne of carbonate, at 100 percent calcination",
@@ -287,6 +287,83 @@
     "not_published": {
       "titanium_slag": "IPCC publishes no default: only two plants make it and their data is confidential. A plant that makes it has to use its own reductant and carbothermal input."
     }
+  },
+  "methanol": {
+    "unit": "tonnes CO2 per tonne of methanol produced",
+    "read_from": "Table 3.12 (printed page 3.73); CH4 default in section 3.9.2.2 (printed page 3.74)",
+    "read_on": "2026-11-12",
+    "note": "Covers the feedstock and the fuel together. Use the conventional steam reforming default unless the process is known.",
+    "values": {
+      "conventional_steam_reforming_natural_gas": 0.67,
+      "conventional_steam_reforming_with_primary_reformer": 0.497,
+      "lurgi_conventional_natural_gas": 0.385,
+      "lurgi_conventional_natural_gas_plus_co2": 0.267,
+      "lurgi_low_pressure": 0.267,
+      "lurgi_combined": 0.396,
+      "lurgi_mega_methanol": 0.31,
+      "partial_oxidation_oil": 1.376,
+      "partial_oxidation_coal": 5.285,
+      "partial_oxidation_lignite": 5.02,
+      "steam_reforming_integrated_ammonia": 1.02
+    },
+    "default": "conventional_steam_reforming_natural_gas",
+    "ch4_kg_per_tonne": 2.3,
+    "ch4_note": "The higher of the two plant values IPCC reports (2.3 and 0.15 kg CH4 per tonne), which it says should be applied as the default."
+  },
+  "ethylene": {
+    "unit": "tonnes CO2 per tonne of ethylene produced",
+    "read_from": "Tables 3.14 and 3.15 (printed page 3.75) and Table 3.16 (printed page 3.76)",
+    "read_on": "2026-11-12",
+    "note": "Total process and energy-feedstock use for the whole steam cracker, divided by its ethylene output. Excludes supplemental fuel burned in flares.",
+    "values": {
+      "naphtha": 1.73,
+      "gas_oil": 2.29,
+      "ethane": 0.95,
+      "propane": 1.04,
+      "butane": 1.07,
+      "other": 1.73
+    },
+    "geographic_adjustment": {
+      "western_europe": 1.0,
+      "eastern_europe": 1.1,
+      "japan_and_korea": 0.9,
+      "asia_africa_russia": 1.3,
+      "americas_and_australia": 1.1
+    },
+    "geographic_note": "Table 3.15: the factors are from Western European crackers. India falls under 'Asia, Africa, Russia' (130 percent).",
+    "ch4_kg_per_tonne": {
+      "ethane": 6,
+      "naphtha": 3,
+      "other": 3
+    }
+  },
+  "carbon_black": {
+    "unit": "tonnes CO2 per tonne of carbon black produced",
+    "read_from": "Table 3.23 and Table 3.24 (printed page 3.80)",
+    "read_on": "2026-11-12",
+    "note": "Total feedstock (primary plus secondary). Furnace black is the default process.",
+    "values": {
+      "furnace_black": 2.62,
+      "thermal_black": 5.25,
+      "acetylene_black": 0.78
+    },
+    "default": "furnace_black",
+    "ch4_kg_per_tonne": {
+      "thermal_treatment": 0.06,
+      "no_thermal_treatment": 28.7
+    }
+  },
+  "hfc23": {
+    "unit": "kg HFC-23 per kg of HCFC-22 produced",
+    "read_from": "Table 3.28 (printed page 3.99)",
+    "read_on": "2026-11-12",
+    "note": "Tier 1 defaults with an uncertainty of about 50 percent. A plant that measures or destroys HFC-23 must use its own figure.",
+    "values": {
+      "old_unoptimised": 0.04,
+      "recent_not_optimised": 0.03,
+      "global_average_1978_1995": 0.02
+    },
+    "default": "recent_not_optimised"
   },
   "iron_and_steel": {
     "unit": "tonnes CO2 per tonne of the named product",

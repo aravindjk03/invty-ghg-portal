@@ -29,7 +29,7 @@ export interface CustomerLeadRecord {
 // have, with named companies, and every sector breakdown started out wrong.
 
 export const leadsService = {
-  createLead(data: Omit<CustomerLeadRecord, 'id' | 'capturedAt'>, ip?: string): CustomerLeadRecord {
+  async createLead(data: Omit<CustomerLeadRecord, 'id' | 'capturedAt'>, ip?: string): Promise<CustomerLeadRecord> {
     const lead: CustomerLeadRecord = {
       ...data,
       id: `lead-${crypto.randomBytes(6).toString('hex')}`,
@@ -37,16 +37,16 @@ export const leadsService = {
       ipAddress: ip || 'client-direct',
     };
 
-    dbService.insertLead(lead);
+    await dbService.insertLead(lead);
     return lead;
   },
 
-  getAllLeads(): CustomerLeadRecord[] {
-    return dbService.allLeads() as CustomerLeadRecord[];
+  async getAllLeads(): Promise<CustomerLeadRecord[]> {
+    return (await dbService.allLeads()) as CustomerLeadRecord[];
   },
 
-  getLeadStats() {
-    const leadsStore = this.getAllLeads();
+  async getLeadStats() {
+    const leadsStore = await this.getAllLeads();
     return {
       totalLeadsCaptured: leadsStore.length,
       topSectors: leadsStore.reduce((acc, curr) => {

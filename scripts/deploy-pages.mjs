@@ -8,8 +8,7 @@
 //   IINVTY_AI_URL        e.g. https://iinvty-insity-edge-ai.onrender.com
 //   IINVTY_GOOGLE_CLIENT_ID  the OAuth Web client ID (see SETUP-GOOGLE.md);
 //                            without it the Google button explains it is not set up
-// Without them the published site points at localhost, so login and
-// INSITY EDGE AI only work on a computer running the servers locally.
+// Without IINVTY_BACKEND_URL it refuses to publish unless --trial is given.
 //
 // Publishing adds one commit on top of gh-pages; history is never rewritten.
 import { execSync } from 'node:child_process';
@@ -31,12 +30,29 @@ const env = { ...process.env, VITE_BASE_PATH: `/${repo}/` };
 if (process.env.IINVTY_BACKEND_URL) env.VITE_API_BASE_URL = process.env.IINVTY_BACKEND_URL;
 if (process.env.IINVTY_AI_URL) env.VITE_PCF_API_BASE_URL = process.env.IINVTY_AI_URL;
 if (process.env.IINVTY_GOOGLE_CLIENT_ID) env.VITE_GOOGLE_CLIENT_ID = process.env.IINVTY_GOOGLE_CLIENT_ID;
-// Free-tier Gemini key for INSITY EDGE AI. Passed at build time only, never committed;
-// restrict it in Google Cloud to this site's address and the Generative Language API.
-if (process.env.IINVTY_GEMINI_KEY) env.VITE_GEMINI_API_KEY = process.env.IINVTY_GEMINI_KEY;
-if (!process.env.IINVTY_BACKEND_URL || !process.env.IINVTY_AI_URL) {
-  console.warn('\n[deploy:pages] IINVTY_BACKEND_URL or IINVTY_AI_URL is not set: the published site\n' +
-    'will call localhost for login and INSITY EDGE AI.\n');
+// An AI key is never built into the site: anything baked in here is public the
+// moment it is published. The key belongs to the estimate service (render.yaml).
+if (process.env.IINVTY_GEMINI_KEY) {
+  console.error('\n[deploy:pages] IINVTY_GEMINI_KEY is set, and is being IGNORED. A key built into the\n' +
+    'site is readable by every visitor. Set GEMINI_API_KEY on the estimate service instead.\n');
+}
+// Publishing without a backend used to only print a warning, and the live site
+// then quietly ran as a browser-only trial (accounts kept in each visitor's
+// browser). Now it has to be asked for: `npm run deploy:pages -- --trial`.
+const trial = process.argv.includes('--trial');
+if (!process.env.IINVTY_BACKEND_URL && !trial) {
+  console.error('\n[deploy:pages] IINVTY_BACKEND_URL is not set, so this would publish a browser-only trial\n' +
+    '(accounts stay in each visitor\'s browser). Set it to your backend, e.g.\n' +
+    '  IINVTY_BACKEND_URL=https://iinvty-backend.onrender.com/api/v1 npm run deploy:pages\n' +
+    'or publish the trial on purpose with: npm run deploy:pages -- --trial\n');
+  process.exit(1);
+}
+if (trial) console.warn('\n[deploy:pages] Publishing the browser-only trial (no backend).\n');
+if (!process.env.IINVTY_AI_URL) {
+  console.warn('[deploy:pages] IINVTY_AI_URL is not set: Product Carbon estimates will be unavailable.\n');
+}
+if (!process.env.IINVTY_GOOGLE_CLIENT_ID) {
+  console.warn('[deploy:pages] IINVTY_GOOGLE_CLIENT_ID is not set: the Google sign-in button is hidden.\n');
 }
 
 console.log(`[deploy:pages] Building the website for /${repo}/ ...`);

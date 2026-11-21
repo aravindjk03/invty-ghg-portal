@@ -8,6 +8,7 @@
 export type PageKey =
   | 'scope-hub'
   | 'product-carbon'
+  | 'cbam'
   | 'scope-1'
   | 'methods'
   | 'factor-library'
@@ -22,6 +23,7 @@ export type PageKey =
 export const PAGE_KEYS: PageKey[] = [
   'scope-hub',
   'product-carbon',
+  'cbam',
   'scope-1',
   'methods',
   'factor-library',
@@ -39,12 +41,12 @@ export const DEFAULT_PAGE: PageKey = 'scope-hub';
 /**
  * Built but not currently exposed in the UI.
  *
- * CBAM, BRSR Core, CEMS Monitor and the Supplier Portal are complete and their
+ * BRSR Core, CEMS Monitor and the Supplier Portal are complete and their
  * backend routes still work; they are disconnected from routing and navigation
  * rather than deleted, so re-enabling one is a matter of adding its key back to
  * PageKey/PAGE_KEYS and restoring its case in App.tsx.
  */
-export const PARKED_PAGES = ['cbam', 'brsr', 'cems', 'suppliers'] as const;
+export const PARKED_PAGES = ['brsr', 'cems', 'suppliers'] as const;
 
 export function isPageKey(value: string | null | undefined): value is PageKey {
   return !!value && (PAGE_KEYS as string[]).includes(value);

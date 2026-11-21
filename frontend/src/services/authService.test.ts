@@ -86,6 +86,49 @@ describe('browser-only sign-in', () => {
   });
 });
 
+describe('passwords in the browser store', () => {
+  it('are not written in plain text', async () => {
+    const store = installBrowserStubs();
+    vi.resetModules();
+    ({ authService } = await import('./authService'));
+
+    const password = 'correct horse battery staple';
+    await authService.signup({
+      name: 'Asha Rao', email: 'asha@example.com', password, companyName: 'Rao Metals',
+    });
+
+    const raw = store.get('invty_offline_users') ?? '';
+    expect(raw).not.toContain(password);
+    expect(raw).toContain('PBKDF2-SHA256');
+  });
+
+  it('still verify correctly once hashed', async () => {
+    await authService.signup({
+      name: 'Asha Rao', email: 'asha@example.com', password: 'a good password', companyName: 'Rao Metals',
+    });
+    await expect(authService.login('asha@example.com', 'a good password')).resolves.toBeTruthy();
+    await expect(authService.login('asha@example.com', 'a good passworD')).rejects.toThrow();
+  });
+
+  it('upgrade an account stored before hashing existed, then drop the plaintext', async () => {
+    const store = installBrowserStubs();
+    store.set('invty_offline_users', JSON.stringify([{
+      user: {
+        id: 'usr_old', email: 'old@example.com', name: 'Old Account',
+        companyName: 'Rao Metals', role: 'ESG_ANALYST', createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      password: 'legacy plaintext',
+    }]));
+    vi.resetModules();
+    ({ authService } = await import('./authService'));
+
+    await expect(authService.login('old@example.com', 'legacy plaintext')).resolves.toBeTruthy();
+    const raw = store.get('invty_offline_users') ?? '';
+    expect(raw).not.toContain('legacy plaintext');
+    expect(raw).toContain('PBKDF2-SHA256');
+  });
+});
+
 describe('mobile verification without an SMS service', () => {
   it('says the code is on screen rather than claiming a text was sent', async () => {
     const sent = await authService.sendMobileOtp('+919876543210');

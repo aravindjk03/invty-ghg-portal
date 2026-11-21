@@ -249,7 +249,8 @@ export interface EvidenceRow {
 export interface EmissionFactorRow {
   id: string;
   activity: string;
-  factorValue: number;
+  /** The value the engine calculated with; null when the row was not calculated. */
+  factorValue: number | null;
   unit: string;
   source: string;
   publicationYear: number;

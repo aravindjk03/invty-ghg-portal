@@ -86,10 +86,16 @@ def test_every_mapping_actually_calculates(mappings):
         gwp_set_name="AR5", reporting_year=2025,
     )
 
+    # Zero by definition, approved as such: no fuel on a walk, no greenhouse
+    # gas in ammonia, no carbon in hydrogen. Each must still CALCULATE.
+    zero_by_definition = {"derived.walk_cycle", "derived.r717_release",
+                          "derived.hydrogen_combustion",
+                          "derived.energy_balance", "derived.reuse_eol"}
     failures = [
         f"{mappings[int(line.record_id)].catalogue_key} -> {line.activity_key}: {line.message}"
         for line in run.line_results
-        if line.status != "calculated" or line.emissions_kgco2e <= 0
+        if line.status != "calculated"
+        or (line.emissions_kgco2e <= 0 and line.activity_key not in zero_by_definition)
     ]
     assert not failures, "mapped factors that do not calculate:\n  " + "\n  ".join(failures)
 
@@ -122,11 +128,12 @@ def test_biomass_carries_its_combustion_gases_not_its_biogenic_carbon(mappings):
 def test_a_source_with_no_published_factor_is_left_out_rather_than_invented(mappings):
     # Process emissions are real sources that no ingested factor set covers:
     # clinker calcination and nitric acid need the IPCC industrial-processes
-    # methods, not a factor per tonne of product. They stay uncalculated on
-    # purpose, the report lists them, and nobody reports a made-up number.
+    # methods, not a factor per tonne of product. They stay off the factor map
+    # on purpose (the Methods page calculates them), and a pipeline or
+    # hazardous waste - which no ingested set publishes - is never invented.
     mapped = {mapping.catalogue_key for mapping in mappings}
     for key in ("process.cement_clinker", "process.nitric_acid", "process.ammonia_production",
-                "fuel.hydrogen.green"):
+                "cat4.pipeline", "land.use_change"):
         assert key not in mapped
 
 
@@ -197,8 +204,12 @@ def test_every_mapped_source_calculates_in_a_unit_the_product_offers(mappings):
                     region=chosen.region, value=D(1), unit=unit))
 
     run = run_inventory(records, gwp_set_name="AR5", reporting_year=2025)
+    zero_by_definition = {"derived.walk_cycle", "derived.r717_release",
+                          "derived.hydrogen_combustion",
+                          "derived.energy_balance", "derived.reuse_eol"}
     calculated = {meta[line.record_id][0] for line in run.line_results
-                  if line.emissions_kgco2e > 0 or line.biogenic_co2_kg > 0}
+                  if line.emissions_kgco2e > 0 or line.biogenic_co2_kg > 0
+                  or (line.status == "calculated" and line.activity_key in zero_by_definition)}
 
     silent = sorted(set(by_key) - calculated)
     assert not silent, (

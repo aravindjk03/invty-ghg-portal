@@ -12,7 +12,7 @@ Implemented, with the chapter each came from:
   Ch 2  cement clinker, lime, glass, and the carbonates used as flux or raw
         material anywhere else
   Ch 3  ammonia, nitric acid, adipic acid, silicon and calcium carbide,
-        titanium dioxide
+        titanium dioxide, methanol, ethylene, carbon black, HFC-23 from HCFC-22
   Ch 4  coke, sinter, pellet, iron, DRI and the three steelmaking routes;
         ferroalloys; aluminium anode CO2 and PFCs; magnesium SF6; lead; zinc
 
@@ -433,6 +433,114 @@ def titanium_dioxide_co2(
         gas_masses_kg={"CO2": _tonnes_to_kg(D(product_tonnes) * factor)},
         basis=f"{factor} tCO2 per tonne ({product})",
         components={"product_tonnes": D(product_tonnes), "factor": factor},
+    )
+
+
+def methanol_emissions(
+    methanol_tonnes: Decimal | str | float,
+    *,
+    process: str = "conventional_steam_reforming_natural_gas",
+    parameters: Optional[IndustrialParameters] = None,
+) -> ProcessResult:
+    """CO2 and CH4 from making methanol, in kilograms (Table 3.12).
+
+    The CO2 factor covers the feedstock and the fuel together, so that fuel must
+    not also be reported under stationary combustion.
+    """
+    p = parameters or IndustrialParameters.load()
+    tonnes = D(methanol_tonnes)
+    factor = p.factor("methanol", process)
+    ch4 = D(str(p.group("methanol")["ch4_kg_per_tonne"]))
+    return ProcessResult(
+        process="methanol_production",
+        gas_masses_kg={"CO2": _tonnes_to_kg(tonnes * factor), "CH4": tonnes * ch4},
+        basis=f"{factor} tCO2 and {ch4} kg CH4 per tonne methanol ({process})",
+        components={"methanol_tonnes": tonnes, "co2_factor": factor, "ch4_factor": ch4},
+        notes=("This factor counts the feedstock and the fuel together. Do not also report "
+               "that fuel under stationary combustion.",),
+    )
+
+
+def ethylene_emissions(
+    ethylene_tonnes: Decimal | str | float,
+    *,
+    feedstock: str = "naphtha",
+    region: str = "asia_africa_russia",
+    parameters: Optional[IndustrialParameters] = None,
+) -> ProcessResult:
+    """CO2 and CH4 from a steam cracker, per tonne of ethylene (Tables 3.14-3.16).
+
+    IPCC divides the whole cracker's emissions by its ethylene output, so the
+    propylene, butadiene and aromatics it also makes are already inside this
+    figure and must not be counted again. The factors are from Western European
+    crackers and are scaled by the region's adjustment in Table 3.15.
+    """
+    p = parameters or IndustrialParameters.load()
+    block = p.group("ethylene")
+    tonnes = D(ethylene_tonnes)
+    factor = p.factor("ethylene", feedstock)
+    adjustments = block["geographic_adjustment"]          # type: ignore[index]
+    if region not in adjustments:                         # type: ignore[operator]
+        raise KeyError(f"No Table 3.15 adjustment for {region!r}. Published: "
+                       f"{', '.join(sorted(adjustments))}.")  # type: ignore[arg-type]
+    adjustment = D(str(adjustments[region]))              # type: ignore[index]
+    ch4_table = block["ch4_kg_per_tonne"]                 # type: ignore[index]
+    ch4 = D(str(ch4_table.get(feedstock, ch4_table["other"])))  # type: ignore[union-attr,index]
+    return ProcessResult(
+        process="ethylene_production",
+        gas_masses_kg={"CO2": _tonnes_to_kg(tonnes * factor * adjustment),
+                       "CH4": tonnes * ch4},
+        basis=(f"{factor} tCO2 per tonne ethylene ({feedstock}) x {adjustment} "
+               f"({region}); {ch4} kg CH4 per tonne"),
+        components={"ethylene_tonnes": tonnes, "co2_factor": factor,
+                    "geographic_adjustment": adjustment, "ch4_factor": ch4},
+        notes=("The whole cracker's output is inside this figure. Do not also report its "
+               "propylene or other products.",),
+    )
+
+
+def carbon_black_emissions(
+    carbon_black_tonnes: Decimal | str | float,
+    *,
+    process: str = "furnace_black",
+    thermal_treatment: bool = True,
+    parameters: Optional[IndustrialParameters] = None,
+) -> ProcessResult:
+    """CO2 and CH4 from making carbon black, in kilograms (Tables 3.23 and 3.24)."""
+    p = parameters or IndustrialParameters.load()
+    tonnes = D(carbon_black_tonnes)
+    factor = p.factor("carbon_black", process)
+    ch4_table = p.group("carbon_black")["ch4_kg_per_tonne"]   # type: ignore[index]
+    ch4 = D(str(ch4_table["thermal_treatment" if thermal_treatment  # type: ignore[index]
+                          else "no_thermal_treatment"]))
+    return ProcessResult(
+        process="carbon_black_production",
+        gas_masses_kg={"CO2": _tonnes_to_kg(tonnes * factor), "CH4": tonnes * ch4},
+        basis=f"{factor} tCO2 and {ch4} kg CH4 per tonne carbon black ({process})",
+        components={"carbon_black_tonnes": tonnes, "co2_factor": factor, "ch4_factor": ch4},
+    )
+
+
+def hfc23_byproduct(
+    hcfc22_tonnes: Decimal | str | float,
+    *,
+    plant: str = "recent_not_optimised",
+    parameters: Optional[IndustrialParameters] = None,
+) -> ProcessResult:
+    """HFC-23 released making HCFC-22, in kilograms (Table 3.28, Tier 1).
+
+    The factor is a mass ratio, so tonnes of HCFC-22 give tonnes of HFC-23.
+    """
+    p = parameters or IndustrialParameters.load()
+    tonnes = D(hcfc22_tonnes)
+    factor = p.factor("hfc23", plant)
+    return ProcessResult(
+        process="hfc23_byproduct",
+        gas_masses_kg={"HFC-23": _tonnes_to_kg(tonnes * factor)},
+        basis=f"{factor} kg HFC-23 per kg HCFC-22 ({plant})",
+        components={"hcfc22_tonnes": tonnes, "factor": factor},
+        notes=("A Tier 1 default with about 50 percent uncertainty. A plant that measures "
+               "or destroys its HFC-23 must use its own figure.",),
     )
 
 

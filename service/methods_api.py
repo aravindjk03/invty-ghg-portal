@@ -31,7 +31,9 @@ from ghg_core.methods import (CarbonateInput, EntericParameters, Herd,
                               managed_soil_n2o, manure_ch4, manure_n2o,
                               nitric_acid_n2o, nitrogen_in_effluent,
                               organic_load_from_population, solid_waste_ch4,
-                              titanium_dioxide_co2, urea_co2, urea_nitrogen,
+                              titanium_dioxide_co2, urea_co2, rice_ch4, RiceParameters,
+                              methanol_emissions, ethylene_emissions,
+                              carbon_black_emissions, hfc23_byproduct, urea_nitrogen,
                               wastewater_ch4, wastewater_n2o, zinc_co2)
 from ghg_core.quantities import D, ZERO
 from ghg_core.rebasis import rebase
@@ -100,6 +102,20 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
                   "how the manure is stored, and the share on each system"],
     },
     {
+        "key": "rice_cultivation",
+        "computes": ["agri.rice_cultivation"],
+        "name": "CH4 from rice cultivation",
+        "scope": "1",
+        "gases": ["CH4"],
+        "source": "IPCC 2006 Volume 4 Chapter 5, Equations 5.1 to 5.3 and Tables 5.11 to 5.14",
+        "why_not_a_factor": "A paddy's methane depends on how long and how continuously it is "
+                            "flooded, whether it was flooded before planting, and what organic "
+                            "matter was ploughed in - not on the area alone.",
+        "needs": ["harvested area and days of cultivation, per season",
+                  "the water regime during and before the season",
+                  "organic amendments applied, in tonnes per hectare"],
+    },
+    {
         "key": "wastewater",
         "computes": ["fugitive.ch4_wastewater", "fugitive.n2o_wastewater"],
         "name": "CH4 and N2O from wastewater",
@@ -126,7 +142,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "mineral_industry",
-        "computes": ["process.cement_clinker", "process.lime_calcination", "process.dolomite_calcination", "process.limestone_flux", "process.soda_ash_use", "process.glass_carbonates", "process.ceramics", "process.pulp_paper_lime_kiln"],
+        "computes": ["process.cement_clinker", "process.lime_calcination", "process.dolomite_calcination", "process.limestone_flux", "process.soda_ash_use", "process.glass_carbonates", "process.ceramics", "process.pulp_paper_lime_kiln", "process.phosphoric_acid"],
         "name": "CO2 from cement, lime, glass and carbonates",
         "scope": "1",
         "gases": ["CO2"],
@@ -139,7 +155,7 @@ METHOD_CATALOGUE: tuple[dict, ...] = (
     },
     {
         "key": "chemical_industry",
-        "computes": ["process.ammonia_production", "process.nitric_acid", "process.adipic_acid", "process.urea_production", "process.calcium_carbide", "process.silicon_carbide", "process.titanium_dioxide"],
+        "computes": ["process.ammonia_production", "process.nitric_acid", "process.adipic_acid", "process.urea_production", "process.calcium_carbide", "process.silicon_carbide", "process.titanium_dioxide", "process.methanol_production", "process.ethylene_petchem", "process.carbon_black", "process.hfc23_byproduct"],
         "name": "CO2 and N2O from ammonia, nitric acid, adipic acid and carbides",
         "scope": "1",
         "gases": ["CO2", "N2O", "CH4"],
@@ -192,6 +208,19 @@ class LimeAndUreaRequest(_Base):
     urea: Decimal = ZERO
     urea_fraction_of_solution: Decimal = Field(default=Decimal(1), gt=0, le=1)
     mass_unit: Literal["tonne", "kg"] = "tonne"
+
+
+class RiceSeasonIn(_Strict):
+    harvested_area_ha: Decimal = Field(ge=0)
+    cultivation_days: Decimal = Field(ge=0, le=365)
+    water_regime: str = Field(default="irrigated_continuously_flooded", max_length=64)
+    pre_season: str = Field(default="non_flooded_under_180_days", max_length=64)
+    amendments_t_per_ha: dict[str, Decimal] = Field(default_factory=dict, max_length=10)
+
+
+class RiceCultivationRequest(_Base):
+    method: Literal["rice_cultivation"]
+    seasons: list[RiceSeasonIn] = Field(default_factory=list, max_length=40)
 
 
 class EntericRequest(_Base):
@@ -305,6 +334,16 @@ class ChemicalIndustryRequest(_Base):
     carbide_basis: Literal["product", "petroleum_coke", "carbide_used"] = "product"
     titanium_dioxide_tonnes: Decimal = ZERO
     titanium_dioxide_product: str = "rutile_tio2_chloride_route"
+    methanol_tonnes: Decimal = ZERO
+    methanol_process: str = "conventional_steam_reforming_natural_gas"
+    ethylene_tonnes: Decimal = ZERO
+    ethylene_feedstock: str = "naphtha"
+    ethylene_region: str = "asia_africa_russia"
+    carbon_black_tonnes: Decimal = ZERO
+    carbon_black_process: str = "furnace_black"
+    carbon_black_thermal_treatment: bool = True
+    hcfc22_tonnes: Decimal = ZERO
+    hfc23_plant: str = "recent_not_optimised"
 
 
 class SteelStepIn(_Strict):
@@ -330,7 +369,7 @@ class MetalIndustryRequest(_Base):
 MethodRequest = (ManagedSoilsRequest | LimeAndUreaRequest | EntericRequest
                  | ManureRequest | WastewaterRequest | SolidWasteRequest
                  | MineralIndustryRequest | ChemicalIndustryRequest
-                 | MetalIndustryRequest)
+                 | MetalIndustryRequest | RiceCultivationRequest)
 
 
 # --- response ---------------------------------------------------------------
@@ -688,6 +727,19 @@ def _chemical_industry(request: ChemicalIndustryRequest) -> MethodResponse:
     if D(request.titanium_dioxide_tonnes) > ZERO:
         lines.append(titanium_dioxide_co2(D(request.titanium_dioxide_tonnes),
                                           product=request.titanium_dioxide_product))
+    if D(request.methanol_tonnes) > ZERO:
+        lines.append(methanol_emissions(D(request.methanol_tonnes),
+                                        process=request.methanol_process))
+    if D(request.ethylene_tonnes) > ZERO:
+        lines.append(ethylene_emissions(D(request.ethylene_tonnes),
+                                        feedstock=request.ethylene_feedstock,
+                                        region=request.ethylene_region))
+    if D(request.carbon_black_tonnes) > ZERO:
+        lines.append(carbon_black_emissions(
+            D(request.carbon_black_tonnes), process=request.carbon_black_process,
+            thermal_treatment=request.carbon_black_thermal_treatment))
+    if D(request.hcfc22_tonnes) > ZERO:
+        lines.append(hfc23_byproduct(D(request.hcfc22_tonnes), plant=request.hfc23_plant))
 
     gases: dict[str, Decimal] = {}
     working: dict[str, object] = {}
@@ -697,7 +749,7 @@ def _chemical_industry(request: ChemicalIndustryRequest) -> MethodResponse:
         notes.append("Nothing was recorded, so nothing was calculated.")
     return _respond(
         "chemical_industry", gases, gwp_set_name=request.gwp_set,
-        source="IPCC 2006 Volume 3 Chapter 3, Tables 3.1, 3.3, 3.4, 3.7, 3.8, 3.9",
+        source="IPCC 2006 Volume 3 Chapter 3, Tables 3.1, 3.3, 3.4, 3.7, 3.8, 3.9, 3.12, 3.14-3.16, 3.23, 3.24, 3.28",
         working=working, notes=notes)
 
 
@@ -743,6 +795,27 @@ def _metal_industry(request: MetalIndustryRequest) -> MethodResponse:
         working=working, notes=notes)
 
 
+def _rice(request: RiceCultivationRequest) -> MethodResponse:
+    total = ZERO
+    working: dict[str, object] = {}
+    for index, season in enumerate(request.seasons, start=1):
+        result = rice_ch4(season.harvested_area_ha, season.cultivation_days,
+                          water_regime=season.water_regime, pre_season=season.pre_season,
+                          amendments_t_per_ha=season.amendments_t_per_ha)
+        total += result.ch4_kg
+        prefix = f"season_{index}_" if len(request.seasons) > 1 else ""
+        for name, value in {**result.components, "ch4_kg": result.ch4_kg}.items():
+            working[f"{prefix}{name}"] = value
+    notes = []
+    if not request.seasons:
+        notes.append("Nothing was recorded, so nothing was calculated.")
+    gases = {"CH4": total} if request.seasons else {}
+    return _respond(
+        "rice_cultivation", gases, gwp_set_name=request.gwp_set,
+        source="IPCC 2006 Volume 4 Chapter 5, Equations 5.1 to 5.3 and Tables 5.11 to 5.14",
+        working=working, notes=notes, biogenic_methane=True)
+
+
 _CALCULATORS = {
     "managed_soils": _managed_soils,
     "lime_and_urea": _lime_and_urea,
@@ -753,6 +826,7 @@ _CALCULATORS = {
     "mineral_industry": _mineral_industry,
     "chemical_industry": _chemical_industry,
     "metal_industry": _metal_industry,
+    "rice_cultivation": _rice,
 }
 
 
@@ -780,6 +854,7 @@ def _method_options() -> dict[str, dict]:
     water = WastewaterParameters.load()
     waste = SolidWasteParameters.load()
     industry = IndustrialParameters.load()
+    rice = RiceParameters.load()
 
     manure_species = sorted({
         species
@@ -822,6 +897,11 @@ def _method_options() -> dict[str, dict]:
             },
         },
         "lime_and_urea": {"mass_unit": _labelled(["tonne", "kg"])},
+        "rice_cultivation": {
+            "water_regime": _labelled(list(rice.table("water_regime_during"))),
+            "pre_season": _labelled(list(rice.table("water_regime_before"))),
+            "amendment": _labelled(list(rice.table("organic_amendments"))),
+        },
         "mineral_industry": {
             "lime_type": _labelled(["default_mix", *sorted(industry.group("lime")["values"])]),
             "glass_type": _labelled(sorted(industry.group("glass")["values"])),
@@ -839,6 +919,12 @@ def _method_options() -> dict[str, dict]:
             "carbide_basis": _labelled(["product", "petroleum_coke", "carbide_used"]),
             "titanium_dioxide_product": _labelled(
                 sorted(industry.group("titanium_dioxide")["values"])),
+            "methanol_process": _labelled(sorted(industry.group("methanol")["values"])),
+            "ethylene_feedstock": _labelled(sorted(industry.group("ethylene")["values"])),
+            "ethylene_region": _labelled(
+                sorted(industry.group("ethylene")["geographic_adjustment"])),
+            "carbon_black_process": _labelled(sorted(industry.group("carbon_black")["values"])),
+            "hfc23_plant": _labelled(sorted(industry.group("hfc23")["values"])),
             "not_published": dict(industry.group("titanium_dioxide")["not_published"]),
         },
         "metal_industry": {

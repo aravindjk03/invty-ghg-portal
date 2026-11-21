@@ -149,7 +149,7 @@ export function exportWorkbook(
   });
 
   add('29_Emission_Factors', report.factorRegister.map((factor) => ({
-    'Factor ID': factor.id, Activity: factor.activity, Value: factor.factorValue,
+    'Factor ID': factor.id, Activity: factor.activity, Value: factor.factorValue ?? 'Not calculated',
     Unit: factor.unit, Source: factor.source, Year: factor.publicationYear,
     'Age (years)': factor.ageYears < 0 ? 'unknown' : factor.ageYears,
     Tier: factor.qualityTier, 'GWP set': factor.gwpSet, 'Used by records': factor.usedByEntries,

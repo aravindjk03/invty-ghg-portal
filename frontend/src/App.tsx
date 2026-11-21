@@ -20,8 +20,9 @@ const MethodsPage = lazy(() => import('./pages/MethodsPage').then((m) => ({ defa
 const FactorLibraryPage = lazy(() => import('./pages/FactorLibraryPage').then((m) => ({ default: m.FactorLibraryPage })));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then((m) => ({ default: m.AuditTrailPage })));
 
-// CBAMPage, BRSRPage, CEMSMonitorPage and SupplierPortalPage are intentionally
-// not routed. See PARKED_PAGES in config/routes.ts.
+const CBAMPage = lazy(() => import('./pages/CBAMPage').then((m) => ({ default: m.CBAMPage })));
+// BRSRPage, CEMSMonitorPage and SupplierPortalPage are intentionally not
+// routed. See PARKED_PAGES in config/routes.ts.
 import { authService } from './services/authService';
 import { leadService } from './services/leadService';
 import { Toast } from './components/ui/Toast';
@@ -166,6 +167,8 @@ function MainApp() {
         return <MethodsPage onNavigate={navigate} />;
       case 'product-carbon':
         return <ProductCarbonPage onNavigate={navigate} />;
+      case 'cbam':
+        return <CBAMPage onNavigate={navigate} />;
       case 'dashboard':
         return <DashboardPage onNavigate={navigate} />;
       case 'report':

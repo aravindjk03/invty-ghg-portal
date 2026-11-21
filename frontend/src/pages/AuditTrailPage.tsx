@@ -13,6 +13,7 @@ import {
   Search,
 } from 'lucide-react';
 import { ActivityEntry } from '../types/ghg';
+import { csvSafe } from '../lib/utils';
 import { EmptyState } from '../components/ui/EmptyState';
 
 interface AuditTrailPageProps {
@@ -89,7 +90,7 @@ function toRow(entry: ActivityEntry, scope: keyof typeof scopeLabel): RecordRow 
 }
 
 function csvCell(value: string | number | undefined): string {
-  const text = value == null ? '' : String(value);
+  const text = csvSafe(value);
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

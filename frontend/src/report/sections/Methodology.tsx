@@ -67,7 +67,7 @@ export const RegistersPage: React.FC<{ report: GhgInventoryReport }> = ({ report
       rows={report.factorRegister.map((factor) => [
         factor.id,
         factor.activity,
-        num(factor.factorValue, 4),
+        factor.factorValue === null ? '—' : num(factor.factorValue, 4),
         factor.unit,
         factor.source,
         factor.publicationYear || '—',

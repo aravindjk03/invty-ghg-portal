@@ -50,12 +50,14 @@ export const ghgService = {
       'Last Updated': e.updatedAt,
     }));
 
-    const csvContent = Papa.unparse(rows);
+    // escapeFormulae: a cell beginning =, +, - or @ is prefixed so a
+    // spreadsheet reads it as text rather than running it.
+    const csvContent = Papa.unparse(rows, { escapeFormulae: true });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', filename);
+    link.setAttribute('download', safeFilename(filename));
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -121,7 +123,6 @@ export const ghgService = {
         ID: f.id,
         Activity: f.fuelOrActivity,
         Scope: f.scope,
-        'Factor Value': f.factorValue,
         Unit: f.unit,
         Source: f.source,
         Tier: f.qualityTier,
@@ -242,7 +243,9 @@ export const ghgService = {
               amount: numAmount,
               unit,
               emissionFactor: factor,
-              calculatedTco2e: Number(((numAmount * factor.factorValue) / 1000).toFixed(2)),
+              // The engine calculates the row once it is added; no figure is
+              // guessed here from the picker's data.
+              calculatedTco2e: 0,
               updatedAt: new Date().toISOString(),
             });
           });

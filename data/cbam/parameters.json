@@ -1,0 +1,201 @@
+{
+  "groundRule": "Values are copied from the Commission's files without change; '-' in the source means no default was published for that good and country.",
+  "sources": {
+    "defaultValues": {
+      "act": "Implementing Regulation (EU) 2025/2621, Annex I, as corrected by Implementing Regulation (EU) 2026/1740",
+      "annexIV": "Implementing Regulation (EU) 2025/2621, Annex IV, as corrected by Implementing Regulation (EU) 2026/1740",
+      "file": "default_values_IR_2026-1740.xlsx",
+      "sha256": "900583811c7e1194799eb9bdbad2d6d7e1100f5a7d80a664c1584a8fce6f9f35",
+      "url": "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism/cbam-legislation-and-guidance_en",
+      "fileVersion": "Version 2, 6 August 2026",
+      "notIncluded": "Annex II (country grid emission factors) and Annex III (electricity as a good) are not in the Commission's file and could not be retrieved from EUR-Lex; their data is also IEA-licensed for non-commercial use only. Electricity emission factors are therefore entered by the user with their source."
+    },
+    "benchmarks": {
+      "act": "Implementing Regulation (EU) 2025/2620, Annex point 5",
+      "file": "benchmarks_IR_2025-2620.xlsx",
+      "sha256": "b79108b025e697822f0f59de477fa68066c1c05c228fae2270cd230af84e8a7b",
+      "url": "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism/cbam-legislation-and-guidance_en",
+      "fileVersion": "Version 1"
+    }
+  },
+  "certificatePrice": {
+    "quarterly2026": [
+      {
+        "quarter": "Q1 2026",
+        "published": "7 April 2026",
+        "eurPerCertificate": "75.36"
+      },
+      {
+        "quarter": "Q2 2026",
+        "published": "6 July 2026",
+        "eurPerCertificate": "75.28"
+      },
+      {
+        "quarter": "Q3 2026",
+        "published": "5 October 2026",
+        "eurPerCertificate": "82.32"
+      },
+      {
+        "quarter": "Q4 2026",
+        "published": "4 January 2027",
+        "eurPerCertificate": null
+      }
+    ],
+    "rule": "2026: one price per calendar quarter, applying to goods imported in that quarter. From 2027: weekly prices.",
+    "source": {
+      "doc": "European Commission, Price of CBAM certificates (taxation-customs.ec.europa.eu)",
+      "url": "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism/price-cbam-certificates_en",
+      "fetched": "2026-11-21",
+      "file": "price_of_cbam_certificates_2026-11-21.html"
+    }
+  },
+  "markUp": {
+    "byYear": {
+      "2026": "0.10",
+      "2027": "0.20",
+      "2028": "0.30"
+    },
+    "fromYear2028": "0.30",
+    "fertilisers": "0.01",
+    "appliesTo": "total default value (direct + indirect where indirect counts), Annex I and Annex IV",
+    "source": {
+      "doc": "European Commission, Guidance No. 3 - CBAM methods for the calculation of emissions embedded in goods",
+      "file": "guidance3_extract.txt",
+      "pdfPage": 115,
+      "quotes": [
+        "10% in 2026",
+        "20% in 2027, and",
+        "30% from 2028 onwards.",
+        "A lower mark-up applies to the fertiliser sector.",
+        "This mark-up is 1% from 2026 onwards."
+      ]
+    }
+  },
+  "cbamFactor": {
+    "byYear": {
+      "2026": "0.975",
+      "2027": "0.950",
+      "2028": "0.900",
+      "2029": "0.775",
+      "2030": "0.515",
+      "2031": "0.390",
+      "2032": "0.265",
+      "2033": "0.140",
+      "2034": "0.000"
+    },
+    "source": {
+      "doc": "European Commission, Guidance No. 4 - CBAM calculation of the free allocation adjustment to the number of CBAM certificates to be surrendered",
+      "file": "guidance4_extract.txt",
+      "pdfPage": 13,
+      "table": "Table 2-1",
+      "quotes": [
+        "2026          97,5%",
+        "2027          95,0%",
+        "2028          90,0%",
+        "2029          77,5%",
+        "2030          51,5%",
+        "2031          39,0%",
+        "2032          26,5%",
+        "2033          14,0%",
+        "2034           0,0%"
+      ]
+    }
+  },
+  "cscf": {
+    "byYear": {
+      "2026": "1.0",
+      "2027": "1.0",
+      "2028": "1.0",
+      "2029": "1.0",
+      "2030": "1.0"
+    },
+    "status": "preliminary",
+    "note": "Guidance No. 4 lists these as preliminary. The final values for 2026-2030 are in Commission Implementing Decision (EU) 2026/1862, which could not be retrieved (EUR-Lex refuses automated access). Check that decision and change the value in the calculator if it differs.",
+    "source": {
+      "doc": "European Commission, Guidance No. 4 - CBAM calculation of the free allocation adjustment to the number of CBAM certificates to be surrendered",
+      "file": "guidance4_extract.txt",
+      "pdfPage": 13,
+      "table": "Table 2-1",
+      "quotes": [
+        "(partly preliminary) CSCF values",
+        "Commission Implementing Decision",
+        "(EU) 2026/1862"
+      ]
+    }
+  },
+  "deMinimis": {
+    "tonnesPerYear": "50",
+    "excludedSectors": [
+      "electricity",
+      "hydrogen"
+    ],
+    "source": {
+      "doc": "European Commission, Guidance No. 1 - Introduction to CBAM concepts",
+      "file": "guidance1_extract.txt",
+      "pdfPage": 23,
+      "quotes": [
+        "The current threshold is set at 50 tonnes of net mass",
+        "does not apply to imports of electricity or hydrogen"
+      ]
+    }
+  },
+  "indirectCounted": {
+    "sectors": [
+      "cement",
+      "fertilisers"
+    ],
+    "source": {
+      "doc": "European Commission, Guidance No. 3 - CBAM methods for the calculation of emissions embedded in goods",
+      "file": "guidance3_extract.txt",
+      "pdfPage": 19,
+      "quotes": [
+        "indirect emissions are relevant for:",
+        "Goods from the cement sector;",
+        "Goods from the fertiliser sector;"
+      ]
+    }
+  },
+  "defaultValueRules": {
+    "otherCountries": "Where the good is not listed for the country of production in Annex I, or the field shows '-', use the table 'Other countries and territories'.",
+    "annexIV": "Precursors whose country of production is unknown use Annex IV (highest default value).",
+    "source": {
+      "doc": "European Commission, Guidance No. 3 - CBAM methods for the calculation of emissions embedded in goods",
+      "file": "guidance3_extract.txt",
+      "pdfPage": 114,
+      "quotes": [
+        "Other countries and territories",
+        "Operators using precursors of unknown country of origin"
+      ]
+    }
+  },
+  "obligation": {
+    "formula": "max[0; SEE - SEFA - SECPP / RP_CBAM] x M",
+    "source": {
+      "doc": "European Commission, Guidance No. 1 - Introduction to CBAM concepts",
+      "file": "guidance1_extract.txt",
+      "pdfPage": 15,
+      "quotes": [
+        "ensures that any result of the formula which is below zero would",
+        "RPCBAM is the reference price of a CBAM certificate"
+      ]
+    }
+  },
+  "freeAllocation": {
+    "processSFA": "SFA = CBAM_y x CSCF_y x BM_A (Column A)",
+    "complexSEFA": "SEFA = SFA + sum(m_i x SEFA_i); EU-origin precursors count as zero",
+    "defaultSEFA": "SEFA = CBAM_y x CSCF_y x BM_B (Column B), route from Annex I / Annex IV",
+    "electricity": "Free allocation adjustment for electricity (CN 2716 00 00) is zero.",
+    "source": {
+      "doc": "European Commission, Guidance No. 4 - CBAM calculation of the free allocation adjustment to the number of CBAM certificates to be surrendered",
+      "file": "guidance4_extract.txt",
+      "pdfPage": 11,
+      "quotes": [
+        "Equation (2)",
+        "Equation (4)",
+        "Equation (6)",
+        "the specific free allocation of any precursor",
+        "electrical energy (CN code 2716 00 00), as it is zero"
+      ]
+    }
+  }
+}

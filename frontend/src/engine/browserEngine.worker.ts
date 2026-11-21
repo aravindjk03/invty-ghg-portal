@@ -21,12 +21,26 @@ type Handle = (method: string, path: string, query: string, body: string | null)
 
 let booting: Promise<Handle> | null = null;
 
+const progress = (stage: string) => self.postMessage({ id: 0, ok: true, progress: stage });
+
 async function boot(base: string): Promise<Handle> {
+  progress('downloading');
+  // The version stamp names this build's engine, so the files below are
+  // fetched under it: the service worker keeps them on disk between visits,
+  // and a new deploy replaces them exactly once.
+  const stamp = await fetch(`${base}engine/engine-version.json`, { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : {}))
+    .catch(() => ({})) as { version?: string };
+  const v = stamp.version ? `?v=${stamp.version}` : '';
+
+  // The runtime and the engine's own files download together.
+  const filesRequest = fetch(`${base}engine/engine-files.json${v}`);
   const { loadPyodide } = await import(/* @vite-ignore */ `${base}pyodide/pyodide.mjs`);
   const py = await loadPyodide({ indexURL: `${base}pyodide/` });
+  progress('starting_python');
   await py.loadPackage(['pydantic'], { checkIntegrity: true });
 
-  const response = await fetch(`${base}engine/engine-files.json`);
+  const response = await filesRequest;
   if (!response.ok) throw new Error(`engine files not found (${response.status})`);
   const files = (await response.json()) as Record<string, string>;
   for (const [file, text] of Object.entries(files)) {
@@ -35,8 +49,14 @@ async function boot(base: string): Promise<Handle> {
     py.FS.writeFile(full, text);
   }
 
+  progress('loading_factors');
   py.runPython("import sys; sys.path.insert(0, '/engine')");
-  return py.pyimport('service.browser_api').handle as Handle;
+  const handle = py.pyimport('service.browser_api').handle as Handle;
+  // Read the factor tables now, while the visitor is still signing in, so the
+  // first calculation does not pay for it.
+  py.runPython('from service.inventory import load_registry; load_registry()');
+  progress('ready');
+  return handle;
 }
 
 self.onmessage = async (event: MessageEvent<EngineRequest>) => {

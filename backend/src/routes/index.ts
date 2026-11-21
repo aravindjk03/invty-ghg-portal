@@ -1,23 +1,28 @@
+import { dbService } from '../db/database';
 import { Router, Request, Response } from 'express';
 import factorsRoutes from './factors.routes';
 import emissionsRoutes from './emissions.routes';
 import reportsRoutes from './reports.routes';
 import leadsRoutes from './leads.routes';
-import cbamRoutes from './cbam.routes';
 import brsrRoutes from './brsr.routes';
 import suppliersRoutes from './suppliers.routes';
 import cemsRoutes from './cems.routes';
 import auditRoutes from './audit.routes';
 import authRoutes from './auth.routes';
 import entitlementsRoutes from './entitlements.routes';
+import opsRoutes from './ops.routes';
 import { requireAuth } from '../middleware/requireAuth';
+import { opsGate } from '../middleware/opsGate';
+import { bumpUsage, UsageMetric } from '../services/ops.service';
 
 const router = Router();
 
 // Health check endpoint
-router.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'healthy',
+router.get('/health', async (_req: Request, res: Response) => {
+  const database = await dbService.ping();
+  res.status(database ? 200 : 503).json({
+    status: database ? 'healthy' : 'database_unreachable',
+    database: { kind: dbService.kind, driver: dbService.driver, reachable: database },
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     service: 'invty-ghg-backend-api',
@@ -40,10 +45,38 @@ router.use('/v1/emissions', requireAuth, emissionsRoutes);
 router.use('/v1/reports', requireAuth, reportsRoutes);
 router.use('/v1/audit', requireAuth, auditRoutes);
 
-// Parked modules: still mounted and protected, but not exposed in the UI.
-router.use('/v1/cbam', requireAuth, cbamRoutes);
-router.use('/v1/brsr', requireAuth, brsrRoutes);
-router.use('/v1/suppliers', requireAuth, suppliersRoutes);
-router.use('/v1/cems', requireAuth, cemsRoutes);
+// The operations console, for the internal developer and cyber team. Every
+// route inside names the staff roles allowed; nothing here is for customers.
+// opsGate first: from the wrong site or network the console API looks like any
+// unknown route, before the token is even read.
+router.use('/v1/ops', opsGate, requireAuth, opsRoutes);
+
+/**
+ * How often a signed-in account used a feature that runs in the browser
+ * (calculations happen there, not on this server). Only a metric name from
+ * this list and a small count are accepted - never content or figures.
+ */
+const REPORTABLE: UsageMetric[] = ['calculation', 'method_calculation', 'rows_saved', 'report_export'];
+router.post('/v1/usage', requireAuth, async (req: Request, res: Response) => {
+  const metric = String(req.body?.metric ?? '') as UsageMetric;
+  const count = Math.min(Math.max(Math.floor(Number(req.body?.count ?? 1)) || 1, 1), 50);
+  if (!REPORTABLE.includes(metric)) {
+    res.status(400).json({ success: false, error: { code: 'UNKNOWN_METRIC', message: 'Unknown usage metric.' } });
+    return;
+  }
+  await bumpUsage(req.user!.id, metric, count);
+  res.status(204).end();
+});
+
+// Parked modules. The UI does not route to any of them, so by default the API
+// does not serve them either: an endpoint nobody can reach from the product is
+// attack surface with no user. They also keep their state in process memory
+// and CEMS starts with simulated readings, neither of which belongs in front
+// of a customer. Set ENABLE_PARKED_MODULES=true to work on them.
+if (process.env.ENABLE_PARKED_MODULES === 'true') {
+  router.use('/v1/brsr', requireAuth, brsrRoutes);
+  router.use('/v1/suppliers', requireAuth, suppliersRoutes);
+  router.use('/v1/cems', requireAuth, cemsRoutes);
+}
 
 export default router;

@@ -199,6 +199,55 @@ export const ChemicalIndustryForm: React.FC<FormProps<ChemicalIndustryInput>> = 
           <p key={sentence} className="text-[11px] leading-snug text-brand-muted">{sentence}</p>
         ))}
       </Section>
+
+      <Section title="Methanol">
+        <Grid cols={2}>
+          <Num label="Produced" value={input.methanol_tonnes}
+               onChange={(v) => set({ methanol_tonnes: v })} unit="t" />
+          <Choice label="Process" value={input.methanol_process}
+                  options={optionsFor(info, 'methanol_process')}
+                  onChange={(value) => set({ methanol_process: value })}
+                  hint="Covers the feedstock and the fuel together. Do not also report that fuel under combustion." />
+        </Grid>
+      </Section>
+
+      <Section title="Ethylene (steam cracker)">
+        <Grid>
+          <Num label="Ethylene produced" value={input.ethylene_tonnes}
+               onChange={(v) => set({ ethylene_tonnes: v })} unit="t" />
+          <Choice label="Feedstock" value={input.ethylene_feedstock}
+                  options={optionsFor(info, 'ethylene_feedstock')}
+                  onChange={(value) => set({ ethylene_feedstock: value })} />
+          <Choice label="Region" value={input.ethylene_region}
+                  options={optionsFor(info, 'ethylene_region')}
+                  onChange={(value) => set({ ethylene_region: value })}
+                  hint="IPCC Table 3.15. India is in Asia, Africa, Russia (130%)." />
+        </Grid>
+      </Section>
+
+      <Section title="Carbon black">
+        <Grid>
+          <Num label="Produced" value={input.carbon_black_tonnes}
+               onChange={(v) => set({ carbon_black_tonnes: v })} unit="t" />
+          <Choice label="Process" value={input.carbon_black_process}
+                  options={optionsFor(info, 'carbon_black_process')}
+                  onChange={(value) => set({ carbon_black_process: value })} />
+          <Switch label="Tail gas is burned (thermal treatment)"
+                  checked={input.carbon_black_thermal_treatment}
+                  onChange={(checked) => set({ carbon_black_thermal_treatment: checked })} />
+        </Grid>
+      </Section>
+
+      <Section title="HFC-23 from HCFC-22 production">
+        <Grid cols={2}>
+          <Num label="HCFC-22 produced" value={input.hcfc22_tonnes}
+               onChange={(v) => set({ hcfc22_tonnes: v })} unit="t" />
+          <Choice label="Plant" value={input.hfc23_plant}
+                  options={optionsFor(info, 'hfc23_plant')}
+                  onChange={(value) => set({ hfc23_plant: value })}
+                  hint="A plant that measures or destroys its HFC-23 must use its own figure." />
+        </Grid>
+      </Section>
     </div>
   );
 };

@@ -57,6 +57,14 @@ export const ChemicalSafetyPanel: React.FC<{ initialQuery?: string }> = ({
   const search = async (term: string) => {
     const name = term.trim();
     if (!name) return;
+    // The lookup runs on the estimate service. Without one there is nowhere to
+    // send it, and that is said plainly rather than left to fail.
+    if (!env.PCF_API_BASE_URL) {
+      setError('The safety lookup needs the estimate service, which is not connected to this '
+        + 'site. This is not a finding that the substance is safe.');
+      setResult(undefined);
+      return;
+    }
     setLoading(true);
     setError(undefined);
     try {

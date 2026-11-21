@@ -9,6 +9,7 @@ from .lime_urea import (CarbonateParameters, CarbonateResult, liming_co2, urea_c
                         urea_nitrogen)
 from .managed_soils import (NitrogenInputs, SoilN2OResult, SoilParameters,
                             managed_soil_n2o, nitrogen_in)
+from .rice import RiceParameters, RiceResult, rice_ch4
 from .manure import (LivestockGroup, ManureCH4Result, ManureN2OResult, ManureParameters,
                      ManureStream, annual_n_excretion, climate_band, manure_ch4, manure_n2o)
 
@@ -20,4 +21,5 @@ __all__ = [
     "LivestockGroup", "ManureCH4Result", "ManureN2OResult", "ManureParameters",
     "ManureStream", "annual_n_excretion", "climate_band",
     "manure_ch4", "manure_n2o",
+    "RiceParameters", "RiceResult", "rice_ch4",
 ]

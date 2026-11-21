@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { authRateLimiter } from '../middleware/rateLimiter';
+import { requireAuth } from '../middleware/requireAuth';
 
 const router = Router();
 
@@ -11,7 +12,7 @@ router.post('/signup', authRateLimiter, authController.signup);
 router.post('/login', authRateLimiter, authController.login);
 
 // POST /api/v1/auth/google - Official Google Sign-In & Verification
-router.post('/google', authController.googleAuth);
+router.post('/google', authRateLimiter, authController.googleAuth);
 
 // POST /api/v1/auth/mobile/send-otp - Dispatch 6-digit numeric OTP
 router.post('/mobile/send-otp', authRateLimiter, authController.sendMobileOtp);
@@ -24,6 +25,12 @@ router.get('/me', authController.me);
 
 // POST /api/v1/auth/logout - Invalidate session
 router.post('/logout', authController.logout);
+
+// Account self-service. Each one acts only on the signed-in account.
+router.patch('/me', requireAuth, authController.updateProfile);
+router.post('/change-password', requireAuth, authRateLimiter, authController.changePassword);
+router.post('/logout-everywhere', requireAuth, authController.logoutEverywhere);
+router.delete('/me', requireAuth, authRateLimiter, authController.deleteAccount);
 
 // GET /api/v1/auth/demo-accounts - Helper for demonstration / testing
 router.get('/demo-accounts', authController.getDemoAccounts);

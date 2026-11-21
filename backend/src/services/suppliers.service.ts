@@ -2,6 +2,8 @@ import crypto from 'crypto';
 
 export interface SupplierInvitationRecord {
   id: string;
+  /** The account that issued the invitation; only it may list or approve it. */
+  ownerId: string;
   token: string;
   supplierName: string;
   supplierEmail: string;
@@ -28,50 +30,13 @@ export interface SupplierInvitationRecord {
   };
 }
 
-const suppliersStore: SupplierInvitationRecord[] = [
-  {
-    id: 'inv-supp-001',
-    token: 'tok_ea91b2c45d6f78e0',
-    supplierName: 'BlueDart DHL Express Freight',
-    supplierEmail: 'sustainability@bluedart-freight.com',
-    scope3CategoryNumber: 4,
-    categoryName: 'Upstream Transportation & Distribution',
-    requestedItemDescription: 'Inbound raw steel coil linehaul freight (FY 2024-25)',
-    purchaseOrderRef: 'PO-2024-LOG-8910',
-    status: 'SUBMITTED',
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    expiresAt: new Date(Date.now() + 86400000 * 25).toISOString(),
-    submission: {
-      supplierName: 'BlueDart DHL Express Freight Logistics Ltd',
-      supplierCompanyPanOrEin: 'AAACB1234F',
-      reportingPeriod: 'FY 2024-25',
-      providedQuantity: 1250000,
-      providedUnit: 't.km',
-      primaryEmissionFactor: 0.089,
-      factorUnit: 'kgCO2e / t.km',
-      factorDataSource: 'ISO 14067 Product Carbon Footprint (Third-Party Verified by DNV)',
-      calculatedTco2e: 111.25,
-      evidenceFileName: 'BlueDart_Fleet_Carbon_Assurance_2024.pdf',
-      submittedAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  },
-  {
-    id: 'inv-supp-002',
-    token: 'tok_3f88a109bc4d6211',
-    supplierName: 'Jindal Pellet Plant Feedstock',
-    supplierEmail: 'carbon.accounting@jindalfeedstock.in',
-    scope3CategoryNumber: 1,
-    categoryName: 'Purchased Goods and Services',
-    requestedItemDescription: 'Direct reduced iron (DRI) pellets grade A',
-    purchaseOrderRef: 'PO-2024-RAW-0042',
-    status: 'PENDING',
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    expiresAt: new Date(Date.now() + 86400000 * 28).toISOString(),
-  },
-];
+// Starts empty. It used to hold two invitations with their magic-link tokens
+// written in this file — published, and valid for weeks from every boot — one
+// of them carrying a submission described as "Third-Party Verified by DNV".
+const suppliersStore: SupplierInvitationRecord[] = [];
 
 export const suppliersService = {
-  createInvitation(data: {
+  createInvitation(ownerId: string, data: {
     supplierName: string;
     supplierEmail: string;
     scope3CategoryNumber: number;
@@ -82,6 +47,7 @@ export const suppliersService = {
     const token = `tok_${crypto.randomBytes(12).toString('hex')}`;
     const invitation: SupplierInvitationRecord = {
       id: `inv-supp-${crypto.randomBytes(4).toString('hex')}`,
+      ownerId,
       token,
       supplierName: data.supplierName,
       supplierEmail: data.supplierEmail,
@@ -105,8 +71,8 @@ export const suppliersService = {
     return inv;
   },
 
-  getAllInvitations(): SupplierInvitationRecord[] {
-    return [...suppliersStore];
+  getAllInvitations(ownerId: string): SupplierInvitationRecord[] {
+    return suppliersStore.filter((i) => i.ownerId === ownerId);
   },
 
   submitSupplierData(
@@ -123,7 +89,9 @@ export const suppliersService = {
       evidenceFileName?: string;
     }
   ): SupplierInvitationRecord | null {
-    const inv = suppliersStore.find((i) => i.token === token);
+    // Through the same lookup as the form itself, so an expired link cannot
+    // still be submitted to.
+    const inv = this.getInvitationByToken(token);
     if (!inv) return null;
 
     const calculatedTco2e = Number(
@@ -140,12 +108,13 @@ export const suppliersService = {
     return inv;
   },
 
-  approveSubmission(id: string, auditorName = 'External GHG Auditor'): SupplierInvitationRecord | null {
-    const inv = suppliersStore.find((i) => i.id === id);
+  /** `approver` is the signed-in account. It was a free-text field in the request. */
+  approveSubmission(ownerId: string, id: string, approver: string): SupplierInvitationRecord | null {
+    const inv = suppliersStore.find((i) => i.id === id && i.ownerId === ownerId);
     if (!inv || !inv.submission) return null;
 
     inv.status = 'APPROVED';
-    inv.submission.verifiedBy = auditorName;
+    inv.submission.verifiedBy = approver;
     return inv;
   },
 };

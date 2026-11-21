@@ -8,7 +8,9 @@
     "build": "npm run engine && tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "engine": "node ../scripts/build-browser-engine.mjs"
+    "engine": "node ../scripts/build-browser-engine.mjs",
+    "build:admin": "tsc && vite build --config vite.admin.config.ts",
+    "dev:admin": "vite --config vite.admin.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

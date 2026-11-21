@@ -19,6 +19,7 @@ test = [
     "pint>=0.24",
     "sqlalchemy>=2.0,<2.1",
     "alembic>=1.13,<1.14",
+    "openpyxl>=3.1",        # scripts/ingest_cbam.py reads the Commission's workbooks
 ]
 # The Product Carbon service (service/). fastapi, pydantic and uvicorn are
 # approved in docs/techstack-and-bugguard.md Part 1. anthropic is added for

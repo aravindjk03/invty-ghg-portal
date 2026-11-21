@@ -39,8 +39,16 @@ export interface CatalogueSource {
   gases: string;
   factor_source: string;
   notes: string;
+  /**
+   * Always 0. This register lists the sources a user may pick; it holds no
+   * calculation value. The value used is the published factor the engine
+   * resolves for the source (GET /v1/inventory/catalogue-map), which the
+   * factor library and every row show. A hand-typed number here once sat
+   * beside the engine's and disagreed with it.
+   */
   factorValue: number;
   qualityTier: 'Primary' | 'Secondary' | 'Proxy' | 'Estimated';
+  /** Always 0; the engine reports the year of the factor it used. */
   publicationYear: number;
 }
 

@@ -27,6 +27,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityEntry } from '../types/ghg';
 import { calculateInventory, InventoryError } from '../services/inventoryService';
 import { unitChoiceFor } from '../services/catalogueMap';
+import { engineVersion } from '../engine/engineFetch';
+import { reportUsage } from '../services/usageReporter';
 import { GwpSetName, InventoryRecordInput, InventoryResult } from '../types/inventory';
 
 const GHG_CATEGORY: Record<string, string> = {
@@ -115,6 +117,7 @@ export function recordsFor(entries: ActivityEntry[], fx?: FxRate): {
       return;
     }
     const isScope2 = scopeOf(entry) === '2';
+    const memoBucket = scopeOf(entry) === 'memo' ? memoBucketOf(entry.emissionFactor?.id) : undefined;
     const dollars = inDollars(entry, fx);
     const base = {
       scope: scopeOf(entry),
@@ -125,6 +128,7 @@ export function recordsFor(entries: ActivityEntry[], fx?: FxRate): {
       ...(dollars ? { note: dollars.note } : {}),
       facility_id: entry.facility || undefined,
       period_month: entry.periodMonth,
+      ...(memoBucket ? { memo_bucket: memoBucket } : {}),
     };
     const ownFactor = supplied !== undefined ? {
       supplied_factor: String(supplied),
@@ -162,6 +166,37 @@ export function recordsFor(entries: ActivityEntry[], fx?: FxRate): {
   return { records: mappedRecords, unmapped: missing };
 }
 
+/**
+ * The last calculation, kept on this device so a returning visitor sees their
+ * totals at once instead of after the engine has started.
+ *
+ * It is shown only when BOTH the inputs and the engine build are exactly the
+ * ones it was calculated from: the engine is deterministic, so the figures are
+ * the ones it would produce again. The engine still recalculates, and its
+ * answer replaces this one. Anything that differs shows nothing from here.
+ */
+const LAST_KEY = 'invty_last_inventory_v1';
+
+interface LastInventory { fingerprint: string; version: string; result: InventoryResult }
+
+export function readLastInventory(fingerprint: string, version: string): InventoryResult | undefined {
+  try {
+    const stored = JSON.parse(localStorage.getItem(LAST_KEY) || 'null') as LastInventory | null;
+    if (stored && stored.fingerprint === fingerprint && stored.version === version) return stored.result;
+  } catch {
+    // Unreadable or blocked storage: nothing to show early.
+  }
+  return undefined;
+}
+
+export function keepLastInventory(fingerprint: string, version: string, result: InventoryResult): void {
+  try {
+    localStorage.setItem(LAST_KEY, JSON.stringify({ fingerprint, version, result }));
+  } catch {
+    // Storage full or blocked: the next visit simply waits for the engine.
+  }
+}
+
 export function useEngineInventory(
   entries: ActivityEntry[], gwpSet: GwpSetName, reportingYear: number,
   tdLoss?: { rate?: number; source?: string },
@@ -188,13 +223,30 @@ export function useEngineInventory(
     abort.current = controller;
     setLoading(true);
 
+    let fresh = false;
+    const versionReady = engineVersion();
+    versionReady.then((stamp) => {
+      if (fresh || controller.signal.aborted || !stamp?.version) return;
+      const last = readLastInventory(fingerprint, stamp.version);
+      if (last) setResult(last);
+    });
+
     calculateInventory(records, {
       gwpSet, reportingYear,
       tdLossRate: tdLoss?.rate, tdLossRateSource: tdLoss?.source,
       electricityWttFactor: electricityWtt?.factor,
       electricityWttSource: electricityWtt?.source,
     }, controller.signal)
-      .then((calculated) => { setResult(calculated); setError(undefined); })
+      .then((calculated) => {
+        fresh = true;
+        // Counted once per recalculation, never what was calculated.
+        reportUsage('calculation');
+        setResult(calculated);
+        setError(undefined);
+        versionReady.then((stamp) => {
+          if (stamp?.version) keepLastInventory(fingerprint, stamp.version, calculated);
+        });
+      })
       .catch((caught: Error) => {
         if (caught.name === 'AbortError') return;
         setResult(undefined);
@@ -207,4 +259,14 @@ export function useEngineInventory(
   }, [fingerprint]);
 
   return { result, loading, error, unmapped };
+}
+
+/** The memo line a memo source belongs to, from its catalogue key. */
+export function memoBucketOf(key: string | undefined): InventoryRecordInput['memo_bucket'] {
+  if (!key) return undefined;
+  if (key.startsWith('memo.montreal')) return 'montreal_protocol_gases';
+  if (key.startsWith('memo.biogenic')) return 'biogenic_co2';
+  if (key === 'memo.offsets_retired') return 'offsets_retired';
+  if (key === 'land.removals_biochar' || key === 'process.co2_captured') return 'removals';
+  return 'energy_balance';
 }

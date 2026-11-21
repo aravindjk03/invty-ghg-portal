@@ -19,7 +19,7 @@ import { Input } from '../ui/Input';
 import {
   EntericInput, LimeAndUreaInput, ManagedSoilsInput, ManureGroupInput, ManureInput,
   ManureStreamInput, MethodInfo, MethodInput, SolidWasteInput, WasteStreamInput,
-  WastewaterInput, WastewaterPathwayInput,
+  WastewaterInput, WastewaterPathwayInput, RiceCultivationInput, RiceSeasonRow,
 } from '../../types/methods';
 
 interface FormProps<T extends MethodInput> {
@@ -552,6 +552,60 @@ export const MethodIdentity: React.FC<{
       <Input id={`${prefix}-facility`} label="Facility" value={facility}
              placeholder="e.g. Plant 2"
              onChange={(event) => onChange({ facility: event.target.value })} />
+    </div>
+  );
+};
+
+// --- rice cultivation -------------------------------------------------------
+
+export const RiceCultivationForm: React.FC<FormProps<RiceCultivationInput>> = ({
+  input, info, onChange,
+}) => {
+  const regimes = optionsFor(info, 'water_regime');
+  const preSeasons = optionsFor(info, 'pre_season');
+  const amendments = optionsFor(info, 'amendment');
+  return (
+    <div className="flex flex-col gap-5">
+      <Note>
+        Enter one row per season and water regime: a field cropped twice a year is two seasons.
+        Organic amendments are tonnes per hectare — dry weight for straw, fresh weight for the
+        rest. The methane is biogenic, so the non-fossil GWP is applied.
+      </Note>
+      <RepeatingRows<RiceSeasonRow>
+        rows={input.seasons}
+        onChange={(rows) => onChange({ ...input, seasons: rows })}
+        blank={() => ({
+          harvested_area_ha: 0, cultivation_days: 120,
+          water_regime: regimes[1]?.value || regimes[0]?.value || '',
+          pre_season: preSeasons[0]?.value || '', amendments_t_per_ha: {},
+        })}
+        addLabel="Add a season"
+        emptyMessage="No rice seasons recorded."
+        render={(row, update) => (
+          <div className="flex flex-col gap-3">
+            <Grid>
+              <Num label="Harvested area" value={row.harvested_area_ha}
+                   onChange={(v) => update({ harvested_area_ha: v })} unit="ha" />
+              <Num label="Cultivation period" value={row.cultivation_days}
+                   onChange={(v) => update({ cultivation_days: v })} unit="days" />
+              <Choice label="Water during the season" value={row.water_regime} options={regimes}
+                      onChange={(value) => update({ water_regime: value })} />
+              <Choice label="Water before the season" value={row.pre_season} options={preSeasons}
+                      onChange={(value) => update({ pre_season: value })} />
+            </Grid>
+            <Grid>
+              {amendments.map((option) => (
+                <Num key={option.value} label={option.label}
+                     value={row.amendments_t_per_ha[option.value] ?? 0}
+                     onChange={(v) => update({
+                       amendments_t_per_ha: { ...row.amendments_t_per_ha, [option.value]: v },
+                     })}
+                     unit="t/ha" />
+              ))}
+            </Grid>
+          </div>
+        )}
+      />
     </div>
   );
 };
