@@ -3,7 +3,6 @@ import factorsRoutes from './factors.routes';
 import emissionsRoutes from './emissions.routes';
 import reportsRoutes from './reports.routes';
 import leadsRoutes from './leads.routes';
-import cbamRoutes from './cbam.routes';
 import brsrRoutes from './brsr.routes';
 import suppliersRoutes from './suppliers.routes';
 import cemsRoutes from './cems.routes';
@@ -72,7 +71,6 @@ router.post('/v1/usage', requireAuth, (req: Request, res: Response) => {
 // and CEMS starts with simulated readings, neither of which belongs in front
 // of a customer. Set ENABLE_PARKED_MODULES=true to work on them.
 if (process.env.ENABLE_PARKED_MODULES === 'true') {
-  router.use('/v1/cbam', requireAuth, cbamRoutes);
   router.use('/v1/brsr', requireAuth, brsrRoutes);
   router.use('/v1/suppliers', requireAuth, suppliersRoutes);
   router.use('/v1/cems', requireAuth, cemsRoutes);

@@ -29,7 +29,7 @@ This repository is strictly partitioned into independent frontend and backend wo
 │   │   │   ├── layout/            # TopBar, Persistent SummaryRail
 │   │   │   └── charts/            # Recharts, StackedScopeBar, Interactive Sankey diagram
 │   │   ├── pages/                 # Scope Hub, Scope 1-3 workspaces, Dashboard, Report Preview,
-│   │   │                          # CBAM, BRSR Core, CEMS Monitor, Supplier Portal, Audit Trail,
+│   │   │                          # CBAM calculator (docs/CBAM.md), BRSR Core, CEMS Monitor, Supplier Portal, Audit Trail,
 │   │   │                          # Settings, Showcase
 │   │   ├── engine/                # Decimal calculation engine
 │   │   ├── context/               # Global GHG calculation state

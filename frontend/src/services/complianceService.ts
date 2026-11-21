@@ -23,40 +23,6 @@ async function withFallback<T>(call: () => Promise<T>, fallback: () => T): Promi
   }
 }
 
-// ---------------------------------------------------------------- CBAM
-
-export interface CbamRequest {
-  sector: 'steel' | 'aluminium' | 'cement' | 'fertilisers';
-  cnCode: string;
-  goodsDescription: string;
-  productionVolumeTonnes: number;
-  scope1AttributedTco2e: number;
-  scope2AttributedTco2e: number;
-  carbonPricePaidEurPerTonne?: number;
-  reportingQuarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
-  reportingYear: number;
-  installationName?: string;
-  countryCode?: string;
-  unLocode?: string;
-}
-
-export interface CbamResult {
-  cnCode: string;
-  goodsDescription: string;
-  productionVolumeTonnes: number;
-  directEmbeddedSpecific: number;
-  indirectEmbeddedSpecific: number;
-  totalEmbeddedSpecific: number;
-  totalEmbeddedEmissions: number;
-  euBenchmarkSpecific: number;
-  benchmarkDeltaPercentage: number;
-  isBenchmarkBreached: boolean;
-  effectiveCarbonPricePaidEur: number;
-  estimatedCbamCertificatesRequired: number;
-  estimatedCertificatesCostEur: number;
-  xmlPreview: string;
-}
-
 // ---------------------------------------------------------------- BRSR
 
 export interface BrsrRequest {
@@ -116,13 +82,6 @@ export interface SupplierInvitation {
 }
 
 export const complianceService = {
-  calculateCbam(payload: CbamRequest, fallback: () => CbamResult) {
-    return withFallback(
-      () => request<CbamResult>('/cbam/calculate', { method: 'POST', body: JSON.stringify(payload) }),
-      fallback
-    );
-  },
-
   calculateBrsr<T>(payload: BrsrRequest, fallback: () => T) {
     return withFallback(
       () => request<T>('/brsr/calculate', { method: 'POST', body: JSON.stringify(payload) }),

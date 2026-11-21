@@ -306,7 +306,7 @@ Everything else — every NCV, every density, every carbon content, every emissi
 | **BIS test methods** — IS 1350 Part 1 (proximate analysis), Part 2 (calorific value); IS 1448 series (petroleum products) | **How the user's lab measured the GCV you are about to use.** Cite the test method in the report when a measured value is entered. |
 
 ### Other jurisdictions (for exporters)
-UK **DESNZ** conversion factors · US **EPA** GHG Emission Factors Hub and **eGRID** · **IEA** national grid factors · **AIB** European residual mixes · **Green-e** US residual mix · **EU CBAM** implementing regulation for embedded emissions.
+UK **DESNZ** conversion factors · US **EPA** GHG Emission Factors Hub and **eGRID** · **IEA** national grid factors · **AIB** European residual mixes · **Green-e** US residual mix · **EU CBAM** implementing regulations for embedded emissions: see [`CBAM.md`](CBAM.md) for the calculator's method and sources.
 
 ---
 

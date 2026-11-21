@@ -22,6 +22,7 @@ import {
   X,
   LucideIcon,
   Package,
+  Globe,
   Sprout,
   History,
 } from 'lucide-react';
@@ -55,6 +56,14 @@ const NAV_ITEMS: NavItem[] = [
     gradient: 'linear-gradient(135deg,rgba(13,148,136,0.18),rgba(20,184,166,0.18))',
     activeTextClass: 'text-teal-700',
     activeIconStyle: { color: '#0f766e' },
+  },
+  {
+    icon: Globe,
+    label: 'CBAM',
+    page: 'cbam',
+    gradient: 'linear-gradient(135deg,rgba(37,99,235,0.16),rgba(14,165,233,0.16))',
+    activeTextClass: 'text-sky-700',
+    activeIconStyle: { color: '#0369a1' },
   },
   {
     icon: Flame,

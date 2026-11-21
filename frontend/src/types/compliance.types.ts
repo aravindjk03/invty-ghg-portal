@@ -1,52 +1,6 @@
 // Compliance, IoT, and Audit Trail Type Definitions
 
-// -------------------------------------------------------------
-// 1. EU CBAM (Carbon Border Adjustment Mechanism)
-// -------------------------------------------------------------
-export type CBAMSector = 'steel' | 'aluminium' | 'cement' | 'fertilisers';
-
-export interface CBAMGood {
-  cnCode: string;
-  name: string;
-  sector: CBAMSector;
-  defaultBenchmarkDirect: number; // tCO2e / t product
-  defaultBenchmarkIndirect: number; // tCO2e / t product
-}
-
-export interface CBAMInstallation {
-  installationName: string;
-  countryCode: string; // e.g. "IN"
-  unLocode: string; // e.g. "INJAI"
-  coordinates: string; // e.g. "22.8046 N, 86.2029 E"
-  operatorName: string;
-  technologyRoute: string; // e.g. "BF-BOF", "EAF", "DRI", "Rotary Kiln"
-}
-
-export interface CBAMCalculationInput {
-  sector: CBAMSector;
-  cnCode: string;
-  productionVolumeTonnes: number;
-  scope1AttributedTco2e: number;
-  scope2AttributedTco2e: number;
-  carbonPricePaidInOriginEurPerTonne?: number; // Carbon tax / domestic ETS paid
-  reportingPeriodQuarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
-  reportingYear: number;
-}
-
-export interface CBAMCalculationResult {
-  cnCode: string;
-  productionVolumeTonnes: number;
-  directEmbeddedSpecific: number; // tCO2e / tonne product
-  indirectEmbeddedSpecific: number; // tCO2e / tonne product
-  totalEmbeddedSpecific: number; // tCO2e / tonne product
-  totalEmbeddedEmissions: number; // tCO2e total
-  euBenchmarkSpecific: number; // benchmark tCO2e / tonne
-  benchmarkDeltaPercentage: number; // % above or below benchmark
-  isBenchmarkBreached: boolean;
-  effectiveCarbonPricePaidEur: number;
-  estimatedCbamCertificatesRequired: number;
-  xmlPreview: string;
-}
+// EU CBAM lives in src/cbam (model.ts), with the Commission's own tables.
 
 // -------------------------------------------------------------
 // 2. SEBI BRSR Core (Principle 6 GHG Disclosures)

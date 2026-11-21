@@ -6,7 +6,7 @@ import { SummaryRail } from '../components/layout/SummaryRail';
 import { useGHG } from '../context/GHGContext';
 import { formatIndianNumber } from '../engine/unitConverter';
 import { ALL_15_CATEGORIES } from './Scope3Page';
-import { ArrowRight, Building2, CheckCircle2, Package } from 'lucide-react';
+import { ArrowRight, Building2, CheckCircle2, Globe, Package } from 'lucide-react';
 
 export interface ScopeHubPageProps {
   onNavigate: (page: string) => void;
@@ -88,6 +88,34 @@ export const ScopeHubPage: React.FC<ScopeHubPageProps> = ({ onNavigate }) => {
                 rightIcon={<ArrowRight size={14} />}
               >
                 Estimate a product
+              </Button>
+            </div>
+          </Card>
+
+          {/* CBAM calculator - EU border carbon, its own report */}
+          <Card interactive onClick={() => onNavigate('cbam')} className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div className="flex-1">
+                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-brand-link block">
+                  EU border carbon · CBAM definitive period
+                </span>
+                <h2 className="mt-1.5 text-xl font-bold text-brand-heading flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-brand-link" />
+                  CBAM Calculator
+                </h2>
+                <p className="text-sm text-brand-muted mt-1.5 max-w-2xl leading-relaxed">
+                  Embedded emissions of steel, aluminium, cement, fertilisers, hydrogen and electricity exported to the EU,
+                  or the certificates an EU importer must buy, using the Commission's own default values and benchmarks.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-brand-body">
+                  <span className="rounded-md border border-border bg-surface px-2 py-1">Exporter &amp; importer</span>
+                  <span className="rounded-md border border-border bg-surface px-2 py-1">Precursors &amp; free allocation</span>
+                  <span className="rounded-md border border-border bg-surface px-2 py-1">Own report: PDF, Excel, XML</span>
+                </div>
+              </div>
+              <Button variant="primary" size="sm" className="self-start md:self-center"
+                onClick={(e) => { e.stopPropagation(); onNavigate('cbam'); }} rightIcon={<ArrowRight size={14} />}>
+                Open CBAM calculator
               </Button>
             </div>
           </Card>
