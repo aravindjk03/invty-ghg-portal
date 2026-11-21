@@ -1,0 +1,83 @@
+# Runs the whole test suite on every push and pull request: the backend on
+# SQLite AND on Postgres (the production database), the website, and the
+# Python engine.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: iinvty
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d iinvty"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Tests on SQLite
+        run: npm test
+      - name: Tests on Postgres
+        run: npm test
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/iinvty
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx vitest run
+      - run: npm run build
+      - run: npm run build:admin
+      - name: Catalogue copies in sync
+        run: node ../scripts/check-catalogue-sync.mjs
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[test,service]"
+      - run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend image builds
+        run: docker build -t iinvty-backend backend
+      - name: AI service image builds
+        run: docker build -f Dockerfile.ai -t iinvty-ai .

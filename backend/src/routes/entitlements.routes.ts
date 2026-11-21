@@ -23,10 +23,10 @@ import { bumpUsage } from '../services/ops.service';
 const router = Router();
 
 /** The user behind a bearer token, or null. */
-function userFromToken(req: Request): string | null {
+async function userFromToken(req: Request): Promise<string | null> {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) return null;
-  const session = dbService.getSession(header.substring(7));
+  const session = await dbService.getSession(header.substring(7));
   return session ? session.user.id : null;
 }
 
@@ -62,8 +62,8 @@ function requireServiceSecret(req: Request, res: Response, next: NextFunction): 
 }
 
 /** What this account may do. Read-only, for the page. */
-router.get('/', (req: Request, res: Response) => {
-  const userId = userFromToken(req);
+router.get('/', async (req: Request, res: Response) => {
+  const userId = await userFromToken(req);
   if (!userId) {
     res.status(401).json({
       success: false,
@@ -73,13 +73,13 @@ router.get('/', (req: Request, res: Response) => {
   }
   res.status(200).json({
     success: true,
-    entitlement: dbService.getEntitlement(userId),
-    recentEstimates: dbService.recentEstimates(userId, 10),
+    entitlement: await dbService.getEntitlement(userId),
+    recentEstimates: await dbService.recentEstimates(userId, 10),
   });
 });
 
 /** Spend one estimate, or refuse with 402. Service only. */
-router.post('/reserve', requireServiceSecret, (req: Request, res: Response) => {
+router.post('/reserve', requireServiceSecret, async (req: Request, res: Response) => {
   const { userId, product } = req.body ?? {};
   if (typeof userId !== 'string' || !userId) {
     res.status(400).json({
@@ -89,7 +89,7 @@ router.post('/reserve', requireServiceSecret, (req: Request, res: Response) => {
     return;
   }
 
-  const reservation = dbService.reserveEstimate(userId, String(product ?? 'unnamed'));
+  const reservation = await dbService.reserveEstimate(userId, String(product ?? 'unnamed'));
   if (!reservation.allowed) {
     // 402 Payment Required, because that is exactly what it is. The message is
     // the one the page shows, so it is written for the customer, not the log.
@@ -106,7 +106,7 @@ router.post('/reserve', requireServiceSecret, (req: Request, res: Response) => {
     return;
   }
 
-  bumpUsage(userId, 'ai_estimate');
+  await bumpUsage(userId, 'ai_estimate');
   res.status(200).json({
     success: true,
     ledgerId: reservation.ledgerId,
@@ -115,7 +115,7 @@ router.post('/reserve', requireServiceSecret, (req: Request, res: Response) => {
 });
 
 /** Give back an estimate that was reserved but never delivered. Service only. */
-router.post('/refund', requireServiceSecret, (req: Request, res: Response) => {
+router.post('/refund', requireServiceSecret, async (req: Request, res: Response) => {
   const { userId, ledgerId, reason } = req.body ?? {};
   if (typeof userId !== 'string' || typeof ledgerId !== 'string') {
     res.status(400).json({
@@ -126,7 +126,7 @@ router.post('/refund', requireServiceSecret, (req: Request, res: Response) => {
   }
   res.status(200).json({
     success: true,
-    entitlement: dbService.refundEstimate(userId, ledgerId, String(reason ?? 'not delivered')),
+    entitlement: await dbService.refundEstimate(userId, ledgerId, String(reason ?? 'not delivered')),
   });
 });
 

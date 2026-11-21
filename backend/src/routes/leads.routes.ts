@@ -31,7 +31,7 @@ const createLeadSchema = z.object({
 });
 
 // POST /api/v1/leads - Ingest customer lead from Enterprise Lead Gate
-router.post('/', leadRateLimiter, (req: Request, res: Response) => {
+router.post('/', leadRateLimiter, async (req: Request, res: Response) => {
   const parseResult = createLeadSchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({
@@ -46,7 +46,7 @@ router.post('/', leadRateLimiter, (req: Request, res: Response) => {
   }
 
   const clientIp = req.headers['x-forwarded-for']?.toString() || req.socket.remoteAddress || 'direct';
-  const lead = leadsService.createLead(parseResult.data, clientIp);
+  const lead = await leadsService.createLead(parseResult.data, clientIp);
 
   res.status(201).json({
     success: true,
@@ -60,9 +60,9 @@ router.post('/', leadRateLimiter, (req: Request, res: Response) => {
 // This was open to anyone who found the URL. It returns every lead with name,
 // work email, company, phone and IP address — the whole prospect list, and a
 // pile of other people's personal data, to an unauthenticated stranger.
-router.get('/', requireAuth, requireRole('ADMIN'), (_req: Request, res: Response) => {
-  const leads = leadsService.getAllLeads();
-  const stats = leadsService.getLeadStats();
+router.get('/', requireAuth, requireRole('ADMIN'), async (_req: Request, res: Response) => {
+  const leads = await leadsService.getAllLeads();
+  const stats = await leadsService.getLeadStats();
 
   res.status(200).json({
     success: true,

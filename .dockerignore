@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/dist-admin
+**/__pycache__
+**/.pytest_cache
+frontend
+backend
+docs
+tests
+.git
+**/.env
+**/.env.*
+!**/.env.example

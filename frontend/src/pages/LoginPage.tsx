@@ -261,6 +261,18 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           client_id: clientId,
           scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid',
           prompt: 'select_account',
+          // The popup was closed, blocked, or never opened. Without this the
+          // button just spun forever.
+          error_callback: (err: { type?: string }) => {
+            setGoogleLoading(false);
+            setError(
+              err?.type === 'popup_closed'
+                ? 'Google sign-in was closed before it finished.'
+                : err?.type === 'popup_failed_to_open'
+                  ? 'Your browser blocked the Google window. Allow pop-ups for this site and try again.'
+                  : 'Google sign-in did not complete. Try again, or use your email address.',
+            );
+          },
           callback: async (tokenResponse: any) => {
             if (tokenResponse.error) {
               setGoogleLoading(false);
@@ -288,7 +300,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
               handleAuthSuccess(authRes.user, `Signed in with Google as ${profile.email}`);
             } catch (err: any) {
-              setError(err.message || 'Could not complete Google sign-in.');
+              setError(err?.message || 'Could not complete Google sign-in.');
             } finally {
               setGoogleLoading(false);
             }

@@ -14,17 +14,15 @@
 #     that most improves how the product feels. It is a paid plan, so it is left
 #     as `free` here for you to decide.
 #
-#  2. The backend keeps its accounts and saved inventories in a SQLite file
-#     under backend/data. On the free plan that disk is EPHEMERAL: every deploy
-#     or restart wipes it, so accounts created there are lost (the built-in demo
-#     accounts are re-seeded each start). Persistent storage needs a paid plan;
-#     to add it, switch iinvty-backend to `starter` and add under it:
-#       disk:
-#         name: iinvty-data
-#         mountPath: /opt/render/project/src/backend/data
-#         sizeGB: 1
+#  2. The backend keeps accounts, sessions and logs in Postgres when
+#     DATABASE_URL is set. Use a free Neon database (neon.tech): Render's free
+#     disk is wiped on every deploy or restart, so without DATABASE_URL the
+#     accounts would be lost. Paste the Neon connection string when Render asks.
+#
+# Everything marked `sync: false` is asked for once, in Render's dashboard, and
+# never stored in this file. Step-by-step: DEPLOY.md and docs/GO-LIVE-CHECKLIST.md.
 services:
-  # Login, inventory and reports API (Express + node:sqlite).
+  # Login, inventory and reports API (Express; Postgres via DATABASE_URL).
   - type: web
     name: iinvty-backend
     runtime: node
@@ -37,7 +35,17 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: "24"              # node:sqlite needs Node 22.5 or later
+        value: "24"
+      # Neon (or any Postgres) connection string, ending ?sslmode=require.
+      - key: DATABASE_URL
+        sync: false
+      # The first administrator: created on an empty database, with a one-time
+      # password printed once in the Render log.
+      - key: ADMIN_EMAIL
+        sync: false
+      # The admin site's address (Cloudflare Pages), once it exists. Leave empty until then.
+      - key: ADMIN_ORIGIN
+        sync: false
       - key: NODE_ENV
         value: production
       - key: CORS_ORIGIN
@@ -47,10 +55,10 @@ services:
       # The server refuses to start in production on the development default.
       - key: JWT_SECRET
         generateValue: true
-      # The Google OAuth Web client ID (see SETUP-GOOGLE.md). Google sign-ins are
+      # YOUR Google OAuth Web client ID (SETUP-GOOGLE.md). Google sign-ins are
       # only accepted when the token was issued to this client.
       - key: GOOGLE_CLIENT_ID
-        value: 27668255109-avkjdneoliv5qcb2uuscn1cnk3ojh1bu.apps.googleusercontent.com
+        sync: false
       # How many AI product estimates a free account gets before it is asked to
       # upgrade. Changed here, never in the browser.
       - key: FREE_ESTIMATE_LIMIT

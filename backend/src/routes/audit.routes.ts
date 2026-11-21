@@ -14,8 +14,8 @@ const recordBlockSchema = z.object({
 });
 
 // GET /api/v1/audit/ledger - Get full SHA-256 block ledger
-router.get('/ledger', (req: Request, res: Response) => {
-  const blocks = auditService.getLedger(req.user!.id);
+router.get('/ledger', async (req: Request, res: Response) => {
+  const blocks = await auditService.getLedger(req.user!.id);
   res.status(200).json({
     success: true,
     count: blocks.length,
@@ -24,8 +24,8 @@ router.get('/ledger', (req: Request, res: Response) => {
 });
 
 // GET /api/v1/audit/verify - Auditor one-click cryptographic chain integrity verification
-router.get('/verify', (req: Request, res: Response) => {
-  const report = auditService.verifyChainIntegrity(req.user!.id);
+router.get('/verify', async (req: Request, res: Response) => {
+  const report = await auditService.verifyChainIntegrity(req.user!.id);
   res.status(200).json({
     success: true,
     data: report,
@@ -33,7 +33,7 @@ router.get('/verify', (req: Request, res: Response) => {
 });
 
 // POST /api/v1/audit/record - Append a new signed block to ledger
-router.post('/record', (req: Request, res: Response) => {
+router.post('/record', async (req: Request, res: Response) => {
   const result = recordBlockSchema.safeParse(req.body);
   if (!result.success) {
     res.status(400).json({
@@ -43,7 +43,7 @@ router.post('/record', (req: Request, res: Response) => {
     return;
   }
 
-  const block = auditService.recordBlock(
+  const block = await auditService.recordBlock(
     req.user!.id,
     req.user!.email,
     result.data.action,

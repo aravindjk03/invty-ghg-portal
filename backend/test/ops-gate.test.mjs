@@ -35,6 +35,7 @@ before(async () => {
     env: {
       ...process.env, NODE_ENV: 'test', PORT: String(PORT),
       IINVTY_DB_FILE: path.join(dir, 'gate.db'),
+      IINVTY_DB_SCHEMA: `t_gate_${process.pid}_${Date.now()}`,
       RATE_LIMIT_MAX_REQUESTS: '100000',
       CORS_ORIGIN: CUSTOMER_SITE,
       ADMIN_ORIGIN: `${ADMIN_SITE}/`,

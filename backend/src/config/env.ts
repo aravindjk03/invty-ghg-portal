@@ -32,6 +32,12 @@ const envSchema = z.object({
    */
   ADMIN_ORIGIN: z.string().optional(),
   /**
+   * Postgres connection string (e.g. a free Neon database). When set, accounts
+   * and logs are kept there; when not, in a SQLite file under backend/data,
+   * which hosts with an ephemeral disk wipe on every restart.
+   */
+  DATABASE_URL: z.string().optional(),
+  /**
    * Optional network allowlist for the console API: comma-separated IPs or CIDR
    * ranges (office, VPN). Any other address gets a plain 404.
    */
@@ -46,6 +52,12 @@ if (!parsedEnv.success) {
 }
 
 export const env = parsedEnv.data;
+
+if (env.NODE_ENV === 'production' && !env.DATABASE_URL) {
+  console.warn('\n[CONFIG WARNING] DATABASE_URL is not set: accounts and logs go to a SQLite file. On a host '
+    + 'whose disk is wiped on restart (Render/Koyeb free) they will be LOST. Set DATABASE_URL to a Postgres '
+    + 'database (see DEPLOY.md).\n');
+}
 
 if (env.NODE_ENV === 'production') {
   const fatal: string[] = [];

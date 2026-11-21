@@ -1,3 +1,4 @@
+import { dbService } from '../db/database';
 import { Router, Request, Response } from 'express';
 import factorsRoutes from './factors.routes';
 import emissionsRoutes from './emissions.routes';
@@ -17,9 +18,11 @@ import { bumpUsage, UsageMetric } from '../services/ops.service';
 const router = Router();
 
 // Health check endpoint
-router.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'healthy',
+router.get('/health', async (_req: Request, res: Response) => {
+  const database = await dbService.ping();
+  res.status(database ? 200 : 503).json({
+    status: database ? 'healthy' : 'database_unreachable',
+    database: { kind: dbService.kind, reachable: database },
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     service: 'invty-ghg-backend-api',
@@ -54,14 +57,14 @@ router.use('/v1/ops', opsGate, requireAuth, opsRoutes);
  * this list and a small count are accepted - never content or figures.
  */
 const REPORTABLE: UsageMetric[] = ['calculation', 'method_calculation', 'rows_saved', 'report_export'];
-router.post('/v1/usage', requireAuth, (req: Request, res: Response) => {
+router.post('/v1/usage', requireAuth, async (req: Request, res: Response) => {
   const metric = String(req.body?.metric ?? '') as UsageMetric;
   const count = Math.min(Math.max(Math.floor(Number(req.body?.count ?? 1)) || 1, 1), 50);
   if (!REPORTABLE.includes(metric)) {
     res.status(400).json({ success: false, error: { code: 'UNKNOWN_METRIC', message: 'Unknown usage metric.' } });
     return;
   }
-  bumpUsage(req.user!.id, metric, count);
+  await bumpUsage(req.user!.id, metric, count);
   res.status(204).end();
 });
 

@@ -2,8 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { DatabaseSync } = require('node:sqlite');
+import type { Db } from './driver';
 
 export interface UserRecord {
   id: string;
@@ -108,211 +107,66 @@ export function normalisePhone(phone: string): string {
 }
 
 class DatabaseService {
-  private db: any;
-  private dbFilePath: string;
+  private _db: Db | null = null;
+  private ready: Promise<void> | null = null;
 
-  constructor() {
-    const dataDir = path.resolve(__dirname, '../../data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    // IINVTY_DB_FILE lets the test suite use a throwaway database.
-    this.dbFilePath = process.env.IINVTY_DB_FILE || path.join(dataDir, 'invty_portal.db');
-    this.db = new DatabaseSync(this.dbFilePath);
-    this.initSchema();
-    this.seedDefaultUsers();
-    this.renameDemoAdmin();
+  private get db(): Db {
+    if (!this._db) throw new Error('Database not initialised: await dbService.init() before serving requests.');
+    return this._db;
   }
 
-  private initSchema() {
-    this.db.exec('PRAGMA journal_mode = WAL;');
-    this.db.exec('PRAGMA foreign_keys = ON;');
+  /** Which database is in use, for /api/health and the logs. */
+  public get kind(): Db['kind'] | null {
+    return this._db?.kind ?? null;
+  }
 
-    // Users table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL COLLATE NOCASE,
-        password_hash TEXT NOT NULL,
-        salt TEXT NOT NULL,
-        name TEXT NOT NULL,
-        company_name TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'ESG_ANALYST',
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      );
+  /**
+   * Opens the database (Postgres when DATABASE_URL is set, else the SQLite file),
+   * creates the tables and seeds what an empty database needs. Safe to call
+   * more than once.
+   */
+  public init(): Promise<void> {
+    if (!this.ready) this.ready = this.open();
+    return this.ready;
+  }
 
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
-      CREATE TABLE IF NOT EXISTS sessions (
-        token TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        expires_at TEXT NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-
-      CREATE TABLE IF NOT EXISTS otps (
-        phone TEXT PRIMARY KEY,
-        code TEXT NOT NULL,
-        expires_at TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      );
-
-      -- What a customer is entitled to. One row per account, created on first
-      -- use. The count lives here, in the database, and not in the browser:
-      -- a quota a visitor can clear by opening developer tools is not a quota.
-      CREATE TABLE IF NOT EXISTS entitlements (
-        user_id TEXT PRIMARY KEY,
-        plan TEXT NOT NULL DEFAULT 'free',
-        estimates_used INTEGER NOT NULL DEFAULT 0,
-        first_used_at TEXT,
-        last_used_at TEXT,
-        upgraded_at TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      );
-
-      -- Every estimate that consumed a credit, so a disputed bill can be
-      -- answered with a list rather than a number.
-      CREATE TABLE IF NOT EXISTS estimate_ledger (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        product TEXT NOT NULL,
-        plan_at_time TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        refunded_at TEXT,
-        refund_reason TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_ledger_user ON estimate_ledger(user_id);
-
-      -- Someone asking to be contacted: for a report, or to be put on Premium.
-      -- On disk rather than in memory, because a restart losing the request of
-      -- a customer who tried to pay is worse than any bug in this file.
-      CREATE TABLE IF NOT EXISTS login_failures (
-        email TEXT PRIMARY KEY COLLATE NOCASE,
-        failures INTEGER NOT NULL DEFAULT 0,
-        locked_until TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS audit_blocks (
-        owner_id TEXT NOT NULL,
-        block_index INTEGER NOT NULL,
-        timestamp TEXT NOT NULL,
-        action TEXT NOT NULL,
-        entity_id TEXT NOT NULL,
-        actor TEXT NOT NULL,
-        payload_summary TEXT NOT NULL,
-        previous_block_hash TEXT NOT NULL,
-        block_hash TEXT NOT NULL,
-        PRIMARY KEY (owner_id, block_index),
-        FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
-      );
-
-      CREATE TABLE IF NOT EXISTS leads (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        work_email TEXT NOT NULL,
-        company_name TEXT NOT NULL,
-        sector TEXT,
-        phone TEXT,
-        primary_need TEXT,
-        requested_action TEXT,
-        referral_source TEXT,
-        annual_scale TEXT,
-        inventory_stats TEXT,
-        captured_at TEXT NOT NULL,
-        ip_address TEXT
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_leads_captured ON leads(captured_at);
-
-      -- ── Operations console ────────────────────────────────────────────
-      -- What happened to accounts and requests, for the developer and cyber
-      -- team. IP addresses are stored masked (last octet / last 80 bits
-      -- removed) and every row is deleted after 90 days.
-      CREATE TABLE IF NOT EXISTS security_events (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        at TEXT NOT NULL,
-        type TEXT NOT NULL,
-        severity TEXT NOT NULL,
-        user_id TEXT,
-        actor_id TEXT,
-        subject TEXT,
-        ip_masked TEXT,
-        user_agent TEXT,
-        detail TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_sec_at ON security_events(at);
-      CREATE INDEX IF NOT EXISTS idx_sec_type ON security_events(type, at);
-      CREATE INDEX IF NOT EXISTS idx_sec_user ON security_events(user_id, at);
-
-      -- Counts per account per day. No content, no figures: only how often.
-      CREATE TABLE IF NOT EXISTS usage_daily (
-        user_id TEXT NOT NULL,
-        day TEXT NOT NULL,
-        metric TEXT NOT NULL,
-        count INTEGER NOT NULL DEFAULT 0,
-        PRIMARY KEY (user_id, day, metric)
-      );
-      CREATE INDEX IF NOT EXISTS idx_usage_day ON usage_daily(day);
-
-      CREATE TABLE IF NOT EXISTS ops_alerts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        at TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        subject TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'open',
-        detail TEXT,
-        resolved_at TEXT,
-        resolved_by TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_alerts_status ON ops_alerts(status, at);
-
-      -- Every action taken in the console, chained with a keyed hash so an
-      -- edited or deleted row breaks verification.
-      CREATE TABLE IF NOT EXISTS admin_actions (
-        seq INTEGER PRIMARY KEY AUTOINCREMENT,
-        at TEXT NOT NULL,
-        actor_id TEXT NOT NULL,
-        actor_email TEXT NOT NULL,
-        action TEXT NOT NULL,
-        target_id TEXT,
-        detail TEXT,
-        prev_hash TEXT NOT NULL,
-        hash TEXT NOT NULL
-      );
-    `);
-
-    // Schema migrations for existing SQLite file
-    try {
-      const columns = (this.db.prepare('PRAGMA table_info(users)').all()).map((c: any) => c.name);
-      if (!columns.includes('phone')) {
-        this.db.exec('ALTER TABLE users ADD COLUMN phone TEXT;');
-        this.db.exec('CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);');
-      }
-      if (!columns.includes('avatar_url')) {
-        this.db.exec('ALTER TABLE users ADD COLUMN avatar_url TEXT;');
-      }
-      if (!columns.includes('auth_provider')) {
-        this.db.exec("ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'email';");
-      }
-      if (!columns.includes('status')) {
-        this.db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active';");
-      }
-      if (!columns.includes('last_login_at')) {
-        this.db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT;');
-      }
-      if (!columns.includes('suspended_reason')) {
-        this.db.exec('ALTER TABLE users ADD COLUMN suspended_reason TEXT;');
-      }
-    } catch (err) {
-      console.warn('[IINVTY DB] Schema migration check notice:', err);
+  private async open(): Promise<void> {
+    const url = (process.env.DATABASE_URL || '').trim();
+    if (url) {
+      // Loaded only when used, so a Postgres host never touches node:sqlite and vice versa.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { PostgresDb } = require('./postgres') as typeof import('./postgres');
+      const pg = new PostgresDb(url, process.env.IINVTY_DB_SCHEMA?.trim() || undefined);
+      await pg.init();
+      this._db = pg;
+    } else {
+      const dataDir = path.resolve(__dirname, '../../data');
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+      // IINVTY_DB_FILE lets the test suite use a throwaway database.
+      const file = process.env.IINVTY_DB_FILE || path.join(dataDir, 'invty_portal.db');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { SqliteDb } = require('./sqlite') as typeof import('./sqlite');
+      const lite = new SqliteDb(file);
+      await lite.init();
+      this._db = lite;
     }
+    await this.seedDefaultUsers();
+    await this.renameDemoAdmin();
+  }
+
+  /** Runs fn under a lock named key, in one transaction (see Db.serial). */
+  public serial<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    return this.db.serial(key, () => fn());
+  }
+
+  public async ping(): Promise<boolean> {
+    return this._db ? this._db.ping() : false;
+  }
+
+  public async close(): Promise<void> {
+    await this._db?.close();
+    this._db = null;
+    this.ready = null;
   }
 
   // Hash password with secure scrypt algorithm + random salt
@@ -332,32 +186,30 @@ class DatabaseService {
   private static readonly MAX_FAILURES = 5;
   private static readonly LOCK_MINUTES = 15;
 
-  public loginLockSeconds(email: string): number {
-    const row = this.db.prepare('SELECT locked_until FROM login_failures WHERE email = ?')
-      .get(email.trim()) as { locked_until: string | null } | undefined;
+  public async loginLockSeconds(email: string): Promise<number> {
+    const row = await this.db.get('SELECT locked_until FROM login_failures WHERE email = ?', email.trim().toLowerCase()) as { locked_until: string | null } | undefined;
     if (!row?.locked_until) return 0;
     const remaining = Math.ceil((new Date(row.locked_until).getTime() - Date.now()) / 1000);
     if (remaining <= 0) {
-      this.clearLoginFailures(email);
+      await this.clearLoginFailures(email);
       return 0;
     }
     return remaining;
   }
 
-  public recordLoginFailure(email: string): void {
-    const key = email.trim();
-    this.db.prepare('INSERT INTO login_failures (email, failures) VALUES (?, 1) '
-      + 'ON CONFLICT(email) DO UPDATE SET failures = failures + 1').run(key);
-    const row = this.db.prepare('SELECT failures FROM login_failures WHERE email = ?')
-      .get(key) as { failures: number };
+  public async recordLoginFailure(email: string): Promise<void> {
+    const key = email.trim().toLowerCase();
+    await this.db.run('INSERT INTO login_failures (email, failures) VALUES (?, 1) '
+      + 'ON CONFLICT(email) DO UPDATE SET failures = login_failures.failures + 1', key);
+    const row = await this.db.get('SELECT failures FROM login_failures WHERE email = ?', key) as { failures: number };
     if (row.failures >= DatabaseService.MAX_FAILURES) {
       const until = new Date(Date.now() + DatabaseService.LOCK_MINUTES * 60_000).toISOString();
-      this.db.prepare('UPDATE login_failures SET locked_until = ?, failures = 0 WHERE email = ?').run(until, key);
+      await this.db.run('UPDATE login_failures SET locked_until = ?, failures = 0 WHERE email = ?', until, key);
     }
   }
 
-  public clearLoginFailures(email: string): void {
-    this.db.prepare('DELETE FROM login_failures WHERE email = ?').run(email.trim());
+  public async clearLoginFailures(email: string): Promise<void> {
+    await this.db.run('DELETE FROM login_failures WHERE email = ?', email.trim().toLowerCase());
   }
 
   public verifyPassword(password: string, hash: string, salt: string): boolean {
@@ -382,13 +234,12 @@ class DatabaseService {
    * collect and change. Outside production the demo accounts stay, because
    * that is what they are for.
    */
-  private seedDefaultUsers() {
-    const checkStmt = this.db.prepare('SELECT COUNT(*) as count FROM users');
-    const result = checkStmt.get() as { count: number };
+  private async seedDefaultUsers(): Promise<void> {
+        const result = await this.db.get('SELECT COUNT(*) as count FROM users') as { count: number };
     if (!result || result.count !== 0) return;
 
     if (process.env.NODE_ENV === 'production') {
-      this.seedProductionAdmin();
+      await this.seedProductionAdmin();
       return;
     }
 
@@ -396,7 +247,7 @@ class DatabaseService {
       console.log('[IINVTY DB] Seeding initial enterprise demonstration accounts...');
 
       const adminCreds = this.hashPassword('IINVTY@2026');
-      this.createUser({
+      await this.createUser({
         id: 'usr-admin-invty-001',
         email: 'admin@invty.com',
         phone: '+919876543210',
@@ -411,7 +262,7 @@ class DatabaseService {
       });
 
       const demoCreds = this.hashPassword('Demo@1234');
-      this.createUser({
+      await this.createUser({
         id: 'usr-demo-lead-002',
         email: 'demo@company.com',
         phone: '+919123456780',
@@ -435,7 +286,7 @@ class DatabaseService {
    * written to the log once, where only someone who can already read the
    * server's output will see it.
    */
-  private seedProductionAdmin() {
+  private async seedProductionAdmin(): Promise<void> {
     const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
     if (!email) {
       console.log(
@@ -450,7 +301,7 @@ class DatabaseService {
     const creds = this.hashPassword(password);
     const now = new Date().toISOString();
 
-    this.createUser({
+    await this.createUser({
       id: `usr-admin-${crypto.randomBytes(6).toString('hex')}`,
       email,
       password_hash: creds.hash,
@@ -470,14 +321,12 @@ class DatabaseService {
     );
   }
 
-  public createUser(user: UserRecord): SafeUser {
-    const stmt = this.db.prepare(`
+  public async createUser(user: UserRecord): Promise<SafeUser> {
+    
+    await this.db.run(`
       INSERT INTO users (id, email, phone, password_hash, salt, name, company_name, role, avatar_url, auth_provider, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      user.id,
+    `, user.id,
       user.email.toLowerCase().trim(),
       user.phone || null,
       user.password_hash,
@@ -488,8 +337,7 @@ class DatabaseService {
       user.avatar_url || null,
       user.auth_provider || 'email',
       user.created_at,
-      user.updated_at
-    );
+      user.updated_at);
 
     return this.toSafeUser(user);
   }
@@ -497,9 +345,9 @@ class DatabaseService {
   // The company is IINVTY (formerly written INVTY). Databases seeded before the rename
   // still hold the old demo admin name and password; update them in place without
   // touching any other account, or a password the admin has already changed.
-  private renameDemoAdmin() {
+  private async renameDemoAdmin(): Promise<void> {
     try {
-      const admin = this.findUserByEmail('admin@invty.com');
+      const admin = await this.findUserByEmail('admin@invty.com');
       if (!admin) return;
       const now = new Date().toISOString();
       // Deliberately no password rewrite here. This used to notice the old
@@ -507,22 +355,21 @@ class DatabaseService {
       // a credential from the public repository back onto a live account.
       // Outside production the seeder sets it; in production nothing should
       // move an account's password but its owner.
-      this.db.prepare(
+      await this.db.run(
         "UPDATE users SET name = 'IINVTY Enterprise Admin', company_name = 'IINVTY Sustainability Systems', updated_at = ? " +
         "WHERE id = ? AND name = 'INVTY Enterprise Admin' AND company_name = 'INVTY Sustainability Systems'"
-      ).run(now, admin.id);
+      , now, admin.id);
     } catch (err) {
       console.warn('[IINVTY DB] Demo admin rename notice:', err);
     }
   }
 
-  public findUserByEmail(email: string): UserRecord | null {
-    const stmt = this.db.prepare('SELECT * FROM users WHERE email = ? COLLATE NOCASE');
-    const row = stmt.get(email.toLowerCase().trim()) as UserRecord | undefined;
+  public async findUserByEmail(email: string): Promise<UserRecord | null> {
+        const row = await this.db.get('SELECT * FROM users WHERE lower(email) = ?', email.toLowerCase().trim()) as UserRecord | undefined;
     return row || null;
   }
 
-  public findUserByPhone(phone: string): UserRecord | null {
+  public async findUserByPhone(phone: string): Promise<UserRecord | null> {
     // This used to strip only whitespace and hyphens and interpolate what was
     // left into a LIKE pattern, so `%` and `_` survived as wildcards: a
     // "phone number" of %%%%%%%% produced phone LIKE '%%%%%%%%%', matched
@@ -533,67 +380,62 @@ class DatabaseService {
     // to one account.
     const normalised = normalisePhone(phone);
     if (!normalised) return null;
-    const stmt = this.db.prepare('SELECT * FROM users WHERE phone = ?');
-    const row = stmt.get(normalised) as UserRecord | undefined;
+        const row = await this.db.get('SELECT * FROM users WHERE phone = ?', normalised) as UserRecord | undefined;
     return row || null;
   }
 
-  public findUserById(id: string): UserRecord | null {
-    const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
-    const row = stmt.get(id) as UserRecord | undefined;
+  public async findUserById(id: string): Promise<UserRecord | null> {
+        const row = await this.db.get('SELECT * FROM users WHERE id = ?', id) as UserRecord | undefined;
     return row || null;
   }
 
   // OTP management for mobile sign-in
-  public saveOtp(phone: string, code: string, ttlSeconds = 300): void {
+  public async saveOtp(phone: string, code: string, ttlSeconds = 300): Promise<void> {
     const cleanPhone = normalisePhone(phone);
     if (!cleanPhone) return;
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
 
-    const stmt = this.db.prepare(`
+    
+    await this.db.run(`
       INSERT INTO otps (phone, code, created_at, expires_at)
       VALUES (?, ?, ?, ?)
       ON CONFLICT(phone) DO UPDATE SET
         code = excluded.code,
         created_at = excluded.created_at,
         expires_at = excluded.expires_at
-    `);
-
-    stmt.run(cleanPhone, code, now.toISOString(), expiresAt.toISOString());
+    `, cleanPhone, code, now.toISOString(), expiresAt.toISOString());
   }
 
-  public verifyOtp(phone: string, code: string): boolean {
+  public async verifyOtp(phone: string, code: string): Promise<boolean> {
     const cleanPhone = normalisePhone(phone);
     if (!cleanPhone) return false;
-    const stmt = this.db.prepare('SELECT * FROM otps WHERE phone = ?');
-    const row = stmt.get(cleanPhone) as { phone: string; code: string; expires_at: string } | undefined;
+        const row = await this.db.get('SELECT * FROM otps WHERE phone = ?', cleanPhone) as { phone: string; code: string; expires_at: string } | undefined;
 
     if (!row) return false;
     if (new Date(row.expires_at) < new Date()) {
-      this.deleteOtp(cleanPhone);
+      await this.deleteOtp(cleanPhone);
       return false;
     }
 
     if (row.code.trim() === code.trim()) {
-      this.deleteOtp(cleanPhone);
+      await this.deleteOtp(cleanPhone);
       return true;
     }
 
     return false;
   }
 
-  public deleteOtp(phone: string): void {
+  public async deleteOtp(phone: string): Promise<void> {
     const cleanPhone = normalisePhone(phone);
-    const stmt = this.db.prepare('DELETE FROM otps WHERE phone = ?');
-    stmt.run(cleanPhone);
+        await this.db.run('DELETE FROM otps WHERE phone = ?', cleanPhone);
   }
 
   // Find or create user from Mobile Phone OTP
-  public findOrCreateMobileUser(phone: string, name?: string, companyName?: string): SafeUser {
+  public async findOrCreateMobileUser(phone: string, name?: string, companyName?: string): Promise<SafeUser> {
     const cleanPhone = normalisePhone(phone);
     if (!cleanPhone) throw new Error('A valid phone number is required.');
-    let user = this.findUserByPhone(cleanPhone);
+    let user = await this.findUserByPhone(cleanPhone);
 
     if (!user) {
       const { hash, salt } = this.hashPassword(crypto.randomBytes(16).toString('hex'));
@@ -615,21 +457,21 @@ class DatabaseService {
         updated_at: new Date().toISOString(),
       };
 
-      this.createUser(user);
+      await this.createUser(user);
     }
 
     return this.toSafeUser(user);
   }
 
   // Find or create user from verified Google OAuth
-  public findOrCreateGoogleUser(data: {
+  public async findOrCreateGoogleUser(data: {
     email: string;
     name: string;
     avatarUrl?: string;
     companyName?: string;
-  }): SafeUser {
+  }): Promise<SafeUser> {
     const cleanEmail = data.email.toLowerCase().trim();
-    let user = this.findUserByEmail(cleanEmail);
+    let user = await this.findUserByEmail(cleanEmail);
 
     if (!user) {
       const { hash, salt } = this.hashPassword(crypto.randomBytes(16).toString('hex'));
@@ -650,11 +492,10 @@ class DatabaseService {
         updated_at: new Date().toISOString(),
       };
 
-      this.createUser(user);
+      await this.createUser(user);
     } else if (data.avatarUrl && (!user.avatar_url || user.avatar_url !== data.avatarUrl)) {
       try {
-        const updateStmt = this.db.prepare('UPDATE users SET avatar_url = ?, updated_at = ? WHERE id = ?');
-        updateStmt.run(data.avatarUrl, new Date().toISOString(), user.id);
+                await this.db.run('UPDATE users SET avatar_url = ?, updated_at = ? WHERE id = ?', data.avatarUrl, new Date().toISOString(), user.id);
         user.avatar_url = data.avatarUrl;
       } catch (e) {
         // Ignore non-fatal update error
@@ -664,18 +505,17 @@ class DatabaseService {
     return this.toSafeUser(user);
   }
 
-  public createSession(userId: string, expiresInDays = 7): string {
-    this.db.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(new Date().toISOString(), userId);
+  public async createSession(userId: string, expiresInDays = 7): Promise<string> {
+    await this.db.run('UPDATE users SET last_login_at = ? WHERE id = ?', new Date().toISOString(), userId);
     const token = crypto.randomBytes(32).toString('hex');
     const now = new Date();
     const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
 
-    const stmt = this.db.prepare(`
+    
+    await this.db.run(`
       INSERT INTO sessions (token, user_id, created_at, expires_at)
       VALUES (?, ?, ?, ?)
-    `);
-
-    stmt.run(token, userId, now.toISOString(), expiresAt.toISOString());
+    `, token, userId, now.toISOString(), expiresAt.toISOString());
     return token;
   }
 
@@ -691,19 +531,15 @@ class DatabaseService {
     return Number.isFinite(configured) && configured >= 0 ? Math.floor(configured) : 2;
   }
 
-  private entitlementRow(userId: string): { plan: Plan; estimates_used: number;
+  private async entitlementRow(userId: string): Promise<{ plan: Plan; estimates_used: number;
     first_used_at: string | null; last_used_at: string | null;
-    upgraded_at: string | null } {
-    const existing = this.db
-      .prepare('SELECT plan, estimates_used, first_used_at, last_used_at, upgraded_at '
-               + 'FROM entitlements WHERE user_id = ?')
-      .get(userId) as any;
+    upgraded_at: string | null }> {
+    const existing = await this.db.get('SELECT plan, estimates_used, first_used_at, last_used_at, upgraded_at '
+               + 'FROM entitlements WHERE user_id = ?', userId) as any;
     if (existing) return existing;
 
-    this.db
-      .prepare('INSERT OR IGNORE INTO entitlements (user_id, plan, estimates_used) '
-               + "VALUES (?, 'free', 0)")
-      .run(userId);
+    await this.db.run('INSERT INTO entitlements (user_id, plan, estimates_used) '
+               + "VALUES (?, 'free', 0) ON CONFLICT (user_id) DO NOTHING", userId);
     return { plan: 'free', estimates_used: 0, first_used_at: null, last_used_at: null,
              upgraded_at: null };
   }
@@ -724,8 +560,8 @@ class DatabaseService {
     };
   }
 
-  public getEntitlement(userId: string): Entitlement {
-    return this.toEntitlement(userId, this.entitlementRow(userId));
+  public async getEntitlement(userId: string): Promise<Entitlement> {
+    return this.toEntitlement(userId, await this.entitlementRow(userId));
   }
 
   /**
@@ -739,95 +575,78 @@ class DatabaseService {
    * A reservation that is not used is refunded by `refundEstimate`, so a failed
    * or refused AI call never costs the customer one of their two.
    */
-  public reserveEstimate(userId: string, product: string): Reservation {
-    const row = this.entitlementRow(userId);
+  public async reserveEstimate(userId: string, product: string): Promise<Reservation> {
+    const row = await this.entitlementRow(userId);
 
     if (row.plan === 'premium') {
-      const ledgerId = this.recordLedger(userId, product, row.plan);
-      this.db.prepare("UPDATE entitlements SET estimates_used = estimates_used + 1, "
+      const ledgerId = await this.recordLedger(userId, product, row.plan);
+      await this.db.run("UPDATE entitlements SET estimates_used = estimates_used + 1, "
                       + "last_used_at = ?, first_used_at = COALESCE(first_used_at, ?) "
-                      + 'WHERE user_id = ?')
-        .run(new Date().toISOString(), new Date().toISOString(), userId);
-      return { allowed: true, entitlement: this.getEntitlement(userId), ledgerId };
+                      + 'WHERE user_id = ?', new Date().toISOString(), new Date().toISOString(), userId);
+      return { allowed: true, entitlement: await this.getEntitlement(userId), ledgerId };
     }
 
     const now = new Date().toISOString();
-    const result = this.db
-      .prepare('UPDATE entitlements SET estimates_used = estimates_used + 1, '
+    const result = await this.db.run('UPDATE entitlements SET estimates_used = estimates_used + 1, '
                + 'last_used_at = ?, first_used_at = COALESCE(first_used_at, ?) '
-               + 'WHERE user_id = ? AND estimates_used < ?')
-      .run(now, now, userId, this.freeEstimateLimit);
+               + 'WHERE user_id = ? AND estimates_used < ?', now, now, userId, this.freeEstimateLimit);
 
     if (!result.changes) {
-      return { allowed: false, entitlement: this.getEntitlement(userId) };
+      return { allowed: false, entitlement: await this.getEntitlement(userId) };
     }
-    const ledgerId = this.recordLedger(userId, product, row.plan);
-    return { allowed: true, entitlement: this.getEntitlement(userId), ledgerId };
+    const ledgerId = await this.recordLedger(userId, product, row.plan);
+    return { allowed: true, entitlement: await this.getEntitlement(userId), ledgerId };
   }
 
   /** Give back an estimate that was reserved but never delivered. */
-  public refundEstimate(userId: string, ledgerId: string, reason: string): Entitlement {
-    const ledger = this.db
-      .prepare('SELECT user_id, refunded_at FROM estimate_ledger WHERE id = ?')
-      .get(ledgerId) as any;
+  public async refundEstimate(userId: string, ledgerId: string, reason: string): Promise<Entitlement> {
+    const ledger = await this.db.get('SELECT user_id, refunded_at FROM estimate_ledger WHERE id = ?', ledgerId) as any;
 
     // Only an unrefunded reservation belonging to this account, so a replayed
     // refund cannot hand out free estimates.
     if (ledger && ledger.user_id === userId && !ledger.refunded_at) {
       const now = new Date().toISOString();
-      this.db.prepare('UPDATE estimate_ledger SET refunded_at = ?, refund_reason = ? '
-                      + 'WHERE id = ?')
-        .run(now, reason.slice(0, 200), ledgerId);
-      this.db.prepare('UPDATE entitlements SET estimates_used = MAX(0, estimates_used - 1) '
-                      + 'WHERE user_id = ?')
-        .run(userId);
+      await this.db.run('UPDATE estimate_ledger SET refunded_at = ?, refund_reason = ? '
+                      + 'WHERE id = ?', now, reason.slice(0, 200), ledgerId);
+      await this.db.run('UPDATE entitlements SET estimates_used = CASE WHEN estimates_used > 0 THEN estimates_used - 1 ELSE 0 END '
+                      + 'WHERE user_id = ?', userId);
     }
-    return this.getEntitlement(userId);
+    return await this.getEntitlement(userId);
   }
 
-  private recordLedger(userId: string, product: string, plan: Plan): string {
+  private async recordLedger(userId: string, product: string, plan: Plan): Promise<string> {
     const id = crypto.randomUUID();
-    this.db
-      .prepare('INSERT INTO estimate_ledger (id, user_id, product, plan_at_time, created_at) '
-               + 'VALUES (?, ?, ?, ?, ?)')
-      .run(id, userId, product.slice(0, 300), plan, new Date().toISOString());
+    await this.db.run('INSERT INTO estimate_ledger (id, user_id, product, plan_at_time, created_at) '
+               + 'VALUES (?, ?, ?, ?, ?)', id, userId, product.slice(0, 300), plan, new Date().toISOString());
     return id;
   }
 
   /** Move an account onto premium. Called once payment is confirmed. */
-  public setPlan(userId: string, plan: Plan): Entitlement {
-    this.entitlementRow(userId);
-    this.db
-      .prepare('UPDATE entitlements SET plan = ?, upgraded_at = ? WHERE user_id = ?')
-      .run(plan, plan === 'premium' ? new Date().toISOString() : null, userId);
-    return this.getEntitlement(userId);
+  public async setPlan(userId: string, plan: Plan): Promise<Entitlement> {
+    await this.entitlementRow(userId);
+    await this.db.run('UPDATE entitlements SET plan = ?, upgraded_at = ? WHERE user_id = ?', plan, plan === 'premium' ? new Date().toISOString() : null, userId);
+    return await this.getEntitlement(userId);
   }
 
   // ── Leads ─────────────────────────────────────────────────────────────────
 
   // Audit chain storage. One chain per owning account, so one customer's
   // history is never readable from another's session.
-  public auditBlocks(ownerId: string): AuditBlockRow[] {
-    return this.db
-      .prepare('SELECT * FROM audit_blocks WHERE owner_id = ? ORDER BY block_index ASC')
-      .all(ownerId) as unknown as AuditBlockRow[];
+  public async auditBlocks(ownerId: string): Promise<AuditBlockRow[]> {
+    return await this.db.all('SELECT * FROM audit_blocks WHERE owner_id = ? ORDER BY block_index ASC', ownerId) as unknown as AuditBlockRow[];
   }
 
-  public appendAuditBlock(row: AuditBlockRow): void {
-    this.db
-      .prepare('INSERT INTO audit_blocks (owner_id, block_index, timestamp, action, entity_id, '
-               + 'actor, payload_summary, previous_block_hash, block_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(row.owner_id, row.block_index, row.timestamp, row.action, row.entity_id,
+  public async appendAuditBlock(row: AuditBlockRow): Promise<void> {
+    await this.db.run('INSERT INTO audit_blocks (owner_id, block_index, timestamp, action, entity_id, '
+               + 'actor, payload_summary, previous_block_hash, block_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', row.owner_id, row.block_index, row.timestamp, row.action, row.entity_id,
            row.actor, row.payload_summary, row.previous_block_hash, row.block_hash);
   }
 
-  public insertLead(lead: LeadRow): LeadRow {
-    this.db
-      .prepare('INSERT INTO leads (id, name, work_email, company_name, sector, phone, '
+  public async insertLead(lead: LeadRow): Promise<LeadRow> {
+    await this.db.run('INSERT INTO leads (id, name, work_email, company_name, sector, phone, '
                + 'primary_need, requested_action, referral_source, annual_scale, '
                + 'inventory_stats, captured_at, ip_address) '
-               + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(lead.id, lead.name, lead.workEmail, lead.companyName, lead.sector ?? null,
+               + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', lead.id, lead.name, lead.workEmail, lead.companyName, lead.sector ?? null,
            lead.phone ?? null, lead.primaryNeed ?? null, lead.requestedAction ?? null,
            lead.referralSource ?? null, lead.annualTurnoverOrProduction ?? null,
            lead.inventoryStats ? JSON.stringify(lead.inventoryStats) : null,
@@ -835,10 +654,8 @@ class DatabaseService {
     return lead;
   }
 
-  public allLeads(): LeadRow[] {
-    const rows = this.db
-      .prepare('SELECT * FROM leads ORDER BY captured_at DESC')
-      .all() as any[];
+  public async allLeads(): Promise<LeadRow[]> {
+    const rows = await this.db.all('SELECT * FROM leads ORDER BY captured_at DESC') as any[];
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -856,12 +673,10 @@ class DatabaseService {
     }));
   }
 
-  public recentEstimates(userId: string, limit = 20): Array<{ id: string; product: string;
-    createdAt: string; refundedAt: string | null }> {
-    const rows = this.db
-      .prepare('SELECT id, product, created_at, refunded_at FROM estimate_ledger '
-               + 'WHERE user_id = ? ORDER BY created_at DESC LIMIT ?')
-      .all(userId, Math.min(Math.max(limit, 1), 100)) as any[];
+  public async recentEstimates(userId: string, limit = 20): Promise<Array<{ id: string; product: string;
+    createdAt: string; refundedAt: string | null }>> {
+    const rows = await this.db.all<any>('SELECT id, product, created_at, refunded_at FROM estimate_ledger '
+               + 'WHERE user_id = ? ORDER BY created_at DESC LIMIT ?', userId, Math.min(Math.max(limit, 1), 100));
     return rows.map((row) => ({
       id: row.id,
       product: row.product,
@@ -870,22 +685,21 @@ class DatabaseService {
     }));
   }
 
-  public getSession(token: string): { session: SessionRecord; user: SafeUser } | null {
-    const stmt = this.db.prepare(`
+  public async getSession(token: string): Promise<{ session: SessionRecord; user: SafeUser } | null> {
+    
+    const row = await this.db.get(`
       SELECT s.token, s.user_id, s.created_at as session_created_at, s.expires_at,
              u.id, u.email, u.phone, u.name, u.company_name, u.role, u.avatar_url, u.auth_provider, u.created_at,
              u.status
       FROM sessions s
       JOIN users u ON s.user_id = u.id
       WHERE s.token = ?
-    `);
-
-    const row = stmt.get(token) as any;
+    `, token) as any;
     if (!row) return null;
 
     // Check expiry
     if (new Date(row.expires_at) < new Date()) {
-      this.deleteSession(token);
+      await this.deleteSession(token);
       return null;
     }
 
@@ -911,8 +725,8 @@ class DatabaseService {
     };
   }
 
-  /** The shared connection, for the operations console store. */
-  public get connection(): any {
+  /** The shared database handle, for the operations console store. */
+  public get connection(): Db {
     return this.db;
   }
 
@@ -921,45 +735,42 @@ class DatabaseService {
   // or password, and could not be deleted — which meant a leaked password had
   // no remedy inside the product, and no erasure request could be honoured.
 
-  public updateProfile(
+  public async updateProfile(
     userId: string,
     fields: { name?: string; companyName?: string; avatarUrl?: string | null },
-  ): SafeUser | null {
-    const user = this.findUserById(userId);
+  ): Promise<SafeUser | null> {
+    const user = await this.findUserById(userId);
     if (!user) return null;
     const next = {
       name: fields.name ?? user.name,
       company: fields.companyName ?? user.company_name,
       avatar: fields.avatarUrl === undefined ? (user.avatar_url ?? null) : fields.avatarUrl,
     };
-    this.db.prepare('UPDATE users SET name = ?, company_name = ?, avatar_url = ?, updated_at = ? WHERE id = ?')
-      .run(next.name.trim(), next.company.trim(), next.avatar, new Date().toISOString(), userId);
-    return this.toSafeUser(this.findUserById(userId)!);
+    await this.db.run('UPDATE users SET name = ?, company_name = ?, avatar_url = ?, updated_at = ? WHERE id = ?', next.name.trim(), next.company.trim(), next.avatar, new Date().toISOString(), userId);
+    return this.toSafeUser((await this.findUserById(userId))!);
   }
 
   /** Sets a new password and signs every other device out. */
-  public changePassword(userId: string, newPassword: string, keepToken: string): void {
+  public async changePassword(userId: string, newPassword: string, keepToken: string): Promise<void> {
     const { hash, salt } = this.hashPassword(newPassword);
-    this.db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
-      .run(hash, salt, new Date().toISOString(), userId);
+    await this.db.run('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?', hash, salt, new Date().toISOString(), userId);
     // A password is usually changed because the old one may be known. Any
     // session opened with it must not outlive it.
-    this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(userId, keepToken);
+    await this.db.run('DELETE FROM sessions WHERE user_id = ? AND token != ?', userId, keepToken);
   }
 
-  public deleteOtherSessions(userId: string, keepToken: string): number {
-    const result = this.db.prepare('DELETE FROM sessions WHERE user_id = ? AND token != ?').run(userId, keepToken);
+  public async deleteOtherSessions(userId: string, keepToken: string): Promise<number> {
+    const result = await this.db.run('DELETE FROM sessions WHERE user_id = ? AND token != ?', userId, keepToken);
     return Number(result.changes ?? 0);
   }
 
   /** Erases the account. Sessions, entitlements, ledger and audit rows cascade. */
-  public deleteUser(userId: string): void {
-    this.db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+  public async deleteUser(userId: string): Promise<void> {
+    await this.db.run('DELETE FROM users WHERE id = ?', userId);
   }
 
-  public deleteSession(token: string): void {
-    const stmt = this.db.prepare('DELETE FROM sessions WHERE token = ?');
-    stmt.run(token);
+  public async deleteSession(token: string): Promise<void> {
+        await this.db.run('DELETE FROM sessions WHERE token = ?', token);
   }
 
   public toSafeUser(user: UserRecord): SafeUser {

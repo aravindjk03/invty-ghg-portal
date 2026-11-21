@@ -60,14 +60,16 @@ const toBlock = (row: AuditBlockRow): AuditLedgerBlock => ({
 
 export const auditService = {
   /** Appends a block to the caller's own chain. `actor` comes from the session. */
-  recordBlock(
+  async recordBlock(
     ownerId: string,
     actor: string,
     action: AuditLedgerBlock['action'],
     entityId: string,
     payloadSummary: string,
-  ): AuditLedgerBlock {
-    const chain = dbService.auditBlocks(ownerId);
+  ): Promise<AuditLedgerBlock> {
+    // One writer per chain at a time, so two requests cannot both take the same index.
+    return dbService.serial(`audit:${ownerId}`, async () => {
+    const chain = await dbService.auditBlocks(ownerId);
     const previous = chain[chain.length - 1];
     const body = {
       blockIndex: chain.length,
@@ -80,7 +82,7 @@ export const auditService = {
     };
     const block: AuditLedgerBlock = { ...body, blockHash: mac(ownerId, body) };
 
-    dbService.appendAuditBlock({
+    await dbService.appendAuditBlock({
       owner_id: ownerId,
       block_index: block.blockIndex,
       timestamp: block.timestamp,
@@ -92,18 +94,19 @@ export const auditService = {
       block_hash: block.blockHash,
     });
     return block;
+    });
   },
 
-  getLedger(ownerId: string): AuditLedgerBlock[] {
-    return dbService.auditBlocks(ownerId).map(toBlock);
+  async getLedger(ownerId: string): Promise<AuditLedgerBlock[]> {
+    return (await dbService.auditBlocks(ownerId)).map(toBlock);
   },
 
   /**
    * Checks that every block links to the one before it and still carries the
    * MAC the server gave it. That is all it checks, and all it reports.
    */
-  verifyChainIntegrity(ownerId: string) {
-    const chain = dbService.auditBlocks(ownerId).map(toBlock);
+  async verifyChainIntegrity(ownerId: string) {
+    const chain = (await dbService.auditBlocks(ownerId)).map(toBlock);
     const checked = ['Each block links to the block before it', 'Each block carries the server\'s MAC'];
 
     for (let i = 0; i < chain.length; i++) {

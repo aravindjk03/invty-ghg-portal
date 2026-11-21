@@ -52,6 +52,7 @@ before(async () => {
     env: {
       ...process.env, NODE_ENV: 'test', PORT: String(PORT),
       IINVTY_DB_FILE: path.join(dir, 'ops.db'),
+      IINVTY_DB_SCHEMA: `t_ops_${process.pid}_${Date.now()}`,
       RATE_LIMIT_MAX_REQUESTS: '100000',
     },
     stdio: 'ignore',

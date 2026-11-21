@@ -13,8 +13,9 @@ Every endpoint behind it also checks the caller's role on the server.
 
 The console reads from the backend, so it needs the backend deployed.
 
-1. Deploy the backend with `render.yaml` (see `DEPLOY.md`). Use a paid instance
-   with the persistent disk, or the accounts and logs reset on every restart.
+1. Deploy the backend with `render.yaml` (see `DEPLOY.md`), with `DATABASE_URL`
+   set to a Postgres database (a free Neon one works). Without it, accounts and
+   logs live in a SQLite file that free hosts wipe on every restart.
 2. Set `ADMIN_EMAIL` on the backend. On first boot it creates that ADMIN
    account and prints a one-time password to the log.
 3. Build the admin site against that backend:

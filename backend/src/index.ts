@@ -1,3 +1,4 @@
+import './middleware/asyncErrors';
 import express from 'express';
 import morgan from 'morgan';
 import { env } from './config/env';
@@ -6,6 +7,7 @@ import { globalRateLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { startRetentionSweep } from './services/ops.service';
 import apiRoutes from './routes';
+import { dbService } from './db/database';
 
 const app = express();
 
@@ -44,25 +46,34 @@ app.use((_req, res) => {
 // Centralized error handler
 app.use(errorHandler);
 
-// Start server
-startRetentionSweep();
+// Start server: open the database first, so no request meets a half-made schema.
+let server: ReturnType<typeof app.listen> | null = null;
 
-const server = app.listen(env.PORT, () => {
-  console.log(`=========================================`);
-  console.log(`[IINVTY Enterprise GHG Engine] Server Started`);
-  console.log(`   Port:        ${env.PORT}`);
-  console.log(`   Environment: ${env.NODE_ENV}`);
-  console.log(`   CORS:        ${env.CORS_ORIGIN}`);
-  console.log(`=========================================`);
+dbService.init().then(() => {
+  startRetentionSweep();
+  server = app.listen(env.PORT, () => {
+    console.log(`=========================================`);
+    console.log(`[IINVTY Enterprise GHG Engine] Server Started`);
+    console.log(`   Port:        ${env.PORT}`);
+    console.log(`   Environment: ${env.NODE_ENV}`);
+    console.log(`   Database:    ${dbService.kind}`);
+    console.log(`   CORS:        ${env.CORS_ORIGIN}`);
+    console.log(`=========================================`);
+  });
+}).catch((err) => {
+  console.error('[IINVTY Enterprise GHG Engine] Could not open the database:', (err as Error).message);
+  process.exit(1);
 });
 
 // Graceful shutdown
 const shutdown = () => {
   console.log('\n[IINVTY Enterprise GHG Engine] Gracefully shutting down server...');
-  server.close(() => {
+  const done = () => dbService.close().finally(() => {
     console.log('[IINVTY Enterprise GHG Engine] HTTP server closed. Process exiting.');
     process.exit(0);
   });
+  if (server) server.close(() => { void done(); });
+  else void done();
 };
 
 process.on('SIGTERM', shutdown);

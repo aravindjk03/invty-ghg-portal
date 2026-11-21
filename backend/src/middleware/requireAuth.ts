@@ -24,7 +24,7 @@ function bearerToken(req: Request): string | null {
  * looked up in the database on every request, so logging out or expiry revokes
  * access immediately.
  */
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const token = bearerToken(req);
   if (!token) {
     res.status(401).json({
@@ -35,9 +35,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
 
-  const session = dbService.getSession(token);
+  const session = await dbService.getSession(token);
   if (!session) {
-    recordEvent({ type: 'access.invalid_token', req, detail: { path: req.originalUrl.slice(0, 200) } });
+    await recordEvent({ type: 'access.invalid_token', req, detail: { path: req.originalUrl.slice(0, 200) } });
     res.status(401).json({
       success: false,
       error: { code: 'SESSION_EXPIRED', message: 'Your session has expired. Please sign in again.' },
@@ -47,8 +47,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   if (session.user.status === 'suspended') {
-    dbService.deleteSession(token);
-    recordEvent({ type: 'access.suspended', userId: session.user.id, req,
+    await dbService.deleteSession(token);
+    await recordEvent({ type: 'access.suspended', userId: session.user.id, req,
       detail: { path: req.originalUrl.slice(0, 200) } });
     res.status(403).json({
       success: false,
@@ -71,9 +71,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
  * than to the person making the request.
  */
 export function requireRole(...roles: Array<SafeUser['role']>) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user || !roles.includes(req.user.role)) {
-      recordEvent({ type: 'access.forbidden', userId: req.user?.id ?? null, req,
+      await recordEvent({ type: 'access.forbidden', userId: req.user?.id ?? null, req,
         detail: { path: req.originalUrl.slice(0, 200), role: req.user?.role ?? null } });
       // Deliberately the same shape whether the account is absent or merely
       // unprivileged: a different answer tells a prober which it was.

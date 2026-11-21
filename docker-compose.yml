@@ -1,0 +1,56 @@
+# The whole server side on one machine: Postgres, the backend API and the
+# INSITY EDGE AI service. Works on any computer or VPS with Docker:
+#
+#   cp backend/.env.example backend/.env      # then fill it in
+#   cp service/.env.example service/.env      # add GEMINI_API_KEY
+#   docker compose up -d --build
+#   curl http://localhost:5000/api/health
+#
+# The website itself is static (npm run deploy:pages, or any static host).
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: iinvty
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+      POSTGRES_DB: iinvty
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iinvty -d iinvty"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      # Overrides any DATABASE_URL in backend/.env with the database above.
+      DATABASE_URL: postgres://iinvty:${POSTGRES_PASSWORD:-change-me-locally}@db:5432/iinvty
+      PORT: "5000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  ai:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    restart: unless-stopped
+    env_file: ./service/.env
+    environment:
+      PORT: "8000"
+      BACKEND_BASE_URL: http://backend:5000/api/v1
+    ports:
+      - "8000:8000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

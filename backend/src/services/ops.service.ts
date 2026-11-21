@@ -112,9 +112,8 @@ function throttled(type: string, ip: string | null, subject: string | null): num
     seen.skipped += 1;
     // A burst too fast for the throttle still has to raise its alert.
     if (ip && seen.skipped === ALERT_RULES.refusedRequests.count) {
-      try {
-        raiseAlert('refused_requests_burst', ip, { refused: seen.skipped + 1, seconds: THROTTLE_MS / 1000, type });
-      } catch { /* the log must never break a request */ }
+      raiseAlert('refused_requests_burst', ip, { refused: seen.skipped + 1, seconds: THROTTLE_MS / 1000, type })
+        .catch(() => undefined); // the log must never break a request
     }
     return null; // skip this one
   }
@@ -129,10 +128,12 @@ export function resetEventThrottle(): void {
 }
 
 /**
- * Records one event and runs the alert rules on it. Never throws: a failure
- * to log must not turn a successful sign-in into an error page.
+ * Records one event and runs the alert rules on it. Never rejects: a failure
+ * to log must not turn a successful sign-in into an error page. Request
+ * handlers await it so the event is stored before they answer; middleware
+ * that cannot wait lets it run in the background.
  */
-export function recordEvent(input: SecurityEventInput): void {
+export async function recordEvent(input: SecurityEventInput): Promise<void> {
   try {
     const { ip, ua } = requestContext(input.req);
     const severity = input.severity ?? DEFAULT_SEVERITY[input.type] ?? 'info';
@@ -140,12 +141,11 @@ export function recordEvent(input: SecurityEventInput): void {
     const skipped = throttled(input.type, ip, subject);
     if (skipped === null) return;
     const detail = skipped > 0 ? { ...(input.detail ?? {}), similarSkipped: skipped } : input.detail;
-    db().prepare(`INSERT INTO security_events
+    await db().run(`INSERT INTO security_events
       (at, type, severity, user_id, actor_id, subject, ip_masked, user_agent, detail)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-      now(), input.type, severity, input.userId ?? null, input.actorId ?? null, subject, ip, ua,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, now(), input.type, severity, input.userId ?? null, input.actorId ?? null, subject, ip, ua,
       detail ? JSON.stringify(detail).slice(0, 2000) : null);
-    evaluateAlerts(input.type, input.userId ?? null, subject, ip);
+    await evaluateAlerts(input.type, input.userId ?? null, subject, ip);
   } catch (err) {
     console.warn('[ops] could not record security event:', (err as Error).message);
   }
@@ -153,12 +153,11 @@ export function recordEvent(input: SecurityEventInput): void {
 
 // ── Usage counts ─────────────────────────────────────────────────────────────
 
-export function bumpUsage(userId: string | undefined | null, metric: UsageMetric, by = 1): void {
+export async function bumpUsage(userId: string | undefined | null, metric: UsageMetric, by = 1): Promise<void> {
   if (!userId || by <= 0) return;
   try {
-    db().prepare(`INSERT INTO usage_daily (user_id, day, metric, count) VALUES (?, ?, ?, ?)
-      ON CONFLICT(user_id, day, metric) DO UPDATE SET count = count + excluded.count`)
-      .run(userId, now().slice(0, 10), metric, by);
+    await db().run(`INSERT INTO usage_daily (user_id, day, metric, count) VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id, day, metric) DO UPDATE SET count = usage_daily.count + excluded.count`, userId, now().slice(0, 10), metric, by);
   } catch (err) {
     console.warn('[ops] could not count usage:', (err as Error).message);
   }
@@ -175,66 +174,63 @@ function since(minutes: number): string {
   return new Date(Date.now() - minutes * 60_000).toISOString();
 }
 
-function raiseAlert(kind: string, subject: string, detail: Record<string, unknown>): void {
-  const open = db().prepare("SELECT id FROM ops_alerts WHERE kind = ? AND subject = ? AND status = 'open'")
-    .get(kind, subject);
+async function raiseAlert(kind: string, subject: string, detail: Record<string, unknown>): Promise<void> {
+  const open = await db().get("SELECT id FROM ops_alerts WHERE kind = ? AND subject = ? AND status = 'open'", kind, subject);
   if (open) return; // one open alert per thing, not one per event
-  db().prepare('INSERT INTO ops_alerts (at, kind, subject, status, detail) VALUES (?, ?, ?, ?, ?)')
-    .run(now(), kind, subject, 'open', JSON.stringify(detail));
+  await db().run('INSERT INTO ops_alerts (at, kind, subject, status, detail) VALUES (?, ?, ?, ?, ?)', now(), kind, subject, 'open', JSON.stringify(detail));
 }
 
-function evaluateAlerts(type: string, userId: string | null, subject: string | null, ip: string | null): void {
+async function evaluateAlerts(type: string, userId: string | null, subject: string | null, ip: string | null): Promise<void> {
   if (type === 'auth.login_failed' || type === 'auth.otp_failed' || type === 'auth.locked') {
     const window = since(ALERT_RULES.failedSignIns.minutes);
     if (subject) {
-      const row = db().prepare(`SELECT COUNT(*) AS n FROM security_events
-        WHERE type IN ('auth.login_failed','auth.otp_failed','auth.locked') AND subject = ? AND at >= ?`).get(subject, window) as { n: number };
+      const row = await db().get(`SELECT COUNT(*) AS n FROM security_events
+        WHERE type IN ('auth.login_failed','auth.otp_failed','auth.locked') AND subject = ? AND at >= ?`, subject, window) as { n: number };
       if (row.n >= ALERT_RULES.failedSignIns.count) {
-        raiseAlert('failed_sign_ins_account', subject, { failures: row.n, minutes: ALERT_RULES.failedSignIns.minutes });
+        await raiseAlert('failed_sign_ins_account', subject, { failures: row.n, minutes: ALERT_RULES.failedSignIns.minutes });
       }
     }
     if (ip) {
-      const row = db().prepare(`SELECT COUNT(*) AS n FROM security_events
-        WHERE type IN ('auth.login_failed','auth.otp_failed','auth.locked') AND ip_masked = ? AND at >= ?`).get(ip, window) as { n: number };
+      const row = await db().get(`SELECT COUNT(*) AS n FROM security_events
+        WHERE type IN ('auth.login_failed','auth.otp_failed','auth.locked') AND ip_masked = ? AND at >= ?`, ip, window) as { n: number };
       if (row.n >= ALERT_RULES.failedSignIns.count) {
-        raiseAlert('failed_sign_ins_network', ip, { failures: row.n, minutes: ALERT_RULES.failedSignIns.minutes });
+        await raiseAlert('failed_sign_ins_network', ip, { failures: row.n, minutes: ALERT_RULES.failedSignIns.minutes });
       }
     }
   }
 
   if (type.startsWith('access.') && ip) {
-    const row = db().prepare(`SELECT COUNT(*) AS n FROM security_events
-      WHERE type LIKE 'access.%' AND ip_masked = ? AND at >= ?`).get(ip, since(ALERT_RULES.refusedRequests.minutes)) as { n: number };
+    const row = await db().get(`SELECT COUNT(*) AS n FROM security_events
+      WHERE type LIKE 'access.%' AND ip_masked = ? AND at >= ?`, ip, since(ALERT_RULES.refusedRequests.minutes)) as { n: number };
     if (row.n >= ALERT_RULES.refusedRequests.count) {
-      raiseAlert('refused_requests_burst', ip, { refused: row.n, minutes: ALERT_RULES.refusedRequests.minutes });
+      await raiseAlert('refused_requests_burst', ip, { refused: row.n, minutes: ALERT_RULES.refusedRequests.minutes });
     }
   }
 
   if (type === 'auth.login_ok' && userId && ip) {
-    const user = dbService.findUserById(userId);
+    const user = await dbService.findUserById(userId);
     if (user && (STAFF_ROLES as readonly string[]).includes(user.role)) {
-      const seen = db().prepare(`SELECT COUNT(*) AS n FROM security_events
-        WHERE type = 'auth.login_ok' AND user_id = ? AND ip_masked = ?`).get(userId, ip) as { n: number };
+      const seen = await db().get(`SELECT COUNT(*) AS n FROM security_events
+        WHERE type = 'auth.login_ok' AND user_id = ? AND ip_masked = ?`, userId, ip) as { n: number };
       // This event is already stored, so 1 means this network is new for the account.
-      const earlier = db().prepare(`SELECT COUNT(*) AS n FROM security_events
-        WHERE type = 'auth.login_ok' AND user_id = ?`).get(userId) as { n: number };
+      const earlier = await db().get(`SELECT COUNT(*) AS n FROM security_events
+        WHERE type = 'auth.login_ok' AND user_id = ?`, userId) as { n: number };
       if (seen.n === 1 && earlier.n > 1) {
-        raiseAlert('staff_sign_in_new_network', `${user.email} @ ${ip}`, { role: user.role, network: ip });
+        await raiseAlert('staff_sign_in_new_network', `${user.email} @ ${ip}`, { role: user.role, network: ip });
       }
     }
   }
 }
 
-export function listAlerts(status: 'open' | 'resolved' | 'all' = 'open', limit = 200) {
+export async function listAlerts(status: 'open' | 'resolved' | 'all' = 'open', limit = 200) {
   const rows = status === 'all'
-    ? db().prepare('SELECT * FROM ops_alerts ORDER BY id DESC LIMIT ?').all(limit)
-    : db().prepare('SELECT * FROM ops_alerts WHERE status = ? ORDER BY id DESC LIMIT ?').all(status, limit);
+    ? await db().all('SELECT * FROM ops_alerts ORDER BY id DESC LIMIT ?', limit)
+    : await db().all('SELECT * FROM ops_alerts WHERE status = ? ORDER BY id DESC LIMIT ?', status, limit);
   return (rows as any[]).map((row) => ({ ...row, detail: row.detail ? JSON.parse(row.detail) : null }));
 }
 
-export function resolveAlert(id: number, by: string): boolean {
-  const result = db().prepare("UPDATE ops_alerts SET status = 'resolved', resolved_at = ?, resolved_by = ? WHERE id = ? AND status = 'open'")
-    .run(now(), by, id);
+export async function resolveAlert(id: number, by: string): Promise<boolean> {
+  const result = await db().run("UPDATE ops_alerts SET status = 'resolved', resolved_at = ?, resolved_by = ? WHERE id = ? AND status = 'open'", now(), by, id);
   return Number(result.changes ?? 0) > 0;
 }
 
@@ -251,26 +247,30 @@ function actionHash(prev: string, at: string, actorId: string, action: string,
 
 const GENESIS = '0'.repeat(64);
 
-export function recordAdminAction(actor: { id: string; email: string }, action: string,
-  targetId: string | null, detail?: Record<string, unknown>, req?: Request): void {
-  const last = db().prepare('SELECT hash FROM admin_actions ORDER BY seq DESC LIMIT 1').get() as { hash: string } | undefined;
-  const prev = last?.hash ?? GENESIS;
-  const at = now();
+export async function recordAdminAction(actor: { id: string; email: string }, action: string,
+  targetId: string | null, detail?: Record<string, unknown>, req?: Request): Promise<void> {
   const detailText = detail ? JSON.stringify(detail).slice(0, 2000) : null;
-  db().prepare(`INSERT INTO admin_actions (at, actor_id, actor_email, action, target_id, detail, prev_hash, hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(at, actor.id, actor.email, action, targetId, detailText, prev,
-    actionHash(prev, at, actor.id, action, targetId, detailText));
-  recordEvent({ type: `admin.${action}`, severity: action === 'role_changed' ? 'high' : 'info',
+  // Read the last hash and append in one locked step, so two actions at the
+  // same moment cannot both chain onto the same row.
+  await db().serial('admin_actions', async (tx) => {
+    const last = await tx.get<{ hash: string }>('SELECT hash FROM admin_actions ORDER BY seq DESC LIMIT 1');
+    const prev = last?.hash ?? GENESIS;
+    const at = now();
+    await tx.run(`INSERT INTO admin_actions (at, actor_id, actor_email, action, target_id, detail, prev_hash, hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, at, actor.id, actor.email, action, targetId, detailText, prev,
+      actionHash(prev, at, actor.id, action, targetId, detailText));
+  });
+  await recordEvent({ type: `admin.${action}`, severity: action === 'role_changed' ? 'high' : 'info',
     userId: targetId, actorId: actor.id, req, detail });
   if (action === 'role_changed' && detail && (STAFF_ROLES as readonly string[]).includes(String(detail.to))) {
-    const target = targetId ? dbService.findUserById(targetId) : null;
-    raiseAlert('staff_role_granted', `${target?.email ?? targetId} -> ${detail.to}`,
+    const target = targetId ? await dbService.findUserById(targetId) : null;
+    await raiseAlert('staff_role_granted', `${target?.email ?? targetId} -> ${detail.to}`,
       { by: actor.email, from: detail.from, to: detail.to });
   }
 }
 
-export function listAdminActions(limit = 200) {
-  const rows = db().prepare('SELECT * FROM admin_actions ORDER BY seq ASC').all() as any[];
+export async function listAdminActions(limit = 200) {
+  const rows = await db().all('SELECT * FROM admin_actions ORDER BY seq ASC') as any[];
   let prev = GENESIS;
   let valid = true;
   let firstBroken: number | null = null;
@@ -298,11 +298,11 @@ export function listAdminActions(limit = 200) {
  * chain is trimmed from the start only, so what remains still verifies from
  * its first kept row (whose prev_hash becomes the new anchor).
  */
-export function sweepOld(days = RETENTION_DAYS): { events: number; usage: number; alerts: number } {
+export async function sweepOld(days = RETENTION_DAYS): Promise<{ events: number; usage: number; alerts: number }> {
   const cutoff = new Date(Date.now() - days * 86_400_000).toISOString();
-  const events = db().prepare('DELETE FROM security_events WHERE at < ?').run(cutoff);
-  const usage = db().prepare('DELETE FROM usage_daily WHERE day < ?').run(cutoff.slice(0, 10));
-  const alerts = db().prepare("DELETE FROM ops_alerts WHERE at < ? AND status = 'resolved'").run(cutoff);
+  const events = await db().run('DELETE FROM security_events WHERE at < ?', cutoff);
+  const usage = await db().run('DELETE FROM usage_daily WHERE day < ?', cutoff.slice(0, 10));
+  const alerts = await db().run("DELETE FROM ops_alerts WHERE at < ? AND status = 'resolved'", cutoff);
   return {
     events: Number(events.changes ?? 0),
     usage: Number(usage.changes ?? 0),
@@ -313,8 +313,8 @@ export function sweepOld(days = RETENTION_DAYS): { events: number; usage: number
 let sweeper: NodeJS.Timeout | null = null;
 export function startRetentionSweep(): void {
   if (sweeper) return;
-  try { sweepOld(); } catch { /* first boot on an old schema */ }
-  sweeper = setInterval(() => { try { sweepOld(); } catch { /* next time */ } }, 6 * 3_600_000);
+  sweepOld().catch(() => undefined); // first boot on an old schema
+  sweeper = setInterval(() => { sweepOld().catch(() => undefined); }, 6 * 3_600_000);
   sweeper.unref();
 }
 
@@ -322,29 +322,28 @@ export function startRetentionSweep(): void {
 
 const day = (offset: number) => new Date(Date.now() - offset * 86_400_000).toISOString().slice(0, 10);
 
-export function overview() {
-  const one = (sql: string, ...args: unknown[]) => Number((db().prepare(sql).get(...args) as any)?.n ?? 0);
+export async function overview() {
+  const one = async (sql: string, ...args: unknown[]) => Number(((await db().get(sql, ...args)) as any)?.n ?? 0);
   const last24h = since(24 * 60);
-  const usageTotals = db().prepare(`SELECT metric, SUM(count) AS total FROM usage_daily WHERE day >= ? GROUP BY metric`)
-    .all(day(30)) as Array<{ metric: string; total: number }>;
+  const usageTotals = await db().all(`SELECT metric, SUM(count) AS total FROM usage_daily WHERE day >= ? GROUP BY metric`, day(30)) as Array<{ metric: string; total: number }>;
   return {
     users: {
-      total: one('SELECT COUNT(*) AS n FROM users'),
-      suspended: one("SELECT COUNT(*) AS n FROM users WHERE status = 'suspended'"),
-      new7d: one('SELECT COUNT(*) AS n FROM users WHERE created_at >= ?', since(7 * 24 * 60)),
-      new30d: one('SELECT COUNT(*) AS n FROM users WHERE created_at >= ?', since(30 * 24 * 60)),
-      activeToday: one('SELECT COUNT(DISTINCT user_id) AS n FROM usage_daily WHERE day = ?', day(0)),
-      active7d: one('SELECT COUNT(DISTINCT user_id) AS n FROM usage_daily WHERE day >= ?', day(6)),
-      staff: one("SELECT COUNT(*) AS n FROM users WHERE role IN ('ADMIN','SECURITY','OPERATOR')"),
+      total: await one('SELECT COUNT(*) AS n FROM users'),
+      suspended: await one("SELECT COUNT(*) AS n FROM users WHERE status = 'suspended'"),
+      new7d: await one('SELECT COUNT(*) AS n FROM users WHERE created_at >= ?', since(7 * 24 * 60)),
+      new30d: await one('SELECT COUNT(*) AS n FROM users WHERE created_at >= ?', since(30 * 24 * 60)),
+      activeToday: await one('SELECT COUNT(DISTINCT user_id) AS n FROM usage_daily WHERE day = ?', day(0)),
+      active7d: await one('SELECT COUNT(DISTINCT user_id) AS n FROM usage_daily WHERE day >= ?', day(6)),
+      staff: await one("SELECT COUNT(*) AS n FROM users WHERE role IN ('ADMIN','SECURITY','OPERATOR')"),
     },
     signIns24h: {
-      ok: one("SELECT COUNT(*) AS n FROM security_events WHERE type = 'auth.login_ok' AND at >= ?", last24h),
-      failed: one("SELECT COUNT(*) AS n FROM security_events WHERE type IN ('auth.login_failed','auth.otp_failed') AND at >= ?", last24h),
-      locked: one("SELECT COUNT(*) AS n FROM security_events WHERE type = 'auth.locked' AND at >= ?", last24h),
+      ok: await one("SELECT COUNT(*) AS n FROM security_events WHERE type = 'auth.login_ok' AND at >= ?", last24h),
+      failed: await one("SELECT COUNT(*) AS n FROM security_events WHERE type IN ('auth.login_failed','auth.otp_failed') AND at >= ?", last24h),
+      locked: await one("SELECT COUNT(*) AS n FROM security_events WHERE type = 'auth.locked' AND at >= ?", last24h),
     },
-    refused24h: one("SELECT COUNT(*) AS n FROM security_events WHERE type LIKE 'access.%' AND at >= ?", last24h),
-    activeSessions: one('SELECT COUNT(*) AS n FROM sessions WHERE expires_at > ?', now()),
-    openAlerts: one("SELECT COUNT(*) AS n FROM ops_alerts WHERE status = 'open'"),
+    refused24h: await one("SELECT COUNT(*) AS n FROM security_events WHERE type LIKE 'access.%' AND at >= ?", last24h),
+    activeSessions: await one('SELECT COUNT(*) AS n FROM sessions WHERE expires_at > ?', now()),
+    openAlerts: await one("SELECT COUNT(*) AS n FROM ops_alerts WHERE status = 'open'"),
     usage30d: Object.fromEntries(usageTotals.map((row) => [row.metric, Number(row.total)])),
     server: {
       uptimeSeconds: Math.round(process.uptime()),
@@ -355,28 +354,29 @@ export function overview() {
   };
 }
 
-export function usageSeries(fromDay: string, toDay: string) {
-  const series = db().prepare(`SELECT day, metric, SUM(count) AS total FROM usage_daily
-    WHERE day BETWEEN ? AND ? GROUP BY day, metric ORDER BY day`).all(fromDay, toDay) as any[];
-  const signIns = db().prepare(`SELECT substr(at, 1, 10) AS day,
-      SUM(type = 'auth.login_ok') AS ok,
-      SUM(type IN ('auth.login_failed','auth.otp_failed')) AS failed
-    FROM security_events WHERE substr(at, 1, 10) BETWEEN ? AND ? GROUP BY day ORDER BY day`).all(fromDay, toDay) as any[];
-  const topUsers = db().prepare(`SELECT u.id, u.email, u.name, u.company_name AS companyName, SUM(d.count) AS total
+export async function usageSeries(fromDay: string, toDay: string) {
+  const series = await db().all(`SELECT day, metric, SUM(count) AS total FROM usage_daily
+    WHERE day BETWEEN ? AND ? GROUP BY day, metric ORDER BY day`, fromDay, toDay) as any[];
+  const signIns = await db().all(`SELECT substr(at, 1, 10) AS day,
+      SUM(CASE WHEN type = 'auth.login_ok' THEN 1 ELSE 0 END) AS ok,
+      SUM(CASE WHEN type IN ('auth.login_failed','auth.otp_failed') THEN 1 ELSE 0 END) AS failed
+    FROM security_events WHERE substr(at, 1, 10) BETWEEN ? AND ? GROUP BY substr(at, 1, 10) ORDER BY day`, fromDay, toDay) as any[];
+  const topUsers = await db().all(`SELECT u.id, u.email, u.name, u.company_name AS "companyName", SUM(d.count) AS total
     FROM usage_daily d JOIN users u ON u.id = d.user_id WHERE d.day BETWEEN ? AND ?
-    GROUP BY u.id ORDER BY total DESC LIMIT 15`).all(fromDay, toDay) as any[];
-  const adoption = db().prepare(`SELECT metric, COUNT(DISTINCT user_id) AS users FROM usage_daily
-    WHERE day BETWEEN ? AND ? GROUP BY metric`).all(fromDay, toDay) as any[];
+    GROUP BY u.id ORDER BY total DESC LIMIT 15`, fromDay, toDay) as any[];
+  const adoption = await db().all(`SELECT metric, COUNT(DISTINCT user_id) AS users FROM usage_daily
+    WHERE day BETWEEN ? AND ? GROUP BY metric`, fromDay, toDay) as any[];
   return { from: fromDay, to: toDay, series, signIns, topUsers, adoption };
 }
 
 export interface UserQuery { q?: string; role?: string; status?: string; page?: number; pageSize?: number }
 
-export function searchUsers(query: UserQuery) {
+export async function searchUsers(query: UserQuery) {
   const where: string[] = [];
   const args: unknown[] = [];
   if (query.q) {
-    where.push('(email LIKE ? ESCAPE \'\\\' OR name LIKE ? ESCAPE \'\\\' OR company_name LIKE ? ESCAPE \'\\\' OR phone LIKE ? ESCAPE \'\\\')');
+    const op = db().like; // case-insensitive on both databases
+    where.push(`(email ${op} ? ESCAPE '\\' OR name ${op} ? ESCAPE '\\' OR company_name ${op} ? ESCAPE '\\' OR phone ${op} ? ESCAPE '\\')`);
     const like = `%${query.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
     args.push(like, like, like, like);
   }
@@ -385,27 +385,26 @@ export function searchUsers(query: UserQuery) {
   const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const pageSize = Math.min(Math.max(query.pageSize ?? 50, 1), 200);
   const page = Math.max(query.page ?? 1, 1);
-  const total = Number((db().prepare(`SELECT COUNT(*) AS n FROM users ${clause}`).get(...args) as any).n);
-  const rows = db().prepare(`SELECT id, email, phone, name, company_name AS companyName, role, status,
-      auth_provider AS authProvider, created_at AS createdAt, last_login_at AS lastLoginAt,
-      (SELECT COUNT(*) FROM sessions s WHERE s.user_id = users.id AND s.expires_at > ?) AS activeSessions,
+  const total = Number((await db().get(`SELECT COUNT(*) AS n FROM users ${clause}`, ...args) as any).n);
+  const rows = await db().all(`SELECT id, email, phone, name, company_name AS "companyName", role, status,
+      auth_provider AS "authProvider", created_at AS "createdAt", last_login_at AS "lastLoginAt",
+      (SELECT COUNT(*) FROM sessions s WHERE s.user_id = users.id AND s.expires_at > ?) AS "activeSessions",
       (SELECT COALESCE(SUM(count), 0) FROM usage_daily d WHERE d.user_id = users.id AND d.day >= ?) AS usage30d
-    FROM users ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
-    .all(now(), day(30), ...args, pageSize, (page - 1) * pageSize);
+    FROM users ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    now(), day(30), ...args, pageSize, (page - 1) * pageSize);
   return { total, page, pageSize, users: rows };
 }
 
-export function userDetail(userId: string) {
-  const user = db().prepare(`SELECT id, email, phone, name, company_name AS companyName, role, status,
-      suspended_reason AS suspendedReason, auth_provider AS authProvider, created_at AS createdAt,
-      updated_at AS updatedAt, last_login_at AS lastLoginAt FROM users WHERE id = ?`).get(userId);
+export async function userDetail(userId: string) {
+  const user = await db().get(`SELECT id, email, phone, name, company_name AS "companyName", role, status,
+      suspended_reason AS "suspendedReason", auth_provider AS "authProvider", created_at AS "createdAt",
+      updated_at AS "updatedAt", last_login_at AS "lastLoginAt" FROM users WHERE id = ?`, userId);
   if (!user) return null;
-  const sessions = db().prepare(`SELECT substr(token, 1, 8) AS ref, created_at AS createdAt, expires_at AS expiresAt
-    FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY created_at DESC`).all(userId, now());
-  const usage = db().prepare(`SELECT day, metric, count FROM usage_daily WHERE user_id = ? AND day >= ? ORDER BY day`)
-    .all(userId, day(30));
-  const events = db().prepare(`SELECT id, at, type, severity, ip_masked AS ip, user_agent AS userAgent, detail
-    FROM security_events WHERE user_id = ? ORDER BY id DESC LIMIT 50`).all(userId) as any[];
+  const sessions = await db().all(`SELECT substr(token, 1, 8) AS ref, created_at AS "createdAt", expires_at AS "expiresAt"
+    FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY created_at DESC`, userId, now());
+  const usage = await db().all(`SELECT day, metric, count FROM usage_daily WHERE user_id = ? AND day >= ? ORDER BY day`, userId, day(30));
+  const events = await db().all(`SELECT id, at, type, severity, ip_masked AS ip, user_agent AS "userAgent", detail
+    FROM security_events WHERE user_id = ? ORDER BY id DESC LIMIT 50`, userId) as any[];
   return {
     user, sessions, usage,
     events: events.map((row) => ({ ...row, detail: row.detail ? JSON.parse(row.detail) : null })),
@@ -417,7 +416,7 @@ export interface EventQuery {
   page?: number; pageSize?: number;
 }
 
-export function searchEvents(query: EventQuery) {
+export async function searchEvents(query: EventQuery) {
   const where: string[] = [];
   const args: unknown[] = [];
   if (query.type) {
@@ -435,10 +434,10 @@ export function searchEvents(query: EventQuery) {
   const pageSize = Math.min(Math.max(query.pageSize ?? 100, 1), 1000);
   const page = Math.max(query.page ?? 1, 1);
   const from = 'FROM security_events e LEFT JOIN users u ON u.id = e.user_id';
-  const total = Number((db().prepare(`SELECT COUNT(*) AS n ${from} ${clause}`).get(...args) as any).n);
-  const rows = db().prepare(`SELECT e.id, e.at, e.type, e.severity, e.user_id AS userId, u.email AS userEmail,
-      e.actor_id AS actorId, e.subject, e.ip_masked AS ip, e.user_agent AS userAgent, e.detail
-    ${from} ${clause} ORDER BY e.id DESC LIMIT ? OFFSET ?`).all(...args, pageSize, (page - 1) * pageSize) as any[];
+  const total = Number((await db().get(`SELECT COUNT(*) AS n ${from} ${clause}`, ...args) as any).n);
+  const rows = await db().all(`SELECT e.id, e.at, e.type, e.severity, e.user_id AS "userId", u.email AS "userEmail",
+      e.actor_id AS "actorId", e.subject, e.ip_masked AS ip, e.user_agent AS "userAgent", e.detail
+    ${from} ${clause} ORDER BY e.id DESC LIMIT ? OFFSET ?`, ...args, pageSize, (page - 1) * pageSize) as any[];
   return {
     total, page, pageSize,
     events: rows.map((row) => ({ ...row, detail: row.detail ? JSON.parse(row.detail) : null })),
@@ -454,25 +453,24 @@ export function csvCell(value: unknown): string {
 
 // ── Account actions ──────────────────────────────────────────────────────────
 
-export function countAdmins(excludingId?: string): number {
+export async function countAdmins(excludingId?: string): Promise<number> {
   const row = excludingId
-    ? db().prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'ADMIN' AND status = 'active' AND id != ?").get(excludingId)
-    : db().prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'ADMIN' AND status = 'active'").get();
+    ? await db().get("SELECT COUNT(*) AS n FROM users WHERE role = 'ADMIN' AND status = 'active' AND id != ?", excludingId)
+    : await db().get("SELECT COUNT(*) AS n FROM users WHERE role = 'ADMIN' AND status = 'active'");
   return Number((row as any).n);
 }
 
-export function setStatus(userId: string, status: 'active' | 'suspended', reason: string | null): void {
-  db().prepare('UPDATE users SET status = ?, suspended_reason = ?, updated_at = ? WHERE id = ?')
-    .run(status, status === 'suspended' ? reason : null, now(), userId);
-  if (status === 'suspended') endSessions(userId);
+export async function setStatus(userId: string, status: 'active' | 'suspended', reason: string | null): Promise<void> {
+  await db().run('UPDATE users SET status = ?, suspended_reason = ?, updated_at = ? WHERE id = ?', status, status === 'suspended' ? reason : null, now(), userId);
+  if (status === 'suspended') await endSessions(userId);
 }
 
-export function setRole(userId: string, role: string): void {
-  db().prepare('UPDATE users SET role = ?, updated_at = ? WHERE id = ?').run(role, now(), userId);
+export async function setRole(userId: string, role: string): Promise<void> {
+  await db().run('UPDATE users SET role = ?, updated_at = ? WHERE id = ?', role, now(), userId);
 }
 
-export function endSessions(userId: string): number {
-  const result = db().prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+export async function endSessions(userId: string): Promise<number> {
+  const result = await db().run('DELETE FROM sessions WHERE user_id = ?', userId);
   return Number(result.changes ?? 0);
 }
 
@@ -483,15 +481,14 @@ export function endSessions(userId: string): number {
  * trusted channel; the account holder changes it from Settings after signing in.
  * It is never logged and never stored in clear.
  */
-export function forcePasswordReset(userId: string): string {
+export async function forcePasswordReset(userId: string): Promise<string> {
   // 20 characters from an unambiguous alphabet: about 113 bits.
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
   const bytes = crypto.randomBytes(20);
   const temporary = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
   const { hash, salt } = dbService.hashPassword(temporary);
-  db().prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?')
-    .run(hash, salt, now(), userId);
-  endSessions(userId);
-  dbService.clearLoginFailures(dbService.findUserById(userId)?.email ?? '');
+  await db().run('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?', hash, salt, now(), userId);
+  await endSessions(userId);
+  await dbService.clearLoginFailures((await dbService.findUserById(userId))?.email ?? '');
   return temporary;
 }
