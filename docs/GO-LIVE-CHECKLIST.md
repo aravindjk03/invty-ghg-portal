@@ -8,20 +8,27 @@ Keep a private note (not in git) of each address and secret as you go.
 
 ---
 
-### 1. Database: Neon (about 5 minutes)
+### 1. Database: Neon (done)
 
-- [ ] Sign up at neon.tech. Create a project, choosing a region near your
-      users.
-- [ ] Copy the connection string (`postgres://…?sslmode=require`).
+The repository is linked to Neon project `hidden-fire-39540730`, branch
+`production`, in AWS Singapore. `neon deploy` has been run.
 
-**Check:** in Neon's SQL editor, `select 1;` returns 1.
+- [x] `neon deploy` pulled `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`
+      (direct) into `.env.local`.
+- [x] Tested end to end against it: the backend suite (22/22), sign-up, a
+      restart, and sign-in again.
+- [ ] Copy both values from `.env.local` (or the Neon console, **Connect**) for
+      step 2.
+
+**Check:** `neon env pull` succeeds, and `.env.local` holds both variables.
 
 ### 2. Backend API: Render (about 10 minutes)
 
 - [ ] On render.com: **New**, then **Blueprint**, then pick this repository and
       the branch to deploy.
 - [ ] When asked, paste:
-  - `DATABASE_URL`: the Neon string
+  - `DATABASE_URL`: the Neon **pooled** string
+  - `DATABASE_URL_UNPOOLED`: the Neon **direct** string
   - `ADMIN_EMAIL`: your email
   - `GEMINI_API_KEY`: from aistudio.google.com, in a project with no billing
 

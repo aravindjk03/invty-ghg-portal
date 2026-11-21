@@ -27,13 +27,27 @@ logs. Where it keeps them depends on `DATABASE_URL`:
 - **Not set:** a SQLite file in `backend/data`. This is fine on your own
   computer, and it's what the tests use.
 
-Neon setup:
-1. Sign up at **neon.tech** (free). Create a project, choosing the region
-   closest to the backend (e.g. AWS Singapore for India, or Frankfurt).
-2. Copy the connection string. It looks like
-   `postgres://USER:PASSWORD@ep-xxx.REGION.aws.neon.tech/neondb?sslmode=require`.
-3. Set it as `DATABASE_URL` on the backend. The tables are created on first
-   start; there is no migration command to run.
+Neon setup: the repository is already linked to the Neon project
+`hidden-fire-39540730`, branch `production`, in AWS Singapore (`neon.ts`, `.neon`).
+1. `npm i -g neon@latest`, then `neon login`.
+2. `neon deploy` (or `neon env pull`) writes the branch's settings to
+   `.env.local` at the repo root, which is git-ignored:
+   - `DATABASE_URL`: pooled (`-pooler`) connection string
+   - `DATABASE_URL_UNPOOLED`: direct connection string
+   - `NEON_BRANCH`, `NEON_BRANCH_ID`
+
+   The backend reads that file for local runs, so `npm run dev:backend` uses
+   Neon with no copying.
+3. On the host (Render), set `DATABASE_URL` to the **pooled** string and
+   `DATABASE_URL_UNPOOLED` to the **direct** one. The tables are created over
+   the direct connection on first start; there is no migration command to run.
+
+Driver: the backend uses `node-postgres` (`pg`) over TCP with the pooled string,
+as Neon recommends for a long-running server. On serverless or edge hosts, or
+any network that only allows HTTPS, set `DATABASE_DRIVER=neon-http` to use
+Neon's serverless driver over HTTPS instead. Note that this driver queues
+console-log writes within one server process only, so run a single instance
+with it.
 
 Any other Postgres works the same way: Supabase, Aiven, RDS, Cloud SQL, or the
 `db` service in `docker-compose.yml`.

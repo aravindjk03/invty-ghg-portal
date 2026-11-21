@@ -1,4 +1,4 @@
-import { Pool, PoolClient, types } from 'pg';
+import { Client, Pool, PoolClient, types } from 'pg';
 import type { Db, RunResult } from './driver';
 import { toPositional } from './driver';
 import { POSTGRES_SCHEMA } from './schema';
@@ -68,7 +68,25 @@ export class PostgresDb implements Db {
     this.handle = new PgHandle(this.pool, (k, f) => this.serial(k, f));
   }
 
-  async init(): Promise<void> {
+  /**
+   * Creates the tables. Over the direct (unpooled) connection when one is
+   * given, as Neon recommends for schema changes; otherwise over the pool.
+   */
+  async init(directUrl?: string): Promise<void> {
+    if (directUrl) {
+      const client = new Client({ connectionString: directUrl, connectionTimeoutMillis: 15_000 });
+      await client.connect();
+      try {
+        if (this.schema) {
+          await client.query(`CREATE SCHEMA IF NOT EXISTS ${this.schema}`);
+          await client.query(`SET search_path TO ${this.schema}`);
+        }
+        await client.query(POSTGRES_SCHEMA);
+      } finally {
+        await client.end();
+      }
+      return;
+    }
     if (this.schema) await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${this.schema}`);
     await this.pool.query(POSTGRES_SCHEMA);
   }

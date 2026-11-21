@@ -1,7 +1,24 @@
 import dotenv from 'dotenv';
+import path from 'path';
 import { z } from 'zod';
 
-dotenv.config();
+/*
+ * Settings come from the host's environment first (Render, Docker, CI). For
+ * local runs they are also read from files, earliest wins, never overriding a
+ * variable that is already set:
+ *   backend/.env            your own local settings
+ *   <repo>/.env.local       written by `neon deploy` / `neon env pull`
+ *                           (DATABASE_URL, DATABASE_URL_UNPOOLED, NEON_BRANCH…)
+ *   <repo>/.env
+ */
+const backendDir = path.resolve(__dirname, '../..');
+const repoDir = path.resolve(backendDir, '..');
+// Tests never read the repo-level files: they hold the real Neon database, and
+// a test run must not write to it. Tests pass DATABASE_URL explicitly when wanted.
+const envFiles = process.env.NODE_ENV === 'test'
+  ? [path.join(backendDir, '.env')]
+  : [path.join(backendDir, '.env'), path.join(repoDir, '.env.local'), path.join(repoDir, '.env')];
+dotenv.config({ path: envFiles, quiet: true } as dotenv.DotenvConfigOptions);
 
 /**
  * Development-only signing secret. Production refuses to start on this value,
@@ -37,6 +54,17 @@ const envSchema = z.object({
    * which hosts with an ephemeral disk wipe on every restart.
    */
   DATABASE_URL: z.string().optional(),
+  /**
+   * Direct (unpooled) connection string, used only to create the tables at
+   * start-up, as Neon recommends for schema changes. Optional.
+   */
+  DATABASE_URL_UNPOOLED: z.string().optional(),
+  /**
+   * How to reach Postgres. 'pg' (default): node-postgres over TCP, for a
+   * long-running server (Render, Docker, a VM). 'neon-http': Neon's serverless
+   * driver over HTTPS, for serverless/edge hosts or networks that only allow HTTPS.
+   */
+  DATABASE_DRIVER: z.enum(['pg', 'neon-http']).optional(),
   /**
    * Optional network allowlist for the console API: comma-separated IPs or CIDR
    * ranges (office, VPN). Any other address gets a plain 404.

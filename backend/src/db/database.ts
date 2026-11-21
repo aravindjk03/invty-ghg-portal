@@ -120,6 +120,13 @@ class DatabaseService {
     return this._db?.kind ?? null;
   }
 
+  /** How it is reached: sqlite, pg (TCP) or neon-http (HTTPS). */
+  public get driver(): 'sqlite' | 'pg' | 'neon-http' | null {
+    if (!this._db) return null;
+    if (this._db.kind === 'sqlite') return 'sqlite';
+    return (process.env.DATABASE_DRIVER || '').trim() === 'neon-http' ? 'neon-http' : 'pg';
+  }
+
   /**
    * Opens the database (Postgres when DATABASE_URL is set, else the SQLite file),
    * creates the tables and seeds what an empty database needs. Safe to call
@@ -135,10 +142,21 @@ class DatabaseService {
     if (url) {
       // Loaded only when used, so a Postgres host never touches node:sqlite and vice versa.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { PostgresDb } = require('./postgres') as typeof import('./postgres');
-      const pg = new PostgresDb(url, process.env.IINVTY_DB_SCHEMA?.trim() || undefined);
-      await pg.init();
-      this._db = pg;
+      const schema = process.env.IINVTY_DB_SCHEMA?.trim() || undefined;
+      // Tables are created over the direct connection when Neon gives one.
+      const direct = (process.env.DATABASE_URL_UNPOOLED || '').trim() || undefined;
+      if ((process.env.DATABASE_DRIVER || '').trim() === 'neon-http') {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { PostgresHttpDb } = require('./postgres-http') as typeof import('./postgres-http');
+        const http = new PostgresHttpDb(url, schema);
+        await http.init(direct);
+        this._db = http;
+      } else {
+        const { PostgresDb } = require('./postgres') as typeof import('./postgres');
+        const pg = new PostgresDb(url, schema);
+        await pg.init(direct);
+        this._db = pg;
+      }
     } else {
       const dataDir = path.resolve(__dirname, '../../data');
       if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });

@@ -22,7 +22,7 @@ router.get('/health', async (_req: Request, res: Response) => {
   const database = await dbService.ping();
   res.status(database ? 200 : 503).json({
     status: database ? 'healthy' : 'database_unreachable',
-    database: { kind: dbService.kind, reachable: database },
+    database: { kind: dbService.kind, driver: dbService.driver, reachable: database },
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     service: 'invty-ghg-backend-api',

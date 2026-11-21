@@ -56,7 +56,7 @@ dbService.init().then(() => {
     console.log(`[IINVTY Enterprise GHG Engine] Server Started`);
     console.log(`   Port:        ${env.PORT}`);
     console.log(`   Environment: ${env.NODE_ENV}`);
-    console.log(`   Database:    ${dbService.kind}`);
+    console.log(`   Database:    ${dbService.kind} (${dbService.driver})`);
     console.log(`   CORS:        ${env.CORS_ORIGIN}`);
     console.log(`=========================================`);
   });

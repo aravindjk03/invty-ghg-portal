@@ -36,8 +36,13 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "24"
-      # Neon (or any Postgres) connection string, ending ?sslmode=require.
+      # Neon's POOLED connection string (host contains "-pooler"), from
+      # `neon env pull` (.env.local) or the Neon console. node-postgres over TCP,
+      # as Neon recommends for a long-running server.
       - key: DATABASE_URL
+        sync: false
+      # Neon's DIRECT connection string: used only to create the tables on start.
+      - key: DATABASE_URL_UNPOOLED
         sync: false
       # The first administrator: created on an empty database, with a one-time
       # password printed once in the Render log.

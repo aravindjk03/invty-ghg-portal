@@ -15,6 +15,17 @@ import path from 'node:path';
 
 const require = createRequire(import.meta.url);
 const { toPositional } = require('../dist/db/driver.js');
+const { splitStatements } = require('../dist/db/postgres-http.js');
+const { POSTGRES_SCHEMA } = require('../dist/db/schema.js');
+
+test('the Postgres schema splits into single statements for the HTTPS driver', () => {
+  const parts = splitStatements(POSTGRES_SCHEMA);
+  assert.ok(parts.length >= 20, `only ${parts.length} statements`);
+  for (const p of parts) {
+    assert.match(p, /^CREATE (TABLE|INDEX|UNIQUE INDEX) IF NOT EXISTS/);
+    assert.ok(!p.includes(';') && !/^\s*--/m.test(p));
+  }
+});
 
 test('? placeholders become $n, but not inside quoted strings', () => {
   assert.equal(toPositional('SELECT * FROM t WHERE a = ? AND b = ?'), 'SELECT * FROM t WHERE a = $1 AND b = $2');
